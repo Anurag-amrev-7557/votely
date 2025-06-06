@@ -201,7 +201,6 @@ export default defineConfig({
         properties: true,
         keep_fargs: false,
         keep_infinity: true,
-        passes: 5,
       },
       mangle: {
         safari10: true,
@@ -308,10 +307,6 @@ export default defineConfig({
     minifyWhitespace: true,
     treeShaking: true,
     legalComments: 'none',
-  },
-  // Enable experimental features
-  experimental: {
-    renderBuiltUrl: true,
   },
   // Optimize preview server
   preview: {
