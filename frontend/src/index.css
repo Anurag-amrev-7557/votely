@@ -1,0 +1,338 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', 'Noto Sans', system-ui, sans-serif;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    height: 100%;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Theme Transition */
+  :root {
+    --theme-transition-duration: 300ms;
+  }
+
+  /* Base theme transition */
+  * {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: var(--theme-transition-duration);
+  }
+
+  /* Disable transitions during initial load */
+  .no-transition * {
+    transition: none !important;
+  }
+
+  /* Theme transition class */
+  .theme-transition * {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: var(--theme-transition-duration);
+  }
+
+  /* Enhanced Smooth Scrolling */
+  html, body {
+    scroll-behavior: smooth;
+    overflow-y: auto;
+    scroll-padding-top: 2rem;
+    overscroll-behavior-y: contain;
+    height: 100%;
+    will-change: scroll-position;
+  }
+
+  /* Optimized Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.3);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    transition: background-color 0.2s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.5);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  /* Firefox Scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+  }
+
+  /* Optimized Elastic Scroll Container */
+  .elastic-scroll {
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    scroll-snap-type: y proximity;
+    will-change: transform;
+  }
+
+  .elastic-scroll > * {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    will-change: transform;
+  }
+
+  /* Optimized Smooth Scroll Animation */
+  @keyframes smoothScroll {
+    0% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
+
+  .smooth-scroll-animation {
+    animation: smoothScroll 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+  }
+
+  /* Optimized Theme Switch Animation */
+  .theme-switch-wrapper {
+    position: relative;
+    overflow: hidden;
+    will-change: transform;
+  }
+
+  /* Performance Optimizations */
+  .will-change-transform {
+    will-change: transform;
+  }
+
+  .will-change-opacity {
+    will-change: opacity;
+  }
+
+  .will-change-scroll {
+    will-change: scroll-position;
+  }
+
+  .hardware-accelerated {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+
+  /* Optimized Transitions */
+  .transition-transform {
+    transition-property: transform;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: var(--theme-transition-duration);
+  }
+
+  .transition-opacity {
+    transition-property: opacity;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: var(--theme-transition-duration);
+  }
+
+  /* Optimized Animations */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+    will-change: opacity;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+    will-change: transform, opacity;
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  /* Theme icon styles */
+  .theme-icon {
+    transition: all 0.3s ease;
+  }
+
+  .theme-icon line {
+    transform-origin: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .theme-icon circle {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Theme icon transitions */
+  .theme-icon-transition {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .theme-icon-transition svg {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .theme-icon-transition svg path {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Smooth hover transitions */
+  .hover-transition {
+    transition: all 0.3s ease;
+  }
+
+  /* Card hover effects */
+  .pricing-card {
+    transition: all 0.3s ease;
+  }
+
+  .pricing-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Button hover effects */
+  .button-hover {
+    transition: all 0.3s ease;
+  }
+
+  /* FAQ accordion transitions */
+  details summary {
+    transition: all 0.3s ease;
+  }
+
+  details[open] summary {
+    margin-bottom: 0.5rem;
+  }
+
+  details summary::after {
+    transition: transform 0.3s ease;
+  }
+}
+
+/* Custom Scrollbar Styles */
+@layer utilities {
+  /* Light Mode Scrollbar */
+  .light-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #CBD5E1 #F1F5F9;
+  }
+
+  .light-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .light-scrollbar::-webkit-scrollbar-track {
+    background: #F1F5F9;
+    border-radius: 4px;
+  }
+
+  .light-scrollbar::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 4px;
+    border: 2px solid #F1F5F9;
+  }
+
+  .light-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+  }
+
+  /* Dark Mode Scrollbar */
+  .dark-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #475569 #1E293B;
+  }
+
+  .dark-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .dark-scrollbar::-webkit-scrollbar-track {
+    background: #1E293B;
+    border-radius: 4px;
+  }
+
+  .dark-scrollbar::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 4px;
+    border: 2px solid #1E293B;
+  }
+
+  .dark-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #64748B;
+  }
+}
+
+/* Apply scrollbar styles based on theme */
+:root {
+  color-scheme: light;
+}
+
+:root.dark {
+  color-scheme: dark;
+}
+
+/* Base scrollbar styles */
+html {
+  @apply light-scrollbar;
+}
+
+html.dark {
+  @apply dark-scrollbar;
+}
+
+/* Ensure scrollbar styles are applied to all scrollable elements */
+* {
+  scrollbar-width: inherit;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+

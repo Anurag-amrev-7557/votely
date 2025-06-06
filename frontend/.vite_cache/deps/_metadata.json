@@ -1,0 +1,127 @@
+{
+  "hash": "1f44e892",
+  "configHash": "282f5fef",
+  "lockfileHash": "9c213c63",
+  "browserHash": "8b61e04a",
+  "optimized": {
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "6857e3b6",
+      "needsInterop": true
+    },
+    "react-dom": {
+      "src": "../../node_modules/react-dom/index.js",
+      "file": "react-dom.js",
+      "fileHash": "46603ef6",
+      "needsInterop": true
+    },
+    "react-router-dom": {
+      "src": "../../node_modules/react-router-dom/dist/index.js",
+      "file": "react-router-dom.js",
+      "fileHash": "dc53a834",
+      "needsInterop": false
+    },
+    "@heroicons/react": {
+      "src": "../../node_modules/@heroicons/react/index.esm.js",
+      "file": "@heroicons_react.js",
+      "fileHash": "9734d2da",
+      "needsInterop": false
+    },
+    "axios": {
+      "src": "../../node_modules/axios/index.js",
+      "file": "axios.js",
+      "fileHash": "9465515a",
+      "needsInterop": false
+    },
+    "date-fns": {
+      "src": "../../node_modules/date-fns/index.js",
+      "file": "date-fns.js",
+      "fileHash": "ec460a7c",
+      "needsInterop": false
+    },
+    "framer-motion": {
+      "src": "../../node_modules/framer-motion/dist/es/index.mjs",
+      "file": "framer-motion.js",
+      "fileHash": "bfcc17e9",
+      "needsInterop": false
+    },
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "0de942a3",
+      "needsInterop": true
+    },
+    "react/jsx-runtime": {
+      "src": "../../node_modules/react/jsx-runtime.js",
+      "file": "react_jsx-runtime.js",
+      "fileHash": "d85437f5",
+      "needsInterop": true
+    },
+    "@heroicons/react/24/outline": {
+      "src": "../../node_modules/@heroicons/react/24/outline/esm/index.js",
+      "file": "@heroicons_react_24_outline.js",
+      "fileHash": "363cd2cc",
+      "needsInterop": false
+    },
+    "chart.js": {
+      "src": "../../node_modules/chart.js/dist/chart.js",
+      "file": "chart__js.js",
+      "fileHash": "6ec9909e",
+      "needsInterop": false
+    },
+    "lodash": {
+      "src": "../../node_modules/lodash/lodash.js",
+      "file": "lodash.js",
+      "fileHash": "0b1dd2a4",
+      "needsInterop": true
+    },
+    "react-chartjs-2": {
+      "src": "../../node_modules/react-chartjs-2/dist/index.js",
+      "file": "react-chartjs-2.js",
+      "fileHash": "a4f813b4",
+      "needsInterop": false
+    },
+    "react-csv": {
+      "src": "../../node_modules/react-csv/src/index.js",
+      "file": "react-csv.js",
+      "fileHash": "ddea9c74",
+      "needsInterop": false
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "ee5c9854",
+      "needsInterop": true
+    },
+    "react-error-boundary": {
+      "src": "../../node_modules/react-error-boundary/dist/react-error-boundary.development.js",
+      "file": "react-error-boundary.js",
+      "fileHash": "5d5694a8",
+      "needsInterop": false
+    },
+    "react-hot-toast": {
+      "src": "../../node_modules/react-hot-toast/dist/index.mjs",
+      "file": "react-hot-toast.js",
+      "fileHash": "f4d67036",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-X62NT3PW": {
+      "file": "chunk-X62NT3PW.js"
+    },
+    "chunk-UKR35MWI": {
+      "file": "chunk-UKR35MWI.js"
+    },
+    "chunk-GNV4TVWT": {
+      "file": "chunk-GNV4TVWT.js"
+    },
+    "chunk-46RQY2CM": {
+      "file": "chunk-46RQY2CM.js"
+    },
+    "chunk-RFBBAUMM": {
+      "file": "chunk-RFBBAUMM.js"
+    }
+  }
+}
