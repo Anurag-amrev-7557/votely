@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { useTheme } from '../../../context/ThemeContext';
 
 const AccessibilityFeature = ({ icon, title, description }) => (
-    <div className="flex flex-col gap-3 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
+    <div className="flex flex-col gap-3 p-4 bg-white dark:bg-gray-900 rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
         <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg w-fit">
             {icon}
         </div>
@@ -12,47 +13,101 @@ const AccessibilityFeature = ({ icon, title, description }) => (
 );
 
 const AccessibilitySection = () => {
+    const { isDarkMode } = useTheme();
+    const sectionBg = useMemo(() => isDarkMode ? 'dark:bg-gray-900' : 'bg-white', [isDarkMode]);
+
     return (
-        <section className="max-w-7xl mx-auto">
+        <section className={`max-w-7xl mx-auto ${sectionBg}`}>
             <div className="flex flex-col gap-8 px-4 py-12">
                 <motion.div 
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="flex flex-col gap-6 text-center max-w-3xl mx-auto"
                 >
-                    {/* Accessibility Tag */}
-                    <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="inline-flex items-center justify-center gap-2 px-4 py-1.5 bg-blue-50 dark:bg-blue-500/10 rounded-full mx-auto"
+                    {/* Advanced Animated Accessibility Badge */}
+                    <div
+                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-100 via-purple-200 to-purple-100 dark:from-purple-900/40 dark:via-purple-800/30 dark:to-purple-900/40 text-purple-700 dark:text-purple-300 text-sm font-semibold shadow-lg ring-1 ring-purple-200 dark:ring-purple-900/40 mb-4 relative group transition-all duration-500 will-change-[background-color,color,box-shadow] mx-auto"
+                        tabIndex={0}
+                        role="status"
+                        aria-label="Universal Access"
                     >
-                        <motion.svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
+                        {/* Animated Glow Effect */}
+                        <span
+                            className="absolute -inset-1.5 rounded-full bg-purple-400/20 dark:bg-purple-700/20 blur-xl pointer-events-none z-0"
+                            style={{
+                                animation: "pulse-orb 2.8s ease-in-out infinite"
+                            }}
+                            aria-hidden="true"
+                        />
+                        {/* Animated Accessibility Icon */}
+                        <svg
+                            className="relative z-10 w-5 h-5 text-purple-500 dark:text-purple-300 drop-shadow-[0_1px_2px_rgba(168,85,247,0.15)]"
                             fill="none"
                             stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="text-blue-500 dark:text-blue-400"
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{ delay: 0.2 }}
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
                         >
-                            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-                            <path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1Z" />
-                            <path d="M12 11h4" />
-                            <path d="M12 16h4" />
-                            <path d="M8 11h.01" />
-                            <path d="M8 16h.01" />
-                        </motion.svg>
-                        <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
+                            >
+                                <animate
+                                    attributeName="opacity"
+                                    values="0.7;1;0.7"
+                                    dur="2.2s"
+                                    repeatCount="indefinite"
+                                />
+                            </path>
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1Z"
+                            />
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M12 11h4"
+                            />
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M12 16h4"
+                            />
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M8 11h.01"
+                            />
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M8 16h.01"
+                            />
+                            {/* Sparkle effect */}
+                            <g>
+                                <circle className="animate-float-sparkle sparkle-0" cx="19" cy="6" r="1.1" fill="#a78bfa" opacity="0.7" />
+                                <circle className="animate-float-sparkle sparkle-1" cx="6" cy="5" r="0.7" fill="#c4b5fd" opacity="0.6" />
+                                <circle className="animate-float-sparkle sparkle-2" cx="12" cy="3.5" r="0.6" fill="#f3e8ff" opacity="0.5" />
+                            </g>
+                        </svg>
+                        <span className="relative z-10 font-semibold tracking-wide bg-gradient-to-r from-purple-700 via-purple-500 to-purple-400 dark:from-purple-300 dark:via-purple-400 dark:to-purple-500 bg-clip-text text-transparent">
                             Universal Access
                         </span>
-                    </motion.div>
+                        {/* Tooltip on focus/hover for accessibility */}
+                        <div
+                            className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-3 py-1 rounded bg-gray-900/90 text-xs text-white shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 z-20"
+                            role="tooltip"
+                        >
+                            Designed for everyone, everywhere.
+                        </div>
+                    </div>
 
                     <h2 className="text-gray-900 dark:text-white text-[28px] font-bold leading-tight tracking-[-0.015em] @[480px]:text-3xl">
                         Accessibility Commitment
@@ -269,4 +324,4 @@ const AccessibilitySection = () => {
     );
 }
 
-export default AccessibilitySection;
+export default React.memo(AccessibilitySection);

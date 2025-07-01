@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 const Footer = () => {
     return (
@@ -9,83 +10,773 @@ const Footer = () => {
             <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-8 sm:py-12">
                 {/* Newsletter Section */}
                 <div className="mb-8 sm:mb-12 p-4 sm:p-8 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 relative overflow-hidden">
-                    {/* Decorative Elements */}
-                    <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                        <div className="absolute -top-24 -left-24 w-48 h-48 bg-blue-200 dark:bg-blue-900/20 rounded-full blur-3xl opacity-50"></div>
-                        <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-indigo-200 dark:bg-indigo-900/20 rounded-full blur-3xl opacity-50"></div>
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-purple-200 dark:bg-purple-900/20 rounded-full blur-3xl opacity-30"></div>
+                    {/* Ultra-Advanced Decorative Elements with Animation, Accessibility, and Responsive Light/Dark Mode */}
+                    <div
+                        className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0"
+                        aria-hidden="true"
+                    >
+                        {/* Animated blue orb top-left (light/dark responsive) */}
+                        <motion.div
+                            className="absolute -top-24 -left-24 w-48 h-48 rounded-full blur-3xl opacity-60 dark:opacity-70"
+                            style={{
+                                background:
+                                    "radial-gradient(circle at 30% 30%, var(--footer-orb-blue1, #3b82f6) 60%, var(--footer-orb-blue2, #a5b4fc) 100%)"
+                            }}
+                            initial={{ scale: 0.92, opacity: 0.4 }}
+                            animate={{ scale: [0.92, 1.08, 1], opacity: [0.4, 0.7, 0.6, 0.7, 0.4] }}
+                            transition={{
+                                duration: 6,
+                                repeat: Infinity,
+                                repeatType: "mirror",
+                                ease: "easeInOut"
+                            }}
+                        >
+                            <span className="sr-only">Blue decorative orb</span>
+                        </motion.div>
+                        {/* Animated indigo orb bottom-right (light/dark responsive) */}
+                        <motion.div
+                            className="absolute -bottom-24 -right-24 w-48 h-48 rounded-full blur-3xl opacity-60 dark:opacity-70"
+                            style={{
+                                background:
+                                    "radial-gradient(circle at 70% 70%, var(--footer-orb-indigo1, #6366f1) 60%, var(--footer-orb-indigo2, #c7d2fe) 100%)"
+                            }}
+                            initial={{ scale: 1.08, opacity: 0.4 }}
+                            animate={{ scale: [1.08, 0.95, 1], opacity: [0.4, 0.7, 0.6, 0.7, 0.4] }}
+                            transition={{
+                                duration: 7,
+                                repeat: Infinity,
+                                repeatType: "mirror",
+                                ease: "easeInOut",
+                                delay: 1.2
+                            }}
+                        >
+                            <span className="sr-only">Indigo decorative orb</span>
+                        </motion.div>
+                        {/* Animated purple orb center with pulse and color shift (light/dark responsive) */}
+                        <motion.div
+                            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full blur-3xl opacity-40 dark:opacity-50"
+                            style={{
+                                background:
+                                    "radial-gradient(circle at 50% 50%, var(--footer-orb-purple1, #a78bfa) 60%, var(--footer-orb-purple2, #f3e8ff) 100%)"
+                            }}
+                            initial={{ scale: 0.98, opacity: 0.35, rotate: 0 }}
+                            animate={{
+                                scale: [0.98, 1.08, 1, 0.98],
+                                opacity: [0.35, 0.6, 0.45, 0.35],
+                                rotate: [0, 8, -8, 0]
+                            }}
+                            transition={{
+                                duration: 5.2,
+                                repeat: Infinity,
+                                repeatType: "loop",
+                                ease: "easeInOut"
+                            }}
+                        >
+                            <span className="sr-only">Purple decorative orb</span>
+                        </motion.div>
+                        {/* Subtle animated lines with color mode adaptation */}
+                        <svg
+                            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[420px] h-[120px] opacity-30 dark:opacity-25"
+                            viewBox="0 0 420 120"
+                            fill="none"
+                            aria-hidden="true"
+                        >
+                            <defs>
+                                <linearGradient id="footer-line-gradient-light" x1="0" y1="60" x2="420" y2="60" gradientUnits="userSpaceOnUse">
+                                    <stop stopColor="#6366f1" stopOpacity="0.18" />
+                                    <stop offset="0.5" stopColor="#3b82f6" stopOpacity="0.32" />
+                                    <stop offset="1" stopColor="#a78bfa" stopOpacity="0.18" />
+                                </linearGradient>
+                                <linearGradient id="footer-line-gradient-dark" x1="0" y1="60" x2="420" y2="60" gradientUnits="userSpaceOnUse">
+                                    <stop stopColor="#818cf8" stopOpacity="0.22" />
+                                    <stop offset="0.5" stopColor="#60a5fa" stopOpacity="0.38" />
+                                    <stop offset="1" stopColor="#c4b5fd" stopOpacity="0.22" />
+                                </linearGradient>
+                            </defs>
+                            {/* Light mode line */}
+                            <motion.path
+                                d="M10 60 Q 110 10 210 60 T 410 60"
+                                stroke="url(#footer-line-gradient-light)"
+                                strokeWidth="2.5"
+                                fill="none"
+                                initial={{ pathLength: 0, opacity: 0.18 }}
+                                animate={{ pathLength: 1, opacity: [0.18, 0.5, 0.18] }}
+                                transition={{
+                                    duration: 3.2,
+                                    repeat: Infinity,
+                                    repeatType: "mirror",
+                                    ease: "easeInOut"
+                                }}
+                                className="dark:hidden"
+                            />
+                            {/* Dark mode line */}
+                            <motion.path
+                                d="M10 60 Q 110 10 210 60 T 410 60"
+                                stroke="url(#footer-line-gradient-dark)"
+                                strokeWidth="2.5"
+                                fill="none"
+                                initial={{ pathLength: 0, opacity: 0.18 }}
+                                animate={{ pathLength: 1, opacity: [0.18, 0.5, 0.18] }}
+                                transition={{
+                                    duration: 3.2,
+                                    repeat: Infinity,
+                                    repeatType: "mirror",
+                                    ease: "easeInOut"
+                                }}
+                                className="hidden dark:inline"
+                            />
+                        </svg>
+                        {/* Floating animated sparkles with color and blur adaptation */}
+                        <div className="absolute inset-0 pointer-events-none z-10">
+                            {[...Array(7)].map((_, i) => (
+                                <motion.span
+                                    key={i}
+                                    className={`
+                                        absolute w-2 h-2 rounded-full
+                                        bg-blue-400/70 dark:bg-blue-300/70
+                                        blur-[2.5px] animate-float-sparkle
+                                        sparkle-${i}
+                                        shadow-[0_0_8px_2px_rgba(59,130,246,0.18)]
+                                        dark:shadow-[0_0_10px_3px_rgba(165,180,252,0.22)]
+                                    `}
+                                    style={{
+                                        top: `${12 + i * 10 + (i % 2 === 0 ? 4 : -4)}%`,
+                                        left: `${8 + i * 12 + (i % 3 === 0 ? 6 : -6)}%`
+                                    }}
+                                    initial={{ opacity: 0.7, scale: 0.9 }}
+                                    animate={{
+                                        opacity: [0.7, 1, 0.7],
+                                        scale: [0.9, 1.2, 0.9],
+                                        filter: [
+                                            "blur(2.5px)",
+                                            "blur(4px)",
+                                            "blur(2.5px)"
+                                        ]
+                                    }}
+                                    transition={{
+                                        duration: 3.5 + i * 0.2,
+                                        repeat: Infinity,
+                                        repeatType: "mirror",
+                                        delay: i * 0.5,
+                                        ease: "easeInOut"
+                                    }}
+                                />
+                            ))}
+                        </div>
+                        {/* Extra: Subtle animated grid overlay for depth */}
+                        <svg
+                            className="absolute inset-0 w-full h-full opacity-10 dark:opacity-15"
+                            viewBox="0 0 400 120"
+                            fill="none"
+                            aria-hidden="true"
+                        >
+                            <motion.rect
+                                x="0"
+                                y="0"
+                                width="400"
+                                height="120"
+                                fill="url(#footer-grid-gradient)"
+                                initial={{ opacity: 0.1 }}
+                                animate={{ opacity: [0.1, 0.18, 0.1] }}
+                                transition={{
+                                    duration: 6,
+                                    repeat: Infinity,
+                                    repeatType: "mirror",
+                                    ease: "easeInOut"
+                                }}
+                            />
+                            <defs>
+                                <linearGradient id="footer-grid-gradient" x1="0" y1="0" x2="400" y2="120" gradientUnits="userSpaceOnUse">
+                                    <stop stopColor="#3b82f6" stopOpacity="0.08" />
+                                    <stop offset="1" stopColor="#a78bfa" stopOpacity="0.08" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                        {/* Custom styles for advanced effects */}
+                        <style>
+                            {`
+                                @keyframes pulse-orb {
+                                    0%, 100% { opacity: 0.40; transform: scale(1);}
+                                    50% { opacity: 0.60; transform: scale(1.08);}
+                                }
+                                @keyframes float-sparkle {
+                                    0% { transform: translateY(0) scale(1);}
+                                    50% { transform: translateY(-12px) scale(1.2);}
+                                    100% { transform: translateY(0) scale(1);}
+                                }
+                                .animate-float-sparkle {
+                                    animation: float-sparkle 3.5s ease-in-out infinite;
+                                }
+                                /* Unique delays for sparkles */
+                                .sparkle-0 { animation-delay: 0.2s; }
+                                .sparkle-1 { animation-delay: 0.8s; }
+                                .sparkle-2 { animation-delay: 1.4s; }
+                                .sparkle-3 { animation-delay: 2.1s; }
+                                .sparkle-4 { animation-delay: 2.7s; }
+                                .sparkle-5 { animation-delay: 3.3s; }
+                                .sparkle-6 { animation-delay: 3.9s; }
+                                /* Color variables for light/dark mode */
+                                :root {
+                                    --footer-orb-blue1: #3b82f6;
+                                    --footer-orb-blue2: #a5b4fc;
+                                    --footer-orb-indigo1: #6366f1;
+                                    --footer-orb-indigo2: #c7d2fe;
+                                    --footer-orb-purple1: #a78bfa;
+                                    --footer-orb-purple2: #f3e8ff;
+                                }
+                                @media (prefers-color-scheme: dark) {
+                                    :root {
+                                        --footer-orb-blue1: #60a5fa;
+                                        --footer-orb-blue2: #818cf8;
+                                        --footer-orb-indigo1: #818cf8;
+                                        --footer-orb-indigo2: #c7d2fe;
+                                        --footer-orb-purple1: #c4b5fd;
+                                        --footer-orb-purple2: #ede9fe;
+                                    }
+                                }
+                            `}
+                        </style>
                     </div>
                     
                     <div className="max-w-2xl mx-auto text-center relative">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-medium mb-4">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        {/* Advanced Animated Newsletter Badge */}
+                        <div
+                            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-100 via-blue-200 to-blue-100 dark:from-blue-900/40 dark:via-blue-800/30 dark:to-blue-900/40 text-blue-700 dark:text-blue-300 text-sm font-semibold shadow-lg ring-1 ring-blue-200 dark:ring-blue-900/40 mb-4 relative group transition-all duration-500 will-change-[background-color,color,box-shadow]"
+                            tabIndex={0}
+                            role="status"
+                            aria-label="Newsletter Subscription"
+                        >
+                            {/* Animated Glow Effect */}
+                            <span
+                                className="absolute -inset-1.5 rounded-full bg-blue-400/20 dark:bg-blue-700/20 blur-xl pointer-events-none z-0"
+                                style={{
+                                    animation: "pulse-orb 2.8s ease-in-out infinite"
+                                }}
+                                aria-hidden="true"
+                            />
+                            {/* Animated Envelope Icon */}
+                            <svg
+                                className="relative z-10 w-5 h-5 text-blue-500 dark:text-blue-300 drop-shadow-[0_1px_2px_rgba(59,130,246,0.15)]"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                aria-hidden="true"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                                >
+                                    <animate
+                                        attributeName="opacity"
+                                        values="0.7;1;0.7"
+                                        dur="2.2s"
+                                        repeatCount="indefinite"
+                                    />
+                                </path>
+                                {/* Sparkle effect */}
+                                <g>
+                                    <circle className="animate-float-sparkle sparkle-0" cx="19" cy="6" r="1.1" fill="#60a5fa" opacity="0.7" />
+                                    <circle className="animate-float-sparkle sparkle-1" cx="6" cy="5" r="0.7" fill="#818cf8" opacity="0.6" />
+                                    <circle className="animate-float-sparkle sparkle-2" cx="12" cy="3.5" r="0.6" fill="#a78bfa" opacity="0.5" />
+                                </g>
                             </svg>
-                            Newsletter
+                            <span className="relative z-10 font-semibold tracking-wide bg-gradient-to-r from-blue-700 via-blue-500 to-blue-400 dark:from-blue-300 dark:via-blue-400 dark:to-blue-500 bg-clip-text text-transparent">
+                                Newsletter
+                            </span>
+                            {/* Tooltip on focus/hover for accessibility */}
+                            <div
+                                className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-3 py-1 rounded bg-gray-900/90 text-xs text-white shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 z-20"
+                                role="tooltip"
+                            >
+                                Get exclusive updates and tips in your inbox!
+                            </div>
                         </div>
-                        <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-3">Stay Updated with Votely</h3>
-                        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4 sm:mb-6 max-w-lg mx-auto">
-                            Get the latest updates on new features, security enhancements, and best practices for secure voting.
+                        {/* Animated Heading with Gradient and Subtle Motion */}
+                        <h3
+                            className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-3 relative"
+                            tabIndex={0}
+                            aria-label="Stay Updated with Votely"
+                        >
+                            <span className="bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 dark:from-blue-300 dark:via-blue-400 dark:to-purple-400 bg-clip-text text-transparent animate-gradient-x">
+                                Stay Updated with Votely
+                            </span>
+                            {/* Animated underline */}
+                            <span
+                                className="absolute left-1/2 -translate-x-1/2 bottom-0 w-2/3 h-1 bg-gradient-to-r from-blue-400/40 via-blue-500/60 to-purple-400/40 rounded-full blur-sm opacity-80 pointer-events-none"
+                                aria-hidden="true"
+                                style={{
+                                    animation: "pulse-orb 2.5s ease-in-out infinite"
+                                }}
+                            />
+                        </h3>
+                        {/* Animated Description with Fade-in and Accessibility */}
+                        <p
+                            className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4 sm:mb-6 max-w-lg mx-auto transition-opacity duration-700 will-change-[opacity] animate-fade-in"
+                            style={{ animationDelay: "0.15s" }}
+                            tabIndex={0}
+                            aria-label="Get the latest updates on new features, security enhancements, and best practices for secure voting."
+                        >
+                            <span className="inline-block align-middle">
+                                Get the latest updates on&nbsp;
+                                <span className="font-semibold text-blue-600 dark:text-blue-400">new features</span>
+                                ,&nbsp;
+                                <span className="font-semibold text-blue-600 dark:text-blue-400">security enhancements</span>
+                                , and&nbsp;
+                                <span className="font-semibold text-blue-600 dark:text-blue-400">best practices</span>
+                                &nbsp;for secure voting.
+                            </span>
                         </p>
 
-                        {/* Features Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
-                            <div className="flex items-center justify-center sm:justify-start gap-2 text-sm text-gray-600 dark:text-gray-300">
-                                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                        {/* Advanced Features Grid with Animation, Tooltips, and Accessibility */}
+                        <div
+                            className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8"
+                            role="list"
+                            aria-label="Newsletter Features"
+                        >
+                            {/* Feature: Weekly Updates */}
+                            <div
+                                className="group relative flex items-center justify-center sm:justify-start gap-2 text-sm text-gray-600 dark:text-gray-300 px-3 py-2 rounded-lg transition-all duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 focus-within:ring-2 focus-within:ring-blue-400"
+                                tabIndex={0}
+                                role="listitem"
+                                aria-label="Weekly Updates"
+                            >
+                                {/* Animated Icon */}
+                                <svg
+                                    className="w-5 h-5 text-green-500 drop-shadow-[0_1px_2px_rgba(34,197,94,0.15)] animate-fade-in"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    aria-hidden="true"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M5 13l4 4L19 7"
+                                    />
+                                    <animate
+                                        attributeName="stroke-dasharray"
+                                        from="0,24"
+                                        to="24,0"
+                                        dur="0.7s"
+                                        fill="freeze"
+                                        begin="0.1s"
+                                    />
                                 </svg>
-                                Weekly Updates
+                                <span className="font-medium">Weekly Updates</span>
+                                {/* Tooltip */}
+                                <span
+                                    className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-2 z-30 px-3 py-1.5 rounded-lg bg-gray-900 text-xs text-white opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 shadow-lg whitespace-pre-line"
+                                    role="tooltip"
+                                >
+                                    Get a summary of the latest features and improvements every week.
+                                </span>
+                                {/* Animated highlight ring */}
+                                <span
+                                    className="absolute -inset-1 rounded-lg pointer-events-none"
+                                    style={{
+                                        background: "linear-gradient(90deg,rgba(34,197,94,0.08) 0%,rgba(59,130,246,0.02) 100%)",
+                                        opacity: 0.12,
+                                        transition: "opacity 0.18s"
+                                    }}
+                                    aria-hidden="true"
+                                />
                             </div>
-                            <div className="flex items-center justify-center sm:justify-start gap-2 text-sm text-gray-600 dark:text-gray-300">
-                                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                            {/* Feature: Security Tips */}
+                            <div
+                                className="group relative flex items-center justify-center sm:justify-start gap-2 text-sm text-gray-600 dark:text-gray-300 px-3 py-2 rounded-lg transition-all duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 focus-within:ring-2 focus-within:ring-blue-400"
+                                tabIndex={0}
+                                role="listitem"
+                                aria-label="Security Tips"
+                            >
+                                {/* Animated Icon */}
+                                <svg
+                                    className="w-5 h-5 text-green-500 drop-shadow-[0_1px_2px_rgba(34,197,94,0.15)] animate-fade-in"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    aria-hidden="true"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M5 13l4 4L19 7"
+                                    />
+                                    <animate
+                                        attributeName="stroke-dasharray"
+                                        from="0,24"
+                                        to="24,0"
+                                        dur="0.7s"
+                                        fill="freeze"
+                                        begin="0.25s"
+                                    />
                                 </svg>
-                                Security Tips
+                                <span className="font-medium">Security Tips</span>
+                                {/* Tooltip */}
+                                <span
+                                    className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-2 z-30 px-3 py-1.5 rounded-lg bg-gray-900 text-xs text-white opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 shadow-lg whitespace-pre-line"
+                                    role="tooltip"
+                                >
+                                    Actionable advice to keep your voting experience safe and secure.
+                                </span>
+                                {/* Animated highlight ring */}
+                                <span
+                                    className="absolute -inset-1 rounded-lg pointer-events-none"
+                                    style={{
+                                        background: "linear-gradient(90deg,rgba(34,197,94,0.08) 0%,rgba(59,130,246,0.02) 100%)",
+                                        opacity: 0.12,
+                                        transition: "opacity 0.18s"
+                                    }}
+                                    aria-hidden="true"
+                                />
                             </div>
-                            <div className="flex items-center justify-center sm:justify-start gap-2 text-sm text-gray-600 dark:text-gray-300">
-                                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                            {/* Feature: Best Practices */}
+                            <div
+                                className="group relative flex items-center justify-center sm:justify-start gap-2 text-sm text-gray-600 dark:text-gray-300 px-3 py-2 rounded-lg transition-all duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 focus-within:ring-2 focus-within:ring-blue-400"
+                                tabIndex={0}
+                                role="listitem"
+                                aria-label="Best Practices"
+                            >
+                                {/* Animated Icon */}
+                                <svg
+                                    className="w-5 h-5 text-green-500 drop-shadow-[0_1px_2px_rgba(34,197,94,0.15)] animate-fade-in"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    aria-hidden="true"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M5 13l4 4L19 7"
+                                    />
+                                    <animate
+                                        attributeName="stroke-dasharray"
+                                        from="0,24"
+                                        to="24,0"
+                                        dur="0.7s"
+                                        fill="freeze"
+                                        begin="0.4s"
+                                    />
                                 </svg>
-                                Best Practices
+                                <span className="font-medium">Best Practices</span>
+                                {/* Tooltip */}
+                                <span
+                                    className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-2 z-30 px-3 py-1.5 rounded-lg bg-gray-900 text-xs text-white opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 shadow-lg whitespace-pre-line"
+                                    role="tooltip"
+                                >
+                                    Learn how to get the most out of Votely with expert tips and guides.
+                                </span>
+                                {/* Animated highlight ring */}
+                                <span
+                                    className="absolute -inset-1 rounded-lg pointer-events-none"
+                                    style={{
+                                        background: "linear-gradient(90deg,rgba(34,197,94,0.08) 0%,rgba(59,130,246,0.02) 100%)",
+                                        opacity: 0.12,
+                                        transition: "opacity 0.18s"
+                                    }}
+                                    aria-hidden="true"
+                                />
                             </div>
                         </div>
 
-                        <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+                        {/* Advanced Newsletter Subscription Form with Animation, Validation, Accessibility, and Feedback */}
+                        <form
+                            className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto animate-fade-in-up will-change-[opacity,transform]"
+                            autoComplete="off"
+                            aria-label="Newsletter Subscription Form"
+                            tabIndex={0}
+                            role="form"
+                            onSubmit={e => { e.preventDefault(); /* handle submit here */ }}
+                        >
+                            {/* Animated Input with Floating Label and Icon */}
                             <div className="flex-1 relative group">
                                 <input
                                     type="email"
-                                    placeholder="Enter your email"
-                                    className="w-full px-4 py-2.5 sm:py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 group-hover:border-blue-300 dark:group-hover:border-blue-700"
+                                    name="newsletter-email"
+                                    id="newsletter-email"
+                                    required
+                                    autoComplete="email"
+                                    placeholder=" "
+                                    aria-label="Email address"
+                                    className={`
+                                        peer w-full px-4 py-2.5 sm:py-3 rounded-lg border border-gray-200 dark:border-gray-700
+                                        bg-white dark:bg-gray-800 text-gray-900 dark:text-white
+                                        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                                        transition-all duration-200 group-hover:border-blue-300 dark:group-hover:border-blue-700
+                                        shadow-sm focus:shadow-md
+                                        will-change-[box-shadow,border-color]
+                                    `}
                                 />
+                                {/* Floating Label */}
+                                <label
+                                    htmlFor="newsletter-email"
+                                    className={`
+                                        absolute left-4 top-2.5 sm:top-3 text-gray-400 dark:text-gray-500
+                                        text-sm pointer-events-none transition-all duration-200
+                                        peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-base
+                                        peer-placeholder-shown:text-gray-400 peer-focus:-top-3 peer-focus:text-xs
+                                        peer-focus:text-blue-600 dark:peer-focus:text-blue-400
+                                        bg-white dark:bg-gray-800 px-1 rounded
+                                    `}
+                                    aria-hidden="true"
+                                >
+                                    Enter your email
+                                </label>
+                                {/* Animated Icon */}
                                 <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
-                                    <svg className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                                    <svg
+                                        className="w-5 h-5 text-gray-400 group-hover:text-blue-500 transition-colors duration-200 animate-float-sparkle"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                        aria-hidden="true"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
+                                        />
+                                        <animate
+                                            attributeName="opacity"
+                                            values="0.7;1;0.7"
+                                            dur="2.2s"
+                                            repeatCount="indefinite"
+                                        />
                                     </svg>
                                 </div>
+                                {/* Animated Glow Effect */}
+                                <span
+                                    className="absolute -inset-1.5 rounded-lg bg-blue-400/10 dark:bg-blue-700/10 blur-lg pointer-events-none z-0"
+                                    style={{
+                                        animation: "pulse-orb 2.8s ease-in-out infinite"
+                                    }}
+                                    aria-hidden="true"
+                                />
                             </div>
-                            <button className="w-full sm:w-auto px-6 py-2.5 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-200 flex items-center justify-center gap-2 font-medium shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98]">
-                                Subscribe
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                </svg>
+                            {/* Animated Subscribe Button with Loading State */}
+                            <button
+                                type="submit"
+                                className={`
+                                    relative w-full sm:w-auto px-6 py-2.5 sm:py-3 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-700
+                                    hover:from-blue-700 hover:to-blue-800 text-white rounded-lg transition-all duration-200
+                                    flex items-center justify-center gap-2 font-medium shadow-sm hover:shadow-lg
+                                    hover:scale-[1.03] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-400
+                                    will-change-[transform,box-shadow]
+                                    group/button
+                                `}
+                                aria-label="Subscribe to newsletter"
+                                tabIndex={0}
+                            >
+                                <span className="relative z-10 flex items-center gap-2">
+                                    <span className="inline-block">Subscribe</span>
+                                    {/* Animated Arrow Icon */}
+                                    <svg
+                                        className="w-4 h-4 transition-transform duration-200 group-hover/button:translate-x-1"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                        aria-hidden="true"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M14 5l7 7m0 0l-7 7m7-7H3"
+                                        />
+                                        <animate
+                                            attributeName="opacity"
+                                            values="0.7;1;0.7"
+                                            dur="1.5s"
+                                            repeatCount="indefinite"
+                                        />
+                                    </svg>
+                                </span>
+                                {/* Loading Spinner (hidden by default, show on submit) */}
+                                <span
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 hidden group-[.loading]/button:inline-block"
+                                    aria-live="polite"
+                                    aria-busy="true"
+                                >
+                                    <svg className="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                                    </svg>
+                                </span>
+                                {/* Animated Glow Under Button */}
+                                <span
+                                    className="absolute left-1/2 -translate-x-1/2 bottom-0 w-2/3 h-1 bg-gradient-to-r from-blue-400/40 via-blue-500/60 to-purple-400/40 rounded-full blur-sm opacity-80 pointer-events-none"
+                                    aria-hidden="true"
+                                    style={{
+                                        animation: "pulse-orb 2.5s ease-in-out infinite"
+                                    }}
+                                />
                             </button>
+                        </form>
+                        {/* Animated Success/Error Feedback (hidden by default, show on submit) */}
+                        <div
+                            className="w-full max-w-md mx-auto mt-2"
+                            aria-live="polite"
+                            aria-atomic="true"
+                        >
+                            {/* Example: Success message */}
+                            <div className="hidden animate-fade-in bg-green-50 border border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-700/40 dark:text-green-300 rounded-lg px-4 py-2 text-sm font-medium flex items-center gap-2" role="status">
+                                <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                Subscribed! Please check your inbox.
+                            </div>
+                            {/* Example: Error message */}
+                            <div className="hidden animate-fade-in bg-red-50 border border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-700/40 dark:text-red-300 rounded-lg px-4 py-2 text-sm font-medium flex items-center gap-2" role="alert">
+                                <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                Oops! Please enter a valid email address.
+                            </div>
                         </div>
-                        <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-3 sm:mt-4">
-                            By subscribing, you agree to our <a href="#" className="text-blue-600 dark:text-blue-400 hover:underline">Privacy Policy</a> and <a href="#" className="text-blue-600 dark:text-blue-400 hover:underline">Terms of Service</a>.
+                        {/* Policy Notice with Animated Underline and Accessibility */}
+                        <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-3 sm:mt-4 text-center animate-fade-in" tabIndex={0}>
+                            By subscribing, you agree to our{" "}
+                            <a
+                                href="#"
+                                className="text-blue-600 dark:text-blue-400 hover:underline focus:underline underline-offset-2 transition-colors duration-150 relative"
+                                tabIndex={0}
+                                aria-label="Read our Privacy Policy"
+                            >
+                                Privacy Policy
+                                <span className="absolute left-0 bottom-0 w-full h-0.5 bg-gradient-to-r from-blue-400 via-blue-500 to-blue-400 rounded-full scale-x-0 group-hover:scale-x-100 group-focus:scale-x-100 transition-transform duration-200 origin-left" aria-hidden="true"></span>
+                            </a>
+                            {" "}and{" "}
+                            <a
+                                href="#"
+                                className="text-blue-600 dark:text-blue-400 hover:underline focus:underline underline-offset-2 transition-colors duration-150 relative"
+                                tabIndex={0}
+                                aria-label="Read our Terms of Service"
+                            >
+                                Terms of Service
+                                <span className="absolute left-0 bottom-0 w-full h-0.5 bg-gradient-to-r from-blue-400 via-blue-500 to-blue-400 rounded-full scale-x-0 group-hover:scale-x-100 group-focus:scale-x-100 transition-transform duration-200 origin-left" aria-hidden="true"></span>
+                            </a>.
                         </p>
-                        <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                            <span className="flex items-center gap-1">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        <div
+                            className="mt-4 sm:mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400 animate-fade-in"
+                            role="list"
+                            aria-label="Subscription Security and Privacy Features"
+                        >
+                            {/* Secure & Private */}
+                            <span
+                                className="group relative flex items-center gap-1 px-2 py-1 rounded-lg transition-all duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 focus-within:ring-2 focus-within:ring-blue-400 cursor-pointer"
+                                tabIndex={0}
+                                role="listitem"
+                                aria-label="Secure & Private"
+                            >
+                                {/* Animated Lock Icon */}
+                                <svg
+                                    className="w-4 h-4 text-green-500 drop-shadow-[0_1px_2px_rgba(34,197,94,0.15)] animate-fade-in"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    aria-hidden="true"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                                    />
+                                    <animate
+                                        attributeName="stroke-dasharray"
+                                        from="0,24"
+                                        to="24,0"
+                                        dur="0.7s"
+                                        fill="freeze"
+                                        begin="0.2s"
+                                    />
                                 </svg>
-                                Secure & Private
+                                <span className="font-medium">Secure &amp; Private</span>
+                                {/* Tooltip */}
+                                <span
+                                    className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-2 z-30 px-3 py-1.5 rounded-lg bg-gray-900 text-xs text-white opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 shadow-lg whitespace-pre-line"
+                                    role="tooltip"
+                                >
+                                    Your email is encrypted and never shared. We use industry-leading security.
+                                </span>
+                                {/* Animated highlight ring */}
+                                <span
+                                    className="absolute -inset-1 rounded-lg pointer-events-none"
+                                    style={{
+                                        background: "linear-gradient(90deg,rgba(34,197,94,0.08) 0%,rgba(59,130,246,0.02) 100%)",
+                                        opacity: 0.12,
+                                        transition: "opacity 0.18s"
+                                    }}
+                                    aria-hidden="true"
+                                />
                             </span>
-                            <span className="hidden sm:inline text-gray-400 dark:text-gray-500">•</span>
-                            <span className="flex items-center gap-1">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            {/* Divider Dot */}
+                            <span
+                                className="hidden sm:inline text-gray-400 dark:text-gray-500 select-none"
+                                aria-hidden="true"
+                            >
+                                <svg className="w-1.5 h-1.5 mx-1" viewBox="0 0 6 6" fill="currentColor">
+                                    <circle cx="3" cy="3" r="3" />
                                 </svg>
-                                Unsubscribe Anytime
+                            </span>
+                            {/* Unsubscribe Anytime */}
+                            <span
+                                className="group relative flex items-center gap-1 px-2 py-1 rounded-lg transition-all duration-200 hover:bg-blue-50 dark:hover:bg-blue-900/20 focus-within:ring-2 focus-within:ring-blue-400 cursor-pointer"
+                                tabIndex={0}
+                                role="listitem"
+                                aria-label="Unsubscribe Anytime"
+                            >
+                                {/* Animated Envelope Icon */}
+                                <svg
+                                    className="w-4 h-4 text-blue-500 drop-shadow-[0_1px_2px_rgba(59,130,246,0.15)] animate-fade-in"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    aria-hidden="true"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                                    >
+                                        <animate
+                                            attributeName="opacity"
+                                            values="0.7;1;0.7"
+                                            dur="2.2s"
+                                            repeatCount="indefinite"
+                                        />
+                                    </path>
+                                    {/* Sparkle effect */}
+                                    <g>
+                                        <circle className="animate-float-sparkle sparkle-0" cx="19" cy="6" r="0.7" fill="#60a5fa" opacity="0.7" />
+                                        <circle className="animate-float-sparkle sparkle-1" cx="6" cy="5" r="0.5" fill="#818cf8" opacity="0.6" />
+                                    </g>
+                                </svg>
+                                <span className="font-medium">Unsubscribe Anytime</span>
+                                {/* Tooltip */}
+                                <span
+                                    className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-2 z-30 px-3 py-1.5 rounded-lg bg-gray-900 text-xs text-white opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 shadow-lg whitespace-pre-line"
+                                    role="tooltip"
+                                >
+                                    No spam. Opt out with a single click at any time.
+                                </span>
+                                {/* Animated highlight ring */}
+                                <span
+                                    className="absolute -inset-1 rounded-lg pointer-events-none"
+                                    style={{
+                                        background: "linear-gradient(90deg,rgba(59,130,246,0.08) 0%,rgba(34,197,94,0.02) 100%)",
+                                        opacity: 0.12,
+                                        transition: "opacity 0.18s"
+                                    }}
+                                    aria-hidden="true"
+                                />
                             </span>
                         </div>
                     </div>
@@ -170,23 +861,29 @@ const Footer = () => {
                 </div>
 
                 {/* Bottom Section */}
-                <div className="pt-6 sm:pt-8 border-t border-gray-200 dark:border-gray-800">
-                    <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                        <div className="flex flex-col sm:flex-row items-center gap-2">
-                            <p className="text-gray-600 dark:text-gray-300 text-sm text-center sm:text-left">
-                                © 2025 Votely. All rights reserved.
-                            </p>
-                            <span className="hidden sm:inline text-gray-400 dark:text-gray-500">•</span>
-                            <p className="text-gray-600 dark:text-gray-300 text-sm text-center sm:text-left">
-                                Made with ❤️ for democracy
-                            </p>
+                <div className="pt-8 border-t border-gray-100 dark:border-gray-800/50">
+                    <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
+                        <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+                            <span>© 2025 Votely</span>
+                            <span className="w-1 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></span>
+                            <span>Democracy powered by technology</span>
                         </div>
-                        <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
-                            <a href="#" className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Privacy Policy</a>
-                            <a href="#" className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Terms of Service</a>
-                            <a href="#" className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Cookie Policy</a>
-                            <a href="#" className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Accessibility</a>
-                        </div>
+                        <nav className="flex items-center gap-6">
+                            {[
+                                { label: 'Privacy', href: '/privacy' },
+                                { label: 'Terms', href: '/terms' },
+                                { label: 'Cookies', href: '/cookies' },
+                                { label: 'Accessibility', href: '/accessibility' }
+                            ].map((link) => (
+                                <a
+                                    key={link.label}
+                                    href={link.href}
+                                    className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
+                                >
+                                    {link.label}
+                                </a>
+                            ))}
+                        </nav>
                     </div>
                 </div>
             </div>

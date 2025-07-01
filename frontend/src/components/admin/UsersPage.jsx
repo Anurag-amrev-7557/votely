@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useTheme } from '../../context/ThemeContext';
 import { toast } from 'react-hot-toast';
-import { debounce } from 'lodash';
+import debounce from 'lodash/debounce';
 import { CSVLink } from 'react-csv';
-import { format } from 'date-fns';
+import format from 'date-fns/format';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const UsersPage = () => {

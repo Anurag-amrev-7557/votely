@@ -7,12 +7,13 @@ import UsersPage from './admin/UsersPage';
 import ResultsPage from './admin/ResultsPage';
 import SecurityPage from './admin/SecurityPage';
 import SettingsPage from './admin/SettingsPage';
+import AdminDashboard from './admin/AdminDashboard';
 
 const AdminPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isDarkMode } = useTheme();
-  const { logout } = useAdminAuth();
+  const { logout, adminEmail, showSessionWarning, refreshSession } = useAdminAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState(() => {
@@ -151,23 +152,54 @@ const AdminPage = () => {
   }
 
   return (
-    <div className={`relative flex size-full min-h-screen flex-col ${isDarkMode ? 'bg-[#15191e]' : 'bg-gray-50'} transition-colors duration-200`}>
-      <div className="layout-container flex h-full grow flex-col">
-        <div className="gap-1 px-6 mt-16 flex flex-1 justify-center py-5">
-          {/* Sidebar */}
-          <div className="layout-content-container flex flex-col w-80">
-            <div className={`flex h-full min-h-[700px] flex-col justify-between ${isDarkMode ? 'bg-[#15191e]' : 'bg-white'} p-6 rounded-xl shadow-sm transition-all duration-200 relative overflow-hidden`}>
-              {/* Background Pattern */}
-              <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20"></div>
-                <div className="absolute inset-0" style={{
-                  backgroundImage: `radial-gradient(circle at 1px 1px, ${isDarkMode ? '#ffffff' : '#000000'} 1px, transparent 0)`,
-                  backgroundSize: '24px 24px'
-                }}></div>
+    <>
+      {/* Session Expiry Warning Modal */}
+      {showSessionWarning && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fadeIn">
+          <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 max-w-md w-full border border-blue-200 dark:border-blue-800 animate-popIn">
+            <div className="flex flex-col items-center gap-4">
+              <div className="flex items-center justify-center w-16 h-16 rounded-full bg-yellow-100 dark:bg-yellow-900/30">
+                <svg className="w-10 h-10 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
               </div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white text-center">Session Expiring Soon</h2>
+              <p className="text-gray-600 dark:text-gray-300 text-center">Your admin session will expire in less than 2 minutes due to inactivity or session timeout.<br/>Would you like to stay logged in?</p>
+              <div className="flex gap-4 mt-2">
+                <button
+                  onClick={refreshSession}
+                  className="px-5 py-2 rounded-lg bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition-colors"
+                >
+                  Stay Logged In
+                </button>
+                <button
+                  onClick={logout}
+                  className="px-5 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                >
+                  Logout Now
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Main Layout */}
+      <div className={`relative flex size-full min-h-screen flex-col ${isDarkMode ? 'bg-[#15191e]' : 'bg-gray-50'} transition-colors duration-200`}>
+        <div className="layout-container flex h-full grow flex-col">
+          <div className="gap-1 px-6 mt-16 flex flex-1 justify-center py-5">
+            {/* Sidebar */}
+            <div className="layout-content-container flex flex-col w-90">
+              <div className={`flex h-full min-h-[700px] flex-col ${isDarkMode ? 'bg-[#15191e]' : 'bg-white'} p-6 rounded-xl shadow-sm transition-all duration-200 relative overflow-hidden`}>
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20"></div>
+                  <div className="absolute inset-0" style={{
+                    backgroundImage: `radial-gradient(circle at 1px 1px, ${isDarkMode ? '#ffffff' : '#000000'} 1px, transparent 0)`,
+                    backgroundSize: '24px 24px'
+                  }}></div>
+                </div>
 
-              {/* Profile Section */}
-              <div className="flex flex-col gap-6 relative">
+                {/* Profile Section */}
                 <div className="flex items-center gap-4 pb-6 border-b border-gray-200 dark:border-gray-700">
                   <div className="relative group">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold shadow-lg shadow-blue-500/20 transition-transform duration-300 group-hover:scale-110">
@@ -179,12 +211,8 @@ const AdminPage = () => {
                     <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-600/20 animate-pulse"></div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h2 className={`text-base font-semibold truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                      Admin User
-                    </h2>
-                    <p className={`text-sm truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      admin@votesafe.com
-                    </p>
+                    <h2 className={`text-base font-semibold truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Admin User</h2>
+                    <p className={`text-sm truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{adminEmail || 'admin@votesafe.com'}</p>
                   </div>
                   <button className={`p-2 rounded-lg transition-all duration-200 ${
                     isDarkMode 
@@ -198,7 +226,7 @@ const AdminPage = () => {
                 </div>
 
                 {/* Navigation Menu */}
-                <nav className="flex flex-col gap-1">
+                <nav className="flex flex-col gap-1 mt-2">
                   {menuItems.map((item, index) => (
                     <button
                       key={index}
@@ -331,184 +359,244 @@ const AdminPage = () => {
                 </button>
               </div>
             </div>
-          </div>
 
-          {/* Main Content */}
-          <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
-            <Routes>
-              <Route path="polls" element={<PollsPage />} />
-              <Route path="users" element={<UsersPage />} />
-              <Route path="results" element={<ResultsPage />} />
-              <Route path="security" element={<SecurityPage />} />
-              <Route path="settings" element={<SettingsPage />} />
-              <Route path="*" element={
-                <>
-                  <div className="flex flex-col gap-6 p-6">
-                    {/* Enhanced Header Section */}
-                    <div className="flex flex-col gap-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex flex-col gap-1">
-                          <h1 className={`text-2xl font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                            Dashboard
-                          </h1>
-                          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                            Welcome back! Here's what's happening with your polls.
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <button
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                              isDarkMode
-                                ? 'bg-gray-800 hover:bg-gray-700 text-gray-200'
-                                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                            }`}
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 100-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
-                            </svg>
-                            Refresh
-                          </button>
-                          <button
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                              isDarkMode
-                                ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                                : 'bg-blue-600 hover:bg-blue-700 text-white'
-                            }`}
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                            </svg>
-                            New Poll
-                          </button>
-                        </div>
-                      </div>
-                      
-                      {/* Quick Stats */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm border border-gray-200 dark:border-gray-700 transition-all duration-200 hover:shadow-md`}>
-                          <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-blue-900/50' : 'bg-blue-50'}`}>
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                                <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                            <div>
-                              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Active Polls</p>
-                              <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>12</p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm border border-gray-200 dark:border-gray-700 transition-all duration-200 hover:shadow-md`}>
-                          <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-green-900/50' : 'bg-green-50'}`}>
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                            <div>
-                              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Registered Voters</p>
-                              <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>5,432</p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm border border-gray-200 dark:border-gray-700 transition-all duration-200 hover:shadow-md`}>
-                          <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-purple-900/50' : 'bg-purple-50'}`}>
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-600" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-                              </svg>
-                            </div>
-                            <div>
-                              <p className={`text-sm font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Total Votes Cast</p>
-                              <p className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>3,876</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Recent Activity Section */}
-                    <div className={`p-6 rounded-xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm border border-gray-200 dark:border-gray-700`}>
-                      <div className="flex items-center justify-between mb-4">
-                        <h2 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Recent Activity</h2>
-                        <button className={`text-sm font-medium ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}>
-                          View All
-                        </button>
-                      </div>
-                      <div className="space-y-4">
-                        {recentActivity.map((activity, index) => (
-                          <div key={index} className="flex items-start gap-4 p-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200">
-                            <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-blue-900/50' : 'bg-blue-50'}`}>
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                            <div className="flex-1">
-                              <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                                {activity.action}: "{activity.details}"
-                              </p>
-                              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                                {activity.timestamp}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </>
-              } />
-            </Routes>
+            {/* Main Content */}
+            <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
+              <Routes>
+                <Route path="polls" element={<PollsPage />} />
+                <Route path="users" element={<UsersPage />} />
+                <Route path="results" element={<ResultsPage />} />
+                <Route path="security" element={<SecurityPage />} />
+                <Route path="settings" element={<SettingsPage />} />
+                <Route path="*" element={<AdminDashboard isDarkMode={isDarkMode} />} />
+              </Routes>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Logout Confirmation Modal */}
+      {/* Advanced Logout Confirmation Modal */}
       {showLogoutConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className={`${isDarkMode ? 'bg-[#2c353f]' : 'bg-white'} rounded-xl p-6 max-w-md w-full mx-4 transform transition-all duration-200 scale-100`}>
-            <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          aria-modal="true"
+          role="dialog"
+          tabIndex={-1}
+        >
+          {/* Animated Backdrop */}
+          <div
+            className="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm transition-opacity duration-300 animate-fadeIn"
+            onClick={() => setShowLogoutConfirm(false)}
+            aria-label="Close logout modal"
+          />
+          {/* Modal Content */}
+          <div
+            className={`relative rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 transition-all duration-300 transform scale-100 ${
+              isDarkMode
+                ? 'bg-gradient-to-br from-[#232b36] via-[#2c353f] to-[#1a202c] border border-gray-700'
+                : 'bg-gradient-to-br from-white via-gray-50 to-blue-50 border border-gray-200'
+            } animate-modalPop`}
+            role="document"
+            aria-labelledby="logout-modal-title"
+            aria-describedby="logout-modal-desc"
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setShowLogoutConfirm(false)}
+              className="absolute top-4 right-4 p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition hover:bg-gray-200 dark:hover:bg-gray-700"
+              aria-label="Close"
+              tabIndex={0}
+            >
+              <svg
+                className={`h-5 w-5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            {/* Icon */}
+            <div className="flex items-center justify-center mb-4">
+              <div
+                className={`rounded-full p-3 shadow-lg ${
+                  isDarkMode
+                    ? 'bg-red-900/30'
+                    : 'bg-red-100'
+                } animate-pulse`}
+              >
+                <svg
+                  className="h-8 w-8 text-red-600"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1"
+                  />
+                </svg>
+              </div>
+            </div>
+            {/* Title */}
+            <h3
+              id="logout-modal-title"
+              className={`text-xl font-bold mb-2 text-center ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}
+            >
               Confirm Logout
             </h3>
-            <p className={`mb-6 ${isDarkMode ? 'text-[#a0acbb]' : 'text-gray-500'}`}>
-              Are you sure you want to logout? Any unsaved changes will be lost.
+            {/* Description */}
+            <p
+              id="logout-modal-desc"
+              className={`mb-6 text-center ${
+                isDarkMode ? 'text-[#a0acbb]' : 'text-gray-600'
+              }`}
+            >
+              Are you sure you want to log out? <span className="font-medium">Any unsaved changes will be lost.</span>
+              <br />
+              <span className="text-xs block mt-2 opacity-80">
+                For your security, you will be signed out of the admin dashboard.
+              </span>
             </p>
-            <div className="flex justify-end gap-4">
+            {/* Accessibility: Focus trap */}
+            <div tabIndex={0} aria-hidden="true" />
+            {/* Buttons */}
+            <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
               <button
                 onClick={() => setShowLogoutConfirm(false)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
-                  isDarkMode
+                className={`w-full sm:w-auto px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500
+                  ${isDarkMode
                     ? 'bg-gray-700 hover:bg-gray-600 text-white'
                     : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                }`}
+                  }`}
+                autoFocus
               >
                 Cancel
               </button>
               <button
                 onClick={confirmLogout}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
-                  isDarkMode
-                    ? 'bg-red-600 hover:bg-red-700 text-white'
-                    : 'bg-red-500 hover:bg-red-600 text-white'
-                }`}
+                className={`w-full sm:w-auto px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500
+                  ${isDarkMode
+                    ? 'bg-gradient-to-r from-red-700 via-red-600 to-red-500 hover:from-red-800 hover:to-red-600 text-white shadow-md'
+                    : 'bg-gradient-to-r from-red-500 via-red-400 to-red-600 hover:from-red-600 hover:to-red-500 text-white shadow-md'
+                  }`}
+                aria-label="Confirm logout"
               >
-                Logout
+                <span className="inline-flex items-center gap-2">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7" />
+                  </svg>
+                  Logout
+                </span>
               </button>
             </div>
+            {/* Accessibility: Focus trap */}
+            <div tabIndex={0} aria-hidden="true" />
           </div>
+          {/* Animations */}
+          <style>
+            {`
+              @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+              }
+              .animate-fadeIn {
+                animation: fadeIn 0.25s cubic-bezier(.4,0,.2,1);
+              }
+              @keyframes modalPop {
+                0% { opacity: 0; transform: scale(0.95) translateY(20px);}
+                100% { opacity: 1; transform: scale(1) translateY(0);}
+              }
+              .animate-modalPop {
+                animation: modalPop 0.3s cubic-bezier(.4,0,.2,1);
+              }
+            `}
+          </style>
         </div>
       )}
 
+      {/* 
+        Advanced Responsive Table Styles:
+        - Uses @container queries for fine-grained column hiding
+        - Adds smooth transitions for column appearance/disappearance
+        - Supports dark mode and accessibility
+        - Includes print-friendly adjustments
+        - Animates column visibility for enhanced UX
+      */}
       <style>
         {`
-          @container(max-width:120px){.table-column-120{display: none;}}
-          @container(max-width:240px){.table-column-240{display: none;}}
-          @container(max-width:360px){.table-column-360{display: none;}}
-          @container(max-width:480px){.table-column-480{display: none;}}
+          /* Container queries for responsive column hiding */
+          @container (max-width: 120px) {
+            .table-column-120 { display: none !important; }
+          }
+          @container (max-width: 240px) {
+            .table-column-240 { display: none !important; }
+          }
+          @container (max-width: 360px) {
+            .table-column-360 { display: none !important; }
+          }
+          @container (max-width: 480px) {
+            .table-column-480 { display: none !important; }
+          }
+          @container (max-width: 640px) {
+            .table-column-640 { display: none !important; }
+          }
+          @container (max-width: 768px) {
+            .table-column-768 { display: none !important; }
+          }
+          @container (max-width: 900px) {
+            .table-column-900 { display: none !important; }
+          }
+
+          /* Smooth fade/slide transitions for columns */
+          .responsive-table th,
+          .responsive-table td {
+            transition: opacity 0.25s cubic-bezier(.4,0,.2,1), transform 0.25s cubic-bezier(.4,0,.2,1);
+            will-change: opacity, transform;
+          }
+          .responsive-table [style*="display: none"] {
+            opacity: 0 !important;
+            transform: translateX(-20px) scale(0.95);
+            pointer-events: none;
+          }
+
+          /* Dark mode support */
+          @media (prefers-color-scheme: dark) {
+            .responsive-table {
+              background-color: #181c23;
+              color: #e5e7eb;
+            }
+            .responsive-table th, .responsive-table td {
+              border-color: #23272f;
+            }
+          }
+
+          /* Print-friendly: always show all columns on print */
+          @media print {
+            .responsive-table th,
+            .responsive-table td {
+              display: table-cell !important;
+              opacity: 1 !important;
+              transform: none !important;
+            }
+          }
+
+          /* Accessibility: focus highlight for table cells */
+          .responsive-table td:focus, .responsive-table th:focus {
+            outline: 2px solid #2563eb;
+            outline-offset: 2px;
+            z-index: 1;
+            position: relative;
+          }
         `}
       </style>
-    </div>
+    </>
   );
 };
 

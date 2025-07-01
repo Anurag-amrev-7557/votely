@@ -1,16 +1,204 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="light" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Preconnects for faster font loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Preconnect and DNS prefetch for analytics/CDN -->
+    <link rel="preconnect" href="https://www.googletagmanager.com">
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
+    <link rel="preconnect" href="https://www.google-analytics.com">
+    <link rel="dns-prefetch" href="https://www.google-analytics.com">
+    <!-- Enhanced font loading: add fallback and display swap -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Noto+Sans:wght@400;500;700;900&display=swap" rel="stylesheet">
     <title>Votely</title>
+    <!-- PWA and theme meta -->
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#181f29" media="(prefers-color-scheme: dark)">
+    <meta name="description" content="Votely: Effortless, modern voting and polling platform.">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Votely">
+    <meta name="application-name" content="Votely">
+    <meta name="msapplication-TileColor" content="#2563eb">
+    <meta name="msapplication-config" content="/browserconfig.xml">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#2563eb">
+    <link rel="preload" as="image" href="/src/assets/landing-hero.webp" type="image/webp" />
+    <style>
+      html, body {
+        min-height: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background-color: var(--theme-bg, #f8fafc);
+        color: var(--theme-text, #1e293b);
+        transition: background-color 0.2s, color 0.2s;
+        font-family: 'Inter', 'Noto Sans', system-ui, sans-serif;
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+        scroll-behavior: smooth;
+      }
+      html.dark body {
+        background-color: #181f29;
+        color: #e2e8f0;
+      }
+      html.theme-transition body {
+        transition: background-color 0.2s, color 0.2s;
+      }
+      /* Scrollbar styling for both themes */
+      ::-webkit-scrollbar {
+        width: 10px;
+        background: var(--theme-muted, #f1f5f9);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--theme-border, #d1d5db);
+        border-radius: 5px;
+      }
+      html.dark ::-webkit-scrollbar {
+        background: #232b36;
+      }
+      html.dark ::-webkit-scrollbar-thumb {
+        background: #3a4552;
+      }
+      /* Selection color */
+      ::selection {
+        background: #c7d2fe;
+        color: #1e293b;
+      }
+      html.dark ::selection {
+        background: #2563eb;
+        color: #e2e8f0;
+      }
+      /* Accessibility: Reduce motion for users who prefer it */
+      @media (prefers-reduced-motion: reduce) {
+        html.theme-transition body, body {
+          transition: none !important;
+        }
+      }
+      /* Responsive root container for mobile safe area */
+      #root {
+        min-height: 100vh;
+        min-height: 100dvh;
+        width: 100vw;
+        box-sizing: border-box;
+        isolation: isolate;
+      }
+    </style>
+    <script>
+      // On page load or when changing themes, best to add inline in `head` to avoid FOUC
+      (function() {
+        try {
+          const userPref = localStorage.getItem('theme');
+          const systemPref = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          const theme = userPref || systemPref;
+          const html = document.documentElement;
+          html.classList.remove('light', 'dark');
+          html.setAttribute('data-theme', theme);
+          html.setAttribute('data-effective-theme', theme === 'system' ? systemPref : theme);
+          if (theme === 'dark') {
+            html.classList.add('dark');
+          } else {
+            html.classList.add('light');
+          }
+          // Set CSS variables for enhanced theming
+          const setVars = (t) => {
+            if (t === 'dark') {
+              html.style.setProperty('--theme-bg', '#181f29');
+              html.style.setProperty('--theme-text', '#e2e8f0');
+              html.style.setProperty('--theme-border', '#3a4552');
+              html.style.setProperty('--theme-accent', '#2563eb');
+              html.style.setProperty('--theme-muted', '#232b36');
+            } else {
+              html.style.setProperty('--theme-bg', '#f8fafc');
+              html.style.setProperty('--theme-text', '#1e293b');
+              html.style.setProperty('--theme-border', '#d1d5db');
+              html.style.setProperty('--theme-accent', '#3b82f6');
+              html.style.setProperty('--theme-muted', '#f1f5f9');
+            }
+          };
+          setVars(theme === 'system' ? systemPref : theme);
+
+          // Set color-scheme meta tag for system color scheme integration
+          let colorSchemeMeta = document.querySelector('meta[name="color-scheme"]');
+          if (!colorSchemeMeta) {
+            colorSchemeMeta = document.createElement('meta');
+            colorSchemeMeta.setAttribute('name', 'color-scheme');
+            document.head.appendChild(colorSchemeMeta);
+          }
+          colorSchemeMeta.setAttribute('content', theme === 'dark' ? 'dark light' : 'light dark');
+
+          // Set theme-color meta for mobile browser UI
+          let themeColorMeta = document.querySelector('meta[name="theme-color"][media]');
+          if (!themeColorMeta) {
+            // Already present in static HTML, but ensure correct order if needed
+            const lightMeta = document.querySelector('meta[name="theme-color"][media*="light"]');
+            const darkMeta = document.querySelector('meta[name="theme-color"][media*="dark"]');
+            if (lightMeta) lightMeta.setAttribute('content', '#f8fafc');
+            if (darkMeta) darkMeta.setAttribute('content', '#181f29');
+          }
+
+          // Accessibility: Add prefers-reduced-motion class if needed
+          if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            html.classList.add('reduced-motion');
+          }
+        } catch (e) {
+          // Fail gracefully
+        }
+      })();
+    </script>
+    <!-- Favicon and PWA icons for various platforms -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <!-- Social meta -->
+    <meta property="og:title" content="Votely" />
+    <meta property="og:description" content="Effortless, modern voting and polling platform." />
+    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://votely.app/" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Votely" />
+    <meta name="twitter:description" content="Effortless, modern voting and polling platform." />
+    <meta name="twitter:image" content="/og-image.png" />
+    <!-- Preload and non-blocking load for Google Fonts -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" onload="this.rel='stylesheet'">
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
+    </noscript>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <div style="padding:2rem;text-align:center;color:#b91c1c;background:#fef2f2;">
+        <strong>Votely requires JavaScript to run.</strong>
+        <br>
+        Please enable JavaScript in your browser.
+      </div>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // Only load Google Analytics in production
+      if (import.meta.env && import.meta.env.PROD) {
+        var ga = document.createElement('script');
+        ga.src = 'https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX';
+        ga.async = true;
+        ga.defer = true;
+        document.head.appendChild(ga);
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-XXXXXXXXXX');
+      }
+    </script>
   </body>
 </html>

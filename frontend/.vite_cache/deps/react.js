@@ -1,2 +1,2 @@
-import{a}from"./chunk-46RQY2CM.js";import"./chunk-RFBBAUMM.js";export default a();
+import{a}from"./chunk-U5LWHTWZ.js";import"./chunk-TEDR2MDT.js";export default a();
 //# sourceMappingURL=react.js.map

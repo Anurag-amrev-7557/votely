@@ -1,127 +1,163 @@
 {
-  "hash": "1f44e892",
-  "configHash": "282f5fef",
-  "lockfileHash": "9c213c63",
-  "browserHash": "8b61e04a",
+  "hash": "0c631995",
+  "configHash": "f56e22a0",
+  "lockfileHash": "1974f757",
+  "browserHash": "b093bddc",
   "optimized": {
     "react": {
       "src": "../../node_modules/react/index.js",
       "file": "react.js",
-      "fileHash": "6857e3b6",
+      "fileHash": "e7533650",
       "needsInterop": true
     },
     "react-dom": {
       "src": "../../node_modules/react-dom/index.js",
       "file": "react-dom.js",
-      "fileHash": "46603ef6",
+      "fileHash": "8577e17b",
       "needsInterop": true
     },
     "react-router-dom": {
       "src": "../../node_modules/react-router-dom/dist/index.js",
       "file": "react-router-dom.js",
-      "fileHash": "dc53a834",
+      "fileHash": "28a012b2",
+      "needsInterop": false
+    },
+    "@headlessui/react": {
+      "src": "../../node_modules/@headlessui/react/dist/headlessui.esm.js",
+      "file": "@headlessui_react.js",
+      "fileHash": "b24784ba",
       "needsInterop": false
     },
     "@heroicons/react": {
       "src": "../../node_modules/@heroicons/react/index.esm.js",
       "file": "@heroicons_react.js",
-      "fileHash": "9734d2da",
+      "fileHash": "efaa8b7a",
       "needsInterop": false
     },
     "axios": {
       "src": "../../node_modules/axios/index.js",
       "file": "axios.js",
-      "fileHash": "9465515a",
+      "fileHash": "a87275c8",
       "needsInterop": false
     },
     "date-fns": {
       "src": "../../node_modules/date-fns/index.js",
       "file": "date-fns.js",
-      "fileHash": "ec460a7c",
+      "fileHash": "00b1ee33",
       "needsInterop": false
     },
     "framer-motion": {
       "src": "../../node_modules/framer-motion/dist/es/index.mjs",
       "file": "framer-motion.js",
-      "fileHash": "bfcc17e9",
+      "fileHash": "3505afd4",
       "needsInterop": false
     },
     "react/jsx-dev-runtime": {
       "src": "../../node_modules/react/jsx-dev-runtime.js",
       "file": "react_jsx-dev-runtime.js",
-      "fileHash": "0de942a3",
+      "fileHash": "fcaf8b0e",
       "needsInterop": true
     },
     "react/jsx-runtime": {
       "src": "../../node_modules/react/jsx-runtime.js",
       "file": "react_jsx-runtime.js",
-      "fileHash": "d85437f5",
+      "fileHash": "27c4e786",
       "needsInterop": true
     },
     "@heroicons/react/24/outline": {
       "src": "../../node_modules/@heroicons/react/24/outline/esm/index.js",
       "file": "@heroicons_react_24_outline.js",
-      "fileHash": "363cd2cc",
+      "fileHash": "78b95369",
       "needsInterop": false
     },
     "chart.js": {
       "src": "../../node_modules/chart.js/dist/chart.js",
       "file": "chart__js.js",
-      "fileHash": "6ec9909e",
+      "fileHash": "df85d268",
       "needsInterop": false
     },
-    "lodash": {
-      "src": "../../node_modules/lodash/lodash.js",
-      "file": "lodash.js",
-      "fileHash": "0b1dd2a4",
+    "date-fns/format": {
+      "src": "../../node_modules/date-fns/format.js",
+      "file": "date-fns_format.js",
+      "fileHash": "2961fc92",
+      "needsInterop": false
+    },
+    "lodash/debounce": {
+      "src": "../../node_modules/lodash/debounce.js",
+      "file": "lodash_debounce.js",
+      "fileHash": "38284afa",
+      "needsInterop": true
+    },
+    "prop-types": {
+      "src": "../../node_modules/prop-types/index.js",
+      "file": "prop-types.js",
+      "fileHash": "adee0f8f",
       "needsInterop": true
     },
     "react-chartjs-2": {
       "src": "../../node_modules/react-chartjs-2/dist/index.js",
       "file": "react-chartjs-2.js",
-      "fileHash": "a4f813b4",
+      "fileHash": "f0a540ad",
       "needsInterop": false
+    },
+    "react-countup": {
+      "src": "../../node_modules/react-countup/build/index.js",
+      "file": "react-countup.js",
+      "fileHash": "ec000b49",
+      "needsInterop": true
     },
     "react-csv": {
       "src": "../../node_modules/react-csv/src/index.js",
       "file": "react-csv.js",
-      "fileHash": "ddea9c74",
+      "fileHash": "40af4b1e",
       "needsInterop": false
     },
     "react-dom/client": {
       "src": "../../node_modules/react-dom/client.js",
       "file": "react-dom_client.js",
-      "fileHash": "ee5c9854",
+      "fileHash": "3b2bfea9",
       "needsInterop": true
     },
     "react-error-boundary": {
       "src": "../../node_modules/react-error-boundary/dist/react-error-boundary.development.js",
       "file": "react-error-boundary.js",
-      "fileHash": "5d5694a8",
+      "fileHash": "a90d7cd8",
       "needsInterop": false
     },
     "react-hot-toast": {
       "src": "../../node_modules/react-hot-toast/dist/index.mjs",
       "file": "react-hot-toast.js",
-      "fileHash": "f4d67036",
+      "fileHash": "e55bfef8",
       "needsInterop": false
+    },
+    "zxcvbn": {
+      "src": "../../node_modules/zxcvbn/lib/main.js",
+      "file": "zxcvbn.js",
+      "fileHash": "582f4f83",
+      "needsInterop": true
     }
   },
   "chunks": {
+    "chunk-YU4OISQA": {
+      "file": "chunk-YU4OISQA.js"
+    },
     "chunk-X62NT3PW": {
       "file": "chunk-X62NT3PW.js"
     },
-    "chunk-UKR35MWI": {
-      "file": "chunk-UKR35MWI.js"
+    "chunk-ZZM4WLKI": {
+      "file": "chunk-ZZM4WLKI.js"
     },
-    "chunk-GNV4TVWT": {
-      "file": "chunk-GNV4TVWT.js"
+    "chunk-OHWHRJ5U": {
+      "file": "chunk-OHWHRJ5U.js"
     },
-    "chunk-46RQY2CM": {
-      "file": "chunk-46RQY2CM.js"
+    "chunk-AO52GS7M": {
+      "file": "chunk-AO52GS7M.js"
     },
-    "chunk-RFBBAUMM": {
-      "file": "chunk-RFBBAUMM.js"
+    "chunk-U5LWHTWZ": {
+      "file": "chunk-U5LWHTWZ.js"
+    },
+    "chunk-TEDR2MDT": {
+      "file": "chunk-TEDR2MDT.js"
     }
   }
 }

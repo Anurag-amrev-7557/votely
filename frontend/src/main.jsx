@@ -9,7 +9,7 @@ const App = lazy(() => import('./App.jsx'))
 // Error fallback component
 const ErrorFallback = ({ error, resetErrorBoundary }) => (
   <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-    <div className="max-w-md w-full p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+    <div className="max-w-md w-full p-6 bg-white dark:bg-gray-900 rounded-lg shadow-lg">
       <h2 className="text-2xl font-bold text-red-600 dark:text-red-400 mb-4">Something went wrong</h2>
       <pre className="text-sm text-gray-600 dark:text-gray-300 mb-4 overflow-auto">
         {error.message}

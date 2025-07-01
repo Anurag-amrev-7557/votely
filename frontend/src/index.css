@@ -40,11 +40,20 @@
   /* Enhanced Smooth Scrolling */
   html, body {
     scroll-behavior: smooth;
-    overflow-y: auto;
-    scroll-padding-top: 2rem;
+    /* Ultra smooth scroll: use a more pronounced cubic-bezier for scroll transitions */
+    scroll-behavior: smooth;
+    /* Hardware acceleration for smoother scroll */
+    will-change: scroll-position, transform;
+    /* For iOS momentum scroll */
+    -webkit-overflow-scrolling: touch;
+    /* Prevent scroll chaining for a more controlled feel */
     overscroll-behavior-y: contain;
+    /* Add scroll-padding for sticky headers */
+    scroll-padding-top: 2rem;
+    /* Smoother rendering */
+    backface-visibility: hidden;
+    perspective: 1000px;
     height: 100%;
-    will-change: scroll-position;
   }
 
   /* Optimized Custom Scrollbar */
@@ -334,5 +343,128 @@ html {
 .no-scrollbar {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
+}
+
+/* Custom CSS for enhanced toast notifications */
+@layer components {
+  /* Enhanced toast animations and styling */
+  .toast-notification {
+    @apply transform-gpu;
+    animation: toastSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .toast-notification[data-state="exit"] {
+    animation: toastSlideOut 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Custom toast variants */
+  .admin-success-toast {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    border-left: 4px solid #10b981;
+  }
+
+  .admin-login-toast {
+    background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+    border-left: 4px solid #3b82f6;
+  }
+
+  .get-started-toast {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border-left: 4px solid #60a5fa;
+  }
+
+  .scroll-explore-toast {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    border-left: 4px solid #a78bfa;
+  }
+
+  /* Toast entrance animations */
+  @keyframes toastSlideIn {
+    0% {
+      opacity: 0;
+      transform: translateX(100%) scale(0.8);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+  }
+
+  @keyframes toastSlideOut {
+    0% {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translateX(100%) scale(0.8);
+    }
+  }
+
+  /* Toast hover effects */
+  .toast-notification:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15), 0 6px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Toast icon animations */
+  .toast-notification svg {
+    animation: toastIconPulse 2s ease-in-out infinite;
+  }
+
+  @keyframes toastIconPulse {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.1);
+    }
+  }
+
+  /* Toast progress bar */
+  .toast-notification::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 100%);
+    border-radius: 0 0 12px 12px;
+    animation: toastProgress 2s linear;
+  }
+
+  @keyframes toastProgress {
+    0% {
+      width: 100%;
+    }
+    100% {
+      width: 0%;
+    }
+  }
+
+  /* Dark mode adjustments */
+  .dark .toast-notification {
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Responsive toast sizing */
+  @media (max-width: 640px) {
+    .toast-notification {
+      max-width: calc(100vw - 32px);
+      min-width: 280px;
+      margin: 0 16px;
+    }
+  }
+}
+
+/* Apply ultra smooth scroll to all scrollable containers */
+.scroll-container, .elastic-scroll, .momentum-scroll, .scroll-snap-container, .scrollable, [data-scrollable], [data-ultra-smooth-scroll] {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  will-change: scroll-position, transform;
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 

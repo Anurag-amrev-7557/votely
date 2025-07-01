@@ -124,11 +124,26 @@ const VotingPage = () => {
   const optionsRef = useRef([]);
 
   useEffect(() => {
-    // Scroll to top when component mounts
-    window.scrollTo({
-      top: 0,
-      behavior: 'instant'
-    });
+    // Enhanced scroll management with smooth animation and position restoration
+    const scrollToTop = () => {
+      // Check if we're already at the top to avoid unnecessary scrolling
+      if (window.scrollY > 0) {
+        // Use smooth scrolling for better UX, fallback to instant for older browsers
+        const supportsSmoothScroll = 'scrollBehavior' in document.documentElement.style;
+        
+        window.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: supportsSmoothScroll ? 'smooth' : 'instant'
+        });
+      }
+    };
+
+    // Execute scroll with a small delay to ensure DOM is fully rendered
+    const scrollTimer = setTimeout(scrollToTop, 50);
+
+    // Cleanup function to clear timeout if component unmounts
+    return () => clearTimeout(scrollTimer);
   }, []);
 
   useEffect(() => {
@@ -175,31 +190,6 @@ const VotingPage = () => {
     fetchPoll();
   }, [pollId]);
 
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        if (showExitModal) {
-          setShowExitModal(false);
-        } else if (showKeyboardShortcuts) {
-          setShowKeyboardShortcuts(false);
-        } else {
-          setShowExitModal(true);
-        }
-      } else if (e.key === '?' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        setShowKeyboardShortcuts(true);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showExitModal, showKeyboardShortcuts]);
-
-  const handleOptionChange = (optionId) => {
-    setSelectedOption(optionId);
-  };
-
   const handleNext = async () => {
     if (!selectedOption) {
       return;
@@ -235,24 +225,238 @@ const VotingPage = () => {
     navigate('/polls');
   };
 
+  // Advanced Keyboard Navigation System with Accessibility, Performance, and UX Enhancements
+  useEffect(() => {
+    // Performance optimization: Debounced key handler to prevent excessive re-renders
+    let keyDownTimeout;
+    const debouncedKeyHandler = (handler) => {
+      clearTimeout(keyDownTimeout);
+      keyDownTimeout = setTimeout(handler, 10);
+    };
+
+    // Enhanced keyboard navigation with comprehensive shortcuts
+    const handleKeyDown = (e) => {
+      // Prevent default behavior for application shortcuts
+      const isApplicationShortcut = (e.metaKey || e.ctrlKey) && 
+        ['?', 'k', 'n', 'p', 'b', 'Enter', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key);
+      
+      if (isApplicationShortcut) {
+        e.preventDefault();
+      }
+
+      // Modal management with intelligent state handling
+      if (e.key === 'Escape') {
+        debouncedKeyHandler(() => {
+          if (showExitModal) {
+            setShowExitModal(false);
+            // Focus management: Return focus to the last active element
+            const lastActiveElement = document.querySelector('[data-last-active]');
+            if (lastActiveElement) {
+              lastActiveElement.focus();
+              lastActiveElement.removeAttribute('data-last-active');
+            }
+          } else if (showKeyboardShortcuts) {
+            setShowKeyboardShortcuts(false);
+          } else {
+            // Store current focus for restoration
+            const activeElement = document.activeElement;
+            if (activeElement && activeElement !== document.body) {
+              activeElement.setAttribute('data-last-active', 'true');
+            }
+            setShowExitModal(true);
+          }
+        });
+      }
+
+      // Advanced shortcut system with modifier key support
+      else if (e.key === '?' && (e.metaKey || e.ctrlKey)) {
+        debouncedKeyHandler(() => setShowKeyboardShortcuts(true));
+      }
+
+      // Navigation shortcuts for better UX
+      else if (e.key === 'n' && (e.metaKey || e.ctrlKey)) {
+        debouncedKeyHandler(() => {
+          if (selectedOption && currentQuestionIndex < poll?.totalQuestions - 1) {
+            handleNext();
+          }
+        });
+      }
+
+      else if (e.key === 'p' && (e.metaKey || e.ctrlKey)) {
+        debouncedKeyHandler(() => {
+          if (currentQuestionIndex > 0) {
+            handleBack();
+          }
+        });
+      }
+
+      // Arrow key navigation for option selection
+      else if (['ArrowUp', 'ArrowDown'].includes(e.key) && !showExitModal && !showKeyboardShortcuts) {
+        e.preventDefault();
+        debouncedKeyHandler(() => {
+          const options = poll?.options || [];
+          if (options.length === 0) return;
+
+          const currentIndex = selectedOption ? options.findIndex(opt => opt.id === selectedOption) : -1;
+          let newIndex;
+
+          if (e.key === 'ArrowUp') {
+            newIndex = currentIndex <= 0 ? options.length - 1 : currentIndex - 1;
+          } else {
+            newIndex = currentIndex >= options.length - 1 ? 0 : currentIndex + 1;
+          }
+
+          setSelectedOption(options[newIndex].id);
+          
+          // Scroll the selected option into view with smooth animation
+          const optionElement = document.querySelector(`[data-option-id="${options[newIndex].id}"]`);
+          if (optionElement) {
+            optionElement.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'nearest',
+              inline: 'nearest'
+            });
+          }
+        });
+      }
+
+      // Quick selection with number keys
+      else if (/^[1-9]$/.test(e.key) && !showExitModal && !showKeyboardShortcuts) {
+        debouncedKeyHandler(() => {
+          const options = poll?.options || [];
+          const optionIndex = parseInt(e.key) - 1;
+          if (optionIndex < options.length) {
+            setSelectedOption(options[optionIndex].id);
+          }
+        });
+      }
+
+      // Enter/Space for option selection and navigation
+      else if (['Enter', ' '].includes(e.key) && !showExitModal && !showKeyboardShortcuts) {
+        e.preventDefault();
+        debouncedKeyHandler(() => {
+          if (selectedOption) {
+            if (currentQuestionIndex < poll?.totalQuestions - 1) {
+              handleNext();
+            } else {
+              handleNext(); // This will trigger submission
+            }
+          }
+        });
+      }
+
+      // Accessibility: Screen reader announcements
+      else if (e.key === 'Tab') {
+        // Announce current state to screen readers
+        const announcement = `Question ${currentQuestionIndex + 1} of ${poll?.totalQuestions || 0}. ${selectedOption ? 'Option selected' : 'No option selected'}`;
+        const announcementElement = document.createElement('div');
+        announcementElement.setAttribute('aria-live', 'polite');
+        announcementElement.setAttribute('aria-atomic', 'true');
+        announcementElement.className = 'sr-only';
+        announcementElement.textContent = announcement;
+        document.body.appendChild(announcementElement);
+        
+        // Clean up after announcement
+        setTimeout(() => {
+          if (announcementElement.parentNode) {
+            announcementElement.parentNode.removeChild(announcementElement);
+          }
+        }, 1000);
+      }
+    };
+
+    // Enhanced event listener with passive option for better performance
+    const options = { passive: false, capture: false };
+    window.addEventListener('keydown', handleKeyDown, options);
+
+    // Cleanup function with comprehensive cleanup
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown, options);
+      clearTimeout(keyDownTimeout);
+      
+      // Clean up any remaining data attributes
+      const lastActiveElements = document.querySelectorAll('[data-last-active]');
+      lastActiveElements.forEach(el => el.removeAttribute('data-last-active'));
+    };
+  }, [
+    showExitModal, 
+    showKeyboardShortcuts, 
+    selectedOption, 
+    currentQuestionIndex, 
+    poll?.totalQuestions, 
+    poll?.options,
+    handleNext,
+    handleBack
+  ]);
+
+  const handleOptionChange = (optionId) => {
+    setSelectedOption(optionId);
+  };
+
+
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-[#c7d7e9]"></div>
+      <div className="fixed inset-0 bg-gray-50/80 dark:bg-[#15191e]/80 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="bg-white dark:bg-[#1e242c] rounded-2xl p-8 shadow-2xl border border-gray-200/50 dark:border-[#3f4c5a]/50">
+          <div className="flex flex-col items-center gap-4">
+            <div className="relative">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 dark:border-[#3f4c5a] border-t-blue-600 dark:border-t-[#c7d7e9]"></div>
+              <div className="absolute inset-0 rounded-full h-16 w-16 border-4 border-transparent border-t-blue-400 dark:border-t-[#8ba3c7] animate-ping opacity-20"></div>
+            </div>
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Loading Poll</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Preparing your voting experience...</p>
+            </div>
+            <div className="flex gap-1 mt-2">
+              <div className="w-2 h-2 bg-blue-600 dark:bg-[#c7d7e9] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+              <div className="w-2 h-2 bg-blue-600 dark:bg-[#c7d7e9] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+              <div className="w-2 h-2 bg-blue-600 dark:bg-[#c7d7e9] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-12">
-        <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
-        <button
-          onClick={() => navigate('/polls')}
-          className="text-blue-600 dark:text-[#c7d7e9] hover:underline"
-        >
-          Return to Polls
-        </button>
+      <div className="min-h-screen bg-gray-50 dark:bg-[#15191e] flex items-center justify-center p-4">
+        <div className="max-w-md w-full">
+          <div className="bg-white dark:bg-[#1e242c] rounded-2xl p-8 shadow-xl border border-gray-200/50 dark:border-[#3f4c5a]/50">
+            <div className="text-center">
+              <div className="mx-auto w-16 h-16 mb-6 flex items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
+                <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Something went wrong</h3>
+              <p className="text-red-600 dark:text-red-400 mb-6 text-sm leading-relaxed">{error}</p>
+              
+              <div className="space-y-3">
+                <button
+                  onClick={() => window.location.reload()}
+                  className="w-full px-4 py-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-[#c7d7e9] dark:hover:bg-[#8ba3c7] dark:text-[#15191e] rounded-lg transition-all duration-200 hover:shadow-lg active:scale-95"
+                >
+                  Try Again
+                </button>
+                <button
+                  onClick={() => navigate('/polls')}
+                  className="w-full px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white border border-gray-300 dark:border-[#3f4c5a] hover:border-gray-400 dark:hover:border-[#5a6b7a] rounded-lg transition-all duration-200 hover:shadow-md active:scale-95"
+                >
+                  Return to Polls
+                </button>
+              </div>
+              
+              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-[#3f4c5a]">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  If this problem persists, please contact support
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -261,29 +465,54 @@ const VotingPage = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-[#15191e] transition-colors duration-200">
       {/* Exit Confirmation Modal */}
       {showExitModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
-          <div className="bg-white dark:bg-[#1e242c] rounded-xl p-6 sm:p-8 max-w-md w-full mx-4 animate-scale-in">
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="exit-modal-title"
+          aria-describedby="exit-modal-description"
+        >
+          <div 
+            className="bg-white dark:bg-[#1e242c] rounded-xl p-6 sm:p-8 max-w-md w-full mx-4 animate-scale-in shadow-2xl border border-gray-200/50 dark:border-[#3f4c5a]/50"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center gap-3 mb-4 sm:mb-6">
-              <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30">
+              <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30 animate-pulse">
                 <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 dark:text-red-400" />
               </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
+              <h3 
+                id="exit-modal-title"
+                className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white"
+              >
                 Exit Voting Session?
               </h3>
             </div>
             
             <div className="space-y-3 sm:space-y-4">
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
+              <p 
+                id="exit-modal-description"
+                className="text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed"
+              >
                 {currentQuestionIndex > 0 
                   ? "You have made progress in this poll. Are you sure you want to exit? Your progress will be lost."
                   : "Are you sure you want to exit? You can return to this poll later."}
               </p>
               
               {currentQuestionIndex > 0 && (
-                <div className="p-3 sm:p-4 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
-                  <p className="text-xs sm:text-sm text-yellow-800 dark:text-yellow-200">
-                    You have completed {currentQuestionIndex} out of {poll?.totalQuestions} questions.
-                  </p>
+                <div className="p-3 sm:p-4 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 animate-fade-in">
+                  <div className="flex items-start gap-2">
+                    <svg className="w-4 h-4 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    <div>
+                      <p className="text-xs sm:text-sm text-yellow-800 dark:text-yellow-200 font-medium">
+                        Progress Warning
+                      </p>
+                      <p className="text-xs sm:text-sm text-yellow-700 dark:text-yellow-300 mt-0.5">
+                        You have completed {currentQuestionIndex} out of {poll?.totalQuestions} questions.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -291,13 +520,15 @@ const VotingPage = () => {
             <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row sm:justify-end gap-3 sm:gap-4">
               <button
                 onClick={() => setShowExitModal(false)}
-                className="w-full sm:w-auto px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
+                className="w-full sm:w-auto px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-all duration-200 hover:bg-gray-100 dark:hover:bg-[#2c353f] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-[#1e242c]"
+                aria-label="Continue voting session"
               >
                 Continue Voting
               </button>
               <button
                 onClick={handleExit}
-                className="w-full sm:w-auto px-4 py-2.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-4 py-2.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-[#1e242c]"
+                aria-label="Exit voting session and return to polls"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Exit to Polls

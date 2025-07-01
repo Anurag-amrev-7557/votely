@@ -58,9 +58,11 @@ const AboutUs = () => {
               {team.map((member) => (
                 <div key={member.name} className="flex flex-col gap-3 text-center pb-3">
                   <div className="px-4">
-                    <div
-                      className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-full border-4 border-gray-200 dark:border-gray-700"
-                      style={{ backgroundImage: `url('${member.img}')` }}
+                    <img
+                      src={`${member.img}=s96`}
+                      alt={member.name}
+                      className="w-full aspect-square object-cover rounded-full border-4 border-gray-200 dark:border-gray-700"
+                      loading="lazy"
                     />
                   </div>
                   <div>

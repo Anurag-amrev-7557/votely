@@ -4,6 +4,7 @@ import { compression } from 'vite-plugin-compression2'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { splitVendorChunkPlugin } from 'vite'
 import { resolve } from 'path'
+import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -51,8 +52,94 @@ export default defineConfig({
       gzipSize: true,
       brotliSize: true,
       template: 'treemap',
-    })
+    }),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+      manifest: {
+        name: 'Votely',
+        short_name: 'Votely',
+        description: 'Secure, modern online voting platform',
+        theme_color: '#2563eb',
+        background_color: '#ffffff',
+        display: 'standalone',
+        start_url: '/',
+        icons: [
+          {
+            src: '/pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: '/pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+          {
+            src: '/pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable',
+          },
+        ],
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-stylesheets',
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-webfonts',
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
+            },
+          },
+        ],
+      },
+    }),
   ],
+  server: {
+    port: 5173,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+        secure: false
+      }
+    },
+    // Enable HMR
+    hmr: {
+      overlay: true,
+      protocol: 'ws',
+    },
+    // Optimize development server
+    watch: {
+      usePolling: true,
+      interval: 100,
+    },
+    // Enable compression
+    compress: true,
+    // Optimize middleware
+    middlewareMode: false,
+    // Enable CORS
+    cors: true,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    },
+    // Optimize dev server
+    fs: {
+      strict: true,
+      allow: ['..'],
+    },
+  },
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
@@ -91,7 +178,6 @@ export default defineConfig({
       output: {
         // Optimize chunk splitting with better granularity
         manualChunks: (id) => {
-          // Split React into smaller chunks
           if (id.includes('node_modules/react/')) {
             if (id.includes('/hooks/')) return 'react-hooks';
             if (id.includes('/jsx-runtime')) return 'react-jsx';
@@ -103,62 +189,26 @@ export default defineConfig({
             if (id.includes('/server/')) return 'react-dom-server';
             return 'react-dom';
           }
-          
-          // Split React Router into smaller chunks
           if (id.includes('node_modules/react-router-dom/')) {
             if (id.includes('/hooks')) return 'router-hooks';
             if (id.includes('/components')) return 'router-components';
             if (id.includes('/utils')) return 'router-utils';
             return 'router-core';
           }
-          
-          // Split Framer Motion into smaller chunks
-          if (id.includes('node_modules/framer-motion/')) {
-            if (id.includes('/dom')) return 'framer-motion-dom';
-            if (id.includes('/three')) return 'framer-motion-3d';
-            if (id.includes('/gestures')) return 'framer-motion-gestures';
-            if (id.includes('/animation')) return 'framer-motion-animation';
-            return 'framer-motion-core';
-          }
-          
-          // Split UI libraries
-          if (id.includes('node_modules/@headlessui/')) {
-            if (id.includes('/react/')) return 'headlessui-react';
-            if (id.includes('/components/')) return 'headlessui-components';
-            return 'headlessui-core';
-          }
-          if (id.includes('node_modules/@heroicons/')) {
-            if (id.includes('/outline')) return 'heroicons-outline';
-            if (id.includes('/solid')) return 'heroicons-solid';
-            if (id.includes('/mini')) return 'heroicons-mini';
-            return 'heroicons-core';
-          }
-          
-          // Split utility libraries
-          if (id.includes('node_modules/axios/')) {
-            if (id.includes('/lib/')) return 'axios-lib';
-            if (id.includes('/helpers/')) return 'axios-helpers';
-            return 'axios-core';
-          }
-          if (id.includes('node_modules/date-fns/')) {
-            if (id.includes('/locale')) return 'date-fns-locale';
-            if (id.includes('/format')) return 'date-fns-format';
-            return 'date-fns-core';
-          }
-          
-          // Split styles
+          if (id.includes('node_modules/framer-motion/')) return 'vendor-framer-motion';
+          if (id.includes('node_modules/@headlessui/')) return 'vendor-headlessui';
+          if (id.includes('node_modules/@heroicons/')) return 'vendor-heroicons';
+          if (id.includes('node_modules/axios/')) return 'vendor-axios';
+          if (id.includes('node_modules/date-fns/')) return 'vendor-date-fns';
+          if (id.includes('node_modules/lodash')) return 'vendor-lodash';
+          if (id.includes('node_modules/zod')) return 'vendor-zod';
+          if (id.includes('node_modules/react-hot-toast')) return 'vendor-toast';
+          if (id.includes('node_modules/react-error-boundary')) return 'vendor-error-boundary';
           if (id.includes('src/index.css')) return 'styles-main';
           if (id.includes('src/styles/')) return 'styles-modules';
-          
-          // Handle other node_modules
-          if (id.includes('node_modules/')) {
-            // Group smaller dependencies
-            if (id.includes('node_modules/lodash')) return 'vendor-lodash';
-            if (id.includes('node_modules/zod')) return 'vendor-zod';
-            if (id.includes('node_modules/react-hot-toast')) return 'vendor-toast';
-            if (id.includes('node_modules/react-error-boundary')) return 'vendor-error-boundary';
-            return 'vendor-other';
-          }
+          if (id.includes('src/components/admin/')) return 'admin';
+          if (id.includes('src/pages/landing/')) return 'landing';
+          if (id.includes('node_modules/')) return 'vendor-other';
         },
         // Optimize chunk loading with better naming
         chunkFileNames: (chunkInfo) => {
@@ -225,41 +275,6 @@ export default defineConfig({
     // Optimize module loading
     modulePreload: {
       polyfill: true,
-    },
-  },
-  server: {
-    // Enable HMR
-    hmr: {
-      overlay: true,
-      protocol: 'ws',
-    },
-    // Optimize development server
-    watch: {
-      usePolling: true,
-      interval: 100,
-    },
-    // Enable compression
-    compress: true,
-    // Optimize middleware
-    middlewareMode: false,
-    // Enable CORS
-    cors: true,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-    },
-    // Optimize dev server
-    fs: {
-      strict: true,
-      allow: ['..'],
-    },
-    // Optimize proxy settings
-    proxy: {
-      '/api': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-        secure: false,
-        ws: true,
-      },
     },
   },
   optimizeDeps: {

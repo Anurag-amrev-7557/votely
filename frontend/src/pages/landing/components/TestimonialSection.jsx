@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTheme } from '../../../context/ThemeContext';
 
 const StarRating = ({ rating }) => (
     <div className="flex gap-0.5">
@@ -122,6 +123,8 @@ const TestimonialForm = ({ onSubmit }) => {
 };
 
 const TestimonialSection = () => {
+    const { isDarkMode } = useTheme();
+    const sectionBg = useMemo(() => isDarkMode ? 'dark:bg-gray-900' : 'bg-white', [isDarkMode]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [showForm, setShowForm] = useState(false);
     const [testimonials, setTestimonials] = useState([
@@ -176,41 +179,67 @@ const TestimonialSection = () => {
     };
 
     return (
-        <section className="max-w-7xl mx-auto">
+        <section className={`max-w-7xl mx-auto ${sectionBg}`}>
             <div className="flex flex-col gap-6 sm:gap-8 px-4 py-10 sm:py-12">
                 <motion.div 
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="flex flex-col gap-4 sm:gap-6 text-center max-w-3xl mx-auto"
                 >
-                    {/* Testimonials Tag */}
-                    <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-1.5 bg-blue-50 dark:bg-blue-500/10 rounded-full mx-auto"
+                    {/* Advanced Animated Testimonials Badge */}
+                    <div
+                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-100 via-blue-200 to-blue-100 dark:from-blue-900/40 dark:via-blue-800/30 dark:to-blue-900/40 text-blue-700 dark:text-blue-300 text-sm font-semibold shadow-lg ring-1 ring-blue-200 dark:ring-blue-900/40 mb-4 relative group transition-all duration-500 will-change-[background-color,color,box-shadow] mx-auto"
+                        tabIndex={0}
+                        role="status"
+                        aria-label="Testimonials"
                     >
-                        <motion.svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
+                        {/* Animated Glow Effect */}
+                        <span
+                            className="absolute -inset-1.5 rounded-full bg-blue-400/20 dark:bg-blue-700/20 blur-xl pointer-events-none z-0"
+                            style={{
+                                animation: "pulse-orb 2.8s ease-in-out infinite"
+                            }}
+                            aria-hidden="true"
+                        />
+                        {/* Animated Chat Bubble Icon */}
+                        <svg
+                            className="relative z-10 w-5 h-5 text-blue-500 dark:text-blue-300 drop-shadow-[0_1px_2px_rgba(59,130,246,0.15)]"
                             fill="none"
                             stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="text-blue-500 dark:text-blue-400"
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            transition={{ delay: 0.2 }}
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
                         >
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                        </motion.svg>
-                        <span className="text-xs sm:text-sm font-medium text-blue-600 dark:text-blue-400">
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                            >
+                                <animate
+                                    attributeName="opacity"
+                                    values="0.7;1;0.7"
+                                    dur="2.2s"
+                                    repeatCount="indefinite"
+                                />
+                            </path>
+                            {/* Sparkle effect */}
+                            <g>
+                                <circle className="animate-float-sparkle sparkle-0" cx="19" cy="6" r="1.1" fill="#60a5fa" opacity="0.7" />
+                                <circle className="animate-float-sparkle sparkle-1" cx="6" cy="5" r="0.7" fill="#818cf8" opacity="0.6" />
+                                <circle className="animate-float-sparkle sparkle-2" cx="12" cy="3.5" r="0.6" fill="#a78bfa" opacity="0.5" />
+                            </g>
+                        </svg>
+                        <span className="relative z-10 font-semibold tracking-wide bg-gradient-to-r from-blue-700 via-blue-500 to-blue-400 dark:from-blue-300 dark:via-blue-400 dark:to-blue-500 bg-clip-text text-transparent text-xs sm:text-sm">
                             Success Stories
                         </span>
-                    </motion.div>
+                        {/* Tooltip on focus/hover for accessibility */}
+                        <div
+                            className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-3 py-1 rounded bg-gray-900/90 text-xs text-white shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 z-20"
+                            role="tooltip"
+                        >
+                            See what our users are saying!
+                        </div>
+                    </div>
 
                     <motion.div 
                         initial={{ opacity: 0, y: -20 }}
@@ -313,4 +342,4 @@ const TestimonialSection = () => {
     );
 }
 
-export default TestimonialSection;
+export default React.memo(TestimonialSection);

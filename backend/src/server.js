@@ -2,8 +2,10 @@ const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const path = require('path');
 const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
+const profileRoutes = require('./routes/profileRoutes');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const session = require('express-session');
@@ -34,13 +36,29 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
+// Serve static files (uploaded images)
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // Health check route
 app.get('/', (req, res) => {
   res.send('API is running...');
 });
 
+// Debug route to test if server is responding
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'API is working', timestamp: new Date().toISOString() });
+});
+
+// Debug route to check if profile routes are accessible
+app.get('/api/profile/test', (req, res) => {
+  res.json({ message: 'Profile route is accessible', timestamp: new Date().toISOString() });
+});
+
 // Auth routes
 app.use('/api/auth', authRoutes);
+
+// Profile routes
+app.use('/api/profile', profileRoutes);
 
 // Google OAuth configuration
 passport.use(new GoogleStrategy({

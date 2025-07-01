@@ -32,6 +32,97 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  // Profile fields
+  profilePhoto: {
+    type: String, // URL to stored image
+    default: null
+  },
+  bio: {
+    type: String,
+    maxlength: [500, 'Bio cannot exceed 500 characters'],
+    default: ''
+  },
+  socialLinks: {
+    twitter: {
+      type: String,
+      default: ''
+    },
+    linkedin: {
+      type: String,
+      default: ''
+    },
+    github: {
+      type: String,
+      default: ''
+    },
+    website: {
+      type: String,
+      default: ''
+    }
+  },
+  // Account status and preferences
+  isPremium: {
+    type: Boolean,
+    default: false
+  },
+  lastActive: {
+    type: Date,
+    default: Date.now
+  },
+  preferences: {
+    theme: {
+      type: String,
+      enum: ['light', 'dark', 'system'],
+      default: 'system'
+    },
+    emailNotifications: {
+      type: Boolean,
+      default: true
+    },
+    pushNotifications: {
+      type: Boolean,
+      default: false
+    },
+    language: {
+      type: String,
+      default: 'en'
+    },
+    timezone: {
+      type: String,
+      default: 'UTC'
+    }
+  },
+  // Activity tracking
+  activityStats: {
+    totalVotes: {
+      type: Number,
+      default: 0
+    },
+    pollsCreated: {
+      type: Number,
+      default: 0
+    },
+    comments: {
+      type: Number,
+      default: 0
+    },
+    shares: {
+      type: Number,
+      default: 0
+    },
+    participationRate: {
+      type: Number,
+      default: 0
+    },
+    streakDays: {
+      type: Number,
+      default: 0
+    },
+    averageRating: {
+      type: Number,
+      default: 0
+    }
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -57,6 +148,12 @@ userSchema.pre('save', async function(next) {
   }
 });
 
+// Update lastActive before saving
+userSchema.pre('save', function(next) {
+  this.lastActive = new Date();
+  next();
+});
+
 // Method to compare password
 userSchema.methods.comparePassword = async function(candidatePassword) {
   try {
@@ -64,6 +161,47 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
   } catch (error) {
     throw error;
   }
+};
+
+// Method to calculate profile completion
+userSchema.methods.getProfileCompletion = function() {
+  let completion = 0;
+  if (this.name) completion += 20;
+  if (this.email) completion += 15;
+  if (this.profilePhoto) completion += 20;
+  if (this.bio && this.bio.length > 10) completion += 15;
+  if (this.socialLinks.twitter || this.socialLinks.linkedin || this.socialLinks.github || this.socialLinks.website) completion += 10;
+  if (this.isVerified) completion += 10;
+  if (this.createdAt) completion += 10;
+  return Math.min(completion, 100);
+};
+
+// Method to update activity stats
+userSchema.methods.updateActivityStats = function(type, increment = 1) {
+  switch (type) {
+    case 'vote':
+      this.activityStats.totalVotes += increment;
+      break;
+    case 'create':
+      this.activityStats.pollsCreated += increment;
+      break;
+    case 'comment':
+      this.activityStats.comments += increment;
+      break;
+    case 'share':
+      this.activityStats.shares += increment;
+      break;
+  }
+  return this.save();
+};
+
+// Transform document to JSON
+userSchema.methods.toJSON = function() {
+  const user = this.toObject();
+  user.id = user._id;
+  delete user._id;
+  delete user.__v;
+  return user;
 };
 
 const User = mongoose.model('User', userSchema);

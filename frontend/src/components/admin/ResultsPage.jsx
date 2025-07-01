@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { format } from 'date-fns';
+import format from 'date-fns/format';
 import toast from 'react-hot-toast';
 import { CSVLink } from 'react-csv';
 import { Line, Bar, Pie } from 'react-chartjs-2';
@@ -123,7 +123,7 @@ const ResultsPage = () => {
     title: `text-2xl font-bold text-gray-900 dark:text-white`,
     description: `mt-1 text-sm text-gray-500 dark:text-gray-400`,
     main: `max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8`,
-    card: `bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 
+    card: `bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 
       transition-all duration-200 hover:shadow-md`,
     statCard: `p-6 flex flex-col`,
     statValue: `text-3xl font-bold text-gray-900 dark:text-white`,
