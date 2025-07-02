@@ -178,37 +178,7 @@ export default defineConfig({
       output: {
         // Optimize chunk splitting with better granularity
         manualChunks: (id) => {
-          if (id.includes('node_modules/react/')) {
-            if (id.includes('/hooks/')) return 'react-hooks';
-            if (id.includes('/jsx-runtime')) return 'react-jsx';
-            if (id.includes('/scheduler')) return 'react-scheduler';
-            return 'react-core';
-          }
-          if (id.includes('node_modules/react-dom/')) {
-            if (id.includes('/client/')) return 'react-dom-client';
-            if (id.includes('/server/')) return 'react-dom-server';
-            return 'react-dom';
-          }
-          if (id.includes('node_modules/react-router-dom/')) {
-            if (id.includes('/hooks')) return 'router-hooks';
-            if (id.includes('/components')) return 'router-components';
-            if (id.includes('/utils')) return 'router-utils';
-            return 'router-core';
-          }
-          if (id.includes('node_modules/framer-motion/')) return 'vendor-framer-motion';
-          if (id.includes('node_modules/@headlessui/')) return 'vendor-headlessui';
-          if (id.includes('node_modules/@heroicons/')) return 'vendor-heroicons';
-          if (id.includes('node_modules/axios/')) return 'vendor-axios';
-          if (id.includes('node_modules/date-fns/')) return 'vendor-date-fns';
-          if (id.includes('node_modules/lodash')) return 'vendor-lodash';
-          if (id.includes('node_modules/zod')) return 'vendor-zod';
-          if (id.includes('node_modules/react-hot-toast')) return 'vendor-toast';
-          if (id.includes('node_modules/react-error-boundary')) return 'vendor-error-boundary';
-          if (id.includes('src/index.css')) return 'styles-main';
-          if (id.includes('src/styles/')) return 'styles-modules';
-          if (id.includes('src/components/admin/')) return 'admin';
-          if (id.includes('src/pages/landing/')) return 'landing';
-          if (id.includes('node_modules/')) return 'vendor-other';
+          if (id.includes('node_modules/')) return 'vendor';
         },
         // Optimize chunk loading with better naming
         chunkFileNames: (chunkInfo) => {

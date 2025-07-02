@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo, useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import landingHeroWebp from '../../../assets/landing-hero.webp';
 import landingHeroPng from '../../../assets/landing-hero.png';
@@ -6,6 +6,225 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../../../context/AdminAuthContext';
 import CountUp from 'react-countup';
 import { useTheme } from '../../../context/ThemeContext';
+
+// Memoized static arrays outside the component
+const FEATURES = [
+  {
+    key: 'encryption',
+    icon: (
+      <span className="relative flex items-center justify-center">
+        <svg
+          className="w-7 h-7 text-green-500 dark:text-green-400 drop-shadow-[0_1px_2px_rgba(34,197,94,0.15)]"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <motion.path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
+            initial={{ pathLength: 0.7, opacity: 0.7 }}
+            animate={{ pathLength: 1, opacity: 1 }}
+            transition={{ duration: 1.2, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
+          />
+          <motion.path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M9 12l2 2 4-4"
+            initial={{ pathLength: 0, opacity: 0.5 }}
+            animate={{ pathLength: 1, opacity: 1 }}
+            transition={{ duration: 1.1, delay: 0.3, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" }}
+          />
+        </svg>
+      </span>
+    ),
+    text: (
+      <>
+        End-to-End <span className="font-semibold text-green-600 dark:text-green-400">Encryption</span>
+        <span className="block text-xs text-gray-500 dark:text-gray-400 font-light mt-0.5">
+          Your vote is private and tamper-proof.
+        </span>
+      </>
+    ),
+    tooltip: "Votes are encrypted on your device and never exposed."
+  },
+  {
+    key: 'results',
+    icon: (
+      <span className="relative flex items-center justify-center">
+        <svg
+          className="w-7 h-7 text-blue-500 dark:text-blue-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <motion.rect
+            x="4"
+            y="12"
+            width="3"
+            height="8"
+            rx="1.5"
+            fill="currentColor"
+            initial={{ height: 0, y: 20 }}
+            animate={{ height: 8, y: 12 }}
+            transition={{ duration: 1.1, repeat: Infinity, repeatType: "reverse", delay: 0.1 }}
+          />
+          <motion.rect
+            x="10.5"
+            y="8"
+            width="3"
+            height="12"
+            rx="1.5"
+            fill="currentColor"
+            initial={{ height: 0, y: 20 }}
+            animate={{ height: 12, y: 8 }}
+            transition={{ duration: 1.1, repeat: Infinity, repeatType: "reverse", delay: 0.3 }}
+          />
+          <motion.rect
+            x="17"
+            y="4"
+            width="3"
+            height="16"
+            rx="1.5"
+            fill="currentColor"
+            initial={{ height: 0, y: 20 }}
+            animate={{ height: 16, y: 4 }}
+            transition={{ duration: 1.1, repeat: Infinity, repeatType: "reverse", delay: 0.5 }}
+          />
+        </svg>
+      </span>
+    ),
+    text: (
+      <>
+        Real-time <span className="font-semibold text-blue-600 dark:text-blue-400">Results</span>
+        <span className="block text-xs text-gray-500 dark:text-gray-400 font-light mt-0.5">
+          Instant, transparent tallying.
+        </span>
+      </>
+    ),
+    tooltip: "See live updates as votes are counted."
+  },
+  {
+    key: 'support',
+    icon: (
+      <span className="relative flex items-center justify-center">
+        <svg
+          className="w-7 h-7 text-purple-500 dark:text-purple-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <motion.circle
+            cx="12"
+            cy="12"
+            r="9"
+            stroke="currentColor"
+            strokeWidth="2"
+            fill="none"
+            initial={{ scale: 0.95, opacity: 0.7 }}
+            animate={{ scale: [0.95, 1.05, 0.95], opacity: [0.7, 1, 0.7] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"
+          />
+        </svg>
+        <span className="absolute -right-1 -top-1 flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
+        </span>
+      </span>
+    ),
+    text: (
+      <>
+        24/7 <span className="font-semibold text-purple-600 dark:text-purple-400">Support</span>
+        <span className="block text-xs text-gray-500 dark:text-gray-400 font-light mt-0.5">
+          Global help, anytime you need it.
+        </span>
+      </>
+    ),
+    tooltip: "Our team is always available to assist you."
+  }
+];
+
+const BADGES = [
+  {
+    name: "Fortune 500",
+    color: "blue",
+    bg: "bg-blue-100 dark:bg-blue-900/30",
+    text: "text-blue-800 dark:text-blue-400",
+    border: "border-blue-200 dark:border-blue-800/40",
+    delay: 0,
+    key: 'fortune',
+    // ...icon and tooltip remain unchanged
+  },
+  {
+    name: "Universities",
+    color: "green",
+    bg: "bg-green-100 dark:bg-green-900/30",
+    text: "text-green-800 dark:text-green-400",
+    border: "border-green-200 dark:border-green-800/40",
+    delay: 0.1,
+    key: 'universities',
+    // ...icon and tooltip remain unchanged
+  },
+  {
+    name: "NGOs",
+    color: "purple",
+    bg: "bg-purple-100 dark:bg-purple-900/30",
+    text: "text-purple-800 dark:text-purple-400",
+    border: "border-purple-200 dark:border-purple-800/40",
+    delay: 0.2,
+    key: 'ngos',
+    // ...icon and tooltip remain unchanged
+  },
+  {
+    name: "More",
+    color: "gray",
+    bg: "bg-gray-100 dark:bg-gray-800/30",
+    text: "text-gray-800 dark:text-gray-200",
+    border: "border-gray-200 dark:border-gray-700/40",
+    delay: 0.3,
+    key: 'more',
+    // ...icon and tooltip remain unchanged
+  }
+];
+
+const AVATAR_IDS = [11, 12, 13, 14, 15, 16];
+
+// 1. Add Framer Motion variants for batching/staggering
+const featuresContainer = {
+  hidden: {},
+  show: {
+    transition: {
+      staggerChildren: 0.18
+    }
+  }
+};
+const featureItem = {
+  hidden: { opacity: 0, y: 16, scale: 0.98 },
+  show: { opacity: 1, y: 0, scale: 1 }
+};
+const badgesContainer = {
+  hidden: {},
+  show: {
+    transition: {
+      staggerChildren: 0.12
+    }
+  }
+};
+const badgeItem = {
+  hidden: { opacity: 0, y: 12, scale: 0.95 },
+  show: { opacity: 1, y: 0, scale: 1 }
+};
 
 const HeroSection = ({ isVisible }) => {
   const { isAdmin } = useAdminAuth();
@@ -24,6 +243,12 @@ const HeroSection = ({ isVisible }) => {
     }
   }, [isAdmin, navigate]);
 
+  // Memoized scroll handler
+  const handleScrollClick = useCallback(() => {
+    const next = document.querySelector('[data-hero-next]');
+    if (next) next.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
   // Optionally, memoize admin status for advanced UI/UX (e.g., button state)
   const adminStatus = useMemo(() => ({
     isAdmin,
@@ -31,16 +256,30 @@ const HeroSection = ({ isVisible }) => {
     icon: isAdmin ? '🛡️' : '🔒'
   }), [isAdmin]);
 
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+  const animationStarted = useRef(false);
+
+  // When image is loaded, defer animation start to next paint, then delay by 1s
+  useEffect(() => {
+    if (isImageLoaded && !animationStarted.current) {
+      animationStarted.current = true;
+      requestAnimationFrame(() => {
+        setTimeout(() => setIsReady(true), 1000); // 1s delay
+      });
+    }
+  }, [isImageLoaded]);
+
   return (
-  <div className="relative w-full flex flex-col items-center justify-center min-h-[600px] pb-20 sm:pb-28">
-    <div className="w-full flex flex-col-reverse @[864px]:flex-row gap-8 @[480px]:gap-10 px-6 py-6 @[480px]:py-10 sm:px-8 transition-colors duration-300 will-change-[background-color]">
+  <div className="relative w-full flex flex-col items-center justify-center min-h-[600px] pb-20 sm:pb-28 transition-all duration-500">
+    <div className="w-full flex flex-col-reverse @[864px]:flex-row gap-8 @[480px]:gap-10 px-6 py-6 @[480px]:py-10 sm:px-8 transition-all duration-500">
       {/* Text Section */}
       <div className={`flex flex-col gap-6 @[480px]:min-w-[400px] @[480px]:gap-8 @[864px]:justify-center flex-1 text-center @[864px]:text-left ${headlineColor}`}>
         {/* Advanced Animated Badge */}
         <motion.div
           className="relative hidden @[480px]:inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-100 via-blue-200 to-blue-100 dark:from-blue-900/40 dark:via-blue-800/30 dark:to-blue-900/40 text-blue-700 dark:text-blue-300 text-sm font-semibold shadow-lg ring-1 ring-blue-200 dark:ring-blue-900/40 w-fit transition-all duration-500 will-change-[background-color,color,box-shadow]"
-          initial={{ opacity: 0, y: 32, scale: 0.95, filter: "blur(4px)" }}
-          animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+          initial={isVisible ? { opacity: 0, y: 32, scale: 0.95, filter: "blur(4px)" } : false}
+          animate={isVisible ? { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" } : false}
           transition={{ type: "spring", stiffness: 320, damping: 24, duration: 0.7 }}
           tabIndex={0}
           role="status"
@@ -234,164 +473,20 @@ const HeroSection = ({ isVisible }) => {
           </motion.p>
         </div>
 
-        {/* Advanced Features Grid */}
-        <div
+        {/* Advanced Features Grid - now batched/staggered */}
+        <motion.div
           className="relative grid grid-cols-1 sm:grid-cols-3 gap-6 min-h-[96px] py-2 px-1 sm:px-0"
           aria-label="Platform Features"
+          variants={featuresContainer}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, amount: 0.7 }}
         >
-          {[
-            {
-              icon: (
-                // Shield with animated check
-                <span className="relative flex items-center justify-center">
-                  <svg
-                    className="w-7 h-7 text-green-500 dark:text-green-400 drop-shadow-[0_1px_2px_rgba(34,197,94,0.15)]"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <motion.path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
-                      initial={{ pathLength: 0.7, opacity: 0.7 }}
-                      animate={{ pathLength: 1, opacity: 1 }}
-                      transition={{ duration: 1.2, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
-                    />
-                    <motion.path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M9 12l2 2 4-4"
-                      initial={{ pathLength: 0, opacity: 0.5 }}
-                      animate={{ pathLength: 1, opacity: 1 }}
-                      transition={{ duration: 1.1, delay: 0.3, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" }}
-                    />
-                  </svg>
-                </span>
-              ),
-              text: (
-                <>
-                  End-to-End <span className="font-semibold text-green-600 dark:text-green-400">Encryption</span>
-                  <span className="block text-xs text-gray-500 dark:text-gray-400 font-light mt-0.5">
-                    Your vote is private and tamper-proof.
-                  </span>
-                </>
-              ),
-              tooltip: "Votes are encrypted on your device and never exposed."
-            },
-            {
-              icon: (
-                // Bar chart with animated bars
-                <span className="relative flex items-center justify-center">
-                  <svg
-                    className="w-7 h-7 text-blue-500 dark:text-blue-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <motion.rect
-                      x="4"
-                      y="12"
-                      width="3"
-                      height="8"
-                      rx="1.5"
-                      fill="currentColor"
-                      initial={{ height: 0, y: 20 }}
-                      animate={{ height: 8, y: 12 }}
-                      transition={{ duration: 1.1, repeat: Infinity, repeatType: "reverse", delay: 0.1 }}
-                    />
-                    <motion.rect
-                      x="10.5"
-                      y="8"
-                      width="3"
-                      height="12"
-                      rx="1.5"
-                      fill="currentColor"
-                      initial={{ height: 0, y: 20 }}
-                      animate={{ height: 12, y: 8 }}
-                      transition={{ duration: 1.1, repeat: Infinity, repeatType: "reverse", delay: 0.3 }}
-                    />
-                    <motion.rect
-                      x="17"
-                      y="4"
-                      width="3"
-                      height="16"
-                      rx="1.5"
-                      fill="currentColor"
-                      initial={{ height: 0, y: 20 }}
-                      animate={{ height: 16, y: 4 }}
-                      transition={{ duration: 1.1, repeat: Infinity, repeatType: "reverse", delay: 0.5 }}
-                    />
-                  </svg>
-                </span>
-              ),
-              text: (
-                <>
-                  Real-time <span className="font-semibold text-blue-600 dark:text-blue-400">Results</span>
-                  <span className="block text-xs text-gray-500 dark:text-gray-400 font-light mt-0.5">
-                    Instant, transparent tallying.
-                  </span>
-                </>
-              ),
-              tooltip: "See live updates as votes are counted."
-            },
-            {
-              icon: (
-                // Globe with animated pulse
-                <span className="relative flex items-center justify-center">
-                  <svg
-                    className="w-7 h-7 text-purple-500 dark:text-purple-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <motion.circle
-                      cx="12"
-                      cy="12"
-                      r="9"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      fill="none"
-                      initial={{ scale: 0.95, opacity: 0.7 }}
-                      animate={{ scale: [0.95, 1.05, 0.95], opacity: [0.7, 1, 0.7] }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"
-                    />
-                  </svg>
-                  <span className="absolute -right-1 -top-1 flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
-                  </span>
-                </span>
-              ),
-              text: (
-                <>
-                  24/7 <span className="font-semibold text-purple-600 dark:text-purple-400">Support</span>
-                  <span className="block text-xs text-gray-500 dark:text-gray-400 font-light mt-0.5">
-                    Global help, anytime you need it.
-                  </span>
-                </>
-              ),
-              tooltip: "Our team is always available to assist you."
-            }
-          ].map((feature, index) => (
+          {FEATURES.map((feature, index) => (
             <motion.div
-              key={index}
-              className="group relative flex items-start gap-3 p-3 rounded-xl bg-white/70 dark:bg-gray-900/60 border border-gray-100 dark:border-0 shadow-sm hover:shadow-lg transition-all duration-300 will-change-[box-shadow,background-color] cursor-pointer"
-              initial={{ opacity: 0, y: 16, scale: 0.98 }}
-              whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: true, amount: 0.6 }}
-              transition={{ duration: 0.5, delay: 0.1 * index, ease: [0.4, 0, 0.2, 1] }}
+              key={feature.key}
+              className="group relative flex items-start gap-3 p-3 rounded-xl bg-white/70 dark:bg-gray-900/60 border border-gray-100 dark:border-0 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer"
+              variants={featureItem}
               tabIndex={0}
               aria-label={typeof feature.text === "string" ? feature.text : undefined}
               role="listitem"
@@ -411,7 +506,7 @@ const HeroSection = ({ isVisible }) => {
               )}
             </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         <motion.div
           className="flex flex-col @[480px]:flex-row flex-wrap gap-3 min-h-[48px] justify-center @[864px]:justify-start"
@@ -580,7 +675,7 @@ const HeroSection = ({ isVisible }) => {
         >
           {/* Animated Avatars with Tooltip Popover */}
           <div className="flex -space-x-3 relative group" role="list" aria-label="Recent voters">
-            {[11, 12, 13, 14, 15, 16].map((imgId, idx) => (
+            {AVATAR_IDS.map((imgId, idx) => (
               <div
                 key={imgId}
                 className="relative"
@@ -615,20 +710,16 @@ const HeroSection = ({ isVisible }) => {
               +994
             </div>
           </div>
-          {/* Animated Count-Up and Trust Badges */}
+          {/* Animated Count-Up and Trust Badges - now batched/staggered */}
           <div className="flex flex-col items-start gap-1 min-w-[180px]">
             {/* Animated Count-Up */}
             <span className="flex items-center gap-2">
-              <span
-                className="text-2xl font-bold text-blue-600 dark:text-blue-400"
-                aria-live="polite"
-                aria-atomic="true"
-              >
+              <span className="text-2xl font-bold text-blue-600 dark:text-blue-400" aria-live="polite" aria-atomic="true">
                 <CountUp end={1000} duration={2.2} separator="," />+
               </span>
               <span className="text-gray-600 dark:text-gray-300 text-base font-medium">active voters</span>
-              {/* Animated checkmark */}
-              <svg className="w-5 h-5 text-green-500 dark:text-green-400 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              {/* Animated checkmark - reduce infinite animation complexity */}
+              <svg className="w-5 h-5 text-green-500 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <motion.path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -636,200 +727,45 @@ const HeroSection = ({ isVisible }) => {
                   d="M5 13l4 4L19 7"
                   initial={{ pathLength: 0, opacity: 0.5 }}
                   animate={{ pathLength: 1, opacity: 1 }}
-                  transition={{ duration: 1.1, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
+                  transition={{ duration: 1.1 }}
                 />
               </svg>
             </span>
-            {/* Ultra-Advanced Animated Trust Badges */}
-            <div
+            {/* Ultra-Advanced Animated Trust Badges - batched/staggered, reduce infinite animation complexity */}
+            <motion.div
               className="flex flex-wrap gap-2 mt-1"
               aria-label="Trusted by organizations"
               role="list"
+              variants={badgesContainer}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true, amount: 0.7 }}
             >
-              {[
-                {
-                  name: "Fortune 500",
-                  color: "blue",
-                  bg: "bg-blue-100 dark:bg-blue-900/30",
-                  text: "text-blue-800 dark:text-blue-400",
-                  border: "border-blue-200 dark:border-blue-800/40",
-                  delay: 0,
-                  icon: (
-                    <motion.svg
-                      className="w-3.5 h-3.5 mr-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                      initial={{ rotate: -10, scale: 0.8, opacity: 0.7 }}
-                      animate={{ rotate: [0, 10, -10, 0], scale: [0.8, 1.1, 0.95, 1], opacity: [0.7, 1, 0.7] }}
-                      transition={{ duration: 2.2, repeat: Infinity, repeatType: "reverse", delay: 0.1 }}
-                    >
-                      <motion.path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364l-1.414 1.414M6.05 17.95l-1.414 1.414m12.728 0l-1.414-1.414M6.05 6.05L4.636 4.636"
-                        initial={{ pathLength: 0.7, opacity: 0.7 }}
-                        animate={{ pathLength: 1, opacity: 1 }}
-                        transition={{ duration: 1.2, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
-                      />
-                    </motion.svg>
-                  ),
-                  tooltip: "Trusted by leading global enterprises"
-                },
-                {
-                  name: "Universities",
-                  color: "green",
-                  bg: "bg-green-100 dark:bg-green-900/30",
-                  text: "text-green-800 dark:text-green-400",
-                  border: "border-green-200 dark:border-green-800/40",
-                  delay: 0.1,
-                  icon: (
-                    <motion.svg
-                      className="w-3.5 h-3.5 mr-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                      initial={{ scale: 0.8, opacity: 0.7 }}
-                      animate={{ scale: [0.8, 1.1, 0.95, 1], opacity: [0.7, 1, 0.7] }}
-                      transition={{ duration: 2.2, repeat: Infinity, repeatType: "reverse", delay: 0.2 }}
-                    >
-                      <motion.path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M5 13l4 4L19 7"
-                        initial={{ pathLength: 0, opacity: 0.5 }}
-                        animate={{ pathLength: 1, opacity: 1 }}
-                        transition={{ duration: 1.1, repeat: Infinity, repeatType: "reverse", ease: "easeInOut", delay: 0.2 }}
-                      />
-                    </motion.svg>
-                  ),
-                  tooltip: "Used by top educational institutions"
-                },
-                {
-                  name: "NGOs",
-                  color: "purple",
-                  bg: "bg-purple-100 dark:bg-purple-900/30",
-                  text: "text-purple-800 dark:text-purple-400",
-                  border: "border-purple-200 dark:border-purple-800/40",
-                  delay: 0.2,
-                  icon: (
-                    <motion.svg
-                      className="w-3.5 h-3.5 mr-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                      initial={{ scale: 0.8, opacity: 0.7 }}
-                      animate={{ scale: [0.8, 1.1, 0.95, 1], opacity: [0.7, 1, 0.7] }}
-                      transition={{ duration: 2.2, repeat: Infinity, repeatType: "reverse", delay: 0.3 }}
-                    >
-                      <motion.circle
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        strokeWidth="2"
-                        stroke="currentColor"
-                        fill="none"
-                        initial={{ pathLength: 0.7, opacity: 0.7 }}
-                        animate={{ pathLength: 1, opacity: 1 }}
-                        transition={{ duration: 1.2, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
-                      />
-                      <motion.path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 8v4m0 4h.01"
-                        initial={{ pathLength: 0, opacity: 0.5 }}
-                        animate={{ pathLength: 1, opacity: 1 }}
-                        transition={{ duration: 1.1, repeat: Infinity, repeatType: "reverse", ease: "easeInOut", delay: 0.3 }}
-                      />
-                    </motion.svg>
-                  ),
-                  tooltip: "Empowering non-profits worldwide"
-                },
-                {
-                  name: "More",
-                  color: "gray",
-                  bg: "bg-gray-100 dark:bg-gray-800/30",
-                  text: "text-gray-800 dark:text-gray-200",
-                  border: "border-gray-200 dark:border-gray-700/40",
-                  delay: 0.3,
-                  icon: (
-                    <motion.svg
-                      className="w-3.5 h-3.5 mr-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                      initial={{ scale: 0.8, opacity: 0.7 }}
-                      animate={{ scale: [0.8, 1.1, 0.95, 1], opacity: [0.7, 1, 0.7] }}
-                      transition={{ duration: 2.2, repeat: Infinity, repeatType: "reverse", delay: 0.4 }}
-                    >
-                      <motion.path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"
-                        initial={{ pathLength: 0.7, opacity: 0.7 }}
-                        animate={{ pathLength: 1, opacity: 1 }}
-                        transition={{ duration: 1.2, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
-                      />
-                    </motion.svg>
-                  ),
-                  tooltip: "And many more organizations"
-                }
-              ].map((badge, idx) => (
+              {BADGES.map((badge, idx) => (
                 <motion.span
-                  key={badge.name}
-                  className={`
-                    group relative inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
-                    ${badge.bg} ${badge.text} ${badge.border}
-                    shadow-sm animate-fade-in
-                  `}
-                  style={{ animationDelay: `${idx * 100}ms` }}
+                  key={badge.key}
+                  className={`group relative inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${badge.bg} ${badge.text} ${badge.border} shadow-sm`}
                   tabIndex={0}
                   role="listitem"
                   aria-label={badge.name}
-                  initial={{ opacity: 0, y: 12, scale: 0.95 }}
-                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                  viewport={{ once: true, amount: 0.7 }}
-                  transition={{ duration: 0.5, delay: badge.delay, ease: [0.4, 0, 0.2, 1] }}
-                  whileHover={{ scale: 1.08, boxShadow: "0 2px 12px 0 rgba(59,130,246,0.10)" }}
-                  whileFocus={{ scale: 1.08, boxShadow: "0 2px 12px 0 rgba(59,130,246,0.12)" }}
+                  variants={badgeItem}
+                  whileHover={{ scale: 1.08 }}
+                  whileFocus={{ scale: 1.08 }}
                 >
                   {badge.icon}
                   <span className="truncate">{badge.name}</span>
                   {/* Tooltip on hover/focus */}
                   <span
-                    className={`
-                      pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-2 z-30 px-3 py-1.5 rounded-lg
-                      bg-gray-900 text-xs text-white opacity-0 group-hover:opacity-100 group-focus:opacity-100
-                      transition-opacity duration-200 shadow-lg whitespace-pre-line
-                    `}
+                    className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-2 z-30 px-3 py-1.5 rounded-lg bg-gray-900 text-xs text-white opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 shadow-lg whitespace-pre-line"
                     role="tooltip"
                   >
                     {badge.tooltip}
                   </span>
-                  {/* Animated highlight ring */}
-                  <motion.span
-                    className="absolute -inset-1 rounded-full pointer-events-none"
-                    initial={{ opacity: 0 }}
-                    whileHover={{ opacity: 0.12 }}
-                    transition={{ duration: 0.18 }}
-                    style={{
-                      background: `linear-gradient(90deg,rgba(59,130,246,0.08) 0%,rgba(59,130,246,0.02) 100%)`
-                    }}
-                    aria-hidden="true"
-                  />
                 </motion.span>
               ))}
-            </div>
+            </motion.div>
             {/* Subtext */}
-            <p className="text-gray-500 dark:text-gray-400 text-xs mt-1 transition-colors duration-300 will-change-[color]">
+            <p className="text-gray-500 dark:text-gray-400 text-xs mt-1 transition-colors duration-300">
               Trusted by organizations worldwide
             </p>
           </div>
@@ -838,16 +774,21 @@ const HeroSection = ({ isVisible }) => {
 
       {/* Advanced Image Section with Parallax, Animated Overlay, and Accessibility */}
       <div className="flex-1 flex items-center justify-center">
-        <img
-          src={landingHeroWebp}
-          srcSet={`${landingHeroWebp} 1x, ${landingHeroPng} 2x`}
-          alt="Online voting platform hero"
-          className="max-w-full h-auto rounded-xl transition-all duration-500"
-          loading="lazy"
-          width={600}
-          height={400}
-          style={{ objectFit: 'cover' }}
-        />
+        <picture>
+          <source srcSet={landingHeroWebp} type="image/webp" />
+          <img
+            src={landingHeroPng}
+            alt="Online voting platform hero"
+            className="max-w-full h-auto rounded-xl transition-all duration-500"
+            loading="lazy"
+            width={600}
+            height={400}
+            style={{ objectFit: 'cover' }}
+            onLoad={() => setIsImageLoaded(true)}
+            decoding="async"
+            fetchpriority="low"
+          />
+        </picture>
       </div>
     </div>
 
@@ -891,11 +832,7 @@ const HeroSection = ({ isVisible }) => {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 1, duration: 0.5, type: "spring", stiffness: 80 }}
-        onClick={() => {
-          // Smooth scroll to next section
-          const next = document.querySelector('[data-hero-next]');
-          if (next) next.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }}
+        onClick={handleScrollClick}
       >
         {/* Mouse body */}
         <svg

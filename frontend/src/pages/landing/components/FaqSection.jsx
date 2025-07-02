@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '../../../context/ThemeContext';
 
-const FaqSection = () => {
+const FaqSection = ({ isVisible }) => {
     const { isDarkMode } = useTheme();
     const sectionBg = useMemo(() => isDarkMode ? 'dark:bg-gray-900' : 'bg-white', [isDarkMode]);
     const [activeCategory, setActiveCategory] = useState('all');
@@ -205,7 +205,7 @@ const FaqSection = () => {
     };
     
     return (
-        <section className={`max-w-7xl mx-auto ${sectionBg}`}>
+        <section className={`max-w-7xl mx-auto ${sectionBg} transition-all duration-500 will-change-[background-color,color,box-shadow,filter]`}>
             <div className="flex flex-col gap-8 px-4 py-12">
                 <motion.div 
                     initial={{ opacity: 0, y: -20 }}

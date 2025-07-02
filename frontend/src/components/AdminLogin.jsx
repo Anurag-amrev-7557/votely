@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { EyeIcon, EyeSlashIcon, ShieldCheckIcon, ExclamationTriangleIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import axios from 'axios';
 
 const AdminLogin = () => {
   // Enhanced state management
@@ -380,6 +381,17 @@ const AdminLogin = () => {
           lockoutTime: null,
           loginHistory: [...prev.loginHistory, loginRecord].slice(-10)
         }));
+        
+        // Also log in as a user to set the user session cookie
+        try {
+          await axios.post('/api/auth/login', {
+            email: formData.email.trim(),
+            password: formData.password
+          }, { withCredentials: true });
+        } catch (userLoginErr) {
+          // Optionally handle user login error, but continue admin login
+          console.warn('User login for admin session failed:', userLoginErr);
+        }
         
         // Add success feedback before navigation
         setTimeout(() => {

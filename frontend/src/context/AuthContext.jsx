@@ -7,6 +7,7 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     // Check if user is logged in
@@ -19,12 +20,14 @@ export const AuthProvider = ({ children }) => {
         if (res.ok) {
           const data = await res.json();
           setUser(data.user);
+          setError(null);
         } else {
-          const errorData = await res.json().catch(() => ({}));
           setUser(null);
+          setError(null);
         }
       } catch (error) {
         setUser(null);
+        setError('Network error. Please try again.');
       } finally {
         setIsLoading(false);
       }
@@ -427,7 +430,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, loginWithGoogle, register, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, error, login, loginWithGoogle, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

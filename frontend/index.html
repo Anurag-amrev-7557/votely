@@ -26,10 +26,9 @@
     <meta name="application-name" content="Votely">
     <meta name="msapplication-TileColor" content="#2563eb">
     <meta name="msapplication-config" content="/browserconfig.xml">
-    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#2563eb">
-    <link rel="preload" as="image" href="/src/assets/landing-hero.webp" type="image/webp" />
     <style>
       html, body {
         min-height: 100%;
@@ -175,6 +174,7 @@
     <noscript>
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap">
     </noscript>
+    <meta name="mobile-web-app-capable" content="yes">
   </head>
   <body>
     <div id="root"></div>
@@ -186,19 +186,5 @@
       </div>
     </noscript>
     <script type="module" src="/src/main.jsx"></script>
-    <script>
-      // Only load Google Analytics in production
-      if (import.meta.env && import.meta.env.PROD) {
-        var ga = document.createElement('script');
-        ga.src = 'https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX';
-        ga.async = true;
-        ga.defer = true;
-        document.head.appendChild(ga);
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-XXXXXXXXXX');
-      }
-    </script>
   </body>
 </html>

@@ -17,6 +17,7 @@ import {
   Legend,
   Filler
 } from 'chart.js';
+import axios from 'axios';
 
 // Register ChartJS components
 ChartJS.register(
@@ -56,58 +57,28 @@ const ResultsPage = () => {
       weekly: []
     }
   });
+  const [polls, setPolls] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [pollResults, setPollResults] = useState(null);
+  const [resultsLoading, setResultsLoading] = useState(false);
+  const [resultsError, setResultsError] = useState(null);
 
-  // Sample data - replace with actual API calls
-  const polls = [
-    {
-      id: 1,
-      title: 'Employee Satisfaction Survey',
-      status: 'active',
-      totalVotes: 156,
-      participation: 78,
-      createdAt: '2024-03-15',
-      endDate: '2024-03-22',
-      options: [
-        { label: 'Very Satisfied', votes: 45, percentage: 28.8 },
-        { label: 'Satisfied', votes: 68, percentage: 43.6 },
-        { label: 'Neutral', votes: 25, percentage: 16.0 },
-        { label: 'Dissatisfied', votes: 12, percentage: 7.7 },
-        { label: 'Very Dissatisfied', votes: 6, percentage: 3.9 },
-      ],
-      demographics: {
-        ageGroups: [
-          { range: '18-24', count: 25 },
-          { range: '25-34', count: 45 },
-          { range: '35-44', count: 38 },
-          { range: '45-54', count: 28 },
-          { range: '55+', count: 20 }
-        ],
-        locations: [
-          { city: 'New York', count: 45 },
-          { city: 'Los Angeles', count: 38 },
-          { city: 'Chicago', count: 25 },
-          { city: 'Houston', count: 20 },
-          { city: 'Others', count: 28 }
-        ],
-        devices: [
-          { type: 'Mobile', count: 85 },
-          { type: 'Desktop', count: 45 },
-          { type: 'Tablet', count: 26 }
-        ]
-      },
-      votingTrends: {
-        hourly: Array.from({ length: 24 }, (_, i) => ({
-          hour: i,
-          votes: Math.floor(Math.random() * 20)
-        })),
-        daily: Array.from({ length: 7 }, (_, i) => ({
-          day: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i],
-          votes: Math.floor(Math.random() * 50)
-        }))
+  useEffect(() => {
+    const fetchPolls = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get('/api/polls');
+        setPolls(response.data);
+        setError(null);
+      } catch (err) {
+        setError('Failed to load polls');
+      } finally {
+        setLoading(false);
       }
-    },
-    // Add more sample polls...
-  ];
+    };
+    fetchPolls();
+  }, []);
 
   useEffect(() => {
     // Simulate API call
@@ -115,6 +86,24 @@ const ResultsPage = () => {
       setIsLoading(false);
     }, 1000);
   }, []);
+
+  useEffect(() => {
+    if (selectedPoll) {
+      setResultsLoading(true);
+      setResultsError(null);
+      setPollResults(null);
+      axios.get(`/api/polls/${selectedPoll.id}/results`)
+        .then(res => {
+          setPollResults(res.data);
+          setResultsLoading(false);
+        })
+        .catch(err => {
+          setResultsError('Failed to load poll results');
+          setResultsLoading(false);
+          toast.error('Failed to load poll results');
+        });
+    }
+  }, [selectedPoll]);
 
   const styles = {
     container: `min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200`,
@@ -700,26 +689,59 @@ const ResultsPage = () => {
                   <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
                     Results
                   </h4>
+                  {resultsLoading ? (
+                    <div className="py-8 text-center text-gray-500 dark:text-gray-400">Loading results...</div>
+                  ) : resultsError ? (
+                    <div className="py-8 text-center text-red-500 dark:text-red-400">{resultsError}</div>
+                  ) : pollResults && (
+                    <>
                   <div className="space-y-4">
-                    {selectedPoll.options.map((option, index) => (
+                        {pollResults.options.map((option, index) => {
+                          const percent = pollResults.totalVotes ? Math.round((option.votes / pollResults.totalVotes) * 100) : 0;
+                          return (
                       <div key={index}>
                         <div className="flex items-center justify-between text-sm mb-1">
-                          <span className="text-gray-700 dark:text-gray-300">{option.label}</span>
+                                <span className="text-gray-700 dark:text-gray-300">{option.text}</span>
                           <span className="font-medium text-gray-900 dark:text-white">
-                            {option.votes} votes ({option.percentage}%)
+                                  {option.votes} votes ({percent}%)
                           </span>
                         </div>
-                        <div className={styles.progressBar}>
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${option.percentage}%` }}
-                            transition={{ duration: 1, delay: 0.5 + index * 0.1 }}
-                            className={`${styles.progressFill} ${getProgressColor(option.percentage)}`}
-                          />
+                              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                <div className="bg-blue-600 h-3 rounded-full transition-all duration-500" style={{ width: `${percent}%` }} />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {/* Participation Rate */}
+                      <div className="mt-6">
+                        <h5 className="text-md font-semibold mb-2">Participation Rate</h5>
+                        <div className="text-lg font-bold">
+                          {/* If you have total eligible voters, use it here. For now, just show total votes. */}
+                          {pollResults.totalVotes} total votes
                         </div>
                       </div>
-                    ))}
+                      {/* Option Votes Bar Chart */}
+                      <div className="mt-6">
+                        <h5 className="text-md font-semibold mb-2">Votes by Option</h5>
+                        <Bar
+                          data={{
+                            labels: pollResults.options.map(opt => opt.text),
+                            datasets: [{
+                              label: 'Votes',
+                              data: pollResults.options.map(opt => opt.votes),
+                              backgroundColor: 'rgba(59, 130, 246, 0.8)'
+                            }]
+                          }}
+                          options={{
+                            responsive: true,
+                            plugins: { legend: { display: false } },
+                            scales: { y: { beginAtZero: true } }
+                          }}
+                        />
                   </div>
+                    </>
+                  )}
                 </div>
 
                 {/* Demographics */}

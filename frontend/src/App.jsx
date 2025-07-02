@@ -324,7 +324,7 @@ const ToasterConfig = memo(() => {
 
 // Enhanced Layout with skip-to-content and focus management
 const Layout = memo(({ children }) => (
-  <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+  <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200 pt-[68px]">
     <a href="#main-content" className="sr-only focus:not-sr-only absolute z-50 left-2 top-2 bg-blue-600 text-white px-4 py-2 rounded transition">Skip to main content</a>
     <ToasterConfig />
     <Navbar />
@@ -823,10 +823,15 @@ const App = () => {
         window.location.reload();
       }}
     >
-      <ThemeProvider>
-        <AuthProvider>
-          <AdminAuthProvider>
-            <Router future={router.future}>
+      <Router
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true
+        }}
+      >
+        <ThemeProvider>
+          <AuthProvider>
+            <AdminAuthProvider>
               <Suspense fallback={<LoadingSpinner />}>
                 <RouteChangeHandler />
                 <Layout>
@@ -834,10 +839,10 @@ const App = () => {
                 </Layout>
               </Suspense>
               <ToasterConfig />
-            </Router>
-          </AdminAuthProvider>
-        </AuthProvider>
-      </ThemeProvider>
+            </AdminAuthProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </Router>
     </ErrorBoundary>
   )
 }

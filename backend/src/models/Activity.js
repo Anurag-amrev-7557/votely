@@ -6,6 +6,26 @@ const activitySchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  poll: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Poll',
+    required: true
+  },
+  option: {
+    type: String,
+    required: true
+  },
+  action: {
+    type: String,
+    default: 'vote_cast'
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now
+  },
+  meta: {
+    type: Object
+  },
   type: {
     type: String,
     enum: ['Voted', 'Created', 'Commented', 'Shared', 'Login', 'Profile_Update'],
@@ -29,10 +49,6 @@ const activitySchema = new mongoose.Schema({
     pollTitle: String,
     commentText: String,
     sharePlatform: String
-  },
-  timestamp: {
-    type: Date,
-    default: Date.now
   }
 }, {
   timestamps: true

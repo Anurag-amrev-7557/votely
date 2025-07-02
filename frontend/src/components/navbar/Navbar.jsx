@@ -243,10 +243,25 @@ const Navbar = () => {
     const [isSwitching, setIsSwitching] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [showNavbar, setShowNavbar] = useState(true);
+    const lastScrollY = React.useRef(window.scrollY);
 
     // Memoize scroll handler
     const handleScroll = useCallback(() => {
         setIsScrolled(window.scrollY > 20);
+        if (window.scrollY < 20) {
+            setShowNavbar(true);
+            lastScrollY.current = window.scrollY;
+            return;
+        }
+        if (window.scrollY > lastScrollY.current) {
+            // Scrolling down
+            setShowNavbar(false);
+        } else {
+            // Scrolling up
+            setShowNavbar(true);
+        }
+        lastScrollY.current = window.scrollY;
     }, []);
 
     useEffect(() => {
@@ -320,8 +335,8 @@ const Navbar = () => {
     return (
         <motion.header 
             initial={{ y: -100 }}
-            animate={{ y: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
+            animate={{ y: showNavbar ? 0 : -100 }}
+            transition={{ duration: 0.4, ease: 'easeInOut' }}
             className={`fixed top-0 left-0 right-0 z-[60] transition-all duration-300 ease-in-out will-change-[background-color,box-shadow] ${
                 isScrolled 
                     ? 'bg-white dark:bg-gray-900 shadow-sm' 

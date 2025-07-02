@@ -42,14 +42,14 @@ const LandingPage = () => {
     }, []);
 
     return (
-        <div className="layout-container flex grow flex-col min-h-screen">
+        <div className="layout-container flex grow flex-col min-h-screen transition-all duration-500 will-change-[background-color,color,box-shadow,filter]">
             <div 
-                className={`px-4 sm:px-6 lg:px-8 flex justify-center py-5 bg-white dark:bg-gray-900 mt-16 w-full transition-colors duration-300 will-change-[background-color]`}
+                className={`px-4 sm:px-6 lg:px-8 flex justify-center py-5 bg-white dark:bg-gray-900 w-full transition-all duration-500 will-change-[background-color,color,box-shadow,filter]`}
             >
                 <div className="layout-content-container flex flex-col max-w-7xl flex-1">
                     <div className="@container space-y-16 sm:space-y-24">
                         <div className="min-h-[80vh] flex items-center justify-center">
-                            <Suspense fallback={<SectionSkeleton />}>
+                            <Suspense fallback={<div className="h-40 flex items-center justify-center">Loading hero...</div>}>
                                 <HeroSection isVisible={isVisible} />
                             </Suspense>
                         </div>

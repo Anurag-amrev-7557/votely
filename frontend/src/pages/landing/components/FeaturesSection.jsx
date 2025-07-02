@@ -111,12 +111,12 @@ const FeatureCard = ({ icon, title, description, imageUrl, index }) => (
   </div>
 );
 
-const FeaturesSection = () => {
+const FeaturesSection = ({ isVisible }) => {
   const { isDarkMode } = useTheme();
   const sectionBg = useMemo(() => isDarkMode ? 'dark:bg-gray-900' : 'bg-white', [isDarkMode]);
 
   return (
-    <div className={`w-full flex flex-col gap-8 sm:gap-12 px-4 @container rounded-xl relative overflow-hidden ${sectionBg}`}>
+    <div className={`w-full flex flex-col gap-8 sm:gap-12 px-4 @container rounded-xl relative overflow-hidden ${sectionBg} transition-all duration-500 will-change-[background-color,color,box-shadow,filter]`}>
 
       <div className="flex flex-col gap-4 text-center max-w-2xl mx-auto relative min-h-[120px] w-full">
         <div className="relative flex items-center justify-center mx-auto mb-2">

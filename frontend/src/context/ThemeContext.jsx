@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 
 const ThemeContext = createContext();
 
@@ -7,8 +8,11 @@ export const ThemeProvider = ({ children }) => {
   const [mode, setMode] = useState(() => {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark' || savedTheme === 'light') return savedTheme;
-    return 'system';
+    return 'light';
   });
+
+  const location = useLocation();
+  const isLandingPage = location.pathname === '/';
 
   // Compute effective theme: respects system if mode is 'system'
   const getEffectiveTheme = useCallback(() => {
@@ -28,10 +32,12 @@ export const ThemeProvider = ({ children }) => {
   // Helper to apply theme to DOM
   const applyTheme = useCallback(
     (theme) => {
-      // Remove both theme classes before adding the new one
-      document.documentElement.classList.remove('light', 'dark');
-      document.documentElement.classList.add(theme);
-
+      if (!isLandingPage) {
+        document.documentElement.classList.remove('light', 'dark');
+        document.documentElement.classList.add(theme);
+      } else {
+        document.documentElement.classList.remove('light', 'dark');
+      }
       // Set color-scheme meta tag for system color scheme integration
       let colorSchemeMeta = document.querySelector('meta[name="color-scheme"]');
       if (!colorSchemeMeta) {
@@ -39,9 +45,7 @@ export const ThemeProvider = ({ children }) => {
         colorSchemeMeta.setAttribute('name', 'color-scheme');
         document.head.appendChild(colorSchemeMeta);
       }
-      // Always prefer current mode first for color-scheme
       colorSchemeMeta.setAttribute('content', theme === 'dark' ? 'dark light' : 'light dark');
-
       // Set background and text color for both modes for smooth transitions
       if (theme === 'dark') {
         document.body.style.backgroundColor = '#181f29';
@@ -50,7 +54,6 @@ export const ThemeProvider = ({ children }) => {
         document.body.style.backgroundColor = '#f8fafc';
         document.body.style.color = '#1e293b';
       }
-
       // Set CSS variables for enhanced theming
       document.documentElement.style.setProperty('--theme-bg', theme === 'dark' ? '#181f29' : '#f8fafc');
       document.documentElement.style.setProperty('--theme-text', theme === 'dark' ? '#e2e8f0' : '#1e293b');
@@ -58,12 +61,12 @@ export const ThemeProvider = ({ children }) => {
       document.documentElement.style.setProperty('--theme-accent', theme === 'dark' ? '#2563eb' : '#3b82f6');
       document.documentElement.style.setProperty('--theme-muted', theme === 'dark' ? '#232b36' : '#f1f5f9');
     },
-    []
+    [isLandingPage]
   );
 
   // Toggle between light and dark mode (never sets to 'system')
   const toggleTheme = useCallback(() => {
-    document.documentElement.classList.add('theme-transition');
+    document.documentElement.classList.add('theme-transition', 'theme-transitioning');
     requestAnimationFrame(() => {
       setMode((prev) => {
         let next;
@@ -81,7 +84,7 @@ export const ThemeProvider = ({ children }) => {
   const setTheme = useCallback(
     (theme) => {
       if (theme !== 'dark' && theme !== 'light' && theme !== 'system') return;
-      document.documentElement.classList.add('theme-transition');
+      document.documentElement.classList.add('theme-transition', 'theme-transitioning');
       requestAnimationFrame(() => {
         if (theme === 'system') {
           localStorage.removeItem('theme');
@@ -103,8 +106,8 @@ export const ThemeProvider = ({ children }) => {
 
     // Remove transition class after transition completes
     const timeoutId = setTimeout(() => {
-      document.documentElement.classList.remove('theme-transition');
-    }, 300);
+      document.documentElement.classList.remove('theme-transition', 'theme-transitioning');
+    }, 500);
 
     return () => clearTimeout(timeoutId);
   }, [effectiveTheme, applyTheme]);
@@ -140,7 +143,7 @@ export const ThemeProvider = ({ children }) => {
   return (
     <ThemeContext.Provider value={themeValue}>
       <div
-        className={isDarkMode ? 'dark' : 'light'}
+        className={isLandingPage ? (isDarkMode ? 'dark' : 'light') : ''}
         style={{
           minHeight: '100vh',
           backgroundColor: isDarkMode ? '#181f29' : '#f8fafc',

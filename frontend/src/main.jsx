@@ -35,11 +35,6 @@ const LoadingFallback = () => (
 const logPerformance = () => {
   if (process.env.NODE_ENV === 'development') {
     const metrics = performance.getEntriesByType('navigation')[0]
-    console.log('Performance Metrics:', {
-      'Time to First Byte': metrics.responseStart - metrics.requestStart,
-      'DOM Content Loaded': metrics.domContentLoadedEventEnd - metrics.navigationStart,
-      'Window Load': metrics.loadEventEnd - metrics.navigationStart,
-    })
   }
 }
 

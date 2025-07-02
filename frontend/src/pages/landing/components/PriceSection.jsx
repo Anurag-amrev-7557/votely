@@ -259,7 +259,7 @@ const PricingCard = ({ plan, price, features, isPopular, buttonText, buttonVaria
     </div>
 );
 
-const PriceSection = () => {
+const PriceSection = ({ isVisible }) => {
     const { isDarkMode } = useTheme();
     const sectionBg = useMemo(() => isDarkMode ? 'dark:bg-gray-900' : 'bg-white', [isDarkMode]);
     // Advanced, extensible, and feature-rich pricing plan configuration
@@ -439,7 +439,7 @@ const PriceSection = () => {
     ];
 
     return (
-        <section className={`max-w-7xl mx-auto ${sectionBg}`}>
+        <section className={`max-w-7xl mx-auto ${sectionBg} transition-all duration-500 will-change-[background-color,color,box-shadow,filter]`}>
             <div className="flex flex-col gap-6 sm:gap-8 px-4 py-10 sm:py-12">
                 <motion.div 
                     initial={{ opacity: 0, y: -20 }}

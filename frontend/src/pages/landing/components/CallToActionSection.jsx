@@ -2,14 +2,14 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '../../../context/ThemeContext';
 
-const CallToActionSection = () => {
+const CallToActionSection = ({ isVisible }) => {
     const { isDarkMode } = useTheme();
     const sectionBg = useMemo(() => isDarkMode ? 'dark:bg-gray-900' : 'from-blue-50 to-indigo-50', [isDarkMode]);
 
     return (
-        <section className="relative overflow-hidden">
+        <section className="relative overflow-hidden transition-all duration-500 will-change-[background-color,color,box-shadow,filter]">
             {/* Background gradient */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${sectionBg} -z-10 transition-colors duration-300 will-change-[background-color]`} />
+            <div className={`absolute inset-0 bg-gradient-to-br ${sectionBg} -z-10 transition-all duration-500 will-change-[background-color,color,box-shadow,filter]`} />
             
             {/* Advanced Decorative Elements with Animated SVGs, Gradients, and Parallax */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-10">

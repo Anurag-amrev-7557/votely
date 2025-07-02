@@ -9,6 +9,8 @@ const profileRoutes = require('./routes/profileRoutes');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const session = require('express-session');
+const http = require('http');
+const { Server } = require('socket.io');
 
 // Load environment variables
 dotenv.config();
@@ -17,6 +19,18 @@ dotenv.config();
 connectDB();
 
 const app = express();
+
+// --- SOCKET.IO SETUP ---
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+    credentials: true,
+  },
+});
+
+// Make io available for controllers
+module.exports.io = io;
 
 // CORS configuration
 const corsOptions = {
@@ -60,6 +74,14 @@ app.use('/api/auth', authRoutes);
 // Profile routes
 app.use('/api/profile', profileRoutes);
 
+// Poll routes
+const pollRoutes = require('./routes/pollRoutes');
+app.use('/api/polls', pollRoutes);
+
+// Vote routes
+const voteRoutes = require('./routes/voteRoutes');
+app.use('/api/votes', voteRoutes);
+
 // Google OAuth configuration
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
@@ -99,7 +121,17 @@ app.get('/api/auth/google/callback',
   }
 );
 
+io.on('connection', (socket) => {
+  // Client requests to join a poll room for real-time updates
+  socket.on('joinPollRoom', (pollId) => {
+    if (pollId) {
+      socket.join(`poll_${pollId}`);
+    }
+  });
+  // Optionally handle disconnects or other events here
+});
+
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 }); 
