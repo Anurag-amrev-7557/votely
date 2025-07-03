@@ -219,6 +219,10 @@ export const AuthProvider = ({ children }) => {
             
             // Update user state
             setUser(event.data.user);
+
+            // Redirect to homepage
+            window.location.replace('/');
+
             resolve({ success: true });
           } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
             // Close the popup

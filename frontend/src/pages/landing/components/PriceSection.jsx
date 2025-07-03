@@ -232,7 +232,8 @@ const PricingCard = ({ plan, price, features, isPopular, buttonText, buttonVaria
             buttonVariant === 'primary' 
                 ? 'bg-blue-600 hover:bg-blue-700 text-white' 
                 : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
-        } text-sm font-bold leading-normal tracking-[0.015em] transition-all duration-300 hover:scale-105 mx-auto sm:mx-0`}>
+        } text-sm font-bold leading-normal tracking-[0.015em] transition-all duration-300 hover:scale-105 mx-auto sm:mx-0`}
+            aria-label={`Choose ${plan} plan`}>
             <span className="truncate">{buttonText}</span>
         </button>
         <div className="flex flex-col gap-2">
@@ -439,156 +440,33 @@ const PriceSection = ({ isVisible }) => {
     ];
 
     return (
-        <section className={`max-w-7xl mx-auto ${sectionBg} transition-all duration-500 will-change-[background-color,color,box-shadow,filter]`}>
-            <div className="flex flex-col gap-6 sm:gap-8 px-4 py-10 sm:py-12">
-                <motion.div 
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex flex-col gap-4 sm:gap-6 text-center max-w-3xl mx-auto"
-                >
-                    {/* Advanced Animated Pricing Badge */}
-                    <div
-                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-100 via-blue-200 to-blue-100 dark:from-blue-900/40 dark:via-blue-800/30 dark:to-blue-900/40 text-blue-700 dark:text-blue-300 text-sm font-semibold shadow-lg ring-1 ring-blue-200 dark:ring-blue-900/40 mb-4 relative group transition-all duration-500 will-change-[background-color,color,box-shadow] mx-auto"
-                        tabIndex={0}
-                        role="status"
-                        aria-label="Pricing Plans"
+        <section aria-labelledby="pricing-main-heading" role="region" tabIndex={0}>
+            <h2 id="pricing-main-heading" className="sr-only">Pricing Plans</h2>
+            <div className={`max-w-7xl mx-auto ${sectionBg} transition-all duration-500 will-change-[background-color,color,box-shadow,filter]`}>
+                <div className="flex flex-col gap-6 sm:gap-8 px-4 py-10 sm:py-12">
+                    <motion.div 
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex flex-col gap-4 sm:gap-6 text-center max-w-3xl mx-auto"
                     >
-                        {/* Animated Glow Effect */}
-                        <span
-                            className="absolute -inset-1.5 rounded-full bg-blue-400/20 dark:bg-blue-700/20 blur-xl pointer-events-none z-0"
-                            style={{
-                                animation: "pulse-orb 2.8s ease-in-out infinite"
-                            }}
-                            aria-hidden="true"
-                        />
-                        {/* Animated Pricing Tag Icon */}
-                        <svg
-                            className="relative z-10 w-5 h-5 text-blue-500 dark:text-blue-300 drop-shadow-[0_1px_2px_rgba(59,130,246,0.15)]"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            aria-hidden="true"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M6 3h12M6 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3M6 3a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3"
-                            >
-                                <animate
-                                    attributeName="opacity"
-                                    values="0.7;1;0.7"
-                                    dur="2.2s"
-                                    repeatCount="indefinite"
-                                />
-                            </path>
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M12 7v10"
-                            />
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M9 10h6"
-                            />
-                            {/* Sparkle effect */}
-                            <g>
-                                <circle className="animate-float-sparkle sparkle-0" cx="19" cy="6" r="1.1" fill="#60a5fa" opacity="0.7" />
-                                <circle className="animate-float-sparkle sparkle-1" cx="6" cy="5" r="0.7" fill="#818cf8" opacity="0.6" />
-                                <circle className="animate-float-sparkle sparkle-2" cx="12" cy="3.5" r="0.6" fill="#a78bfa" opacity="0.5" />
-                            </g>
-                        </svg>
-                        <span className="relative z-10 font-semibold tracking-wide bg-gradient-to-r from-blue-700 via-blue-500 to-blue-400 dark:from-blue-300 dark:via-blue-400 dark:to-blue-500 bg-clip-text text-transparent text-xs sm:text-sm">
-                            Flexible Plans
-                        </span>
-                        {/* Tooltip on focus/hover for accessibility */}
+                        {/* Advanced Animated Pricing Badge */}
                         <div
-                            className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-3 py-1 rounded bg-gray-900/90 text-xs text-white shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 z-20"
-                            role="tooltip"
+                            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-100 via-blue-200 to-blue-100 dark:from-blue-900/40 dark:via-blue-800/30 dark:to-blue-900/40 text-blue-700 dark:text-blue-300 text-sm font-semibold shadow-lg ring-1 ring-blue-200 dark:ring-blue-900/40 mb-4 relative group transition-all duration-500 will-change-[background-color,color,box-shadow] mx-auto"
+                            tabIndex={0}
+                            role="status"
+                            aria-label="Pricing Plans"
                         >
-                            Choose the plan that fits your needs!
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col items-center gap-2 sm:gap-3">
-                        <h2 className="text-gray-900 dark:text-white text-2xl sm:text-[32px] font-bold leading-tight tracking-[-0.02em] @[480px]:text-4xl">
-                            Simple, Transparent Pricing
-                        </h2>
-                        <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base leading-relaxed max-w-2xl">
-                            Choose the perfect plan for your voting needs. All plans include our core features and are backed by our 30-day money-back guarantee.
-                        </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-6 sm:mt-8 mb-10">
-                        <div className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 justify-center sm:justify-start">
-                            <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256" className="text-green-600 dark:text-green-400">
-                          <path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"></path>
-                        </svg>
-                      </div>
-                            <div className="flex flex-col items-center sm:items-start">
-                                <span className="text-gray-900 dark:text-white font-medium text-sm sm:text-base">No Hidden Fees</span>
-                                <span className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">Transparent pricing</span>
-                            </div>
-                    </div>
-
-                        <div className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 justify-center sm:justify-start">
-                            <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256" className="text-blue-600 dark:text-blue-400">
-                          <path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"></path>
-                        </svg>
-                      </div>
-                            <div className="flex flex-col items-center sm:items-start">
-                                <span className="text-gray-900 dark:text-white font-medium text-sm sm:text-base">Cancel Anytime</span>
-                                <span className="text-gray-500 dark:text-gray-400 text-xs whitespace-nowrap sm:text-sm">No long-term commitment</span>
-                            </div>
-                    </div>
-
-                        <div className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 justify-center sm:justify-start">
-                            <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256" className="text-purple-600 dark:text-purple-400">
-                          <path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"></path>
-                        </svg>
-                      </div>
-                            <div className="flex flex-col items-center sm:items-start">
-                                <span className="text-gray-900 dark:text-white font-medium text-sm sm:text-base">30-Day Guarantee</span>
-                                <span className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">Risk-free trial</span>
-                            </div>
-                        </div>
-                    </div>
-                  </motion.div>
-
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-4 min-w-0">
-                    {pricingPlans.map((plan, index) => (
-                        <PricingCard key={index} {...plan} />
-                    ))}
-                </div>
-
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.5 }}
-                    transition={{ duration: 0.7, ease: "easeOut" }}
-                    className="flex flex-col items-center gap-8 sm:gap-10 mt-8 sm:mt-12 relative z-10"
-                >
-                    {/* Animated Glow Background */}
-                    <span
-                        aria-hidden="true"
-                        className="absolute inset-0 pointer-events-none z-0"
-                    >
-                        <span className="block absolute left-1/2 top-0 -translate-x-1/2 w-[340px] h-[120px] sm:w-[480px] sm:h-[180px] bg-gradient-to-r from-blue-400/20 via-blue-200/30 to-blue-400/20 blur-2xl rounded-full opacity-70 animate-pulse-orb" />
-                    </span>
-                    <div className="flex flex-col items-center gap-4 sm:gap-5 text-center max-w-2xl relative z-10">
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-100 via-blue-200 to-blue-100 dark:from-blue-900/40 dark:via-blue-800/30 dark:to-blue-900/40 text-blue-700 dark:text-blue-300 text-sm font-semibold shadow-lg ring-1 ring-blue-200 dark:ring-blue-900/40 mb-2 relative group transition-all duration-500 will-change-[background-color,color,box-shadow]">
-                            {/* Animated Icon */}
-                            <motion.svg
-                                initial={{ scale: 0.85, rotate: -8 }}
-                                animate={{ scale: [0.85, 1.1, 1], rotate: [ -8, 8, 0 ] }}
-                                transition={{ repeat: Infinity, repeatType: "reverse", duration: 2.8, ease: "easeInOut" }}
-                                className="w-5 h-5 text-blue-500 dark:text-blue-300 drop-shadow-[0_1px_2px_rgba(59,130,246,0.15)]"
+                            {/* Animated Glow Effect */}
+                            <span
+                                className="absolute -inset-1.5 rounded-full bg-blue-400/20 dark:bg-blue-700/20 blur-xl pointer-events-none z-0"
+                                style={{
+                                    animation: "pulse-orb 2.8s ease-in-out infinite"
+                                }}
+                                aria-hidden="true"
+                            />
+                            {/* Animated Pricing Tag Icon */}
+                            <svg
+                                className="relative z-10 w-5 h-5 text-blue-500 dark:text-blue-300 drop-shadow-[0_1px_2px_rgba(59,130,246,0.15)]"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -598,74 +476,200 @@ const PriceSection = ({ isVisible }) => {
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                     strokeWidth="2"
-                                    d="M12 19v-6m0 0l-3 3m3-3l3 3M5 12a7 7 0 1 1 14 0 7 7 0 0 1-14 0Z"
+                                    d="M6 3h12M6 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3M6 3a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3"
+                                >
+                                    <animate
+                                        attributeName="opacity"
+                                        values="0.7;1;0.7"
+                                        dur="2.2s"
+                                        repeatCount="indefinite"
+                                    />
+                                </path>
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M12 7v10"
                                 />
-                                {/* Sparkle */}
-                                <motion.circle
-                                    className="origin-center"
-                                    cx="19"
-                                    cy="7"
-                                    r="1"
-                                    fill="#60a5fa"
-                                    opacity="0.7"
-                                    animate={{ scale: [1, 1.3, 1], opacity: [0.7, 1, 0.7] }}
-                                    transition={{ repeat: Infinity, duration: 2.2, delay: 0.5, repeatType: "reverse" }}
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M9 10h6"
                                 />
-                            </motion.svg>
-                            <span className="relative z-10 font-semibold tracking-wide bg-gradient-to-r from-blue-700 via-blue-500 to-blue-400 dark:from-blue-300 dark:via-blue-400 dark:to-blue-500 bg-clip-text text-transparent">
-                                Enterprise & Custom
+                                {/* Sparkle effect */}
+                                <g>
+                                    <circle className="animate-float-sparkle sparkle-0" cx="19" cy="6" r="1.1" fill="#60a5fa" opacity="0.7" />
+                                    <circle className="animate-float-sparkle sparkle-1" cx="6" cy="5" r="0.7" fill="#818cf8" opacity="0.6" />
+                                    <circle className="animate-float-sparkle sparkle-2" cx="12" cy="3.5" r="0.6" fill="#a78bfa" opacity="0.5" />
+                                </g>
+                            </svg>
+                            <span className="relative z-10 font-semibold tracking-wide bg-gradient-to-r from-blue-700 via-blue-500 to-blue-400 dark:from-blue-300 dark:via-blue-400 dark:to-blue-500 bg-clip-text text-transparent text-xs sm:text-sm">
+                                Flexible Plans
                             </span>
                             {/* Tooltip on focus/hover for accessibility */}
                             <div
                                 className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-3 py-1 rounded bg-gray-900/90 text-xs text-white shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 z-20"
                                 role="tooltip"
                             >
-                                Advanced solutions for unique needs.
+                                Choose the plan that fits your needs!
                             </div>
                         </div>
-                        <h3 className="text-gray-900 dark:text-white text-xl sm:text-2xl font-bold leading-tight tracking-[-0.015em]">
-                            Need a Custom Solution?
-                        </h3>
-                        <p className="text-gray-600 dark:text-gray-300 text-base sm:text-lg">
-                            Unlock the full potential of Votely with bespoke features, integrations, and support. Our team partners with organizations of all sizes to deliver secure, scalable, and compliant voting solutions tailored to your exact requirements.
-                        </p>
-                        <ul className="flex flex-wrap justify-center gap-2 sm:gap-3 mt-2 text-sm sm:text-base">
-                            <li className="flex items-center gap-1 px-2 py-1 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium">
-                                <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 20 20"><path strokeLinecap="round" strokeLinejoin="round" d="M5 10l4 4L15 7" /></svg>
-                                SSO & Custom Auth
-                            </li>
-                            <li className="flex items-center gap-1 px-2 py-1 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium">
-                                <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 20 20"><path strokeLinecap="round" strokeLinejoin="round" d="M5 10l4 4L15 7" /></svg>
-                                Dedicated Support
-                            </li>
-                            <li className="flex items-center gap-1 px-2 py-1 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium">
-                                <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 20 20"><path strokeLinecap="round" strokeLinejoin="round" d="M5 10l4 4L15 7" /></svg>
-                                Custom Integrations
-                            </li>
-                            <li className="flex items-center gap-1 px-2 py-1 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium">
-                                <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 20 20"><path strokeLinecap="round" strokeLinejoin="round" d="M5 10l4 4L15 7" /></svg>
-                                Advanced Security
-                            </li>
-                        </ul>
+
+                        <div className="flex flex-col items-center gap-2 sm:gap-3">
+                            <h2 className="text-gray-900 dark:text-white text-2xl sm:text-[32px] font-bold leading-tight tracking-[-0.02em] @[480px]:text-4xl">
+                                Simple, Transparent Pricing
+                            </h2>
+                            <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base leading-relaxed max-w-2xl">
+                                Choose the perfect plan for your voting needs. All plans include our core features and are backed by our 30-day money-back guarantee.
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-6 sm:mt-8 mb-10">
+                            <div className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 justify-center sm:justify-start">
+                                <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256" className="text-green-600 dark:text-green-400">
+                              <path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"></path>
+                          </svg>
+                                </div>
+                                <div className="flex flex-col items-center sm:items-start">
+                                    <span className="text-gray-900 dark:text-white font-medium text-sm sm:text-base">No Hidden Fees</span>
+                                    <span className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">Transparent pricing</span>
+                                </div>
+                        </div>
+
+                            <div className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 justify-center sm:justify-start">
+                                <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256" className="text-blue-600 dark:text-blue-400">
+                              <path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"></path>
+                          </svg>
+                                </div>
+                                <div className="flex flex-col items-center sm:items-start">
+                                    <span className="text-gray-900 dark:text-white font-medium text-sm sm:text-base">Cancel Anytime</span>
+                                    <span className="text-gray-500 dark:text-gray-400 text-xs whitespace-nowrap sm:text-sm">No long-term commitment</span>
+                                </div>
+                        </div>
+
+                            <div className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 justify-center sm:justify-start">
+                                <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256" className="text-purple-600 dark:text-purple-400">
+                              <path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"></path>
+                          </svg>
+                                </div>
+                                <div className="flex flex-col items-center sm:items-start">
+                                    <span className="text-gray-900 dark:text-white font-medium text-sm sm:text-base">30-Day Guarantee</span>
+                                    <span className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">Risk-free trial</span>
+                                </div>
+                            </div>
+                        </div>
+                      </motion.div>
+
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-4 min-w-0">
+                        {pricingPlans.map((plan, index) => (
+                            <PricingCard key={index} {...plan} />
+                        ))}
                     </div>
-                    <Link to="/contact" tabIndex={-1} className="relative z-10">
-                        <motion.button
-                            whileHover={{ scale: 1.045, boxShadow: "0 8px 32px 0 rgba(59,130,246,0.18)" }}
-                            whileTap={{ scale: 0.97 }}
-                            className="flex w-full sm:w-auto min-w-[120px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 sm:h-14 px-5 sm:px-7 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-700 hover:from-blue-700 hover:to-blue-600 text-white text-base sm:text-lg font-bold leading-normal tracking-[0.015em] shadow-xl hover:shadow-2xl transform transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2"
-                            aria-label="Contact Sales for Custom Solution"
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, amount: 0.5 }}
+                        transition={{ duration: 0.7, ease: "easeOut" }}
+                        className="flex flex-col items-center gap-8 sm:gap-10 mt-8 sm:mt-12 relative z-10"
+                    >
+                        {/* Animated Glow Background */}
+                        <span
+                            aria-hidden="true"
+                            className="absolute inset-0 pointer-events-none z-0"
                         >
-                            <span className="truncate flex items-center gap-2">
-                                <svg className="w-5 h-5 text-white/80" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 12.79V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7.79a2 2 0 0 0 1.42-.59l5.2-5.2a2 2 0 0 0 .59-1.42Z" /></svg>
-                                Contact Sales
-                            </span>
-                        </motion.button>
-                    </Link>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center max-w-xs">
-                        Response within 1 business day. <span className="inline-block align-middle animate-pulse text-blue-400">●</span>
-                    </div>
-                </motion.div>
-              </div>
+                            <span className="block absolute left-1/2 top-0 -translate-x-1/2 w-[340px] h-[120px] sm:w-[480px] sm:h-[180px] bg-gradient-to-r from-blue-400/20 via-blue-200/30 to-blue-400/20 blur-2xl rounded-full opacity-70 animate-pulse-orb" />
+                        </span>
+                        <div className="flex flex-col items-center gap-4 sm:gap-5 text-center max-w-2xl relative z-10">
+                            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-100 via-blue-200 to-blue-100 dark:from-blue-900/40 dark:via-blue-800/30 dark:to-blue-900/40 text-blue-700 dark:text-blue-300 text-sm font-semibold shadow-lg ring-1 ring-blue-200 dark:ring-blue-900/40 mb-2 relative group transition-all duration-500 will-change-[background-color,color,box-shadow]">
+                                {/* Animated Icon */}
+                                <motion.svg
+                                    initial={{ scale: 0.85, rotate: -8 }}
+                                    animate={{ scale: [0.85, 1.1, 1], rotate: [ -8, 8, 0 ] }}
+                                    transition={{ repeat: Infinity, repeatType: "reverse", duration: 2.8, ease: "easeInOut" }}
+                                    className="w-5 h-5 text-blue-500 dark:text-blue-300 drop-shadow-[0_1px_2px_rgba(59,130,246,0.15)]"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    aria-hidden="true"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M12 19v-6m0 0l-3 3m3-3l3 3M5 12a7 7 0 1 1 14 0 7 7 0 0 1-14 0Z"
+                                    />
+                                    {/* Sparkle */}
+                                    <motion.circle
+                                        className="origin-center"
+                                        cx="19"
+                                        cy="7"
+                                        r="1"
+                                        fill="#60a5fa"
+                                        opacity="0.7"
+                                        animate={{ scale: [1, 1.3, 1], opacity: [0.7, 1, 0.7] }}
+                                        transition={{ repeat: Infinity, duration: 2.2, delay: 0.5, repeatType: "reverse" }}
+                                    />
+                                </motion.svg>
+                                <span className="relative z-10 font-semibold tracking-wide bg-gradient-to-r from-blue-700 via-blue-500 to-blue-400 dark:from-blue-300 dark:via-blue-400 dark:to-blue-500 bg-clip-text text-transparent">
+                                    Enterprise & Custom
+                                </span>
+                                {/* Tooltip on focus/hover for accessibility */}
+                                <div
+                                    className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-3 py-1 rounded bg-gray-900/90 text-xs text-white shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 z-20"
+                                    role="tooltip"
+                                >
+                                    Advanced solutions for unique needs.
+                                </div>
+                            </div>
+                            <h3 className="text-gray-900 dark:text-white text-xl sm:text-2xl font-bold leading-tight tracking-[-0.015em]">
+                                Need a Custom Solution?
+                            </h3>
+                            <p className="text-gray-600 dark:text-gray-300 text-base sm:text-lg">
+                                Unlock the full potential of Votely with bespoke features, integrations, and support. Our team partners with organizations of all sizes to deliver secure, scalable, and compliant voting solutions tailored to your exact requirements.
+                            </p>
+                            <ul className="flex flex-wrap justify-center gap-2 sm:gap-3 mt-2 text-sm sm:text-base">
+                                <li className="flex items-center gap-1 px-2 py-1 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium">
+                                    <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 20 20"><path strokeLinecap="round" strokeLinejoin="round" d="M5 10l4 4L15 7" /></svg>
+                                    SSO & Custom Auth
+                                </li>
+                                <li className="flex items-center gap-1 px-2 py-1 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium">
+                                    <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 20 20"><path strokeLinecap="round" strokeLinejoin="round" d="M5 10l4 4L15 7" /></svg>
+                                    Dedicated Support
+                                </li>
+                                <li className="flex items-center gap-1 px-2 py-1 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium">
+                                    <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 20 20"><path strokeLinecap="round" strokeLinejoin="round" d="M5 10l4 4L15 7" /></svg>
+                                    Custom Integrations
+                                </li>
+                                <li className="flex items-center gap-1 px-2 py-1 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium">
+                                    <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 20 20"><path strokeLinecap="round" strokeLinejoin="round" d="M5 10l4 4L15 7" /></svg>
+                                    Advanced Security
+                                </li>
+                            </ul>
+                        </div>
+                        <Link to="/contact" tabIndex={-1} className="relative z-10">
+                            <motion.button
+                                whileHover={{ scale: 1.045, boxShadow: "0 8px 32px 0 rgba(59,130,246,0.18)" }}
+                                whileTap={{ scale: 0.97 }}
+                                className="flex w-full sm:w-auto min-w-[120px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 sm:h-14 px-5 sm:px-7 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-700 hover:from-blue-700 hover:to-blue-600 text-white text-base sm:text-lg font-bold leading-normal tracking-[0.015em] shadow-xl hover:shadow-2xl transform transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2"
+                                aria-label="Contact Sales for Custom Solution"
+                            >
+                                <span className="truncate flex items-center gap-2">
+                                    <svg className="w-5 h-5 text-white/80" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 12.79V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7.79a2 2 0 0 0 1.42-.59l5.2-5.2a2 2 0 0 0 .59-1.42Z" /></svg>
+                                    Contact Sales
+                                </span>
+                            </motion.button>
+                        </Link>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center max-w-xs">
+                            Response within 1 business day. <span className="inline-block align-middle animate-pulse text-blue-400">●</span>
+                        </div>
+                    </motion.div>
+                  </div>
+            </div>
         </section>
     );
 }

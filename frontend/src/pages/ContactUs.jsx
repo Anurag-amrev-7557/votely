@@ -24,6 +24,8 @@ const ContactUs = () => {
     <div
       className={`relative flex size-full min-h-screen flex-col bg-gray-50 dark:bg-gray-900 group/design-root overflow-x-hidden ${isDarkMode ? 'dark' : ''}`}
       style={{ fontFamily: 'Inter, Noto Sans, sans-serif' }}
+      role="main"
+      aria-label="Contact Votely main content"
     >
       <div className="layout-container flex h-full grow flex-col">
         <div className="px-40 flex flex-1 justify-center py-5">
@@ -45,6 +47,7 @@ const ContactUs = () => {
                       className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 dark:text-white focus:outline-0 focus:ring-0 border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:border-blue-400 h-14 placeholder:text-gray-400 dark:placeholder:text-gray-500 p-[15px] text-base font-normal leading-normal"
                       value={name}
                       onChange={e => setName(e.target.value)}
+                      aria-label="Your Name"
                     />
                   </label>
                 </div>
@@ -56,6 +59,7 @@ const ContactUs = () => {
                       className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 dark:text-white focus:outline-0 focus:ring-0 border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:border-blue-400 h-14 placeholder:text-gray-400 dark:placeholder:text-gray-500 p-[15px] text-base font-normal leading-normal"
                       value={email}
                       onChange={e => setEmail(e.target.value)}
+                      aria-label="Your Email"
                     />
                   </label>
                 </div>
@@ -67,6 +71,7 @@ const ContactUs = () => {
                       className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 dark:text-white focus:outline-0 focus:ring-0 border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:border-blue-400 h-14 placeholder:text-gray-400 dark:placeholder:text-gray-500 p-[15px] text-base font-normal leading-normal"
                       value={subject}
                       onChange={e => setSubject(e.target.value)}
+                      aria-label="Subject"
                     />
                   </label>
                 </div>
@@ -78,6 +83,7 @@ const ContactUs = () => {
                       className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-gray-900 dark:text-white focus:outline-0 focus:ring-0 border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:border-blue-400 min-h-36 placeholder:text-gray-400 dark:placeholder:text-gray-500 p-[15px] text-base font-normal leading-normal"
                       value={message}
                       onChange={e => setMessage(e.target.value)}
+                      aria-label="Message"
                     />
                   </label>
                 </div>
@@ -85,6 +91,7 @@ const ContactUs = () => {
                   <button
                     type="submit"
                     className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                    aria-label="Submit Contact Form"
                   >
                     <span className="truncate">Submit</span>
                   </button>
@@ -139,6 +146,8 @@ const ContactUs = () => {
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, ease: 'easeOut' }}
+                aria-hidden="true"
+                focusable="false"
               >
                 {/* Desktop window */}
                 <motion.rect

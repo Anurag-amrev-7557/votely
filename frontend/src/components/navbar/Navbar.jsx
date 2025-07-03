@@ -4,19 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { useAuth } from '../../context/AuthContext';
-
-/**
- * Advanced, accessible, and highly interactive NavLink component.
- * - Uses React.memo for performance.
- * - Supports active state (for current route).
- * - Handles keyboard focus and accessibility.
- * - Animates underline on hover/focus/active.
- * - Supports tooltips, icons, and external links.
- * - Accepts custom className, icon, tooltip, and onClick.
- * - Uses React Router's <Link> for internal navigation, <a> for external.
- * - ARIA attributes for accessibility.
- * - Framer Motion for smooth animation.
- */
 import PropTypes from 'prop-types';
 import { useLocation } from 'react-router-dom';
 
@@ -245,6 +232,8 @@ const Navbar = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [showNavbar, setShowNavbar] = useState(true);
     const lastScrollY = React.useRef(window.scrollY);
+    const menuButtonRef = React.useRef(null);
+    const [lastFocusedElement, setLastFocusedElement] = useState(null);
 
     // Memoize scroll handler
     const handleScroll = useCallback(() => {
@@ -332,6 +321,50 @@ const Navbar = () => {
         }
     }, []);
 
+    useEffect(() => {
+        if (!isMobileMenuOpen) return;
+        // Save last focused element
+        setLastFocusedElement(document.activeElement);
+        // Focus first focusable element in menu
+        const focusable = document.querySelectorAll(
+            '.mobile-menu [tabindex="0"], .mobile-menu button, .mobile-menu a'
+        );
+        if (focusable.length) focusable[0].focus();
+        // Trap focus
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                setIsMobileMenuOpen(false);
+                if (menuButtonRef.current) menuButtonRef.current.focus();
+            }
+            if (e.key === 'Tab') {
+                const focusableEls = Array.from(document.querySelectorAll('.mobile-menu [tabindex="0"], .mobile-menu button, .mobile-menu a'));
+                const first = focusableEls[0];
+                const last = focusableEls[focusableEls.length - 1];
+                if (e.shiftKey) {
+                    if (document.activeElement === first) {
+                        e.preventDefault();
+                        last.focus();
+                    }
+                } else {
+                    if (document.activeElement === last) {
+                        e.preventDefault();
+                        first.focus();
+                    }
+                }
+            }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [isMobileMenuOpen]);
+
+    useEffect(() => {
+        if (!isMobileMenuOpen && lastFocusedElement) {
+            setTimeout(() => {
+                if (menuButtonRef.current) menuButtonRef.current.focus();
+            }, 0);
+        }
+    }, [isMobileMenuOpen, lastFocusedElement]);
+
     return (
         <motion.header 
             initial={{ y: -100 }}
@@ -370,7 +403,9 @@ const Navbar = () => {
                     {/* Desktop Navigation - Advanced */}
                     <nav
                         className="hidden md:flex flex-1 justify-end gap-8 items-center"
-                        aria-label="Primary"
+                        aria-label="Main navigation"
+                        role="navigation"
+                        tabIndex={0}
                     >
                         {/* Animated Nav Links with Enhanced Icons */}
                         <div className="flex items-center gap-9">
@@ -456,7 +491,7 @@ const Navbar = () => {
                                 >
                                     {isDarkMode ? (
                                         <>
-                                            <svg className="inline w-4 h-4 mr-1 text-yellow-300" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4.22 2.03a1 1 0 011.42 1.42l-.7.7a1 1 0 11-1.42-1.42l.7-.7zM18 9a1 1 0 100 2h-1a1 1 0 100-2h1zm-2.03 4.22a1 1 0 011.42 1.42l-.7.7a1 1 0 11-1.42-1.42l.7-.7zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4.22-2.03a1 1 0 00-1.42 1.42l.7.7a1 1 0 001.42-1.42l-.7-.7zM4 11a1 1 0 100-2H3a1 1 0 100 2h1zm2.03-4.22a1 1 0 00-1.42-1.42l-.7.7a1 1 0 001.42 1.42l.7-.7z" /></svg>
+                                            <svg className="inline w-4 h-4 mr-1 text-yellow-300" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4.22 2.03a1 1 0 011.42 1.42l-.7.7a1 1 0 11-1.42-1.42l.7-.7zM18 9a1 1 0 100 2h-1a1 1 0 100-2h1zm-2.03 4.22a1 1 0 011.42 1.42l-.7.7a1 1 0 01-1.42-1.42l.7-.7zM10 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4.22-2.03a1 1 0 00-1.42 1.42l.7.7a1 1 0 001.42-1.42l-.7-.7zM4 11a1 1 0 100-2H3a1 1 0 100 2h1zm2.03-4.22a1 1 0 00-1.42-1.42l-.7.7a1 1 0 001.42 1.42l.7-.7z" /></svg>
                                             Switch to light mode
                                         </>
                                     ) : (
@@ -515,13 +550,23 @@ const Navbar = () => {
                                                 aria-label="Profile"
                                             >
                                                 {/* User Avatar or Fallback Icon */}
-                                                {user.avatarUrl ? (
+                                                {user.profilePhoto ? (
+                                                    <img
+                                                        src={user.profilePhoto}
+                                                        alt="User avatar"
+                                                        className="w-6 h-6 rounded-full object-cover mr-2"
+                                                        loading="lazy"
+                                                        draggable="false"
+                                                        onError={e => { e.target.style.display = 'none'; }}
+                                                    />
+                                                ) : user.avatarUrl ? (
                                                     <img
                                                         src={user.avatarUrl}
                                                         alt="User avatar"
                                                         className="w-6 h-6 rounded-full object-cover mr-2"
                                                         loading="lazy"
                                                         draggable="false"
+                                                        onError={e => { e.target.style.display = 'none'; }}
                                                     />
                                                 ) : (
                                                     <svg
@@ -624,11 +669,14 @@ const Navbar = () => {
 
                     {/* Mobile Menu Button */}
                     <motion.button
-                        className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-150"
+                        ref={menuButtonRef}
+                        className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-blue-400/70"
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                         aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+                        aria-controls="mobile-menu"
+                        aria-expanded={isMobileMenuOpen}
                     >
                         <svg
                             className="w-6 h-6 text-gray-600 dark:text-gray-300 transition-colors duration-150 will-change-[color]"
@@ -667,50 +715,15 @@ const Navbar = () => {
                             style={{ top: '68px' }}
                             className="fixed inset-x-0 bottom-0 bg-black/20 backdrop-blur-[2px] z-[45] will-change-[opacity]"
                             onClick={() => setIsMobileMenuOpen(false)}
+                            aria-hidden="true"
                         />
                         <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ 
-                                height: "auto",
-                                opacity: 1
-                            }}
-                            exit={{ 
-                                height: 0,
-                                opacity: 0
-                            }}
-                            transition={{ 
-                                height: {
-                                    type: "spring",
-                                    stiffness: 400,
-                                    damping: 30,
-                                    mass: 0.8,
-                                    duration: 0.3
-                                },
-                                opacity: {
-                                    type: "spring",
-                                    stiffness: 400,
-                                    damping: 30,
-                                    mass: 0.8,
-                                    duration: 0.3
-                                },
-                                exit: {
-                                    height: {
-                                        type: "spring",
-                                        stiffness: 300,
-                                        damping: 25,
-                                        mass: 0.8,
-                                        duration: 0.3
-                                    },
-                                    opacity: {
-                                        type: "spring",
-                                        stiffness: 300,
-                                        damping: 25,
-                                        mass: 0.8,
-                                        duration: 0.3
-                                    }
-                                }
-                            }}
-                            className="md:hidden fixed inset-x-0 top-[68px] z-[50] overflow-hidden will-change-transform"
+                            id="mobile-menu"
+                            role="dialog"
+                            aria-modal="true"
+                            aria-label="Mobile navigation menu"
+                            className="mobile-menu md:hidden fixed inset-x-0 top-[68px] z-[50] overflow-hidden will-change-transform focus:outline-none"
+                            tabIndex={-1}
                         >
                             <div className="max-w-[calc(100%-24px)] mx-auto mt-3">
                                 <motion.div 
@@ -782,6 +795,9 @@ const Navbar = () => {
                                                 to={link.href}
                                                 onClick={handleNavLinkClick(link.sectionId)}
                                                 style={{ textDecoration: 'none' }}
+                                                tabIndex={0}
+                                                aria-label={link.label}
+                                                className="focus-visible:ring-2 focus-visible:ring-blue-400/70"
                                             >
                                                 <motion.div
                                                     className="group relative block px-4 py-3 text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 dark:hover:from-gray-800/50 dark:hover:to-gray-700/50 rounded-xl transition-all duration-300 text-base font-medium will-change-transform border border-transparent hover:border-blue-200 dark:hover:border-blue-800/30 flex items-center gap-3 overflow-hidden"
@@ -961,7 +977,9 @@ const Navbar = () => {
                                                 }}
                                                 whileHover={{ scale: 1.02 }}
                                                 whileTap={{ scale: 0.98 }}
-                                                className="flex-1 px-4 py-3 bg-transparent hover:bg-gray-50 dark:hover:bg-gray-800/50 text-gray-700 dark:text-gray-200 rounded-xl font-semibold transition-all duration-150 text-sm border border-gray-100 dark:border-gray-800 flex items-center justify-center gap-2"
+                                                className="flex-1 px-4 py-3 bg-transparent hover:bg-gray-50 dark:hover:bg-gray-800/50 text-gray-700 dark:text-gray-200 rounded-xl font-semibold transition-all duration-150 text-sm border border-gray-100 dark:border-gray-800 flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-blue-400/70"
+                                                aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                                                tabIndex={0}
                                             >
                                                 {isDarkMode ? (
                                                     <>
@@ -989,14 +1007,16 @@ const Navbar = () => {
                                             }}
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
-                                            className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white rounded-xl font-semibold transition-all duration-150 text-sm shadow-sm hover:shadow-md border border-gray-100 dark:border-gray-800 flex items-center justify-center gap-2"
+                                            className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white rounded-xl font-semibold transition-all duration-150 text-sm shadow-sm hover:shadow-md border border-gray-100 dark:border-gray-800 flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-blue-400/70"
+                                            aria-label="Logout"
+                                            tabIndex={0}
                                         >
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                                                         </svg>
                                                         Logout
                                                     </motion.button>
-                                                    <Link to="/profile">
+                                                    <Link to="/profile" tabIndex={0} aria-label="Profile" className="focus-visible:ring-2 focus-visible:ring-blue-400/70">
                                                         <motion.button
                                                             whileHover={{ scale: 1.02 }}
                                                             whileTap={{ scale: 0.98 }}
@@ -1012,7 +1032,7 @@ const Navbar = () => {
                                                 </>
                                             ) : (
                                                 <>
-                                                    <Link to="/login">
+                                                    <Link to="/login" tabIndex={0} aria-label="Login" className="focus-visible:ring-2 focus-visible:ring-blue-400/70">
                                                         <motion.button
                                                             whileHover={{ scale: 1.02 }}
                                                             whileTap={{ scale: 0.98 }}
@@ -1025,7 +1045,7 @@ const Navbar = () => {
                                                             Login
                                                         </motion.button>
                                                     </Link>
-                                                    <Link to="/register">
+                                                    <Link to="/register" tabIndex={0} aria-label="Sign Up" className="focus-visible:ring-2 focus-visible:ring-blue-400/70">
                                                         <motion.button
                                                             whileHover={{ scale: 1.02 }}
                                                             whileTap={{ scale: 0.98 }}

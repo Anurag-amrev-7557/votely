@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const sendEmail = require('../utils/sendEmail');
 
 const optionSchema = new mongoose.Schema({
   text: { type: String, required: true },
@@ -26,20 +27,37 @@ const pollSchema = new mongoose.Schema({
     showVoterNames: { type: Boolean, default: false },
     notifyOnVote: { type: Boolean, default: false },
     notifyOnEnd: { type: Boolean, default: false },
+    maxVotesPerVoter: { type: Number },
+    randomizeCandidateOrder: { type: Boolean, default: false },
+    voterNameDisplay: { type: String, enum: ['public', 'anonymized'], default: 'public' },
   },
   totalVotes: { type: Number, default: 0 },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 }, { timestamps: true });
 
 // Pre-save hook to set status based on dates
-pollSchema.pre('save', function(next) {
+pollSchema.pre('save', async function(next) {
   const now = new Date();
+  const wasCompleted = this.isModified('status') && this.status === 'completed';
   if (this.endDate && now > this.endDate) {
     this.status = 'completed';
   } else if (this.startDate && now >= this.startDate) {
     this.status = 'active';
   } else {
     this.status = 'upcoming';
+  }
+  // Send notification if poll just completed
+  if (wasCompleted) {
+    try {
+      await sendEmail({
+        to: process.env.ADMIN_EMAIL || 'admin@example.com',
+        subject: `Poll Ended: ${this.title}`,
+        text: `The poll "${this.title}" has ended.`,
+        html: `<p>The poll <strong>${this.title}</strong> has ended.</p>`
+      });
+    } catch (e) {
+      console.error('Failed to send poll end notification email:', e);
+    }
   }
   next();
 });

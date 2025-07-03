@@ -88,7 +88,7 @@ const ResultsPage = () => {
   }, []);
 
   useEffect(() => {
-    if (selectedPoll) {
+    if (selectedPoll && selectedPoll.id) {
       setResultsLoading(true);
       setResultsError(null);
       setPollResults(null);
@@ -193,10 +193,10 @@ const ResultsPage = () => {
 
   const renderDemographicsCharts = (poll) => {
     const ageData = {
-      labels: poll.demographics.ageGroups.map(g => g.range),
+      labels: (poll.demographics?.ageGroups ?? []).map(g => g.range),
       datasets: [{
         label: 'Voters by Age',
-        data: poll.demographics.ageGroups.map(g => g.count),
+        data: (poll.demographics?.ageGroups ?? []).map(g => g.count),
         backgroundColor: [
           'rgba(59, 130, 246, 0.8)',
           'rgba(16, 185, 129, 0.8)',
@@ -210,10 +210,10 @@ const ResultsPage = () => {
     };
 
     const locationData = {
-      labels: poll.demographics.locations.map(l => l.city),
+      labels: (poll.demographics?.locations ?? []).map(l => l.city),
       datasets: [{
         label: 'Voters by Location',
-        data: poll.demographics.locations.map(l => l.count),
+        data: (poll.demographics?.locations ?? []).map(l => l.count),
         backgroundColor: 'rgba(59, 130, 246, 0.8)',
         borderColor: isDarkMode ? '#1f2937' : '#fff',
         borderWidth: 1
@@ -221,10 +221,10 @@ const ResultsPage = () => {
     };
 
     const deviceData = {
-      labels: poll.demographics.devices.map(d => d.type),
+      labels: (poll.demographics?.devices ?? []).map(d => d.type),
       datasets: [{
         label: 'Voters by Device',
-        data: poll.demographics.devices.map(d => d.count),
+        data: (poll.demographics?.devices ?? []).map(d => d.count),
         backgroundColor: [
           'rgba(59, 130, 246, 0.8)',
           'rgba(16, 185, 129, 0.8)',
@@ -261,10 +261,10 @@ const ResultsPage = () => {
 
   const renderVotingTrends = (poll) => {
     const hourlyData = {
-      labels: poll.votingTrends.hourly.map(h => `${h.hour}:00`),
+      labels: (poll.votingTrends?.hourly ?? []).map(h => `${h.hour}:00`),
       datasets: [{
         label: 'Votes per Hour',
-        data: poll.votingTrends.hourly.map(h => h.votes),
+        data: (poll.votingTrends?.hourly ?? []).map(h => h.votes),
         fill: true,
         backgroundColor: 'rgba(59, 130, 246, 0.2)',
         borderColor: 'rgba(59, 130, 246, 1)',
@@ -273,10 +273,10 @@ const ResultsPage = () => {
     };
 
     const dailyData = {
-      labels: poll.votingTrends.daily.map(d => d.day),
+      labels: (poll.votingTrends?.daily ?? []).map(d => d.day),
       datasets: [{
         label: 'Votes per Day',
-        data: poll.votingTrends.daily.map(d => d.votes),
+        data: (poll.votingTrends?.daily ?? []).map(d => d.votes),
         backgroundColor: 'rgba(16, 185, 129, 0.8)',
         borderColor: isDarkMode ? '#1f2937' : '#fff',
         borderWidth: 1
@@ -314,7 +314,7 @@ const ResultsPage = () => {
       // List view: horizontal, full-width, minimal shadow, compact
       return (
         <motion.div
-          key={poll.id}
+          key={poll.id || poll._id || index}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.05 }}
@@ -347,7 +347,7 @@ const ResultsPage = () => {
               </div>
               <div className="space-y-1">
                 {poll.options.slice(0, 2).map((option, optionIndex) => (
-                  <div key={optionIndex} className="flex items-center">
+                  <div key={option.id || option.label || optionIndex} className="flex items-center">
                     <span className="text-xs text-gray-700 dark:text-gray-300 truncate max-w-[80px]">{option.label}</span>
                     <div className="flex-1 mx-2">
                       <div className="h-1.5 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
@@ -374,7 +374,7 @@ const ResultsPage = () => {
     // Card view (grid) - modern card design
     return (
       <motion.div
-        key={poll.id}
+        key={poll.id || poll._id || index}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.1 }}
@@ -434,7 +434,7 @@ const ResultsPage = () => {
           </div>
           <div className="space-y-2">
             {poll.options.slice(0, 3).map((option, optionIndex) => (
-              <div key={optionIndex} className="flex items-center">
+              <div key={option.id || option.label || optionIndex} className="flex items-center">
                 <div className="flex-1">
                   <div className="flex items-center justify-between text-xs mb-0.5">
                     <span className="text-gray-700 dark:text-gray-300 truncate max-w-[120px]">{option.label}</span>
@@ -456,16 +456,16 @@ const ResultsPage = () => {
           <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">Demographics Preview</h4>
           <div className="grid grid-cols-3 gap-3">
             <div className="rounded-xl text-center py-3 bg-gray-50 dark:bg-gray-800 flex flex-col items-center">
-              <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5 font-medium tracking-wide">{poll.demographics.devices[0].type}</div>
-              <div className="text-xl font-extrabold text-gray-900 dark:text-white">{poll.demographics.devices[0].count}%</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5 font-medium tracking-wide">{poll.demographics?.devices?.[0]?.type || 'N/A'}</div>
+              <div className="text-xl font-extrabold text-gray-900 dark:text-white">{poll.demographics?.devices?.[0]?.count ?? 0}%</div>
             </div>
             <div className="rounded-xl text-center py-3 bg-gray-50 dark:bg-gray-800 flex flex-col items-center">
-              <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5 font-medium tracking-wide">{poll.demographics.ageGroups[1].range}</div>
-              <div className="text-xl font-extrabold text-gray-900 dark:text-white">{poll.demographics.ageGroups[1].count}%</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5 font-medium tracking-wide">{poll.demographics?.ageGroups?.[1]?.range || 'N/A'}</div>
+              <div className="text-xl font-extrabold text-gray-900 dark:text-white">{poll.demographics?.ageGroups?.[1]?.count ?? 0}%</div>
             </div>
             <div className="rounded-xl text-center py-3 bg-gray-50 dark:bg-gray-800 flex flex-col items-center">
-              <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5 font-medium tracking-wide">{poll.demographics.locations[0].city}</div>
-              <div className="text-xl font-extrabold text-gray-900 dark:text-white">{poll.demographics.locations[0].count}%</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5 font-medium tracking-wide">{poll.demographics?.locations?.[0]?.city || 'N/A'}</div>
+              <div className="text-xl font-extrabold text-gray-900 dark:text-white">{poll.demographics?.locations?.[0]?.count ?? 0}%</div>
             </div>
           </div>
         </div>
@@ -491,7 +491,8 @@ const ResultsPage = () => {
   }
 
   return (
-    <div className={styles.container}>
+    <div role="main" aria-label="Admin results management" tabIndex={0}>
+      <a href="#main-content" className="sr-only focus:not-sr-only absolute top-2 left-2 bg-blue-600 text-white px-4 py-2 rounded z-50">Skip to main content</a>
       {/* Header */}
       <header className={styles.header}>
         <div className={styles.headerContent}>
@@ -569,59 +570,69 @@ const ResultsPage = () => {
       </header>
 
       {/* Main Content */}
-      <main className={styles.main}>
+      <main id="main-content" tabIndex={-1} className="focus:outline-none">
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className={styles.card}
-          >
-            <div className={styles.statCard}>
-              <span className={styles.statValue}>{stats.totalVotes}</span>
-              <span className={styles.statLabel}>Total Votes</span>
-            </div>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className={styles.card}
-          >
-            <div className={styles.statCard}>
-              <span className={styles.statValue}>{stats.activePolls}</span>
-              <span className={styles.statLabel}>Active Polls</span>
-            </div>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className={styles.card}
-          >
-            <div className={styles.statCard}>
-              <span className={styles.statValue}>{stats.completedPolls}</span>
-              <span className={styles.statLabel}>Completed Polls</span>
-            </div>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className={styles.card}
-          >
-            <div className={styles.statCard}>
-              <span className={styles.statValue}>{stats.averageParticipation}%</span>
-              <span className={styles.statLabel}>Average Participation</span>
-            </div>
-          </motion.div>
-        </div>
+        <section role="region" aria-labelledby="admin-results-overview-heading" tabIndex={0}>
+          <h2 id="admin-results-overview-heading" className="sr-only">Results Overview</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className={styles.card}
+            >
+              <div className={styles.statCard}>
+                <span className={styles.statValue}>{stats.totalVotes}</span>
+                <span className={styles.statLabel}>Total Votes</span>
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className={styles.card}
+            >
+              <div className={styles.statCard}>
+                <span className={styles.statValue}>{stats.activePolls}</span>
+                <span className={styles.statLabel}>Active Polls</span>
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className={styles.card}
+            >
+              <div className={styles.statCard}>
+                <span className={styles.statValue}>{stats.completedPolls}</span>
+                <span className={styles.statLabel}>Completed Polls</span>
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className={styles.card}
+            >
+              <div className={styles.statCard}>
+                <span className={styles.statValue}>{stats.averageParticipation}%</span>
+                <span className={styles.statLabel}>Average Participation</span>
+              </div>
+            </motion.div>
+          </div>
+        </section>
 
         {/* Polls List/Grid */}
-        <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8' : 'space-y-6'}>
-          {polls.map((poll, index) => renderResultCard(poll, index))}
-        </div>
+        <section role="region" aria-labelledby="admin-poll-results-heading" tabIndex={0}>
+          <h2 id="admin-poll-results-heading" className="sr-only">Poll Results</h2>
+          <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8' : 'space-y-6'}>
+            {polls.map((poll, index) => (
+              <React.Fragment key={poll.id || poll._id || index}>
+                {renderResultCard(poll, index)}
+              </React.Fragment>
+            ))}
+          </div>
+        </section>
       </main>
 
       {/* Poll Detail Modal */}
@@ -690,22 +701,27 @@ const ResultsPage = () => {
                     Results
                   </h4>
                   {resultsLoading ? (
-                    <div className="py-8 text-center text-gray-500 dark:text-gray-400">Loading results...</div>
+                    <div aria-live="polite" role="status">Loading poll results...</div>
                   ) : resultsError ? (
                     <div className="py-8 text-center text-red-500 dark:text-red-400">{resultsError}</div>
                   ) : pollResults && (
                     <>
-                  <div className="space-y-4">
+                      {selectedPoll.settings?.voterNameDisplay === 'anonymized' && (
+                        <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-yellow-800 dark:text-yellow-200 text-sm">
+                          <strong>This poll is anonymized.</strong> Voter identities are hidden for privacy.
+                        </div>
+                      )}
+                      <div className="space-y-4">
                         {pollResults.options.map((option, index) => {
                           const percent = pollResults.totalVotes ? Math.round((option.votes / pollResults.totalVotes) * 100) : 0;
                           return (
-                      <div key={index}>
-                        <div className="flex items-center justify-between text-sm mb-1">
+                            <div key={option.id || option.label || index}>
+                              <div className="flex items-center justify-between text-sm mb-1">
                                 <span className="text-gray-700 dark:text-gray-300">{option.text}</span>
-                          <span className="font-medium text-gray-900 dark:text-white">
+                                <span className="font-medium text-gray-900 dark:text-white">
                                   {option.votes} votes ({percent}%)
-                          </span>
-                        </div>
+                                </span>
+                              </div>
                               <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                                 <div className="bg-blue-600 h-3 rounded-full transition-all duration-500" style={{ width: `${percent}%` }} />
                               </div>
@@ -739,7 +755,7 @@ const ResultsPage = () => {
                             scales: { y: { beginAtZero: true } }
                           }}
                         />
-                  </div>
+                      </div>
                     </>
                   )}
                 </div>

@@ -355,472 +355,475 @@ const RegisterPage = () => {
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="w-full max-w-[480px]">
-                <div className="flex flex-wrap items-end gap-4 px-4 py-3">
-                  <label className="flex flex-col min-w-40 flex-1">
-                    <div className="relative">
-                      <input
-                        name="name"
-                        type="text"
-                        placeholder="Full Name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        className={`form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl transition-colors duration-200
-                          ${isDarkMode 
-                            ? 'text-white bg-[#232b36] border border-[#3a4552] placeholder:text-[#7b8a9a] focus:bg-[#27303b] focus:border-blue-500'
-                            : 'text-gray-900 bg-white border border-gray-300 placeholder:text-gray-400 focus:bg-blue-50 focus:border-blue-500'
-                          }
-                          focus:outline-none focus:ring-2 focus:ring-blue-500/30 h-14 p-4 pl-10 text-base font-normal leading-normal`}
-                        autoComplete="name"
-                        spellCheck="false"
-                        aria-label="Full Name"
-                      />
-                      <svg 
-                        className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 
-                          ${isDarkMode ? 'text-[#7b8a9a]' : 'text-gray-400'}`} 
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                    </div>
-                    {errors.some(err => err.toLowerCase().includes('name')) && (
-                      <div className={`text-sm font-medium mt-1 transition-colors duration-200 ${
-                        isDarkMode ? 'text-red-400' : 'text-red-500'
-                      }`}>
-                        {errors.find(err => err.toLowerCase().includes('name'))}
-                      </div>
-                    )}
-                  </label>
-                </div>
-
-                <div className="flex flex-wrap items-end gap-4 px-4 py-3">
-                  <label className="flex flex-col min-w-40 flex-1">
-                    <div className="relative">
-                      <input
-                        name="email"
-                        type="email"
-                        placeholder="Email Address"
-                        value={formData.email}
-                        onChange={handleChange}
-                        className={`form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl transition-colors duration-200
-                          ${isDarkMode 
-                            ? 'text-white bg-[#232b36] border border-[#3a4552] placeholder:text-[#7b8a9a] focus:bg-[#27303b] focus:border-blue-500'
-                            : 'text-gray-900 bg-white border border-gray-300 placeholder:text-gray-400 focus:bg-blue-50 focus:border-blue-500'
-                          }
-                          focus:outline-none focus:ring-2 focus:ring-blue-500/30 h-14 p-4 pl-10 text-base font-normal leading-normal`}
-                        autoComplete="email"
-                        spellCheck="false"
-                        aria-label="Email Address"
-                      />
-                      <svg 
-                        className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 
-                          ${isDarkMode ? 'text-[#7b8a9a]' : 'text-gray-400'}`} 
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                      </svg>
-                    </div>
-                    {errors.some(err => err.toLowerCase().includes('email')) && (
-                      <div className={`text-sm font-medium mt-1 transition-colors duration-200 ${
-                        isDarkMode ? 'text-red-400' : 'text-red-500'
-                      }`}>
-                        {errors.find(err => err.toLowerCase().includes('email'))}
-                      </div>
-                    )}
-                  </label>
-                </div>
-
-                <div className="flex flex-wrap items-end gap-4 px-4 py-3">
-                  <label className="flex flex-col min-w-40 flex-1">
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg
-                          className={`h-5 w-5 ${
-                            isDarkMode ? 'text-[#7b8a9a]' : 'text-gray-400'
-                          }`}
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </div>
-                      <input
-                        name="password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        className={`form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl transition-colors duration-200
-                          ${
-                            isDarkMode
+              <a href="#main-content" className="sr-only focus:not-sr-only absolute top-2 left-2 bg-blue-600 text-white px-4 py-2 rounded z-50">Skip to main content</a>
+              <main id="main-content" tabIndex={-1} className="focus:outline-none">
+                <form onSubmit={handleSubmit} className="w-full max-w-[480px]">
+                  <div className="flex flex-wrap items-end gap-4 px-4 py-3">
+                    <label className="flex flex-col min-w-40 flex-1">
+                      <div className="relative">
+                        <input
+                          name="name"
+                          type="text"
+                          placeholder="Full Name"
+                          value={formData.name}
+                          onChange={handleChange}
+                          className={`form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl transition-colors duration-200
+                            ${isDarkMode 
                               ? 'text-white bg-[#232b36] border border-[#3a4552] placeholder:text-[#7b8a9a] focus:bg-[#27303b] focus:border-blue-500'
                               : 'text-gray-900 bg-white border border-gray-300 placeholder:text-gray-400 focus:bg-blue-50 focus:border-blue-500'
-                          }
-                          focus:outline-none focus:ring-2 focus:ring-blue-500/30 h-14 p-4 pl-10 text-base font-normal leading-normal`}
-                        autoComplete="new-password"
-                        spellCheck="false"
-                        aria-label="Password"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                        tabIndex={-1}
-                        aria-label={showPassword ? "Hide password" : "Show password"}
-                      >
-                        {showPassword ? (
-                          <svg
-                            className={`h-5 w-5 ${
-                              isDarkMode
-                                ? 'text-[#7b8a9a] hover:text-blue-400'
-                                : 'text-gray-400 hover:text-gray-600'
-                            }`}
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                            <path
-                              fillRule="evenodd"
-                              d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        ) : (
-                          <svg
-                            className={`h-5 w-5 ${
-                              isDarkMode
-                                ? 'text-[#7b8a9a] hover:text-blue-400'
-                                : 'text-gray-400 hover:text-gray-600'
-                            }`}
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z"
-                              clipRule="evenodd"
-                            />
-                            <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
-                          </svg>
-                        )}
-                      </button>
-                    </div>
-                    {/* Password Strength Meter */}
-                    <PasswordStrengthMeter password={formData.password} />
-                    {errors.some(err => err.toLowerCase().includes('password')) && (
-                      <div
-                        className={`text-sm font-medium mt-1 transition-colors duration-200 ${
-                          isDarkMode ? 'text-red-400' : 'text-red-500'
-                        }`}
-                      >
-                        {errors.find(err => err.toLowerCase().includes('password'))}
-                      </div>
-                    )}
-                  </label>
-                </div>
-
-                <div className="flex flex-wrap items-end gap-4 px-4 py-3">
-                  <label className="flex flex-col min-w-40 flex-1">
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg
-                          className={`h-5 w-5 ${
-                            isDarkMode ? 'text-[#7b8a9a]' : 'text-gray-400'
-                          }`}
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
+                            }
+                            focus:outline-none focus:ring-2 focus:ring-blue-500/30 h-14 p-4 pl-10 text-base font-normal leading-normal`}
+                          autoComplete="name"
+                          spellCheck="false"
+                          aria-label="Full Name"
+                        />
+                        <svg 
+                          className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 
+                            ${isDarkMode ? 'text-[#7b8a9a]' : 'text-gray-400'}`} 
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
                         >
-                          <path
-                            fillRule="evenodd"
-                            d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                            clipRule="evenodd"
-                          />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                       </div>
-                      <input
-                        name="confirmPassword"
-                        type={showConfirmPassword ? "text" : "password"}
-                        placeholder="Confirm Password"
-                        value={formData.confirmPassword}
-                        onChange={handleChange}
-                        className={`form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl transition-colors duration-200
-                          ${
-                            isDarkMode
+                      {errors.some(err => err.toLowerCase().includes('name')) && (
+                        <div className={`text-sm font-medium mt-1 transition-colors duration-200 ${
+                          isDarkMode ? 'text-red-400' : 'text-red-500'
+                        }`}>
+                          {errors.find(err => err.toLowerCase().includes('name'))}
+                        </div>
+                      )}
+                    </label>
+                  </div>
+
+                  <div className="flex flex-wrap items-end gap-4 px-4 py-3">
+                    <label className="flex flex-col min-w-40 flex-1">
+                      <div className="relative">
+                        <input
+                          name="email"
+                          type="email"
+                          placeholder="Email Address"
+                          value={formData.email}
+                          onChange={handleChange}
+                          className={`form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl transition-colors duration-200
+                            ${isDarkMode 
                               ? 'text-white bg-[#232b36] border border-[#3a4552] placeholder:text-[#7b8a9a] focus:bg-[#27303b] focus:border-blue-500'
                               : 'text-gray-900 bg-white border border-gray-300 placeholder:text-gray-400 focus:bg-blue-50 focus:border-blue-500'
-                          }
-                          focus:outline-none focus:ring-2 focus:ring-blue-500/30 h-14 p-4 pl-10 text-base font-normal leading-normal`}
-                        autoComplete="new-password"
-                        spellCheck="false"
-                        aria-label="Confirm Password"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                        tabIndex={-1}
-                      >
-                        {showConfirmPassword ? (
-                          <svg
-                            className={`h-5 w-5 ${
-                              isDarkMode
-                                ? 'text-[#7b8a9a] hover:text-blue-400'
-                                : 'text-gray-400 hover:text-gray-600'
-                            }`}
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                            <path
-                              fillRule="evenodd"
-                              d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        ) : (
-                          <svg
-                            className={`h-5 w-5 ${
-                              isDarkMode
-                                ? 'text-[#7b8a9a] hover:text-blue-400'
-                                : 'text-gray-400 hover:text-gray-600'
-                            }`}
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z"
-                              clipRule="evenodd"
-                            />
-                            <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
-                          </svg>
-                        )}
-                      </button>
-                    </div>
-                    {errors.some(err => err.toLowerCase().includes('confirm')) && (
-                      <div
-                        className={`text-sm font-medium mt-1 transition-colors duration-200 ${
+                            }
+                            focus:outline-none focus:ring-2 focus:ring-blue-500/30 h-14 p-4 pl-10 text-base font-normal leading-normal`}
+                          autoComplete="email"
+                          spellCheck="false"
+                          aria-label="Email Address"
+                        />
+                        <svg 
+                          className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 
+                            ${isDarkMode ? 'text-[#7b8a9a]' : 'text-gray-400'}`} 
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                        </svg>
+                      </div>
+                      {errors.some(err => err.toLowerCase().includes('email')) && (
+                        <div className={`text-sm font-medium mt-1 transition-colors duration-200 ${
                           isDarkMode ? 'text-red-400' : 'text-red-500'
+                        }`}>
+                          {errors.find(err => err.toLowerCase().includes('email'))}
+                        </div>
+                      )}
+                    </label>
+                  </div>
+
+                  <div className="flex flex-wrap items-end gap-4 px-4 py-3">
+                    <label className="flex flex-col min-w-40 flex-1">
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <svg
+                            className={`h-5 w-5 ${
+                              isDarkMode ? 'text-[#7b8a9a]' : 'text-gray-400'
+                            }`}
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                        <input
+                          name="password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Password"
+                          value={formData.password}
+                          onChange={handleChange}
+                          className={`form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl transition-colors duration-200
+                            ${
+                              isDarkMode
+                                ? 'text-white bg-[#232b36] border border-[#3a4552] placeholder:text-[#7b8a9a] focus:bg-[#27303b] focus:border-blue-500'
+                                : 'text-gray-900 bg-white border border-gray-300 placeholder:text-gray-400 focus:bg-blue-50 focus:border-blue-500'
+                            }
+                            focus:outline-none focus:ring-2 focus:ring-blue-500/30 h-14 p-4 pl-10 text-base font-normal leading-normal`}
+                          autoComplete="new-password"
+                          spellCheck="false"
+                          aria-label="Password"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                          tabIndex={-1}
+                          aria-label={showPassword ? "Hide password" : "Show password"}
+                        >
+                          {showPassword ? (
+                            <svg
+                              className={`h-5 w-5 ${
+                                isDarkMode
+                                  ? 'text-[#7b8a9a] hover:text-blue-400'
+                                  : 'text-gray-400 hover:text-gray-600'
+                              }`}
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                              <path
+                                fillRule="evenodd"
+                                d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          ) : (
+                            <svg
+                              className={`h-5 w-5 ${
+                                isDarkMode
+                                  ? 'text-[#7b8a9a] hover:text-blue-400'
+                                  : 'text-gray-400 hover:text-gray-600'
+                              }`}
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z"
+                                clipRule="evenodd"
+                              />
+                              <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+                      {/* Password Strength Meter */}
+                      <PasswordStrengthMeter password={formData.password} />
+                      {errors.some(err => err.toLowerCase().includes('password')) && (
+                        <div
+                          className={`text-sm font-medium mt-1 transition-colors duration-200 ${
+                            isDarkMode ? 'text-red-400' : 'text-red-500'
+                          }`}
+                        >
+                          {errors.find(err => err.toLowerCase().includes('password'))}
+                        </div>
+                      )}
+                    </label>
+                  </div>
+
+                  <div className="flex flex-wrap items-end gap-4 px-4 py-3">
+                    <label className="flex flex-col min-w-40 flex-1">
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <svg
+                            className={`h-5 w-5 ${
+                              isDarkMode ? 'text-[#7b8a9a]' : 'text-gray-400'
+                            }`}
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                        <input
+                          name="confirmPassword"
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder="Confirm Password"
+                          value={formData.confirmPassword}
+                          onChange={handleChange}
+                          className={`form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl transition-colors duration-200
+                            ${
+                              isDarkMode
+                                ? 'text-white bg-[#232b36] border border-[#3a4552] placeholder:text-[#7b8a9a] focus:bg-[#27303b] focus:border-blue-500'
+                                : 'text-gray-900 bg-white border border-gray-300 placeholder:text-gray-400 focus:bg-blue-50 focus:border-blue-500'
+                            }
+                            focus:outline-none focus:ring-2 focus:ring-blue-500/30 h-14 p-4 pl-10 text-base font-normal leading-normal`}
+                          autoComplete="new-password"
+                          spellCheck="false"
+                          aria-label="Confirm Password"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                          tabIndex={-1}
+                        >
+                          {showConfirmPassword ? (
+                            <svg
+                              className={`h-5 w-5 ${
+                                isDarkMode
+                                  ? 'text-[#7b8a9a] hover:text-blue-400'
+                                  : 'text-gray-400 hover:text-gray-600'
+                              }`}
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                              <path
+                                fillRule="evenodd"
+                                d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          ) : (
+                            <svg
+                              className={`h-5 w-5 ${
+                                isDarkMode
+                                  ? 'text-[#7b8a9a] hover:text-blue-400'
+                                  : 'text-gray-400 hover:text-gray-600'
+                              }`}
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z"
+                                clipRule="evenodd"
+                              />
+                              <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+                      {errors.some(err => err.toLowerCase().includes('confirm')) && (
+                        <div
+                          className={`text-sm font-medium mt-1 transition-colors duration-200 ${
+                            isDarkMode ? 'text-red-400' : 'text-red-500'
+                          }`}
+                        >
+                          {errors.find(err => err.toLowerCase().includes('confirm'))}
+                        </div>
+                      )}
+                    </label>
+                  </div>
+
+                  <div className="px-4">
+                    <label className="flex gap-x-3 py-3 flex-row items-center select-none">
+                      <div className="relative">
+                        <input
+                          id="agreeToTerms"
+                          type="checkbox"
+                          name="agreeToTerms"
+                          checked={formData.agreeToTerms}
+                          onChange={handleChange}
+                          className="sr-only"
+                          aria-checked={formData.agreeToTerms}
+                          tabIndex={0}
+                        />
+                        <div
+                          onClick={() => setFormData(prev => ({ ...prev, agreeToTerms: !prev.agreeToTerms }))}
+                          onKeyDown={e => {
+                            if (e.key === ' ' || e.key === 'Enter') {
+                              setFormData(prev => ({ ...prev, agreeToTerms: !prev.agreeToTerms }));
+                            }
+                          }}
+                          role="checkbox"
+                          aria-checked={formData.agreeToTerms}
+                          tabIndex={0}
+                          className={`
+                            h-5 w-5 rounded transition-colors duration-200 border-2 flex items-center justify-center cursor-pointer
+                            ${isDarkMode
+                              ? formData.agreeToTerms
+                                ? 'border-blue-500 bg-blue-600'
+                                : 'border-[#3f4c5a] bg-[#232b34] hover:bg-[#2a3440]'
+                              : formData.agreeToTerms
+                                ? 'border-blue-600 bg-blue-600'
+                                : 'border-gray-300 bg-white hover:bg-gray-100'
+                            }
+                            shadow-sm
+                            focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2
+                          `}
+                          style={{
+                            boxShadow: isDarkMode && formData.agreeToTerms
+                              ? '0 0 0 2px #2563eb33'
+                              : undefined
+                          }}
+                        >
+                          {formData.agreeToTerms && (
+                            <svg
+                              className={`h-3 w-3 ${isDarkMode ? 'text-white' : 'text-white'}`}
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                      <p
+                        id="agreeToTermsLabel"
+                        className={`text-base font-normal leading-normal ${
+                          isDarkMode ? 'text-white' : 'text-gray-900'
                         }`}
                       >
-                        {errors.find(err => err.toLowerCase().includes('confirm'))}
+                        I agree to the{' '}
+                        <Link to="/terms" className="text-blue-600 hover:text-blue-700 underline focus:outline-none focus:ring-2 focus:ring-blue-400">
+                          Terms of Service
+                        </Link>{' '}
+                        and{' '}
+                        <Link to="/privacy" className="text-blue-600 hover:text-blue-700 underline focus:outline-none focus:ring-2 focus:ring-blue-400">
+                          Privacy Policy
+                        </Link>
+                      </p>
+                    </label>
+                    {errors.some(err => err.toLowerCase().includes('agree')) && (
+                      <div className="text-red-500 text-sm font-medium mt-1" role="alert">
+                        {errors.find(err => err.toLowerCase().includes('agree'))}
                       </div>
                     )}
-                  </label>
-                </div>
+                  </div>
 
-                <div className="px-4">
-                  <label className="flex gap-x-3 py-3 flex-row items-center select-none">
-                    <div className="relative">
-                      <input
-                        id="agreeToTerms"
-                        type="checkbox"
-                        name="agreeToTerms"
-                        checked={formData.agreeToTerms}
-                        onChange={handleChange}
-                        className="sr-only"
-                        aria-checked={formData.agreeToTerms}
-                        tabIndex={0}
-                      />
-                      <div
-                        onClick={() => setFormData(prev => ({ ...prev, agreeToTerms: !prev.agreeToTerms }))}
-                        onKeyDown={e => {
-                          if (e.key === ' ' || e.key === 'Enter') {
-                            setFormData(prev => ({ ...prev, agreeToTerms: !prev.agreeToTerms }));
-                          }
-                        }}
-                        role="checkbox"
-                        aria-checked={formData.agreeToTerms}
-                        tabIndex={0}
-                        className={`
-                          h-5 w-5 rounded transition-colors duration-200 border-2 flex items-center justify-center cursor-pointer
-                          ${isDarkMode
-                            ? formData.agreeToTerms
-                              ? 'border-blue-500 bg-blue-600'
-                              : 'border-[#3f4c5a] bg-[#232b34] hover:bg-[#2a3440]'
-                            : formData.agreeToTerms
-                              ? 'border-blue-600 bg-blue-600'
-                              : 'border-gray-300 bg-white hover:bg-gray-100'
-                          }
-                          shadow-sm
-                          focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2
-                        `}
-                        style={{
-                          boxShadow: isDarkMode && formData.agreeToTerms
-                            ? '0 0 0 2px #2563eb33'
-                            : undefined
-                        }}
-                      >
-                        {formData.agreeToTerms && (
-                          <svg
-                            className={`h-3 w-3 ${isDarkMode ? 'text-white' : 'text-white'}`}
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            viewBox="0 0 24 24"
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                      </div>
-                    </div>
-                    <p
-                      id="agreeToTermsLabel"
-                      className={`text-base font-normal leading-normal ${
-                        isDarkMode ? 'text-white' : 'text-gray-900'
-                      }`}
+                  <div className="flex px-4 py-3">
+                    <motion.button
+                      whileHover={{ scale: 1.04 }}
+                      whileTap={{ scale: 0.97 }}
+                      type="submit"
+                      disabled={isLoading}
+                      className={`
+                        relative flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 flex-1
+                        bg-gradient-to-r
+                        ${isDarkMode
+                          ? 'from-blue-700 via-blue-800 to-blue-900'
+                          : 'from-blue-500 via-blue-600 to-blue-700'
+                        }
+                        ${isDarkMode
+                          ? 'text-gray-100 shadow-blue-900/40'
+                          : 'text-white shadow-lg'
+                        }
+                        transition-all duration-200
+                        text-sm font-bold leading-normal tracking-[0.015em] disabled:opacity-50
+                        active:shadow-md focus:outline-none
+                        focus:ring-2 focus:ring-blue-400 focus:ring-offset-2
+                        ${isDarkMode ? 'focus:ring-offset-[#15191e]' : 'focus:ring-offset-white'}
+                      `}
+                      style={{
+                        boxShadow: isDarkMode
+                          ? '0 4px 24px 0 rgba(30, 64, 175, 0.25)'
+                          : undefined
+                      }}
                     >
-                      I agree to the{' '}
-                      <Link to="/terms" className="text-blue-600 hover:text-blue-700 underline focus:outline-none focus:ring-2 focus:ring-blue-400">
-                        Terms of Service
-                      </Link>{' '}
-                      and{' '}
-                      <Link to="/privacy" className="text-blue-600 hover:text-blue-700 underline focus:outline-none focus:ring-2 focus:ring-blue-400">
-                        Privacy Policy
-                      </Link>
-                    </p>
-                  </label>
-                  {errors.some(err => err.toLowerCase().includes('agree')) && (
-                    <div className="text-red-500 text-sm font-medium mt-1" role="alert">
-                      {errors.find(err => err.toLowerCase().includes('agree'))}
-                    </div>
-                  )}
-                </div>
+                      {/* Ripple effect */}
+                      <span className="absolute inset-0 pointer-events-none" id="ripple-container"></span>
+                      {isLoading ? (
+                        <div className={`animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 ${isDarkMode ? 'border-gray-200' : 'border-white'}`} />
+                      ) : (
+                        <span className="truncate">Create Account</span>
+                      )}
+                    </motion.button>
+                  </div>
+                </form>
 
-                <div className="flex px-4 py-3">
+                {/* Social Sign Up Separator */}
+                <div className="flex items-center my-4 w-full max-w-[480px] px-4">
+                  <div className="flex-grow border-t border-gray-300" />
+                  <span className={`mx-2 text-xs font-semibold ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>Or sign up with</span>
+                  <div className="flex-grow border-t border-gray-300" />
+                </div>
+                {/* Social Sign Up Buttons */}
+                <div className="flex flex-1 gap-4 flex-wrap px-4 py-3 max-w-[480px] justify-center">
                   <motion.button
-                    whileHover={{ scale: 1.04 }}
-                    whileTap={{ scale: 0.97 }}
-                    type="submit"
-                    disabled={isLoading}
+                    whileHover={{ scale: 1.12 }}
+                    whileTap={{ scale: 0.95 }}
+                    aria-label="Sign up with Google"
                     className={`
-                      relative flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 flex-1
-                      bg-gradient-to-r
-                      ${isDarkMode
-                        ? 'from-blue-700 via-blue-800 to-blue-900'
-                        : 'from-blue-500 via-blue-600 to-blue-700'
-                      }
-                      ${isDarkMode
-                        ? 'text-gray-100 shadow-blue-900/40'
-                        : 'text-white shadow-lg'
-                      }
-                      transition-all duration-200
-                      text-sm font-bold leading-normal tracking-[0.015em] disabled:opacity-50
-                      active:shadow-md focus:outline-none
-                      focus:ring-2 focus:ring-blue-400 focus:ring-offset-2
-                      ${isDarkMode ? 'focus:ring-offset-[#15191e]' : 'focus:ring-offset-white'}
+                      flex items-center justify-center rounded-full h-12 w-12
+                      bg-transparent
+                      hover:bg-gray-100 dark:hover:bg-gray-800
+                      focus:bg-gray-200 dark:focus:bg-gray-700
+                      border border-gray-200 dark:border-gray-700
+                      transition-all duration-150 p-0 shadow-none focus:outline-none
                     `}
-                    style={{
-                      boxShadow: isDarkMode
-                        ? '0 4px 24px 0 rgba(30, 64, 175, 0.25)'
-                        : undefined
-                    }}
+                    onClick={handleGoogleSignup}
+                    disabled={isLoading}
                   >
-                    {/* Ripple effect */}
-                    <span className="absolute inset-0 pointer-events-none" id="ripple-container"></span>
-                    {isLoading ? (
-                      <div className={`animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 ${isDarkMode ? 'border-gray-200' : 'border-white'}`} />
-                    ) : (
-                      <span className="truncate">Create Account</span>
-                    )}
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M21.8055 10.0415H21V10H12V14H17.6515C16.827 16.3285 14.6115 18 12 18C8.6865 18 6 15.3135 6 12C6 8.6865 8.6865 6 12 6C13.5295 6 14.921 6.577 15.9805 7.5195L18.809 4.691C17.023 3.0265 14.634 2 12 2C6.4775 2 2 6.4775 2 12C2 17.5225 6.4775 22 12 22C17.5225 22 22 17.5225 22 12C22 11.3295 21.931 10.0415 21.8055 10.0415Z" fill={isDarkMode ? "#e5e7eb" : "#4B5563"}/>
+                      <path d="M3.15295 7.3455L6.43845 9.755C7.32745 7.554 9.48045 6 12 6C13.5295 6 14.921 6.577 15.9805 7.5195L18.809 4.691C17.023 3.0265 14.634 2 12 2C8.15895 2 4.82795 4.1685 3.15295 7.3455Z" fill={isDarkMode ? "#e5e7eb" : "#4B5563"}/>
+                      <path d="M12 22C14.583 22 16.93 21.0115 18.7045 19.404L15.6095 16.785C14.5718 17.5742 13.3038 18.0011 12 18C9.39903 18 7.19053 16.3415 6.35853 14.027L3.09753 16.5395C4.75253 19.778 8.11353 22 12 22Z" fill={isDarkMode ? "#e5e7eb" : "#4B5563"}/>
+                      <path d="M21.8055 10.0415H21V10H12V14H17.6515C17.2571 15.1082 16.5467 16.0766 15.608 16.7855L15.6095 16.7845L18.7045 19.4035C18.4855 19.6025 22 17 22 12C22 11.3295 21.931 10.675 21.8055 10.0415Z" fill={isDarkMode ? "#e5e7eb" : "#4B5563"}/>
+                    </svg>
+                  </motion.button>
+                  {/* Facebook Sign Up */}
+                  <motion.button
+                    whileHover={{ scale: 1.12 }}
+                    whileTap={{ scale: 0.95 }}
+                    aria-label="Sign up with Facebook"
+                    className={`
+                      flex items-center justify-center rounded-full h-12 w-12
+                      bg-transparent
+                      hover:bg-gray-100 dark:hover:bg-gray-800
+                      focus:bg-gray-200 dark:focus:bg-gray-700
+                      border border-gray-200 dark:border-gray-700
+                      transition-all duration-150 p-0 shadow-none focus:outline-none
+                    `}
+                    disabled={isLoading}
+                  >
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill={isDarkMode ? "#e5e7eb" : "#4B5563"} xmlns="http://www.w3.org/2000/svg">
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                  </motion.button>
+                  {/* Twitter Sign Up */}
+                  <motion.button
+                    whileHover={{ scale: 1.12 }}
+                    whileTap={{ scale: 0.95 }}
+                    aria-label="Sign up with Twitter"
+                    className={`
+                      flex items-center justify-center rounded-full h-12 w-12
+                      bg-transparent
+                      hover:bg-gray-100 dark:hover:bg-gray-800
+                      focus:bg-gray-200 dark:focus:bg-gray-700
+                      border border-gray-200 dark:border-gray-700
+                      transition-all duration-150 p-0 shadow-none focus:outline-none
+                    `}
+                    disabled={isLoading}
+                  >
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" fill={isDarkMode ? "#e5e7eb" : "#4B5563"}/>
+                    </svg>
                   </motion.button>
                 </div>
-              </form>
 
-              {/* Social Sign Up Separator */}
-              <div className="flex items-center my-4 w-full max-w-[480px] px-4">
-                <div className="flex-grow border-t border-gray-300" />
-                <span className={`mx-2 text-xs font-semibold ${isDarkMode ? 'text-white' : 'text-gray-700'}`}>Or sign up with</span>
-                <div className="flex-grow border-t border-gray-300" />
-              </div>
-              {/* Social Sign Up Buttons */}
-              <div className="flex flex-1 gap-4 flex-wrap px-4 py-3 max-w-[480px] justify-center">
-                <motion.button
-                  whileHover={{ scale: 1.12 }}
-                  whileTap={{ scale: 0.95 }}
-                  aria-label="Sign up with Google"
-                  className={`
-                    flex items-center justify-center rounded-full h-12 w-12
-                    bg-transparent
-                    hover:bg-gray-100 dark:hover:bg-gray-800
-                    focus:bg-gray-200 dark:focus:bg-gray-700
-                    border border-gray-200 dark:border-gray-700
-                    transition-all duration-150 p-0 shadow-none focus:outline-none
-                  `}
-                  onClick={handleGoogleSignup}
-                  disabled={isLoading}
-                >
-                  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M21.8055 10.0415H21V10H12V14H17.6515C16.827 16.3285 14.6115 18 12 18C8.6865 18 6 15.3135 6 12C6 8.6865 8.6865 6 12 6C13.5295 6 14.921 6.577 15.9805 7.5195L18.809 4.691C17.023 3.0265 14.634 2 12 2C6.4775 2 2 6.4775 2 12C2 17.5225 6.4775 22 12 22C17.5225 22 22 17.5225 22 12C22 11.3295 21.931 10.0415 21.8055 10.0415Z" fill={isDarkMode ? "#e5e7eb" : "#4B5563"}/>
-                    <path d="M3.15295 7.3455L6.43845 9.755C7.32745 7.554 9.48045 6 12 6C13.5295 6 14.921 6.577 15.9805 7.5195L18.809 4.691C17.023 3.0265 14.634 2 12 2C8.15895 2 4.82795 4.1685 3.15295 7.3455Z" fill={isDarkMode ? "#e5e7eb" : "#4B5563"}/>
-                    <path d="M12 22C14.583 22 16.93 21.0115 18.7045 19.404L15.6095 16.785C14.5718 17.5742 13.3038 18.0011 12 18C9.39903 18 7.19053 16.3415 6.35853 14.027L3.09753 16.5395C4.75253 19.778 8.11353 22 12 22Z" fill={isDarkMode ? "#e5e7eb" : "#4B5563"}/>
-                    <path d="M21.8055 10.0415H21V10H12V14H17.6515C17.2571 15.1082 16.5467 16.0766 15.608 16.7855L15.6095 16.7845L18.7045 19.4035C18.4855 19.6025 22 17 22 12C22 11.3295 21.931 10.675 21.8055 10.0415Z" fill={isDarkMode ? "#e5e7eb" : "#4B5563"}/>
-                  </svg>
-                </motion.button>
-                {/* Facebook Sign Up */}
-                <motion.button
-                  whileHover={{ scale: 1.12 }}
-                  whileTap={{ scale: 0.95 }}
-                  aria-label="Sign up with Facebook"
-                  className={`
-                    flex items-center justify-center rounded-full h-12 w-12
-                    bg-transparent
-                    hover:bg-gray-100 dark:hover:bg-gray-800
-                    focus:bg-gray-200 dark:focus:bg-gray-700
-                    border border-gray-200 dark:border-gray-700
-                    transition-all duration-150 p-0 shadow-none focus:outline-none
-                  `}
-                  disabled={isLoading}
-                >
-                  <svg className="w-6 h-6" viewBox="0 0 24 24" fill={isDarkMode ? "#e5e7eb" : "#4B5563"} xmlns="http://www.w3.org/2000/svg">
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                  </svg>
-                </motion.button>
-                {/* Twitter Sign Up */}
-                <motion.button
-                  whileHover={{ scale: 1.12 }}
-                  whileTap={{ scale: 0.95 }}
-                  aria-label="Sign up with Twitter"
-                  className={`
-                    flex items-center justify-center rounded-full h-12 w-12
-                    bg-transparent
-                    hover:bg-gray-100 dark:hover:bg-gray-800
-                    focus:bg-gray-200 dark:focus:bg-gray-700
-                    border border-gray-200 dark:border-gray-700
-                    transition-all duration-150 p-0 shadow-none focus:outline-none
-                  `}
-                  disabled={isLoading}
-                >
-                  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" fill={isDarkMode ? "#e5e7eb" : "#4B5563"}/>
-                  </svg>
-                </motion.button>
-              </div>
-
-              <p className={`flex items-center justify-center gap-2 text-sm font-medium leading-normal pb-3 pt-1 px-4 text-center transition-colors duration-150 ${
-                isDarkMode ? 'text-[#a0acbb]' : 'text-gray-600'
-              }`}>
-                Already have an account?{' '}
-                <Link to="/login" className="text-blue-600 hover:text-blue-700 font-semibold">
-                  Log in
-                </Link>
-              </p>
+                <p className={`flex items-center justify-center gap-2 text-sm font-medium leading-normal pb-3 pt-1 px-4 text-center transition-colors duration-150 ${
+                  isDarkMode ? 'text-[#a0acbb]' : 'text-gray-600'
+                }`}>
+                  Already have an account?{' '}
+                  <Link to="/login" className="text-blue-600 hover:text-blue-700 font-semibold">
+                    Log in
+                  </Link>
+                </p>
+              </main>
             </motion.div>
           </div>
         </div>

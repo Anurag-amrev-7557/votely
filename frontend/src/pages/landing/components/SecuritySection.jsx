@@ -17,7 +17,9 @@ const SecuritySection = ({ isVisible }) => {
     const sectionBg = useMemo(() => isDarkMode ? 'dark:bg-gray-900' : 'bg-white', [isDarkMode]);
 
     return (
-        <section className={`max-w-7xl mx-auto ${sectionBg} transition-all duration-500 will-change-[background-color,color,box-shadow,filter]`}>
+        <section className={`max-w-7xl mx-auto ${sectionBg} transition-all duration-500 will-change-[background-color,color,box-shadow,filter]`} aria-labelledby="security-main-heading" role="region" tabIndex={0}>
+            {/* Visually hidden heading for accessibility */}
+            <h2 id="security-main-heading" className="sr-only">Enterprise-Grade Security</h2>
             <div className="flex flex-col gap-8 px-4 py-12">
                 <motion.div 
                     initial={{ opacity: 0, y: -20 }}
@@ -198,8 +200,6 @@ const SecuritySection = ({ isVisible }) => {
                                 className="text-blue-600 dark:text-blue-400"
                             >
                                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-                                <path d="M12 2v4" />
-                                <path d="M12 18v4" />
                                 <path d="M4.93 4.93l14.14 14.14" />
                                 <path d="M19.07 4.93L4.93 19.07" />
                             </svg>

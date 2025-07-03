@@ -47,6 +47,7 @@ const TestimonialCard = ({ testimonial, isActive }) => (
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="flex items-center gap-1.5 sm:gap-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-xs sm:text-sm"
+                aria-label="Read full testimonial"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256">
                     <path d="M234,80.12A24,24,0,0,0,216,72H160V56a40,40,0,0,0-40-40,8,8,0,0,0-7.16,4.42L75.06,96H32a16,16,0,0,0-16,16v88a16,16,0,0,0,16,16H204a24,24,0,0,0,23.82-21l12-96A24,24,0,0,0,234,80.12ZM32,112H72v88H32ZM223.94,97l-12,96a8,8,0,0,1-7.94,7H88V105.89l36.71-73.43A24,24,0,0,1,144,56V80a8,8,0,0,0,8,8h64a8,8,0,0,1,7.94,9Z"></path>
@@ -57,6 +58,7 @@ const TestimonialCard = ({ testimonial, isActive }) => (
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="flex items-center gap-1.5 sm:gap-2 hover:text-red-600 dark:hover:text-red-400 transition-colors text-xs sm:text-sm"
+                aria-label="Dislike testimonial"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256">
                     <path d="M239.82,157l-12-96A24,24,0,0,0,204,40H32A16,16,0,0,0,16,56v88a16,16,0,0,0,16,16H75.06l37.78,75.58A8,8,0,0,0,120,240a40,40,0,0,0,40-40V184h56a24,24,0,0,0,23.82-27ZM72,144H32V56H72Zm150,21.29a7.88,7.88,0,0,1-6,2.71H152a8,8,0,0,0-8,8v24a24,24,0,0,1-19.29,23.54L88,150.11V56H204a8,8,0,0,1,7.94,7l12,96A7.87,7.87,0,0,1,222,165.29Z"></path>
@@ -179,21 +181,20 @@ const TestimonialSection = ({ isVisible }) => {
     };
 
     return (
-        <section className={`max-w-7xl mx-auto ${sectionBg} transition-all duration-500 will-change-[background-color,color,box-shadow,filter]`}>
+        <section className={`max-w-7xl mx-auto ${sectionBg} transition-all duration-500 will-change-[background-color,color,box-shadow,filter]`} aria-labelledby="testimonial-main-heading" role="region" tabIndex={0}>
+            <h2 id="testimonial-main-heading" className="sr-only">User Testimonials</h2>
             <div className="flex flex-col gap-6 sm:gap-8 px-4 py-10 sm:py-12">
                 <motion.div 
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="flex flex-col gap-4 sm:gap-6 text-center max-w-3xl mx-auto"
                 >
-                    {/* Advanced Animated Testimonials Badge */}
                     <div
                         className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-100 via-blue-200 to-blue-100 dark:from-blue-900/40 dark:via-blue-800/30 dark:to-blue-900/40 text-blue-700 dark:text-blue-300 text-sm font-semibold shadow-lg ring-1 ring-blue-200 dark:ring-blue-900/40 mb-4 relative group transition-all duration-500 will-change-[background-color,color,box-shadow] mx-auto"
                         tabIndex={0}
                         role="status"
                         aria-label="Testimonials"
                     >
-                        {/* Animated Glow Effect */}
                         <span
                             className="absolute -inset-1.5 rounded-full bg-blue-400/20 dark:bg-blue-700/20 blur-xl pointer-events-none z-0"
                             style={{
@@ -201,7 +202,6 @@ const TestimonialSection = ({ isVisible }) => {
                             }}
                             aria-hidden="true"
                         />
-                        {/* Animated Chat Bubble Icon */}
                         <svg
                             className="relative z-10 w-5 h-5 text-blue-500 dark:text-blue-300 drop-shadow-[0_1px_2px_rgba(59,130,246,0.15)]"
                             fill="none"
@@ -222,7 +222,6 @@ const TestimonialSection = ({ isVisible }) => {
                                     repeatCount="indefinite"
                                 />
                             </path>
-                            {/* Sparkle effect */}
                             <g>
                                 <circle className="animate-float-sparkle sparkle-0" cx="19" cy="6" r="1.1" fill="#60a5fa" opacity="0.7" />
                                 <circle className="animate-float-sparkle sparkle-1" cx="6" cy="5" r="0.7" fill="#818cf8" opacity="0.6" />
@@ -232,7 +231,6 @@ const TestimonialSection = ({ isVisible }) => {
                         <span className="relative z-10 font-semibold tracking-wide bg-gradient-to-r from-blue-700 via-blue-500 to-blue-400 dark:from-blue-300 dark:via-blue-400 dark:to-blue-500 bg-clip-text text-transparent text-xs sm:text-sm">
                             Success Stories
                         </span>
-                        {/* Tooltip on focus/hover for accessibility */}
                         <div
                             className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-3 py-1 rounded bg-gray-900/90 text-xs text-white shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 z-20"
                             role="tooltip"
@@ -280,6 +278,7 @@ const TestimonialSection = ({ isVisible }) => {
                             whileTap={{ scale: 0.9 }}
                             onClick={() => setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length)}
                             className="p-1.5 sm:p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600"
+                            aria-label="Previous testimonial"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256">
                                 <path d="M168.49,199.51a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,0-17l80-80a12,12,0,0,1,17,17L97,128l71.51,71.51A12,12,0,0,1,168.49,199.51Z"></path>
@@ -296,6 +295,7 @@ const TestimonialSection = ({ isVisible }) => {
                                         index === currentIndex ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
                                     }`}
                                     onClick={() => setCurrentIndex(index)}
+                                    aria-label={`Read full testimonial ${testimonials[index].name}`}
                                 />
                             ))}
                         </div>
@@ -305,6 +305,7 @@ const TestimonialSection = ({ isVisible }) => {
                             whileTap={{ scale: 0.9 }}
                             onClick={() => setCurrentIndex((prev) => (prev + 1) % testimonials.length)}
                             className="p-1.5 sm:p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600"
+                            aria-label="Next testimonial"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256">
                                 <path d="M184.49,136.49l-80,80a12,12,0,0,1-17-17L159,128,87.51,56.49a12,12,0,0,1,17-17l80,80A12,12,0,0,1,184.49,136.49Z"></path>
@@ -319,6 +320,7 @@ const TestimonialSection = ({ isVisible }) => {
                         whileTap={{ scale: 0.95 }}
                         className="px-4 sm:px-6 py-2 sm:py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm sm:text-base"
                         onClick={() => setShowForm(!showForm)}
+                        aria-label={showForm ? 'Hide form' : 'Share your experience'}
                     >
                         {showForm ? 'Hide Form' : 'Share Your Experience'}
                     </motion.button>

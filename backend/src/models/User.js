@@ -32,6 +32,10 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
   // Profile fields
   profilePhoto: {
     type: String, // URL to stored image
@@ -91,6 +95,24 @@ const userSchema = new mongoose.Schema({
       type: String,
       default: 'UTC'
     }
+  },
+  // Favorites: Array of Poll ObjectIds
+  favorites: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Poll',
+    default: []
+  }],
+  // Two-factor authentication
+  twoFactorEnabled: {
+    type: Boolean,
+    default: false
+  },
+  // Google OAuth
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true,
+    default: null
   },
   // Activity tracking
   activityStats: {

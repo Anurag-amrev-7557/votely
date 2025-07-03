@@ -116,7 +116,7 @@ const VotingPage = () => {
   const { pollId } = useParams();
   const navigate = useNavigate();
   const { isDarkMode } = useTheme();
-  const [selectedOption, setSelectedOption] = useState(null);
+  const [selectedOptions, setSelectedOptions] = useState([]);
   const [poll, setPoll] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -201,14 +201,22 @@ const VotingPage = () => {
     }
   }, [location.search, pollId]);
 
+  useEffect(() => {
+    if (poll && poll.options && poll.settings?.randomizeCandidateOrder) {
+      const shuffled = [...poll.options].sort(() => Math.random() - 0.5);
+      setPoll(prev => ({ ...prev, options: shuffled }));
+    }
+    // eslint-disable-next-line
+  }, [pollId, poll?.settings?.randomizeCandidateOrder]);
+
   const handleNext = async () => {
-    if (!selectedOption) {
-      toast.error('Please select an option to vote.');
+    if (!selectedOptions.length) {
+      toast.error('Please select at least one option to vote.');
       return;
     }
     try {
       setIsSubmitting(true);
-      await axios.post('http://localhost:5001/api/votes', { pollId, option: selectedOption }, { withCredentials: true });
+      await axios.post('/api/votes/vote', { pollId, options: selectedOptions }, { withCredentials: true });
       toast.success('Your vote has been submitted!');
       // Fetch latest poll data to get settings/resultDate
       const pollRes = await axios.get(`/api/polls/${pollId}`);
@@ -235,12 +243,12 @@ const VotingPage = () => {
     } catch (error) {
       console.error('Vote submission error:', error?.response?.data || error);
       const backendMsg = error?.response?.data?.error || 'Failed to submit vote. Please try again.';
-      toast.error(backendMsg);
       if (backendMsg === 'You have already voted in this poll') {
+        toast('You have already voted. Redirecting to results...', { icon: 'ℹ️' });
         navigate(`/vote/${pollId}?showResults=1`);
-        // Do not set redirecting, just navigate immediately
+      } else {
+        toast.error(backendMsg);
       }
-      // For other errors, do not set redirecting
     } finally {
       setIsSubmitting(false);
     }
@@ -249,7 +257,7 @@ const VotingPage = () => {
   const handleBack = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(prev => prev - 1);
-      setSelectedOption(null);
+      setSelectedOptions([]);
     } else {
       setShowExitModal(true);
     }
@@ -310,7 +318,7 @@ const VotingPage = () => {
       // Navigation shortcuts for better UX
       else if (e.key === 'n' && (e.metaKey || e.ctrlKey)) {
         debouncedKeyHandler(() => {
-          if (selectedOption && currentQuestionIndex < poll?.totalQuestions - 1) {
+          if (selectedOptions.length > 0) {
             handleNext();
           }
         });
@@ -331,7 +339,7 @@ const VotingPage = () => {
           const options = poll?.options || [];
           if (options.length === 0) return;
 
-          const currentIndex = selectedOption ? options.findIndex(opt => opt.text === selectedOption) : -1;
+          const currentIndex = selectedOptions.length > 0 ? selectedOptions.findIndex(opt => opt === selectedOptions[0]) : -1;
           let newIndex;
 
           if (e.key === 'ArrowUp') {
@@ -340,7 +348,8 @@ const VotingPage = () => {
             newIndex = currentIndex >= options.length - 1 ? 0 : currentIndex + 1;
           }
 
-          setSelectedOption(options[newIndex].text);
+          const newSelectedOptions = [options[newIndex]];
+          setSelectedOptions(newSelectedOptions);
           
           // Scroll the selected option into view with smooth animation
           const optionElement = document.querySelector(`[data-option-text="${options[newIndex].text}"]`);
@@ -360,7 +369,7 @@ const VotingPage = () => {
           const options = poll?.options || [];
           const optionIndex = parseInt(e.key) - 1;
           if (optionIndex < options.length) {
-            setSelectedOption(options[optionIndex].text);
+            setSelectedOptions([options[optionIndex].text]);
           }
         });
       }
@@ -369,12 +378,8 @@ const VotingPage = () => {
       else if (['Enter', ' '].includes(e.key) && !showExitModal && !showKeyboardShortcuts) {
         e.preventDefault();
         debouncedKeyHandler(() => {
-          if (selectedOption) {
-            if (currentQuestionIndex < poll?.totalQuestions - 1) {
-              handleNext();
-            } else {
-              handleNext(); // This will trigger submission
-            }
+          if (selectedOptions.length > 0) {
+            handleNext();
           }
         });
       }
@@ -382,7 +387,7 @@ const VotingPage = () => {
       // Accessibility: Screen reader announcements
       else if (e.key === 'Tab') {
         // Announce current state to screen readers
-        const announcement = `Question ${currentQuestionIndex + 1} of ${poll?.totalQuestions || 0}. ${selectedOption ? 'Option selected' : 'No option selected'}`;
+        const announcement = `Question ${currentQuestionIndex + 1} of ${poll?.totalQuestions || 0}. ${selectedOptions.length > 0 ? 'Options selected' : 'No options selected'}`;
         const announcementElement = document.createElement('div');
         announcementElement.setAttribute('aria-live', 'polite');
         announcementElement.setAttribute('aria-atomic', 'true');
@@ -415,7 +420,7 @@ const VotingPage = () => {
   }, [
     showExitModal, 
     showKeyboardShortcuts, 
-    selectedOption, 
+    selectedOptions, 
     currentQuestionIndex, 
     poll?.totalQuestions, 
     poll?.options,
@@ -424,7 +429,21 @@ const VotingPage = () => {
   ]);
 
   const handleOptionChange = (optionText) => {
-    setSelectedOption(optionText);
+    const allowMultiple = poll?.settings?.allowMultipleVotes;
+    const maxVotes = poll?.settings?.maxVotesPerVoter || 1;
+    if (allowMultiple) {
+      if (selectedOptions.includes(optionText)) {
+        setSelectedOptions(selectedOptions.filter(opt => opt !== optionText));
+      } else {
+        if (selectedOptions.length < maxVotes) {
+          setSelectedOptions([...selectedOptions, optionText]);
+        } else {
+          toast.error(`You can select up to ${maxVotes} option(s).`);
+        }
+      }
+    } else {
+      setSelectedOptions([optionText]);
+    }
   };
 
   // Real-time results subscription
@@ -763,22 +782,37 @@ const VotingPage = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-2 sm:gap-3 p-2 sm:p-4" role="radiogroup" aria-label="Voting options">
-                  {poll.options && poll.options.length > 0 ? poll.options.map((option, index) => (
-                    <div key={option.id || option._id || index} className="flex items-center gap-4 p-4 rounded-lg border transition-all duration-200 cursor-pointer" onClick={() => handleOptionChange(option.text)}>
-                      {option.image && (
-                        <img src={option.image} alt={option.text} className="w-10 h-10 rounded-full object-cover" />
-                      )}
-                      <div className="flex-1">
-                        <div className="font-semibold text-base sm:text-lg">{option.text}</div>
-                        {option.description && <div className="text-xs text-gray-500 dark:text-gray-400">{option.description}</div>}
+                <section role="radiogroup" aria-labelledby="poll-options-label" className="mt-6">
+                  <h2 id="poll-options-label" className="sr-only">
+                    {poll?.title ? `${poll.title} options` : 'Poll options'}
+                  </h2>
+                  <div className="flex flex-col gap-2 sm:gap-3 p-2 sm:p-4" role={poll?.settings?.allowMultipleVotes ? 'group' : 'radiogroup'} aria-label="Voting options">
+                    {poll.options && poll.options.length > 0 ? poll.options.map((option, index) => (
+                      <div key={option.id || option._id || index} className="flex items-center gap-4 p-4 rounded-lg border transition-all duration-200 cursor-pointer" onClick={() => handleOptionChange(option.text)}>
+                        {option.image && (
+                          <img src={option.image} alt={option.text} className="w-10 h-10 rounded-full object-cover" />
+                        )}
+                        <div className="flex-1">
+                          <div className="font-semibold text-base sm:text-lg">{option.text}</div>
+                          {option.description && <div className="text-xs text-gray-500 dark:text-gray-400">{option.description}</div>}
+                        </div>
+                        {poll?.settings?.allowMultipleVotes ? (
+                          <input
+                            type="checkbox"
+                            checked={selectedOptions.includes(option.text)}
+                            onChange={() => handleOptionChange(option.text)}
+                            className="h-5 w-5 rounded border-2 border-gray-300 text-blue-600 focus:ring-blue-500"
+                            onClick={e => e.stopPropagation()}
+                          />
+                        ) : (
+                          <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${selectedOptions.includes(option.text) ? 'border-blue-600 bg-blue-600' : 'border-gray-300'}`}>{selectedOptions.includes(option.text) && <div className="h-2.5 w-2.5 rounded-full bg-white" />}</div>
+                        )}
                       </div>
-                      <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${selectedOption === option.text ? 'border-blue-600 bg-blue-600' : 'border-gray-300'}`}>{selectedOption === option.text && <div className="h-2.5 w-2.5 rounded-full bg-white" />}</div>
-                    </div>
-                  )) : (
-                    <div className="text-center text-gray-500 dark:text-gray-400 py-8">No options available for this poll.</div>
-                  )}
-                </div>
+                    )) : (
+                      <div className="text-center text-gray-500 dark:text-gray-400 py-8">No options available for this poll.</div>
+                    )}
+                  </div>
+                </section>
 
                 <div className="flex px-2 sm:px-4 py-3 justify-end gap-4">
                   <button
@@ -794,9 +828,9 @@ const VotingPage = () => {
                   </button>
                   <button
                     onClick={handleNext}
-                    disabled={!selectedOption || isSubmitting}
+                    disabled={!selectedOptions.length || isSubmitting}
                     className={`flex min-w-[120px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-9 sm:h-10 px-4 text-sm font-bold leading-normal tracking-[0.015em] transition-all duration-200 ${
-                      !selectedOption || isSubmitting
+                      !selectedOptions.length || isSubmitting
                         ? 'bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed'
                         : 'bg-blue-600 dark:bg-[#c7d7e9] text-white dark:text-[#15191e] hover:bg-blue-700 dark:hover:bg-[#b3c7e0] transform hover:scale-105'
                     }`}

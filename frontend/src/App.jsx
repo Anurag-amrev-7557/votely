@@ -10,6 +10,7 @@ import { Toaster } from 'react-hot-toast'
 import Navbar from './components/navbar/Navbar'
 import Footer from './components/Footer/Footer'
 import ProfilePage from './pages/ProfilePage'
+import PrivacyPolicy from './pages/PrivacyPolicy'
 
 // Lazy load components with prefetching and chunk naming for better debugging
 const LandingPage = lazy(() => import(/* webpackChunkName: "LandingPage" */'./pages/landing/LandingPage'))
@@ -427,7 +428,8 @@ const App = () => {
       { path: '/vote/:pollId', element: VotingPage, priority: 'high' },
       { path: '/login', element: LoginPage, priority: 'high' },
       { path: '/register', element: RegisterPage, priority: 'high' },
-      { path: '/profile', element: ProfilePage, priority: 'normal' }
+      { path: '/profile', element: ProfilePage, priority: 'normal' },
+      { path: '/privacy-policy', element: PrivacyPolicy, priority: 'normal' }
     ],
     admin: [
       { path: '/admin-login', element: AdminLogin, priority: 'normal' },

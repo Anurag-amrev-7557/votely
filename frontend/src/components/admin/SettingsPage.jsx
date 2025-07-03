@@ -310,10 +310,10 @@ const SettingsPage = () => {
       </div>
       {/* User Modal */}
       {showUserModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+        <div role="dialog" aria-modal="true" aria-labelledby="user-modal-title" className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className={`p-6 rounded-xl w-full max-w-md ${isDarkMode ? 'bg-gray-900' : 'bg-white'} shadow-xl`}>
-            <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">{editUser ? 'Edit User' : 'Add User'}</h4>
-            <form onSubmit={e => { e.preventDefault(); setShowUserModal(false); setShowToast(true); setToastMsg(editUser ? 'User updated!' : 'User added!'); setTimeout(() => setShowToast(false), 2000); }} className="space-y-4">
+            <h4 id="user-modal-title" className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Edit User</h4>
+            <form onSubmit={e => { e.preventDefault(); setShowUserModal(false); setShowToast(true); setToastMsg('User updated!'); setTimeout(() => setShowToast(false), 2000); }} className="space-y-4">
               <input className="w-full px-3 py-2 rounded border bg-gray-100 dark:bg-gray-800 dark:text-white" placeholder="Name" defaultValue={editUser?.name || ''} required />
               <input className="w-full px-3 py-2 rounded border bg-gray-100 dark:bg-gray-800 dark:text-white" placeholder="Email" type="email" defaultValue={editUser?.email || ''} required />
               <select className="w-full px-3 py-2 rounded border bg-gray-100 dark:bg-gray-800 dark:text-white" defaultValue={editUser?.role || 'Voter'}>
@@ -425,9 +425,9 @@ const SettingsPage = () => {
       </div>
       {/* API Key Modal */}
       {showApiKeyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+        <div role="dialog" aria-modal="true" aria-labelledby="api-key-modal-title" className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className={`p-6 rounded-xl w-full max-w-md ${isDarkMode ? 'bg-gray-900' : 'bg-white'} shadow-xl`}>
-            <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">New API Key</h4>
+            <h4 id="api-key-modal-title" className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">New API Key</h4>
             <form onSubmit={e => { e.preventDefault(); setShowApiKeyModal(false); setShowToast(true); setToastMsg('API key created!'); setTimeout(() => setShowToast(false), 2000); }} className="space-y-4">
               <input className="w-full px-3 py-2 rounded border bg-gray-100 dark:bg-gray-800 dark:text-white" placeholder="Label" required />
               <div className="flex gap-2 justify-end">
@@ -469,83 +469,86 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex flex-col gap-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-              Settings
-            </h1>
-            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              Manage your system preferences and configurations
-            </p>
-          </div>
-          <button
-            onClick={handleSave}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-              isDarkMode
-                ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
-            }`}
-          >
-            Save Changes
-          </button>
-        </div>
-        {/* Toast */}
-        <AnimatePresence>
-          {showToast && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="fixed top-6 right-6 z-50 bg-green-600 text-white px-4 py-2 rounded shadow-lg flex items-center gap-2"
-            >
-              <CheckCircleIcon className="h-5 w-5" />
-              {toastMsg}
-            </motion.div>
-          )}
-        </AnimatePresence>
-        {/* Settings Navigation */}
-        <div className="flex gap-6">
-          {/* Sidebar */}
-          <div className="w-64 flex-shrink-0">
-            <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm border border-gray-200 dark:border-gray-700`}>
-              <nav className="space-y-1">
-                {settingsTabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                      activeTab === tab.id
-                        ? isDarkMode
-                          ? 'bg-gray-700 text-white'
-                          : 'bg-gray-100 text-gray-900'
-                        : isDarkMode
-                          ? 'text-gray-400 hover:bg-gray-700 hover:text-white'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                    }`}
-                  >
-                    <tab.icon className="h-5 w-5" />
-                    {tab.label}
-                  </button>
-                ))}
-              </nav>
+    <div role="main" aria-label="Admin settings management" tabIndex={0}>
+      <div className="p-6">
+        <div className="flex flex-col gap-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                Settings
+              </h1>
+              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                Manage your system preferences and configurations
+              </p>
             </div>
+            <button
+              onClick={handleSave}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                isDarkMode
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+              }`}
+              aria-label="Save settings"
+            >
+              Save Changes
+            </button>
           </div>
-          {/* Content */}
-          <div className="flex-1">
-            <AnimatePresence mode="wait">
+          {/* Toast */}
+          <AnimatePresence>
+            {showToast && (
               <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.2 }}
+                className="fixed top-6 right-6 z-50 bg-green-600 text-white px-4 py-2 rounded shadow-lg flex items-center gap-2"
               >
-                {renderContent()}
+                <CheckCircleIcon className="h-5 w-5" />
+                {toastMsg}
               </motion.div>
-            </AnimatePresence>
+            )}
+          </AnimatePresence>
+          {/* Settings Navigation */}
+          <div className="flex gap-6">
+            {/* Sidebar */}
+            <div className="w-64 flex-shrink-0">
+              <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow-sm border border-gray-200 dark:border-gray-700`}>
+                <nav className="space-y-1">
+                  {settingsTabs.map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                        activeTab === tab.id
+                          ? isDarkMode
+                            ? 'bg-gray-700 text-white'
+                            : 'bg-gray-100 text-gray-900'
+                          : isDarkMode
+                            ? 'text-gray-400 hover:bg-gray-700 hover:text-white'
+                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      }`}
+                    >
+                      <tab.icon className="h-5 w-5" />
+                      {tab.label}
+                    </button>
+                  ))}
+                </nav>
+              </div>
+            </div>
+            {/* Content */}
+            <div className="flex-1">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {renderContent()}
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </div>
         </div>
       </div>

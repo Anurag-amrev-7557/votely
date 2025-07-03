@@ -7,7 +7,9 @@ const CallToActionSection = ({ isVisible }) => {
     const sectionBg = useMemo(() => isDarkMode ? 'dark:bg-gray-900' : 'from-blue-50 to-indigo-50', [isDarkMode]);
 
     return (
-        <section className="relative overflow-hidden transition-all duration-500 will-change-[background-color,color,box-shadow,filter]">
+        <section className="relative overflow-hidden transition-all duration-500 will-change-[background-color,color,box-shadow,filter]" aria-labelledby="cta-main-heading" role="region" tabIndex={0}>
+            {/* Visually hidden heading for accessibility */}
+            <h2 id="cta-main-heading" className="sr-only">Get Started with Votely</h2>
             {/* Background gradient */}
             <div className={`absolute inset-0 bg-gradient-to-br ${sectionBg} -z-10 transition-all duration-500 will-change-[background-color,color,box-shadow,filter]`} />
             
@@ -218,7 +220,7 @@ const CallToActionSection = ({ isVisible }) => {
                         <div className="group relative flex flex-col sm:flex-row items-center sm:items-center gap-8 p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-md transition-transform duration-200 h-full">
                             <div className="flex-shrink-0 mb-4 sm:mb-0">
                                 {/* Animated Shield Icon */}
-                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 32 32" className="text-green-600 dark:text-green-400 animate-pulse-slow">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 32 32" className="text-green-600 dark:text-green-400 animate-pulse-slow" aria-hidden="true" focusable="false">
                                     <path d="M16 4l12 4v7c0 7.18-5.16 13.41-12 15-6.84-1.59-12-7.82-12-15V8l12-4z" fill="currentColor" fillOpacity="0.15"/>
                                     <path d="M16 4l12 4v7c0 7.18-5.16 13.41-12 15-6.84-1.59-12-7.82-12-15V8l12-4z" stroke="currentColor" strokeWidth="2"/>
                                     <animate attributeName="opacity" values="0.8;1;0.8" dur="2.5s" repeatCount="indefinite"/>
@@ -242,7 +244,7 @@ const CallToActionSection = ({ isVisible }) => {
                         <div className="group relative flex flex-col sm:flex-row items-center sm:items-center gap-8 p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-md transition-transform duration-200 h-full">
                             <div className="flex-shrink-0 mb-4 sm:mb-0">
                                 {/* Animated Lightning Icon */}
-                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 32 32" className="text-blue-600 dark:text-blue-400 animate-bounce-x">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 32 32" className="text-blue-600 dark:text-blue-400 animate-bounce-x" aria-hidden="true" focusable="false">
                                     <path d="M16 3v13h7l-9 13v-13h-7l9-13z" fill="currentColor" fillOpacity="0.15"/>
                                     <path d="M16 3v13h7l-9 13v-13h-7l9-13z" stroke="currentColor" strokeWidth="2"/>
                                 </svg>
@@ -265,7 +267,7 @@ const CallToActionSection = ({ isVisible }) => {
                         <div className="group relative flex flex-col sm:flex-row items-center sm:items-center gap-8 p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-md transition-transform duration-200 h-full">
                             <div className="flex-shrink-0 mb-4 sm:mb-0">
                                 {/* Animated Headset Icon */}
-                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 32 32" className="text-purple-600 dark:text-purple-400 animate-fade-in">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 32 32" className="text-purple-600 dark:text-purple-400 animate-fade-in" aria-hidden="true" focusable="false">
                                     <circle cx="16" cy="16" r="13" fill="currentColor" fillOpacity="0.12"/>
                                     <path d="M8 20v-3a8 8 0 0 1 16 0v3" stroke="currentColor" strokeWidth="2" fill="none"/>
                                     <rect x="7" y="20" width="4" height="6" rx="2" fill="currentColor" opacity="0.2"/>
@@ -290,7 +292,7 @@ const CallToActionSection = ({ isVisible }) => {
                         <div className="group relative flex flex-col sm:flex-row items-center sm:items-center gap-8 p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-md transition-transform duration-200 h-full">
                             <div className="flex-shrink-0 mb-4 sm:mb-0">
                                 {/* Animated Settings Icon */}
-                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 32 32" className="text-yellow-600 dark:text-yellow-400 animate-spin-slow">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 32 32" className="text-yellow-600 dark:text-yellow-400 animate-spin-slow" aria-hidden="true" focusable="false">
                                     <circle cx="16" cy="16" r="13" fill="currentColor" fillOpacity="0.12"/>
                                     <path d="M16 10a6 6 0 1 1 0 12 6 6 0 0 1 0-12zm0-5v3m0 16v3m8.66-13.66l-2.12 2.12m-13.08 13.08l-2.12 2.12m16.97-2.12l-2.12-2.12m-13.08-13.08l-2.12-2.12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                                 </svg>
@@ -451,7 +453,7 @@ const CallToActionSection = ({ isVisible }) => {
                         <div className="flex flex-wrap justify-center gap-6 sm:gap-8 opacity-90">
                             {/* Microsoft */}
                             <div className="relative group h-6 sm:h-8 w-auto grayscale hover:grayscale-0 dark:invert transition-all duration-300">
-                                <svg className="h-full w-auto drop-shadow-lg group-hover:scale-110 transition-transform duration-300" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Microsoft">
+                                <svg className="h-full w-auto drop-shadow-lg group-hover:scale-110 transition-transform duration-300" viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Microsoft" aria-hidden="true" focusable="false">
                                     <title>Microsoft</title>
                                     <desc>Microsoft logo</desc>
                                     <path d="M0 0h23v23H0z" fill="#f3f3f3"/>
@@ -466,7 +468,7 @@ const CallToActionSection = ({ isVisible }) => {
                             </div>
                             {/* Google */}
                             <div className="relative group h-6 sm:h-8 w-auto grayscale hover:grayscale-0 dark:invert transition-all duration-300">
-                                <svg className="h-full w-auto drop-shadow-lg group-hover:scale-110 transition-transform duration-300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Google">
+                                <svg className="h-full w-auto drop-shadow-lg group-hover:scale-110 transition-transform duration-300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Google" aria-hidden="true" focusable="false">
                                     <title>Google</title>
                                     <desc>Google logo</desc>
                                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -480,7 +482,7 @@ const CallToActionSection = ({ isVisible }) => {
                             </div>
                             {/* Amazon */}
                             <div className="relative group h-6 sm:h-8 w-auto grayscale hover:grayscale-0 dark:invert transition-all duration-300">
-                                <svg className="h-full w-auto drop-shadow-lg group-hover:scale-110 transition-transform duration-300" viewBox="0 0 448 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Amazon">
+                                <svg className="h-full w-auto drop-shadow-lg group-hover:scale-110 transition-transform duration-300" viewBox="0 0 448 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Amazon" aria-hidden="true" focusable="false">
                                     <title>Amazon</title>
                                     <desc>Amazon logo</desc>
                                     <path d="M257.2 162.7c-48.7 1.8-169.5 15.5-169.5 117.5 0 109.5 138.3 114 183.5 43 2.5 4.5 5.5 8.5 8.5 12.5 27.5 35.5 60.5 60 116.5 60 81 0 123.5-62.5 123.5-150.5 0-66.5-53.5-115.5-123.5-115.5-27.5 0-55 10-82.5 25.5-27.5 15.5-55 31-82.5 31-27.5 0-55-15.5-82.5-31-27.5-15.5-55-25.5-82.5-25.5-70 0-123.5 49-123.5 115.5 0 88 42.5 150.5 123.5 150.5 56 0 89-24.5 116.5-60 3-4 6-8 8.5-12.5 45.5 71 134.8 66.5 183.5 43 0-102-120.8-115.7-169.5-117.5z" fill="currentColor"/>
@@ -491,7 +493,7 @@ const CallToActionSection = ({ isVisible }) => {
                             </div>
                             {/* IBM */}
                             <div className="relative group h-6 sm:h-8 w-auto grayscale hover:grayscale-0 dark:invert transition-all duration-300">
-                                <svg className="h-full w-auto drop-shadow-lg group-hover:scale-110 transition-transform duration-300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="IBM">
+                                <svg className="h-full w-auto drop-shadow-lg group-hover:scale-110 transition-transform duration-300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="IBM" aria-hidden="true" focusable="false">
                                     <title>IBM</title>
                                     <desc>IBM logo</desc>
                                     <path d="M22.362 5.214c-.43-.168-1.02-.24-1.77-.24-1.5 0-2.7.6-3.6 1.8-.9-1.2-2.1-1.8-3.6-1.8-.75 0-1.35.06-1.8.24-.45.18-.75.45-.9.75-.15.3-.15.6 0 .9.15.3.45.6.9.75.45.18 1.05.3 1.8.3 1.5 0 2.7-.6 3.6-1.8.9 1.2 2.1 1.8 3.6 1.8.75 0 1.35-.12 1.8-.3.45-.18.75-.45.9-.75.15-.3.15-.6 0-.9-.15-.3-.45-.57-.9-.75zM22.362 11.214c-.43-.168-1.02-.24-1.77-.24-1.5 0-2.7.6-3.6 1.8-.9-1.2-2.1-1.8-3.6-1.8-.75 0-1.35.06-1.8.24-.45.18-.75.45-.9.75-.15.3-.15.6 0 .9.15.3.45.6.9.75.45.18 1.05.3 1.8.3 1.5 0 2.7-.6 3.6-1.8.9 1.2 2.1 1.8 3.6 1.8.75 0 1.35-.12 1.8-.3.45-.18.75-.45.9-.75.15-.3.15-.6 0-.9-.15-.3-.45-.57-.9-.75zM22.362 17.214c-.43-.168-1.02-.24-1.77-.24-1.5 0-2.7.6-3.6 1.8-.9-1.2-2.1-1.8-3.6-1.8-.75 0-1.35.06-1.8.24-.45.18-.75.45-.9.75-.15.3-.15.6 0 .9.15.3.45.6.9.75.45.18 1.05.3 1.8.3 1.5 0 2.7-.6 3.6-1.8.9 1.2 2.1 1.8 3.6 1.8.75 0 1.35-.12 1.8-.3.45-.18.75-.45.9-.75.15-.3.15-.6 0-.9-.15-.3-.45-.57-.9-.75z" fill="currentColor"/>
@@ -502,7 +504,7 @@ const CallToActionSection = ({ isVisible }) => {
                             </div>
                             {/* Oracle */}
                             <div className="relative group h-6 sm:h-8 w-auto grayscale hover:grayscale-0 dark:invert transition-all duration-300">
-                                <svg className="h-full w-auto drop-shadow-lg group-hover:scale-110 transition-transform duration-300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Oracle">
+                                <svg className="h-full w-auto drop-shadow-lg group-hover:scale-110 transition-transform duration-300" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Oracle" aria-hidden="true" focusable="false">
                                     <title>Oracle</title>
                                     <desc>Oracle logo</desc>
                                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" fill="currentColor"/>

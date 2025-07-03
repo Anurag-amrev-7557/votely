@@ -11,12 +11,18 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const session = require('express-session');
 const http = require('http');
 const { Server } = require('socket.io');
+const User = require('./models/User');
+const jwt = require('jsonwebtoken');
 
 // Load environment variables
 dotenv.config();
 
 // Connect to MongoDB
 connectDB();
+
+// Start poll status cron job after DB connection
+const startStatusCron = require('./statusCron');
+startStatusCron();
 
 const app = express();
 
@@ -89,7 +95,34 @@ passport.use(new GoogleStrategy({
   callbackURL: process.env.GOOGLE_CALLBACK_URL,
 },
 async (accessToken, refreshToken, profile, done) => {
-  return done(null, profile); // For demo, just return the profile
+  try {
+    let user = await User.findOne({ googleId: profile.id });
+    if (!user) {
+      // Try to find by email in case user registered locally first
+      user = await User.findOne({ email: profile.emails[0].value });
+      if (user) {
+        user.googleId = profile.id;
+        // Update profile photo if not set
+        if (!user.profilePhoto && profile.photos && profile.photos.length > 0) {
+          user.profilePhoto = profile.photos[0].value;
+        }
+        await user.save();
+      } else {
+        user = await User.create({
+          name: profile.displayName,
+          email: profile.emails[0].value,
+          googleId: profile.id,
+          isVerified: true,
+          profilePhoto: profile.photos && profile.photos.length > 0 ? profile.photos[0].value : null,
+          // You may want to set a random password or leave it blank
+          password: Math.random().toString(36).slice(-8) + 'A1!'
+        });
+      }
+    }
+    return done(null, user);
+  } catch (err) {
+    return done(err, null);
+  }
 }));
 
 passport.serializeUser((user, done) => {
@@ -110,12 +143,15 @@ app.get('/api/auth/google',
 
 // Google OAuth callback
 app.get('/api/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/login', session: true }),
+  passport.authenticate('google', { failureRedirect: '/login', session: false }),
   (req, res) => {
-    // Send user info to frontend, or redirect
-    // For SPA, you might want to send a script to postMessage to the opener window
+    // Issue JWT and set cookie
+    const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+    res.cookie('token', token, { httpOnly: true, sameSite: 'lax', maxAge: 30 * 24 * 60 * 60 * 1000 });
+    // PostMessage to frontend
+    const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
     res.send(`<script>
-      window.opener.postMessage({ type: 'GOOGLE_AUTH_SUCCESS', user: ${JSON.stringify(req.user)} }, window.location.origin);
+      window.opener.postMessage({ type: 'GOOGLE_AUTH_SUCCESS', user: ${JSON.stringify(req.user)} }, '${FRONTEND_ORIGIN}');
       window.close();
     </script>`);
   }

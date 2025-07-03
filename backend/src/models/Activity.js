@@ -4,16 +4,16 @@ const activitySchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: false
   },
   poll: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Poll',
-    required: true
+    required: false
   },
   option: {
     type: String,
-    required: true
+    required: false
   },
   action: {
     type: String,
@@ -61,15 +61,17 @@ activitySchema.index({ timestamp: -1 });
 
 // Static method to create activity
 activitySchema.statics.createActivity = async function(userId, type, description, options = {}) {
-  const activity = new this({
+  const activityData = {
     user: userId,
     type,
     description,
     category: options.category || 'General',
     impact: options.impact || 'medium',
     metadata: options.metadata || {}
-  });
-  
+  };
+  if (options.poll) activityData.poll = options.poll;
+  if (options.option) activityData.option = options.option;
+  const activity = new this(activityData);
   await activity.save();
   return activity;
 };

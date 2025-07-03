@@ -54,60 +54,70 @@ const activityAvatars = [
     color: 'bg-blue-500 text-white',
     label: 'Poll Activity',
     keywords: ['Poll Created', 'Poll Closed', 'Vote Cast'],
+    ariaHidden: true,
   },
   {
     icon: UserCircleIcon,
     color: 'bg-green-500 text-white',
     label: 'User Activity',
     keywords: ['User Registered', 'User Updated', 'User Deleted'],
+    ariaHidden: true,
   },
   {
     icon: ShieldCheckIcon,
     color: 'bg-purple-500 text-white',
     label: 'Security Event',
     keywords: ['Security Log', 'Login Attempt', 'Password Changed'],
+    ariaHidden: true,
   },
   {
     icon: BoltIcon,
     color: 'bg-yellow-400 text-gray-900',
     label: 'System Alert',
     keywords: ['System Alert', 'Performance Spike', 'Downtime'],
+    ariaHidden: true,
   },
   {
     icon: GlobeAltIcon,
     color: 'bg-pink-500 text-white',
     label: 'Results',
     keywords: ['Results Published', 'Results Updated'],
+    ariaHidden: true,
   },
   {
     icon: PencilSquareIcon,
     color: 'bg-indigo-500 text-white',
     label: 'Edit',
     keywords: ['Poll Edited', 'User Edited'],
+    ariaHidden: true,
   },
   {
     icon: CheckBadgeIcon,
     color: 'bg-emerald-500 text-white',
     label: 'Success',
     keywords: ['Success', 'Completed'],
+    ariaHidden: true,
   },
   {
     icon: XMarkIcon,
     color: 'bg-red-500 text-white',
     label: 'Error',
     keywords: ['Error', 'Failed', 'Rejected'],
+    ariaHidden: true,
   },
   {
     icon: BellIcon,
     color: 'bg-orange-400 text-white',
     label: 'Notification',
     keywords: ['Notification', 'Reminder'],
+    ariaHidden: true,
   },
   {
     icon: ClockIcon,
     color: 'bg-gray-500 text-white',
     label: 'Time',
     keywords: ['Scheduled', 'Delayed'],
+    ariaHidden: true,
   },
 ];
 
@@ -189,297 +199,307 @@ const AdminDashboard = React.memo(({ isDarkMode }) => {
   else greeting = 'Good evening';
 
   return (
-    <div className={`min-h-screen p-8 ${bg} ${text} transition-colors`}>  
-      {/* Advanced Animated Header */}
-      <div className="mb-8 flex flex-col gap-2 relative">
-        {/* Animated Glow Accent */}
-        <div
-          className={`absolute -top-6 -left-6 w-40 h-20 rounded-full blur-2xl pointer-events-none z-0 ${
-            isDarkMode
-              ? 'bg-gradient-to-tr from-blue-700/30 via-blue-500/20 to-purple-700/10'
-              : 'bg-gradient-to-tr from-blue-300/30 via-blue-200/20 to-purple-200/10'
-          } animate-pulse`}
-          aria-hidden="true"
-        />
-        {/* Greeting with Emoji and Typewriter Effect */}
-        <div className="flex items-center gap-3 z-10">
-          <span
-            className="text-3xl md:text-4xl animate-wave"
-            role="img"
-            aria-label="Waving hand"
-            style={{
-              display: 'inline-block',
-              animation: 'wave 2s infinite',
-              transformOrigin: '70% 70%',
-            }}
+    <div role="main" aria-label="Admin dashboard main content" tabIndex={0} className={`min-h-screen p-8 ${bg} ${text} transition-colors`}>
+      {/* Greeting Section */}
+      <section role="region" aria-labelledby="admin-greeting-heading" tabIndex={0}>
+        <h2 id="admin-greeting-heading" className="sr-only">Admin Dashboard Greeting</h2>
+        <div className="mb-8 flex flex-col gap-2 relative">
+          {/* Animated Glow Accent */}
+          <div
+            className={`absolute -top-6 -left-6 w-40 h-20 rounded-full blur-2xl pointer-events-none z-0 ${
+              isDarkMode
+                ? 'bg-gradient-to-tr from-blue-700/30 via-blue-500/20 to-purple-700/10'
+                : 'bg-gradient-to-tr from-blue-300/30 via-blue-200/20 to-purple-200/10'
+            } animate-pulse`}
+            aria-hidden="true"
+          />
+          {/* Greeting with Emoji and Typewriter Effect */}
+          <div className="flex items-center gap-3 z-10">
+            <span
+              className="text-3xl md:text-4xl animate-wave"
+              role="img"
+              aria-label="Waving hand"
+              style={{
+                display: 'inline-block',
+                animation: 'wave 2s infinite',
+                transformOrigin: '70% 70%',
+              }}
+            >
+              👋
+            </span>
+            <h1
+              className={`text-2xl md:text-3xl font-extrabold tracking-tight ${accent} flex items-center gap-2`}
+              aria-live="polite"
+            >
+              <span className="typewriter" style={{
+                borderRight: '2px solid',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                animation: 'typing 1.5s steps(30, end), blink-caret .75s step-end infinite'
+              }}>
+                {greeting}, Admin
+              </span>
+              <span className="sr-only">{greeting}, Admin</span>
+            </h1>
+          </div>
+          {/* Subtext with Icon and Tooltip */}
+          <div className="flex items-center gap-2 mt-1 z-10">
+            <InformationCircleIcon className={`h-5 w-5 ${subtext} animate-bounce`} aria-hidden="true" />
+            <p className={`text-sm ${subtext} relative group`}>
+              <span>Advanced dashboard overview</span>
+              <span className="absolute left-1/2 -translate-x-1/2 mt-1 w-max px-3 py-1 rounded bg-gray-900 text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-lg">
+                See real-time stats, activity, and quick actions
+              </span>
+            </p>
+          </div>
+          {/* Accessibility: Visually hidden description */}
+          <span className="sr-only">
+            This dashboard provides a real-time overview of polls, voters, and system activity for administrators.
+          </span>
+        </div>
+      </section>
+      {/* Stats Section */}
+      <section role="region" aria-labelledby="admin-stats-heading" tabIndex={0}>
+        <h2 id="admin-stats-heading" className="sr-only">Admin Dashboard Stats</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          {/* Active Polls */}
+          <div
+            className={`relative border ${border} rounded-2xl p-6 flex flex-col gap-2 shadow-lg overflow-hidden group transition-all duration-300 hover:scale-[1.025] hover:shadow-2xl`}
+            tabIndex={0}
+            aria-label="Active Polls"
           >
-            👋
-          </span>
-          <h1
-            className={`text-2xl md:text-3xl font-extrabold tracking-tight ${accent} flex items-center gap-2`}
-            aria-live="polite"
+            {/* Animated Accent Ring */}
+            <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-tr from-blue-400/20 to-blue-600/10 rounded-full blur-2xl pointer-events-none group-hover:scale-110 transition-transform" />
+            {/* Icon */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <ChartBarIcon className={`h-7 w-7 ${accent} drop-shadow`} aria-hidden="true" />
+                <span className={`text-xs font-semibold uppercase tracking-wide ${subtext}`}>Active Polls</span>
+              </div>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 animate-pulse">
+                Live
+              </span>
+            </div>
+            {/* Value */}
+            <span className="text-3xl font-extrabold tracking-tight mb-1">{pollsCount}</span>
+            {/* Mini Trendline */}
+            <div className="h-8">
+              <svg viewBox="0 0 80 32" fill="none" className="w-full h-full">
+                <polyline
+                  points="0,28 10,20 20,24 30,12 40,16 50,8 60,18 70,6 80,10"
+                  fill="none"
+                  stroke="#3b82f6"
+                  strokeWidth="2.5"
+                  strokeLinejoin="round"
+                  className="opacity-80"
+                />
+                <circle cx="80" cy="10" r="2.5" fill="#3b82f6" />
+              </svg>
+            </div>
+            {/* Tooltip */}
+            <span className="absolute top-3 right-3 text-xs text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              {pollsCount > 1 ? 'Multiple polls running' : 'Single poll running'}
+            </span>
+          </div>
+
+          {/* Registered Voters */}
+          <div
+            className={`relative border ${border} rounded-2xl p-6 flex flex-col gap-2 shadow-lg overflow-hidden group transition-all duration-300 hover:scale-[1.025] hover:shadow-2xl`}
+            tabIndex={0}
+            aria-label="Registered Voters"
           >
-            <span className="typewriter" style={{
-              borderRight: '2px solid',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              animation: 'typing 1.5s steps(30, end), blink-caret .75s step-end infinite'
-            }}>
-              {greeting}, Admin
-            </span>
-            <span className="sr-only">{greeting}, Admin</span>
-          </h1>
-        </div>
-        {/* Subtext with Icon and Tooltip */}
-        <div className="flex items-center gap-2 mt-1 z-10">
-          <InformationCircleIcon className={`h-5 w-5 ${subtext} animate-bounce`} aria-hidden="true" />
-          <p className={`text-sm ${subtext} relative group`}>
-            <span>Advanced dashboard overview</span>
-            <span className="absolute left-1/2 -translate-x-1/2 mt-1 w-max px-3 py-1 rounded bg-gray-900 text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-lg">
-              See real-time stats, activity, and quick actions
-            </span>
-          </p>
-        </div>
-        {/* Accessibility: Visually hidden description */}
-        <span className="sr-only">
-          This dashboard provides a real-time overview of polls, voters, and system activity for administrators.
-        </span>
-      </div>
-
-      {/* Advanced Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        {/* Active Polls */}
-        <div
-          className={`relative border ${border} rounded-2xl p-6 flex flex-col gap-2 shadow-lg overflow-hidden group transition-all duration-300 hover:scale-[1.025] hover:shadow-2xl`}
-          tabIndex={0}
-          aria-label="Active Polls"
-        >
-          {/* Animated Accent Ring */}
-          <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-tr from-blue-400/20 to-blue-600/10 rounded-full blur-2xl pointer-events-none group-hover:scale-110 transition-transform" />
-          {/* Icon */}
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <ChartBarIcon className={`h-7 w-7 ${accent} drop-shadow`} aria-hidden="true" />
-              <span className={`text-xs font-semibold uppercase tracking-wide ${subtext}`}>Active Polls</span>
+            {/* Animated Accent Ring */}
+            <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-tr from-green-400/20 to-green-600/10 rounded-full blur-2xl pointer-events-none group-hover:scale-110 transition-transform" />
+            {/* Icon */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <UserCircleIcon className="h-7 w-7 text-green-500 dark:text-green-300 drop-shadow" aria-hidden="true" />
+                <span className={`text-xs font-semibold uppercase tracking-wide ${subtext}`}>Registered Voters</span>
+              </div>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300">
+                +{(votersCount * 0.012).toFixed(0)} today
+              </span>
             </div>
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 animate-pulse">
-              Live
-            </span>
-          </div>
-          {/* Value */}
-          <span className="text-3xl font-extrabold tracking-tight mb-1">{pollsCount}</span>
-          {/* Mini Trendline */}
-          <div className="h-8">
-            <svg viewBox="0 0 80 32" fill="none" className="w-full h-full">
-              <polyline
-                points="0,28 10,20 20,24 30,12 40,16 50,8 60,18 70,6 80,10"
-                fill="none"
-                stroke="#3b82f6"
-                strokeWidth="2.5"
-                strokeLinejoin="round"
-                className="opacity-80"
+            {/* Value */}
+            <span className="text-3xl font-extrabold tracking-tight mb-1">{votersCount.toLocaleString()}</span>
+            {/* Progress Bar */}
+            <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-green-400 to-green-600 transition-all"
+                style={{ width: `${Math.min(100, (votersCount / 6000) * 100)}%` }}
               />
-              <circle cx="80" cy="10" r="2.5" fill="#3b82f6" />
-            </svg>
-          </div>
-          {/* Tooltip */}
-          <span className="absolute top-3 right-3 text-xs text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-            {pollsCount > 1 ? 'Multiple polls running' : 'Single poll running'}
-          </span>
-        </div>
-
-        {/* Registered Voters */}
-        <div
-          className={`relative border ${border} rounded-2xl p-6 flex flex-col gap-2 shadow-lg overflow-hidden group transition-all duration-300 hover:scale-[1.025] hover:shadow-2xl`}
-          tabIndex={0}
-          aria-label="Registered Voters"
-        >
-          {/* Animated Accent Ring */}
-          <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-tr from-green-400/20 to-green-600/10 rounded-full blur-2xl pointer-events-none group-hover:scale-110 transition-transform" />
-          {/* Icon */}
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <UserCircleIcon className="h-7 w-7 text-green-500 dark:text-green-300 drop-shadow" aria-hidden="true" />
-              <span className={`text-xs font-semibold uppercase tracking-wide ${subtext}`}>Registered Voters</span>
             </div>
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300">
-              +{(votersCount * 0.012).toFixed(0)} today
+            {/* Tooltip */}
+            <span className="absolute top-3 right-3 text-xs text-green-400 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              {votersCount.toLocaleString()} total
             </span>
           </div>
-          {/* Value */}
-          <span className="text-3xl font-extrabold tracking-tight mb-1">{votersCount.toLocaleString()}</span>
-          {/* Progress Bar */}
-          <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-green-400 to-green-600 transition-all"
-              style={{ width: `${Math.min(100, (votersCount / 6000) * 100)}%` }}
-            />
-          </div>
-          {/* Tooltip */}
-          <span className="absolute top-3 right-3 text-xs text-green-400 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-            {votersCount.toLocaleString()} total
-          </span>
-        </div>
 
-        {/* Total Votes */}
-        <div
-          className={`relative border ${border} rounded-2xl p-6 flex flex-col gap-2 shadow-lg overflow-hidden group transition-all duration-300 hover:scale-[1.025] hover:shadow-2xl`}
-          tabIndex={0}
-          aria-label="Total Votes"
-        >
-          {/* Animated Accent Ring */}
-          <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-tr from-purple-400/20 to-purple-600/10 rounded-full blur-2xl pointer-events-none group-hover:scale-110 transition-transform" />
-          {/* Icon */}
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <CheckBadgeIcon className="h-7 w-7 text-purple-500 dark:text-purple-300 drop-shadow" aria-hidden="true" />
-              <span className={`text-xs font-semibold uppercase tracking-wide ${subtext}`}>Total Votes</span>
+          {/* Total Votes */}
+          <div
+            className={`relative border ${border} rounded-2xl p-6 flex flex-col gap-2 shadow-lg overflow-hidden group transition-all duration-300 hover:scale-[1.025] hover:shadow-2xl`}
+            tabIndex={0}
+            aria-label="Total Votes"
+          >
+            {/* Animated Accent Ring */}
+            <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-tr from-purple-400/20 to-purple-600/10 rounded-full blur-2xl pointer-events-none group-hover:scale-110 transition-transform" />
+            {/* Icon */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <CheckBadgeIcon className="h-7 w-7 text-purple-500 dark:text-purple-300 drop-shadow" aria-hidden="true" />
+                <span className={`text-xs font-semibold uppercase tracking-wide ${subtext}`}>Total Votes</span>
+              </div>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300">
+                {((votesCount / votersCount) * 100).toFixed(1)}%
+              </span>
             </div>
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300">
-              {((votesCount / votersCount) * 100).toFixed(1)}%
+            {/* Value */}
+            <span className="text-3xl font-extrabold tracking-tight mb-1">{votesCount.toLocaleString()}</span>
+            {/* Animated Sparkline */}
+            <div className="h-8">
+              <svg viewBox="0 0 80 32" fill="none" className="w-full h-full">
+                <polyline
+                  points="0,30 10,28 20,24 30,20 40,16 50,12 60,8 70,6 80,4"
+                  fill="none"
+                  stroke="#a78bfa"
+                  strokeWidth="2.5"
+                  strokeLinejoin="round"
+                  className="opacity-80"
+                />
+                <circle cx="80" cy="4" r="2.5" fill="#a78bfa" />
+              </svg>
+            </div>
+            {/* Tooltip */}
+            <span className="absolute top-3 right-3 text-xs text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              {votesCount.toLocaleString()} votes cast
             </span>
           </div>
-          {/* Value */}
-          <span className="text-3xl font-extrabold tracking-tight mb-1">{votesCount.toLocaleString()}</span>
-          {/* Animated Sparkline */}
-          <div className="h-8">
-            <svg viewBox="0 0 80 32" fill="none" className="w-full h-full">
-              <polyline
-                points="0,30 10,28 20,24 30,20 40,16 50,12 60,8 70,6 80,4"
-                fill="none"
-                stroke="#a78bfa"
-                strokeWidth="2.5"
-                strokeLinejoin="round"
-                className="opacity-80"
-              />
-              <circle cx="80" cy="4" r="2.5" fill="#a78bfa" />
-            </svg>
-          </div>
-          {/* Tooltip */}
-          <span className="absolute top-3 right-3 text-xs text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-            {votesCount.toLocaleString()} votes cast
-          </span>
         </div>
-      </div>
+      </section>
 
       {/* Actions */}
       <div className="mb-8 flex gap-2">
         <button
           onClick={() => setShowNewPollModal(true)}
           className={`px-4 py-2 rounded border ${border} ${accent} font-medium bg-transparent hover:bg-blue-50 dark:hover:bg-gray-800 transition`}
+          aria-label="Create new poll"
         >
           + New Poll
         </button>
       </div>
 
-      {/* Advanced Activity Feed */}
-      <div className={`border ${border} rounded-lg p-5 mb-8`}>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <BellIcon className="h-6 w-6 text-blue-400 dark:text-blue-300" aria-hidden="true" />
-            Recent Activity
-          </h2>
-          <button
-            className={`text-xs px-3 py-1 rounded-full font-medium border ${border} ${accent} hover:bg-blue-50 dark:hover:bg-gray-800 transition`}
-            onClick={() => setShowActivityModal(true)}
-            aria-label="View all activity"
-          >
-            View All
-          </button>
-        </div>
-        <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-          {activityList.length === 0 && (
-            <li className={`py-6 text-center ${subtext}`}>No recent activity.</li>
-          )}
-          {activityList.slice(0, 5).map((activity, idx) => {
-            // Find avatar/icon for this activity
-            const avatar = activityAvatars.find(a =>
-              a.keywords.some(keyword => activity.action.includes(keyword))
-            ) || {
-              icon: InformationCircleIcon,
-              color: 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-300',
-              label: 'Other',
-            };
-            const Icon = avatar.icon;
-            // Status color for timeline dot
-            let statusColor = 'bg-gray-300';
-            if (avatar.color.includes('bg-blue')) statusColor = 'bg-blue-400';
-            if (avatar.color.includes('bg-green')) statusColor = 'bg-green-400';
-            if (avatar.color.includes('bg-purple')) statusColor = 'bg-purple-400';
-            if (avatar.color.includes('bg-yellow')) statusColor = 'bg-yellow-300';
-            if (avatar.color.includes('bg-pink')) statusColor = 'bg-pink-400';
-            if (avatar.color.includes('bg-indigo')) statusColor = 'bg-indigo-400';
-            if (avatar.color.includes('bg-emerald')) statusColor = 'bg-emerald-400';
-            if (avatar.color.includes('bg-red')) statusColor = 'bg-red-400';
-            if (avatar.color.includes('bg-orange')) statusColor = 'bg-orange-400';
-
-            return (
-              <li
-                key={idx}
-                className="py-4 flex items-start gap-4 group relative"
-                tabIndex={0}
-                aria-label={`${activity.action} by ${activity.user} at ${activity.timestamp}`}
-              >
-                {/* Timeline Dot */}
-                <div className="flex flex-col items-center mr-2">
-                  <span
-                    className={`w-3 h-3 rounded-full ring-2 ring-white dark:ring-gray-900 ${statusColor} shadow-md transition-transform group-hover:scale-110`}
-                    aria-label={avatar.label}
-                  />
-                  {idx < Math.min(activityList.length, 5) - 1 && (
-                    <span className="flex-1 w-0.5 bg-gray-200 dark:bg-gray-700 mt-1 mb-1" />
-                  )}
-                </div>
-                {/* Icon Avatar */}
-                <div
-                  className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow ${avatar.color} text-lg font-bold transition-transform group-hover:scale-105`}
-                  aria-label={avatar.label}
-                  title={avatar.label}
-                >
-                  <Icon className="h-6 w-6" aria-hidden="true" />
-                </div>
-                {/* Activity Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-base">{activity.action}</span>
-                    {activity.user && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-300 font-medium">
-                        {activity.user}
-                      </span>
-                    )}
-                  </div>
-                  <span className={`block text-sm ${subtext}`}>{activity.details}</span>
-                  <div className="flex items-center gap-2 mt-1">
-                    <ClockIcon className="h-4 w-4 text-gray-300 dark:text-gray-600" aria-hidden="true" />
-                    <span className="text-xs text-gray-400 dark:text-gray-500">{activity.timestamp}</span>
-                  </div>
-                </div>
-                {/* Tooltip on hover/focus */}
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity pointer-events-none">
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-gray-900 text-white text-xs shadow-lg">
-                    {avatar.label}
-                  </span>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-        {/* Animated "See More" if more activity */}
-        {activityList.length > 5 && (
-          <div className="flex justify-center mt-3">
+      {/* Activity Section */}
+      <section role="region" aria-labelledby="admin-activity-heading" tabIndex={0}>
+        <h2 id="admin-activity-heading" className="sr-only">Admin Dashboard Activity</h2>
+        <div className={`border ${border} rounded-lg p-5 mb-8`}>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <BellIcon className="h-6 w-6 text-blue-400 dark:text-blue-300" aria-hidden="true" />
+              Recent Activity
+            </h2>
             <button
-              className="text-xs text-blue-500 hover:underline font-medium flex items-center gap-1 animate-pulse"
+              className={`text-xs px-3 py-1 rounded-full font-medium border ${border} ${accent} hover:bg-blue-50 dark:hover:bg-gray-800 transition`}
               onClick={() => setShowActivityModal(true)}
-              aria-label="Show more activity"
+              aria-label="View all activity"
             >
-              Show more
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
+              View All
             </button>
           </div>
-        )}
-      </div>
+          <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+            {activityList.length === 0 && (
+              <li className={`py-6 text-center ${subtext}`}>No recent activity.</li>
+            )}
+            {activityList.slice(0, 5).map((activity, idx) => {
+              // Find avatar/icon for this activity
+              const avatar = activityAvatars.find(a =>
+                a.keywords.some(keyword => activity.action.includes(keyword))
+              ) || {
+                icon: InformationCircleIcon,
+                color: 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-300',
+                label: 'Other',
+              };
+              const Icon = avatar.icon;
+              // Status color for timeline dot
+              let statusColor = 'bg-gray-300';
+              if (avatar.color.includes('bg-blue')) statusColor = 'bg-blue-400';
+              if (avatar.color.includes('bg-green')) statusColor = 'bg-green-400';
+              if (avatar.color.includes('bg-purple')) statusColor = 'bg-purple-400';
+              if (avatar.color.includes('bg-yellow')) statusColor = 'bg-yellow-300';
+              if (avatar.color.includes('bg-pink')) statusColor = 'bg-pink-400';
+              if (avatar.color.includes('bg-indigo')) statusColor = 'bg-indigo-400';
+              if (avatar.color.includes('bg-emerald')) statusColor = 'bg-emerald-400';
+              if (avatar.color.includes('bg-red')) statusColor = 'bg-red-400';
+              if (avatar.color.includes('bg-orange')) statusColor = 'bg-orange-400';
+
+              return (
+                <li
+                  key={idx}
+                  className="py-4 flex items-start gap-4 group relative"
+                  tabIndex={0}
+                  aria-label={`${activity.action} by ${activity.user} at ${activity.timestamp}`}
+                >
+                  {/* Timeline Dot */}
+                  <div className="flex flex-col items-center mr-2">
+                    <span
+                      className={`w-3 h-3 rounded-full ring-2 ring-white dark:ring-gray-900 ${statusColor} shadow-md transition-transform group-hover:scale-110`}
+                      aria-label={avatar.label}
+                    />
+                    {idx < Math.min(activityList.length, 5) - 1 && (
+                      <span className="flex-1 w-0.5 bg-gray-200 dark:bg-gray-700 mt-1 mb-1" />
+                    )}
+                  </div>
+                  {/* Icon Avatar */}
+                  <div
+                    className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow ${avatar.color} text-lg font-bold transition-transform group-hover:scale-105`}
+                    aria-label={avatar.label}
+                    title={avatar.label}
+                  >
+                    <Icon className="h-6 w-6" aria-hidden="true" />
+                  </div>
+                  {/* Activity Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-base">{activity.action}</span>
+                      {activity.user && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-300 font-medium">
+                          {activity.user}
+                        </span>
+                      )}
+                    </div>
+                    <span className={`block text-sm ${subtext}`}>{activity.details}</span>
+                    <div className="flex items-center gap-2 mt-1">
+                      <ClockIcon className="h-4 w-4 text-gray-300 dark:text-gray-600" aria-hidden="true" />
+                      <span className="text-xs text-gray-400 dark:text-gray-500">{activity.timestamp}</span>
+                    </div>
+                  </div>
+                  {/* Tooltip on hover/focus */}
+                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity pointer-events-none">
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-gray-900 text-white text-xs shadow-lg">
+                      {avatar.label}
+                    </span>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+          {/* Animated "See More" if more activity */}
+          {activityList.length > 5 && (
+            <div className="flex justify-center mt-3">
+              <button
+                className="text-xs text-blue-500 hover:underline font-medium flex items-center gap-1 animate-pulse"
+                onClick={() => setShowActivityModal(true)}
+                aria-label="Show more activity"
+              >
+                Show more
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* Activity Modal (advanced, animated, accessible) */}
       {showActivityModal && (
         <div
@@ -603,43 +623,45 @@ const AdminDashboard = React.memo(({ isDarkMode }) => {
 
       {/* New Poll Modal */}
       {showNewPollModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className={`bg-white dark:bg-gray-800 rounded-lg p-8 w-full max-w-sm shadow-xl border ${border}`}>
-            <h3 className="text-lg font-semibold mb-4">Create New Poll</h3>
-            <form
-              className="flex flex-col gap-4"
-              onSubmit={e => {
-                e.preventDefault();
-                setShowNewPollModal(false);
-              }}
-            >
-              <input
-                type="text"
-                required
-                className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-transparent focus:outline-none"
-                placeholder="Poll Title"
-              />
-              <textarea
-                required
-                className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-transparent focus:outline-none"
-                placeholder="Description"
-              />
-              <div className="flex gap-2 mt-2">
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
-                >
-                  Create
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowNewPollModal(false)}
-                  className="flex-1 px-4 py-2 rounded border border-gray-300 dark:border-gray-600 bg-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
+        <div role="dialog" aria-modal="true" aria-labelledby="new-poll-title">
+          <h2 id="new-poll-title">Create New Poll</h2>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+            <div className={`bg-white dark:bg-gray-800 rounded-lg p-8 w-full max-w-sm shadow-xl border ${border}`}>
+              <form
+                className="flex flex-col gap-4"
+                onSubmit={e => {
+                  e.preventDefault();
+                  setShowNewPollModal(false);
+                }}
+              >
+                <input
+                  type="text"
+                  required
+                  className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-transparent focus:outline-none"
+                  placeholder="Poll Title"
+                />
+                <textarea
+                  required
+                  className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-transparent focus:outline-none"
+                  placeholder="Description"
+                />
+                <div className="flex gap-2 mt-2">
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
+                  >
+                    Create
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPollModal(false)}
+                    className="flex-1 px-4 py-2 rounded border border-gray-300 dark:border-gray-600 bg-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}

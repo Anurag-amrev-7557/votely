@@ -63,6 +63,8 @@ import {
   BellSlashIcon,
   DocumentDuplicateIcon,
 } from '@heroicons/react/24/outline';
+import axios from 'axios';
+import { useTheme } from '../context/ThemeContext';
 
 const sidebarOptions = [
   { key: 'profile', label: 'Profile', icon: UserCircleIcon, color: 'blue' },
@@ -74,14 +76,20 @@ const sidebarOptions = [
 
 const ProfilePage = () => {
   const { user, logout } = useAuth();
+  const { setTheme: setThemeContext } = useTheme ? useTheme() : { setTheme: () => {} };
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ name: user?.name || '', email: user?.email || '' });
   const [activeSection, setActiveSection] = useState('profile');
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [theme, setTheme] = useState('system');
   const [emailAlerts, setEmailAlerts] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(false);
+  const [language, setLanguage] = useState('English');
+  const [timezone, setTimezone] = useState('UTC-8 (Pacific Time)');
 
   // Profile state
   const [profilePhoto, setProfilePhoto] = useState(null);
@@ -130,8 +138,15 @@ const ProfilePage = () => {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState([]);
 
+  // Activity data state
+  const [activity, setActivity] = useState([]);
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [activityError, setActivityError] = useState(null);
+  const [activityPagination, setActivityPagination] = useState({ page: 1, limit: 10, total: 0, pages: 1 });
+
   // Security state
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [isTfaLoading, setIsTfaLoading] = useState(false);
   const [activeSessions, setActiveSessions] = useState([
     { id: 1, device: 'MacBook Pro', location: 'San Francisco, CA', lastActive: '2 minutes ago', current: true },
     { id: 2, device: 'iPhone 14', location: 'San Francisco, CA', lastActive: '1 hour ago', current: false },
@@ -142,99 +157,61 @@ const ProfilePage = () => {
   const fileInputRef = useRef(null);
   const dropZoneRef = useRef(null);
 
-  // Demo activity with enhanced data
-  const activity = [
-    { 
-      id: 1,
-      type: 'Voted', 
-      desc: 'Voted in "Best Startup 2024"', 
-      date: '2024-06-01',
-      time: '14:30',
-      category: 'Technology',
-      impact: 'high',
-      pollId: 'poll_123',
-      icon: CheckBadgeIcon,
-      color: 'green'
-    },
-    { 
-      id: 2,
-      type: 'Created', 
-      desc: 'Created poll "Favorite Framework"', 
-      date: '2024-05-20',
-      time: '09:15',
-      category: 'Development',
-      impact: 'medium',
-      pollId: 'poll_456',
-      icon: PlusIcon,
-      color: 'blue'
-    },
-    { 
-      id: 3,
-      type: 'Voted', 
-      desc: 'Voted in "UI Trends"', 
-      date: '2024-05-10',
-      time: '16:45',
-      category: 'Design',
-      impact: 'low',
-      pollId: 'poll_789',
-      icon: CheckBadgeIcon,
-      color: 'green'
-    },
-    { 
-      id: 4,
-      type: 'Commented', 
-      desc: 'Added comment to "Remote Work Policies"', 
-      date: '2024-05-08',
-      time: '11:20',
-      category: 'Workplace',
-      impact: 'medium',
-      pollId: 'poll_101',
-      icon: ChatBubbleLeftRightIcon,
-      color: 'purple'
-    },
-    { 
-      id: 5,
-      type: 'Shared', 
-      desc: 'Shared "Climate Action Survey"', 
-      date: '2024-05-05',
-      time: '13:10',
-      category: 'Environment',
-      impact: 'high',
-      pollId: 'poll_202',
-      icon: ArrowUpTrayIcon,
-      color: 'orange'
-    },
-    { 
-      id: 6,
-      type: 'Voted', 
-      desc: 'Voted in "Team Building Activities"', 
-      date: '2024-05-01',
-      time: '10:30',
-      category: 'Team',
-      impact: 'low',
-      pollId: 'poll_303',
-      icon: CheckBadgeIcon,
-      color: 'green'
-    },
-  ];
+  // Map type to icon and color
+  const activityTypeMap = {
+    Voted: { icon: CheckBadgeIcon, color: 'green' },
+    Created: { icon: PlusIcon, color: 'blue' },
+    Commented: { icon: ChatBubbleLeftRightIcon, color: 'purple' },
+    Shared: { icon: ArrowUpTrayIcon, color: 'orange' },
+  };
 
-  const weeklyActivity = [
-    { day: 'Mon', votes: 8, created: 1, comments: 3, total: 12 },
-    { day: 'Tue', votes: 12, created: 2, comments: 5, total: 19 },
-    { day: 'Wed', votes: 6, created: 0, comments: 2, total: 8 },
-    { day: 'Thu', votes: 15, created: 1, comments: 7, total: 23 },
-    { day: 'Fri', votes: 10, created: 1, comments: 4, total: 15 },
-    { day: 'Sat', votes: 4, created: 0, comments: 1, total: 5 },
-    { day: 'Sun', votes: 7, created: 0, comments: 3, total: 10 },
-  ];
+  // Fetch activity from backend
+  const fetchActivity = useCallback(async (page = 1) => {
+    setActivityLoading(true);
+    setActivityError(null);
+    try {
+      const params = new URLSearchParams();
+      params.append('page', page);
+      params.append('limit', activityPagination.limit);
+      if (activityFilter && activityFilter !== 'all') params.append('type', activityFilter.charAt(0).toUpperCase() + activityFilter.slice(1));
+      if (dateRange && dateRange !== 'all') params.append('dateRange', dateRange);
+      const res = await axios.get(`/api/profile/activity?${params.toString()}`, { withCredentials: true });
+      let activities = res.data.activities || [];
+      // Add icon/color
+      activities = activities.map(item => {
+        const map = activityTypeMap[item.type] || { icon: InformationCircleIcon, color: 'gray' };
+        return { ...item, icon: map.icon, color: map.color };
+      });
+      // Search and category filter (client-side)
+      let filtered = activities;
+      if (searchQuery) {
+        filtered = filtered.filter(item => item.desc?.toLowerCase().includes(searchQuery.toLowerCase()));
+      }
+      if (selectedCategories.length > 0) {
+        filtered = filtered.filter(item => selectedCategories.includes(item.category));
+      }
+      setActivity(filtered);
+      setActivityPagination(res.data.pagination || { page, limit: activityPagination.limit, total: filtered.length, pages: 1 });
+    } catch (err) {
+      setActivityError('Failed to load activity.');
+      setActivity([]);
+    } finally {
+      setActivityLoading(false);
+    }
+  }, [activityFilter, dateRange, searchQuery, selectedCategories, activityPagination.limit]);
 
-  const categoryStats = [
-    { category: 'Technology', votes: 18, percentage: 38, color: '#3B82F6' },
-    { category: 'Design', votes: 12, percentage: 26, color: '#8B5CF6' },
-    { category: 'Workplace', votes: 8, percentage: 17, color: '#10B981' },
-    { category: 'Environment', votes: 6, percentage: 13, color: '#F59E0B' },
-    { category: 'Team', votes: 3, percentage: 6, color: '#EF4444' },
-  ];
+  // Fetch activity when section/filter/search/page changes
+  useEffect(() => {
+    if (activeSection === 'activity') {
+      fetchActivity(activityPagination.page);
+    }
+    // eslint-disable-next-line
+  }, [activeSection, activityFilter, dateRange, searchQuery, selectedCategories, activityPagination.page]);
+
+  // Pagination handlers
+  const handleActivityPageChange = (newPage) => {
+    setActivityPagination(prev => ({ ...prev, page: newPage }));
+  };
 
   // Calculate profile completion with enhanced logic
   const calculateProfileCompletion = useCallback(() => {
@@ -391,22 +368,56 @@ const ProfilePage = () => {
     }
   };
 
-  // Enhanced save handler
+  // Further enhanced save handler with validation, loading, and scroll-to-error
   const handleSave = async (e) => {
-    e.preventDefault();
-    
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+
+    // Simple validation example (expand as needed)
+    let errors = {};
+    if (typeof bio === 'string' && bio.length > 500) {
+      errors.bio = 'Bio must be 500 characters or less.';
+    }
+    if (socialLinks) {
+      Object.entries(socialLinks).forEach(([platform, value]) => {
+        if (value && !/^https?:\/\//.test(value)) {
+          errors[platform] = 'Please enter a valid URL (must start with http:// or https://)';
+        }
+      });
+    }
+
+    if (Object.keys(errors).length > 0) {
+      // Optionally, set error state and scroll to first error
+      showNotification(
+        Object.values(errors).join(' '),
+        'error'
+      );
+      // Scroll to the first error field if needed
+      const firstErrorKey = Object.keys(errors)[0];
+      const errorElement = document.querySelector(`[name="${firstErrorKey}"]`);
+      if (errorElement) {
+        errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        errorElement.focus();
+      }
+      return;
+    }
+
+    setIsSaving(true);
     try {
       const profileData = {
         bio,
         socialLinks,
         accountStatus
       };
-      
+
       await updateProfile(profileData);
       setEditing(false);
       setHasUnsavedChanges(false);
+      showNotification('Your profile has been saved!', 'success');
     } catch (error) {
       // Error already handled in updateProfile
+      // Optionally, add extra error handling here
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -446,23 +457,65 @@ const ProfilePage = () => {
     showNotification('Session terminated successfully', 'success');
   };
 
-  // Enhanced 2FA toggle
-  const toggleTwoFactor = () => {
-    setTwoFactorEnabled(prev => !prev);
-    showNotification(
-      twoFactorEnabled ? 'Two-factor authentication disabled' : 'Two-factor authentication enabled',
-      'success'
-    );
+  // Fetch 2FA status on mount
+  useEffect(() => {
+    const fetchTfaStatus = async () => {
+      if (!user) return;
+      try {
+        const res = await axios.get('/api/profile/twofactor', { withCredentials: true });
+        setTwoFactorEnabled(!!res.data.twoFactorEnabled);
+      } catch (err) {
+        setTwoFactorEnabled(false);
+      }
+    };
+    fetchTfaStatus();
+  }, [user]);
+
+  // Enhanced 2FA toggle (persistent)
+  const toggleTwoFactor = async () => {
+    if (!user) {
+      showNotification('Please log in to change 2FA settings', 'error');
+      return;
+    }
+    setIsTfaLoading(true);
+    try {
+      const newStatus = !twoFactorEnabled;
+      const res = await axios.post('/api/profile/twofactor', { enabled: newStatus }, { withCredentials: true });
+      setTwoFactorEnabled(res.data.twoFactorEnabled);
+      showNotification(
+        res.data.twoFactorEnabled ? 'Two-factor authentication enabled' : 'Two-factor authentication disabled',
+        'success'
+      );
+    } catch (err) {
+      showNotification('Failed to update 2FA status', 'error');
+    } finally {
+      setIsTfaLoading(false);
+    }
   };
 
   // Track unsaved changes
+  // Store initial values after user loads
+  const initialProfileRef = useRef({ bio: '', socialLinks: { twitter: '', linkedin: '', github: '', website: '' } });
+  const [userLoaded, setUserLoaded] = useState(false);
   useEffect(() => {
-    const hasChanges = editing || 
-      bio !== 'Passionate about democratic decision-making and community engagement through digital voting platforms.' ||
-      Object.values(socialLinks).some(link => link !== '');
-    
+    if (user) {
+      initialProfileRef.current = {
+        bio: user.bio || '',
+        socialLinks: user.socialLinks || { twitter: '', linkedin: '', github: '', website: '' }
+      };
+      setUserLoaded(true);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!userLoaded) return; // Don't check until user is loaded
+    const hasChanges = editing ||
+      bio !== initialProfileRef.current.bio ||
+      Object.keys(initialProfileRef.current.socialLinks).some(
+        key => (socialLinks[key] || '') !== (initialProfileRef.current.socialLinks[key] || '')
+      );
     setHasUnsavedChanges(hasChanges);
-  }, [editing, bio, socialLinks]);
+  }, [editing, bio, socialLinks, userLoaded]);
 
   // Check if user is properly authenticated
   useEffect(() => {
@@ -535,13 +588,80 @@ const ProfilePage = () => {
     }
   }, [user]);
 
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh] text-lg text-gray-500 dark:text-gray-400">
-        Please log in to view your profile.
-      </div>
-    );
-  }
+  // Load preferences from user object
+  useEffect(() => {
+    if (user && user.preferences) {
+      setTheme(user.preferences.theme || 'system');
+      setEmailAlerts(user.preferences.emailNotifications !== undefined ? user.preferences.emailNotifications : true);
+      setPushNotifications(user.preferences.pushNotifications !== undefined ? user.preferences.pushNotifications : false);
+      setLanguage(
+        user.preferences.language === 'en' ? 'English' :
+        user.preferences.language === 'es' ? 'Spanish' :
+        user.preferences.language === 'fr' ? 'French' :
+        user.preferences.language === 'de' ? 'German' : 'English'
+      );
+      setTimezone(
+        user.preferences.timezone === 'UTC-8' ? 'UTC-8 (Pacific Time)' :
+        user.preferences.timezone === 'UTC-5' ? 'UTC-5 (Eastern Time)' :
+        user.preferences.timezone === 'UTC+0' ? 'UTC+0 (GMT)' :
+        user.preferences.timezone === 'UTC+1' ? 'UTC+1 (Central European Time)' : 'UTC-8 (Pacific Time)'
+      );
+    }
+  }, [user]);
+
+  // Save preferences handler
+  const handleSavePreferences = async () => {
+    setIsSaving(true);
+    try {
+      // Map language and timezone to backend values
+      const langMap = { 'English': 'en', 'Spanish': 'es', 'French': 'fr', 'German': 'de' };
+      const tzMap = {
+        'UTC-8 (Pacific Time)': 'UTC-8',
+        'UTC-5 (Eastern Time)': 'UTC-5',
+        'UTC+0 (GMT)': 'UTC+0',
+        'UTC+1 (Central European Time)': 'UTC+1',
+      };
+      const preferences = {
+        theme,
+        emailNotifications: emailAlerts,
+        pushNotifications,
+        language: langMap[language] || 'en',
+        timezone: tzMap[timezone] || 'UTC-8',
+      };
+      const response = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ preferences })
+      });
+      if (response.ok) {
+        // Update theme in ThemeContext and localStorage
+        if (setThemeContext) setThemeContext(theme);
+        localStorage.setItem('theme', theme);
+        showNotification('Preferences updated successfully!', 'success');
+      } else {
+        let errorMsg = 'Failed to update preferences';
+        try {
+          const errorData = await response.json();
+          if (errorData && errorData.error) errorMsg = errorData.error;
+          else if (errorData && errorData.message) errorMsg = errorData.message;
+        } catch {}
+        showNotification(errorMsg, 'error');
+      }
+    } catch (error) {
+      showNotification('Failed to update preferences. Please try again.', 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Toggle theme between light and dark
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    if (setThemeContext) setThemeContext(nextTheme);
+    localStorage.setItem('theme', nextTheme);
+  };
 
   const handleEdit = () => setEditing(true);
   const handleCancel = () => {
@@ -611,167 +731,165 @@ const ProfilePage = () => {
       transition={{ duration: 0.3 }}
       className="space-y-8"
     >
-      {/* Enhanced Profile Header with Animated Stats */}
+      {/* Profile Header */}
       <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-8 relative overflow-hidden">
         {/* Animated Background Elements */}
-        <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0 opacity-10 pointer-events-none select-none">
           <div className="absolute top-4 right-4 w-32 h-32 bg-blue-400 rounded-full blur-3xl animate-pulse"></div>
           <div className="absolute bottom-4 left-4 w-24 h-24 bg-purple-400 rounded-full blur-2xl animate-pulse delay-1000"></div>
         </div>
-        
-        <div className="relative flex items-start justify-between">
-          <div className="flex items-center space-x-8">
-            {/* Enhanced Profile Photo with Advanced Drag & Drop */}
-            <div className="relative group">
-              <motion.div
-                ref={dropZoneRef}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                className={`relative w-28 h-28 rounded-full overflow-hidden border-4 transition-all duration-300 shadow-lg ${
-                  isDragOver 
-                    ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/20 scale-105' 
-                    : 'border-gray-200 dark:border-gray-700'
-                } ${isUploadingPhoto ? 'animate-pulse' : ''}`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {profilePhotoPreview || profilePhoto ? (
-                  <img
-                    src={profilePhotoPreview || profilePhoto}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 flex items-center justify-center">
-                    <UserCircleIcon className="w-16 h-16 text-white" />
-                  </div>
-                )}
-                
-                {/* Enhanced Upload Overlay */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: isDragOver ? 1 : 0 }}
-                  className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm"
-                >
-                  <div className="text-center text-white">
-                    <ArrowUpTrayIcon className="w-8 h-8 mx-auto mb-2" />
-                    <p className="text-sm font-medium">Drop image here</p>
-                  </div>
-                </motion.div>
-                
-                {/* Enhanced Upload Button */}
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center"
-                >
-                  <div className="text-center text-white">
-                    <PhotoIcon className="w-6 h-6 mx-auto mb-1" />
-                    <p className="text-xs">Change Photo</p>
-                  </div>
-                </button>
-              </motion.div>
-              
-              {/* Enhanced Upload Progress */}
-              {isUploadingPhoto && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -top-2 -right-2 w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center shadow-lg"
-                >
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                </motion.div>
+        <div className="relative flex flex-col lg:flex-row items-center lg:items-start justify-between gap-8">
+          {/* Profile Photo */}
+          <div className="relative group flex-shrink-0">
+            <motion.div
+              ref={dropZoneRef}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`relative w-32 h-32 rounded-full overflow-hidden border-4 transition-all duration-300 shadow-lg ${
+                isDragOver 
+                  ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/20 scale-105' 
+                  : 'border-gray-200 dark:border-gray-700'
+              } ${isUploadingPhoto ? 'animate-pulse' : ''}`}
+              whileHover={{ scale: 1.07 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              {profilePhotoPreview || profilePhoto ? (
+                <img
+                  src={profilePhotoPreview || profilePhoto}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 flex items-center justify-center">
+                  <UserCircleIcon className="w-16 h-16 text-white" />
+                </div>
               )}
-              
-              {/* Profile Photo Badge */}
+              {/* Upload Overlay */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: isDragOver ? 1 : 0 }}
+                className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm pointer-events-none"
+              >
+                <div className="text-center text-white">
+                  <ArrowUpTrayIcon className="w-8 h-8 mx-auto mb-2" />
+                  <p className="text-sm font-medium">Drop image here</p>
+                </div>
+              </motion.div>
+              {/* Upload Button */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center focus:outline-none focus:opacity-100"
+                aria-label="Change profile photo"
+                tabIndex={0}
+              >
+                <div className="text-center text-white">
+                  <PhotoIcon className="w-6 h-6 mx-auto mb-1" />
+                  <p className="text-xs">Change Photo</p>
+                </div>
+              </button>
+            </motion.div>
+            {/* Upload Progress */}
+            {isUploadingPhoto && (
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ delay: 0.5 }}
-                className="absolute -bottom-2 -left-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg"
+                className="absolute -top-2 -right-2 w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center shadow-lg"
               >
-                Active
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               </motion.div>
-              
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handlePhotoUpload}
-                className="hidden"
-              />
-            </div>
-            
-            <div className="space-y-3">
-              <div className="flex items-center space-x-4">
-                <motion.h2 
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="text-3xl font-bold text-gray-900 dark:text-white"
-                >
-                  {user?.name || 'User Name'}
-                </motion.h2>
-                {accountStatus.isVerified && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="flex items-center space-x-2 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-full"
-                  >
-                    <CheckBadgeIcon className="w-5 h-5" />
-                    <span className="text-sm font-medium">Verified</span>
-                  </motion.div>
-                )}
-                {accountStatus.isPremium && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.2 }}
-                    className="flex items-center space-x-2 text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 px-3 py-1 rounded-full"
-                  >
-                    <TrophyIcon className="w-5 h-5" />
-                    <span className="text-sm font-medium">Premium</span>
-                  </motion.div>
-                )}
-              </div>
-              
-              <motion.p 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 }}
-                className="text-gray-600 dark:text-gray-400 flex items-center space-x-2"
-              >
-                <EnvelopeIcon className="w-4 h-4" />
-                <span>{user?.email || 'user@example.com'}</span>
-              </motion.p>
-              
-              <motion.div 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-                className="flex items-center space-x-6 text-sm text-gray-500 dark:text-gray-400"
-              >
-                <span className="flex items-center space-x-2">
-                  <CalendarDaysIcon className="w-4 h-4" />
-                  <span>Joined {new Date(accountStatus.joinDate).toLocaleDateString()}</span>
-                </span>
-                <span className="flex items-center space-x-2">
-                  <ClockIcon className="w-4 h-4" />
-                  <span>Last active {new Date(accountStatus.lastActive).toLocaleDateString()}</span>
-                </span>
-                <span className="flex items-center space-x-2">
-                  <FireIcon className="w-4 h-4 text-orange-500" />
-                  <span>{activityStats.streakDays} day streak</span>
-                </span>
-              </motion.div>
-            </div>
+            )}
+            {/* Profile Photo Badge */}
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.5 }}
+              className="absolute -bottom-2 -left-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium shadow-lg"
+            >
+              Active
+            </motion.div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoUpload}
+              className="hidden"
+            />
           </div>
-          
-          {/* Enhanced Profile Completion with Animation */}
+          {/* Main Info */}
+          <div className="flex-1 space-y-3 min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <motion.h2 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="text-3xl font-bold text-gray-900 dark:text-white truncate"
+              >
+                {user?.name || 'User Name'}
+              </motion.h2>
+              {accountStatus.isVerified && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="flex items-center space-x-2 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-full"
+                  title="Verified Account"
+                >
+                  <CheckBadgeIcon className="w-5 h-5" />
+                  <span className="text-sm font-medium">Verified</span>
+                </motion.div>
+              )}
+              {accountStatus.isPremium && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="flex items-center space-x-2 text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 px-3 py-1 rounded-full"
+                  title="Premium User"
+                >
+                  <TrophyIcon className="w-5 h-5" />
+                  <span className="text-sm font-medium">Premium</span>
+                </motion.div>
+              )}
+            </div>
+            <motion.div className="flex items-center gap-2">
+              <EnvelopeIcon className="w-4 h-4 text-gray-400" />
+              <span className="text-gray-600 dark:text-gray-400 truncate">{user?.email || 'user@example.com'}</span>
+              <button
+                type="button"
+                className="ml-1 p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+                title="Copy email"
+                onClick={() => navigator.clipboard.writeText(user?.email || '')}
+              >
+                <DocumentDuplicateIcon className="w-4 h-4 text-gray-400" />
+              </button>
+            </motion.div>
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400"
+            >
+              <span className="flex items-center gap-1">
+                <CalendarDaysIcon className="w-4 h-4" />
+                <span>Joined {new Date(accountStatus.joinDate).toLocaleDateString()}</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <ClockIcon className="w-4 h-4" />
+                <span>Last active {new Date(accountStatus.lastActive).toLocaleDateString()}</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <FireIcon className="w-4 h-4 text-orange-500" />
+                <span>{activityStats.streakDays} day streak</span>
+              </span>
+            </motion.div>
+          </div>
+          {/* Profile Completion */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 }}
-            className="text-right"
+            className="text-right min-w-[180px]"
           >
             <div className="flex items-center space-x-2 mb-3">
               <SparklesIcon className="w-6 h-6 text-yellow-500" />
@@ -779,15 +897,19 @@ const ProfilePage = () => {
                 Profile Completion
               </span>
             </div>
-            <div className="relative w-36 h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden shadow-inner">
+            <div className="relative w-36 h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden shadow-inner group">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${profileCompletion}%` }}
-                transition={{ duration: 1.5, ease: "easeOut" }}
+                transition={{ duration: 1.5, ease: 'easeOut' }}
                 className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full relative"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
               </motion.div>
+              {/* Tooltip on hover */}
+              <div className="absolute left-1/2 -top-8 -translate-x-1/2 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-2 py-1 shadow-lg z-10">
+                {profileCompletion < 100 ? `${100 - profileCompletion}% left to complete your profile` : 'Profile complete!'}
+              </div>
             </div>
             <motion.span 
               initial={{ opacity: 0 }}
@@ -803,17 +925,16 @@ const ProfilePage = () => {
           </motion.div>
         </div>
       </div>
-
-      {/* Enhanced Profile Content */}
+      {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Profile Info */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Enhanced Bio Section */}
+          {/* About Me Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow duration-300"
+            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow duration-300 relative"
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
@@ -828,12 +949,21 @@ const ProfilePage = () => {
                 <button
                   onClick={() => setEditing(false)}
                   className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  title="Cancel editing"
                 >
                   <XMarkIcon className="w-5 h-5" />
                 </button>
               )}
+              {!editing && (
+                <button
+                  onClick={() => setEditing(true)}
+                  className="text-blue-500 hover:text-blue-700 p-1 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors ml-2"
+                  title="Edit bio"
+                >
+                  <PencilSquareIcon className="w-5 h-5" />
+                </button>
+              )}
             </div>
-            
             {editing ? (
               <div className="space-y-3">
                 <textarea
@@ -845,10 +975,11 @@ const ProfilePage = () => {
                   rows={4}
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none transition-colors"
                   placeholder="Tell us about yourself, your interests, and what drives you..."
+                  maxLength={500}
                 />
                 <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
                   <span>{bio.length}/500 characters</span>
-                  <span className={`${bio.length > 450 ? 'text-orange-500' : 'text-green-500'}`}>
+                  <span className={`${bio.length > 450 ? 'text-orange-500' : 'text-green-500'}`}> 
                     {bio.length > 450 ? 'Getting long!' : 'Good length'}
                   </span>
                 </div>
@@ -867,8 +998,7 @@ const ProfilePage = () => {
               </div>
             )}
           </motion.div>
-
-          {/* Enhanced Social Links with Previews */}
+          {/* Social Links Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -883,7 +1013,6 @@ const ProfilePage = () => {
                 Social Links
               </h3>
             </div>
-            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
                 { key: 'twitter', label: 'Twitter', icon: '🐦', placeholder: 'https://twitter.com/username', color: 'blue' },
@@ -896,6 +1025,7 @@ const ProfilePage = () => {
                   className="space-y-2"
                   whileHover={{ scale: 1.02 }}
                   transition={{ duration: 0.2 }}
+                  title={label}
                 >
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center space-x-2">
                     <span>{icon}</span>
@@ -925,6 +1055,7 @@ const ProfilePage = () => {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 dark:text-blue-400 hover:underline truncate flex items-center space-x-2 group"
+                          title={`Visit ${label}`}
                         >
                           <span>{socialLinks[key]}</span>
                           <ArrowUpTrayIcon className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -941,13 +1072,12 @@ const ProfilePage = () => {
               ))}
             </div>
           </motion.div>
-
-          {/* New: Achievement Badges Section */}
+          {/* Achievements Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow duration-300"
+            className="bg-gradient-to-br from-yellow-50 via-white to-blue-50 dark:from-yellow-900/10 dark:via-gray-900 dark:to-blue-900/10 rounded-xl p-6 shadow-md border border-gray-100 dark:border-gray-800 hover:shadow-lg transition-shadow duration-300"
           >
             <div className="flex items-center space-x-3 mb-4">
               <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg flex items-center justify-center">
@@ -957,7 +1087,6 @@ const ProfilePage = () => {
                 Achievements & Stats
               </h3>
             </div>
-            
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 { icon: CheckBadgeIcon, label: 'Votes Cast', value: activityStats.totalVotes, color: 'blue' },
@@ -970,7 +1099,8 @@ const ProfilePage = () => {
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.4 + index * 0.1 }}
-                  className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                  className={`text-center p-4 rounded-lg shadow-sm hover:shadow-md transition-colors bg-${stat.color}-50 dark:bg-${stat.color}-900/10`}
+                  title={stat.label}
                 >
                   <div className={`w-8 h-8 mx-auto mb-2 bg-${stat.color}-100 dark:bg-${stat.color}-900/20 rounded-lg flex items-center justify-center`}>
                     <stat.icon className={`w-4 h-4 text-${stat.color}-600 dark:text-${stat.color}-400`} />
@@ -982,15 +1112,14 @@ const ProfilePage = () => {
             </div>
           </motion.div>
         </div>
-
-        {/* Enhanced Account Status Sidebar */}
+        {/* Sidebar: Account Status & Quick Actions */}
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
-          className="space-y-6"
+          className="space-y-6 lg:sticky lg:top-24 h-fit"
         >
-          {/* Enhanced Account Status */}
+          {/* Account Status */}
           <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow duration-300">
             <div className="flex items-center space-x-3 mb-4">
               <div className="w-8 h-8 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
@@ -1016,7 +1145,6 @@ const ProfilePage = () => {
                   </span>
                 </div>
               </div>
-              
               <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <span className="text-sm text-gray-600 dark:text-gray-400">Plan</span>
                 <div className="flex items-center space-x-2">
@@ -1032,7 +1160,6 @@ const ProfilePage = () => {
                   </span>
                 </div>
               </div>
-              
               <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <span className="text-sm text-gray-600 dark:text-gray-400">Member Since</span>
                 <span className="text-sm font-medium text-gray-900 dark:text-white">
@@ -1041,8 +1168,7 @@ const ProfilePage = () => {
               </div>
             </div>
           </div>
-
-          {/* Enhanced Quick Actions */}
+          {/* Quick Actions */}
           <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow duration-300">
             <div className="flex items-center space-x-3 mb-4">
               <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
@@ -1058,6 +1184,7 @@ const ProfilePage = () => {
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setEditing(!editing)}
                 className="w-full flex items-center justify-between px-4 py-3 text-left bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-all duration-200"
+                title={editing ? 'Cancel editing' : 'Edit profile'}
               >
                 <div className="flex items-center space-x-3">
                   <PencilSquareIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -1067,7 +1194,6 @@ const ProfilePage = () => {
                 </div>
                 <ArrowRightOnRectangleIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               </motion.button>
-              
               {editing && (
                 <motion.button
                   initial={{ opacity: 0, y: 10 }}
@@ -1075,6 +1201,7 @@ const ProfilePage = () => {
                   onClick={handleSave}
                   disabled={isSaving}
                   className="w-full flex items-center justify-center px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium rounded-lg transition-colors duration-200"
+                  title="Save changes"
                 >
                   {isSaving ? (
                     <div className="flex items-center space-x-2">
@@ -1170,12 +1297,12 @@ const ProfilePage = () => {
                     <div className="flex items-center space-x-2">
                       <input
                         type="text"
-                        value={user?.id || 'N/A'}
+                        value={user?._id || 'N/A'}
                         disabled
                         className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
                       />
                       <button
-                        onClick={() => navigator.clipboard.writeText(user?.id || '')}
+                        onClick={() => navigator.clipboard.writeText(user?._id || '')}
                         className="p-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                         title="Copy User ID"
                       >
@@ -1313,13 +1440,35 @@ const ProfilePage = () => {
                 </button>
               </div>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">New Password</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+                placeholder="Enter new password"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Confirm New Password</label>
+              <input
+                type="password"
+                value={confirmNewPassword}
+                onChange={e => setConfirmNewPassword(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors"
+                placeholder="Confirm new password"
+              />
+            </div>
             <motion.button 
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2"
+              onClick={handleChangePassword}
+              disabled={isChangingPassword}
+              className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <KeyIcon className="w-4 h-4" />
-              <span>Change Password</span>
+              <span>{isChangingPassword ? 'Changing...' : 'Change Password'}</span>
             </motion.button>
           </div>
           
@@ -1574,6 +1723,24 @@ const ProfilePage = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* Data Privacy Controls */}
+      <div className="mt-10 flex flex-col md:flex-row gap-4">
+        <button
+          onClick={handleExportData}
+          disabled={isExporting}
+          className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {isExporting ? 'Exporting...' : 'Export My Data'}
+        </button>
+        <button
+          onClick={() => setShowDeleteModal(true)}
+          disabled={isDeleting}
+          className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {isDeleting ? 'Deleting...' : 'Delete My Account'}
+        </button>
+      </div>
     </motion.div>
   );
 
@@ -1620,8 +1787,9 @@ const ProfilePage = () => {
                 ? 'bg-red-600 hover:bg-red-700 text-white'
                 : 'bg-green-600 hover:bg-green-700 text-white'
             }`}
+            disabled={isTfaLoading}
           >
-            {twoFactorEnabled ? 'Disable 2FA' : 'Enable 2FA'}
+            {isTfaLoading ? 'Saving...' : (twoFactorEnabled ? 'Disable 2FA' : 'Enable 2FA')}
           </button>
         </div>
         <div className="flex items-center space-x-3 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -1763,7 +1931,11 @@ const ProfilePage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Language</label>
-                <select className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+                <select
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  value={language}
+                  onChange={e => setLanguage(e.target.value)}
+                >
                   <option>English</option>
                   <option>Spanish</option>
                   <option>French</option>
@@ -1772,7 +1944,11 @@ const ProfilePage = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Time Zone</label>
-                <select className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+                <select
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  value={timezone}
+                  onChange={e => setTimezone(e.target.value)}
+                >
                   <option>UTC-8 (Pacific Time)</option>
                   <option>UTC-5 (Eastern Time)</option>
                   <option>UTC+0 (GMT)</option>
@@ -1780,6 +1956,16 @@ const ProfilePage = () => {
                 </select>
               </div>
             </div>
+          </div>
+          {/* Save Button */}
+          <div className="flex justify-end mt-8">
+            <button
+              onClick={handleSavePreferences}
+              disabled={isSaving}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isSaving ? 'Saving...' : 'Save Preferences'}
+            </button>
           </div>
         </div>
       </div>
@@ -1834,10 +2020,22 @@ const ProfilePage = () => {
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
           >
             <option value="all">All Activities</option>
-            <option value="voted">Votes</option>
-            <option value="created">Created</option>
-            <option value="commented">Comments</option>
-            <option value="shared">Shares</option>
+            <option value="Voted">Votes</option>
+            <option value="Created">Created</option>
+            <option value="Commented">Comments</option>
+            <option value="Shared">Shares</option>
+          </select>
+          {/* Date range filter (optional) */}
+          <select
+            value={dateRange}
+            onChange={e => setDateRange(e.target.value)}
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+          >
+            <option value="all">All Time</option>
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+            <option value="year">This Year</option>
           </select>
         </div>
       </div>
@@ -1848,7 +2046,16 @@ const ProfilePage = () => {
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Activity</h3>
         </div>
         <div className="divide-y divide-gray-200 dark:divide-gray-700">
-          {filteredActivity.map((item) => {
+          {activityLoading && (
+            <div className="p-6 text-center text-gray-500 dark:text-gray-400">Loading activity...</div>
+          )}
+          {activityError && (
+            <div className="p-6 text-center text-red-500 dark:text-red-400">{activityError}</div>
+          )}
+          {!activityLoading && !activityError && activity.length === 0 && (
+            <div className="p-6 text-center text-gray-500 dark:text-gray-400">No activity found.</div>
+          )}
+          {!activityLoading && !activityError && activity.map((item) => {
             const Icon = item.icon;
             return (
               <div key={item.id} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
@@ -1876,9 +2083,101 @@ const ProfilePage = () => {
             );
           })}
         </div>
+        {/* Pagination */}
+        {activityPagination.pages > 1 && (
+          <div className="flex justify-center items-center gap-2 py-4">
+            <button
+              onClick={() => handleActivityPageChange(Math.max(1, activityPagination.page - 1))}
+              disabled={activityPagination.page === 1}
+              className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50"
+            >
+              Prev
+            </button>
+            <span className="text-gray-700 dark:text-gray-200">
+              Page {activityPagination.page} of {activityPagination.pages}
+            </span>
+            <button
+              onClick={() => handleActivityPageChange(Math.min(activityPagination.pages, activityPagination.page + 1))}
+              disabled={activityPagination.page === activityPagination.pages}
+              className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
     </motion.div>
   );
+
+  const [isExporting, setIsExporting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const handleExportData = async () => {
+    setIsExporting(true);
+    setNotification(null);
+    try {
+      const res = await axios.get('/api/profile/export-data', { withCredentials: true });
+      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(res.data.data, null, 2));
+      const downloadAnchorNode = document.createElement('a');
+      downloadAnchorNode.setAttribute('href', dataStr);
+      downloadAnchorNode.setAttribute('download', 'votely-user-data.json');
+      document.body.appendChild(downloadAnchorNode);
+      downloadAnchorNode.click();
+      downloadAnchorNode.remove();
+      setNotification({ type: 'success', message: 'Your data has been exported.' });
+    } catch (err) {
+      setNotification({ type: 'error', message: 'Failed to export data.' });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setShowDeleteModal(false);
+    setIsDeleting(true);
+    setNotification(null);
+    try {
+      await axios.delete('/api/profile/delete-account', { withCredentials: true });
+      setNotification({ type: 'success', message: 'Your account has been deleted.' });
+      setTimeout(() => {
+        logout();
+        window.location.href = '/';
+      }, 1500);
+    } catch (err) {
+      setNotification({ type: 'error', message: 'Failed to delete account.' });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Handler for changing password
+  const handleChangePassword = async () => {
+    if (!password || !newPassword || !confirmNewPassword) {
+      showNotification('Please fill in all password fields.', 'error');
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      showNotification('New passwords do not match.', 'error');
+      return;
+    }
+    setIsChangingPassword(true);
+    try {
+      const res = await axios.post('/api/profile/change-password', {
+        currentPassword: password,
+        newPassword,
+      }, { withCredentials: true });
+      showNotification(res.data.message || 'Password changed successfully.', 'success');
+      setPassword('');
+      setNewPassword('');
+      setConfirmNewPassword('');
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to change password.';
+      showNotification(msg, 'error');
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -1888,13 +2187,13 @@ const ProfilePage = () => {
       {/* Enhanced Loading Overlay */}
       <LoadingOverlay />
 
-      <div className="w-full max-w-7xl px-6 sm:px-8 lg:px-12 py-12 mx-auto pt-20">
+      <div className="w-full max-w-7xl px-6 sm:px-8 lg:px-12 mx-auto">
         {/* Header with unsaved changes warning */}
         {hasUnsavedChanges && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 flex items-center justify-between"
+            className="my-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 flex items-center justify-between"
           >
             <div className="flex items-center space-x-3">
               <ExclamationTriangleIcon className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
@@ -1920,50 +2219,113 @@ const ProfilePage = () => {
           </motion.div>
         )}
 
-        <div className="flex flex-col lg:flex-row gap-8 mt-8">
-          {/* Enhanced Sidebar */}
+        <div className="flex flex-col lg:flex-row gap-8 mt-3">
+          {/* Ultra-Enhanced Sidebar */}
           <aside className="lg:w-80 flex-shrink-0">
-            <nav className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 sticky top-8 shadow-sm">
-              <div className="space-y-2">
+            <nav className="bg-white/90 dark:bg-gray-800/90 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 sticky top-8 shadow-lg backdrop-blur-md transition-all duration-300">
+              {/* User Profile Quick Info */}
+              <div className="flex items-center gap-4 mb-6 px-2">
+                <div className="relative">
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  >
+                    {user?.googlePhoto || user?.photoURL || user?.avatarUrl ? (
+                      <img
+                        src={user.googlePhoto || user.photoURL || user.avatarUrl}
+                        alt="User avatar"
+                        className="w-12 h-12 rounded-full border-2 border-primary-500 shadow"
+                      />
+                    ) : (
+                      <UserCircleIcon className="w-12 h-12 text-gray-400 dark:text-gray-600" />
+                    )}
+                  </motion.div>
+                  {/* Online status dot */}
+                  <span className="absolute bottom-0 right-0 block w-3 h-3 rounded-full bg-green-400 border-2 border-white dark:border-gray-800 shadow" title="Online"></span>
+                </div>
+                <div>
+                  <div className="font-semibold text-gray-900 dark:text-gray-100 text-base truncate max-w-[10rem]">{user?.name || 'User'}</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[10rem]">{user?.email}</div>
+                </div>
+              </div>
+              {/* Sidebar Navigation */}
+              <div className="space-y-1 relative">
                 {sidebarOptions.map((opt, index) => {
                   const Icon = opt.icon;
+                  const isActive = activeSection === opt.key;
                   return (
                     <motion.button
                       key={opt.key}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
+                      transition={{ delay: index * 0.08 }}
                       onClick={() => handleSectionChange(opt.key)}
-                      className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group ${
-                        activeSection === opt.key 
-                          ? `bg-${opt.color}-50 dark:bg-${opt.color}-900/20 text-${opt.color}-700 dark:text-${opt.color}-300 shadow-sm` 
+                      aria-current={isActive ? "page" : undefined}
+                      className={`relative w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-${opt.color}-400 ${
+                        isActive
+                          ? `bg-${opt.color}-50 dark:bg-${opt.color}-900/30 text-${opt.color}-700 dark:text-${opt.color}-200 shadow`
                           : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50'
                       }`}
                     >
-                      <Icon className={`w-5 h-5 transition-colors ${
-                        activeSection === opt.key 
-                          ? `text-${opt.color}-600 dark:text-${opt.color}-400` 
-                          : 'text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300'
-                      }`} />
-                      <span>{opt.label}</span>
-                      {activeSection === opt.key && (
-                        <motion.div
-                          layoutId="activeSection"
-                          className={`absolute right-2 w-2 h-2 rounded-full bg-${opt.color}-500`}
+                      {isActive && (
+                        <motion.span
+                          layoutId="sidebar-active-bar"
+                          className={`absolute left-0 top-0 h-full w-1.5 rounded-full bg-${opt.color}-500 shadow-md`}
+                          transition={{ type: "spring", stiffness: 400, damping: 30 }}
                         />
+                      )}
+                      <span className="flex items-center">
+                        <Icon className={`w-5 h-5 transition-colors ${
+                          isActive
+                            ? `text-${opt.color}-600 dark:text-${opt.color}-300 drop-shadow`
+                            : 'text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300'
+                        }`} />
+                      </span>
+                      <span className="truncate">{opt.label}</span>
+                      {/* Optional: badge for notifications */}
+                      {opt.badge && (
+                        <span className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-full bg-${opt.color}-100 dark:bg-${opt.color}-800 text-${opt.color}-700 dark:text-${opt.color}-200`}>
+                          {opt.badge}
+                        </span>
                       )}
                     </motion.button>
                   );
                 })}
               </div>
-              
+              {/* Theme Toggle & Settings */}
+              <div className="flex items-center justify-between mt-8 mb-2 px-2">
+                <button
+                  onClick={toggleTheme}
+                  className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-300 transition"
+                  title="Toggle theme"
+                  type="button"
+                >
+                  <span className="sr-only">Toggle theme</span>
+                  {theme === 'dark' ? (
+                    <MoonIcon className="w-5 h-5" />
+                  ) : (
+                    <SunIcon className="w-5 h-5" />
+                  )}
+                  <span>{theme === 'dark' ? 'Dark' : 'Light'} mode</span>
+                </button>
+                <button
+                  onClick={() => handleSectionChange('preferences')}
+                  className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-300 transition"
+                  title="Preferences"
+                  type="button"
+                >
+                  <AdjustmentsHorizontalIcon className="w-5 h-5" />
+                  <span>Preferences</span>
+                </button>
+              </div>
               {/* Enhanced Logout Section */}
-              <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <div className="mt-4 pt-5 border-t border-gray-200 dark:border-gray-700">
                 <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={{ scale: 1.03, x: 2 }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={logout}
-                  className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 group"
+                  className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-red-400"
                 >
                   <ArrowRightOnRectangleIcon className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                   <span>Sign Out</span>
@@ -1992,6 +2354,21 @@ const ProfilePage = () => {
           </main>
         </div>
       </div>
+
+      <AnimatePresence>
+        {showDeleteModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40" role="dialog" aria-modal="true" aria-labelledby="delete-account-title">
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-8 w-full max-w-md">
+              <h3 id="delete-account-title" className="text-lg font-bold mb-4 text-gray-900 dark:text-white">Delete Account</h3>
+              <div className="mb-4 text-sm text-gray-700 dark:text-gray-300">Are you sure you want to <span className="font-semibold text-red-600 dark:text-red-400">permanently delete your account</span>? This action cannot be undone and all your data will be erased.</div>
+              <div className="flex justify-end gap-2 mt-6">
+                <button onClick={() => setShowDeleteModal(false)} className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition">Cancel</button>
+                <button onClick={handleDeleteAccount} className="px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition" disabled={isDeleting}>{isDeleting ? 'Deleting...' : 'Delete'}</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

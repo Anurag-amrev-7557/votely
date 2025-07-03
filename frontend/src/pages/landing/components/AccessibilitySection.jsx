@@ -17,7 +17,8 @@ const AccessibilitySection = ({ isVisible }) => {
     const sectionBg = useMemo(() => isDarkMode ? 'dark:bg-gray-900' : 'bg-white', [isDarkMode]);
 
     return (
-        <section className={`max-w-7xl mx-auto ${sectionBg} transition-all duration-500 will-change-[background-color,color,box-shadow,filter]`}>
+        <section className={`max-w-7xl mx-auto ${sectionBg} transition-all duration-500 will-change-[background-color,color,box-shadow,filter]`} aria-labelledby="accessibility-main-heading" role="region" tabIndex={0}>
+            <h2 id="accessibility-main-heading" className="sr-only">Accessibility Commitment</h2>
             <div className="flex flex-col gap-8 px-4 py-12">
                 <motion.div 
                     initial={{ opacity: 0, y: -20 }}

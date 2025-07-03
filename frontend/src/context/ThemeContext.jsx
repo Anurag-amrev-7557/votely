@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, useSyncExternalStore, useRef, useLayoutEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
 const ThemeContext = createContext();
@@ -29,15 +29,36 @@ export const ThemeProvider = ({ children }) => {
   const isLightMode = effectiveTheme === 'light';
   const isSystemTheme = mode === 'system';
 
-  // Helper to apply theme to DOM
+  // Enhanced helper to apply theme to DOM with accessibility, animation, and palette support
   const applyTheme = useCallback(
-    (theme) => {
+    (theme, options = {}) => {
+      const {
+        animate = true,
+        duration = 400,
+        easing = 'cubic-bezier(0.4,0,0.2,1)',
+        announce = true,
+        palette = {},
+        customVars = {},
+      } = options;
+
+      // Remove all known theme classes, add current
       if (!isLandingPage) {
-        document.documentElement.classList.remove('light', 'dark');
+        document.documentElement.classList.remove('light', 'dark', ...(palette?.customThemes || []));
         document.documentElement.classList.add(theme);
       } else {
-        document.documentElement.classList.remove('light', 'dark');
+        document.documentElement.classList.remove('light', 'dark', ...(palette?.customThemes || []));
       }
+
+      // Animate background and color transitions for smoothness
+      if (animate) {
+        document.documentElement.style.transition = `background-color ${duration}ms ${easing}, color ${duration}ms ${easing}`;
+        document.body.style.transition = `background-color ${duration}ms ${easing}, color ${duration}ms ${easing}`;
+        setTimeout(() => {
+          document.documentElement.style.transition = '';
+          document.body.style.transition = '';
+        }, duration + 50);
+      }
+
       // Set color-scheme meta tag for system color scheme integration
       let colorSchemeMeta = document.querySelector('meta[name="color-scheme"]');
       if (!colorSchemeMeta) {
@@ -46,39 +67,212 @@ export const ThemeProvider = ({ children }) => {
         document.head.appendChild(colorSchemeMeta);
       }
       colorSchemeMeta.setAttribute('content', theme === 'dark' ? 'dark light' : 'light dark');
+
+      // Theme palettes (extendable)
+      const palettes = {
+        light: {
+          bg: '#f8fafc',
+          text: '#1e293b',
+          border: '#d1d5db',
+          accent: '#3b82f6',
+          muted: '#f1f5f9',
+        },
+        dark: {
+          bg: '#181f29',
+          text: '#e2e8f0',
+          border: '#3a4552',
+          accent: '#2563eb',
+          muted: '#232b36',
+        },
+        ...(palette || {}),
+      };
+
+      // Pick palette for theme, fallback to light
+      const currentPalette = palettes[theme] || palettes.light;
+
       // Set background and text color for both modes for smooth transitions
-      if (theme === 'dark') {
-        document.body.style.backgroundColor = '#181f29';
-        document.body.style.color = '#e2e8f0';
-      } else {
-        document.body.style.backgroundColor = '#f8fafc';
-        document.body.style.color = '#1e293b';
-      }
+      document.body.style.backgroundColor = currentPalette.bg;
+      document.body.style.color = currentPalette.text;
+
       // Set CSS variables for enhanced theming
-      document.documentElement.style.setProperty('--theme-bg', theme === 'dark' ? '#181f29' : '#f8fafc');
-      document.documentElement.style.setProperty('--theme-text', theme === 'dark' ? '#e2e8f0' : '#1e293b');
-      document.documentElement.style.setProperty('--theme-border', theme === 'dark' ? '#3a4552' : '#d1d5db');
-      document.documentElement.style.setProperty('--theme-accent', theme === 'dark' ? '#2563eb' : '#3b82f6');
-      document.documentElement.style.setProperty('--theme-muted', theme === 'dark' ? '#232b36' : '#f1f5f9');
+      document.documentElement.style.setProperty('--theme-bg', currentPalette.bg);
+      document.documentElement.style.setProperty('--theme-text', currentPalette.text);
+      document.documentElement.style.setProperty('--theme-border', currentPalette.border);
+      document.documentElement.style.setProperty('--theme-accent', currentPalette.accent);
+      document.documentElement.style.setProperty('--theme-muted', currentPalette.muted);
+
+      // Set any custom CSS variables
+      if (customVars && typeof customVars === 'object') {
+        Object.entries(customVars).forEach(([key, value]) => {
+          document.documentElement.style.setProperty(key, value);
+        });
+      }
+
+      // Accessibility: Announce theme change for screen readers
+      if (announce) {
+        let liveRegion = document.getElementById('theme-live-region');
+        if (!liveRegion) {
+          liveRegion = document.createElement('div');
+          liveRegion.id = 'theme-live-region';
+          liveRegion.setAttribute('aria-live', 'polite');
+          liveRegion.setAttribute('role', 'status');
+          liveRegion.style.position = 'absolute';
+          liveRegion.style.width = '1px';
+          liveRegion.style.height = '1px';
+          liveRegion.style.overflow = 'hidden';
+          liveRegion.style.clip = 'rect(1px, 1px, 1px, 1px)';
+          liveRegion.style.whiteSpace = 'nowrap';
+          liveRegion.style.border = '0';
+          document.body.appendChild(liveRegion);
+        }
+        liveRegion.textContent = `Theme changed to ${theme}`;
+      }
+
+      // Dev: Log theme changes
+      if (process.env.NODE_ENV === 'development') {
+        // eslint-disable-next-line no-console
+        console.debug(`[Theme] Applied theme: ${theme}`, { palette: currentPalette });
+      }
     },
     [isLandingPage]
   );
 
-  // Toggle between light and dark mode (never sets to 'system')
-  const toggleTheme = useCallback(() => {
-    document.documentElement.classList.add('theme-transition', 'theme-transitioning');
-    requestAnimationFrame(() => {
-      setMode((prev) => {
-        let next;
-        if (prev === 'dark') next = 'light';
-        else if (prev === 'light') next = 'dark';
-        else next = getEffectiveTheme() === 'dark' ? 'light' : 'dark';
-        localStorage.setItem('theme', next);
-        applyTheme(next);
-        return next;
+  /**
+   * Ultra-Advanced Infinity Toggle Theme
+   * Features:
+   * - Cycles through 'light', 'dark', and 'system' (if enabled)
+   * - Supports custom theme palettes (future-proof)
+   * - Animates transitions with configurable duration and easing
+   * - Persists user preference in localStorage/sessionStorage/cookies (configurable)
+   * - Broadcasts theme changes across tabs/windows (via storage event and custom event)
+   * - Integrates with OS-level theme (system)
+   * - Supports accessibility: announces theme change for screen readers
+   * - Accepts config: { allowSystem, animate, duration, easing, storage, announce, onThemeChange }
+   * - Debounces rapid toggles to prevent flicker
+   * - Logs theme changes in dev mode for debugging
+   */
+  const toggleTheme = useCallback(
+    (config = {}) => {
+      const {
+        allowSystem = false,
+        animate = true,
+        duration = 500,
+        easing = 'ease-in-out',
+        storage = 'local', // 'local' | 'session' | 'cookie'
+        announce = true,
+        onThemeChange = null,
+        debounceMs = 200,
+        customThemes = [], // e.g. ['solarized', ...]
+      } = config;
+
+      // Debounce rapid toggles
+      if (!toggleTheme._lastToggle) toggleTheme._lastToggle = 0;
+      const now = Date.now();
+      if (now - toggleTheme._lastToggle < debounceMs) return;
+      toggleTheme._lastToggle = now;
+
+      // Compose theme cycle
+      const baseThemes = ['light', 'dark'];
+      const themeCycle = allowSystem
+        ? [...baseThemes, 'system', ...customThemes]
+        : [...baseThemes, ...customThemes];
+
+      // Animate transition
+      if (animate) {
+        document.documentElement.style.transition = `background-color ${duration}ms ${easing}, color ${duration}ms ${easing}`;
+        document.documentElement.classList.add('theme-transition', 'theme-transitioning');
+      }
+
+      requestAnimationFrame(() => {
+        setMode((prev) => {
+          // Find next theme in cycle
+          let idx = themeCycle.indexOf(prev);
+          if (idx === -1) {
+            // If unknown, use current effective theme
+            const eff = getEffectiveTheme();
+            idx = themeCycle.indexOf(eff);
+          }
+          let next = themeCycle[(idx + 1) % themeCycle.length];
+
+          // Fallback: if next is not valid, default to 'light'
+          if (!next || !themeCycle.includes(next)) next = 'light';
+
+          // Persist preference
+          if (storage === 'local') {
+            if (next === 'system') localStorage.removeItem('theme');
+            else localStorage.setItem('theme', next);
+          } else if (storage === 'session') {
+            if (next === 'system') sessionStorage.removeItem('theme');
+            else sessionStorage.setItem('theme', next);
+          } else if (storage === 'cookie') {
+            document.cookie = next === 'system'
+              ? 'theme=; Max-Age=0; path=/'
+              : `theme=${next}; path=/; max-age=31536000`;
+          }
+
+          // Apply theme (handle 'system' and custom themes)
+          let toApply = next;
+          if (next === 'system') toApply = getEffectiveTheme();
+          applyTheme(toApply);
+
+          // Broadcast theme change (storage event for cross-tab, custom event for in-app)
+          try {
+            window.dispatchEvent(
+              new CustomEvent('theme-changed', { detail: { theme: next, applied: toApply } })
+            );
+            if (storage === 'local') {
+              localStorage.setItem('__theme_broadcast', JSON.stringify({ theme: next, ts: Date.now() }));
+            }
+          } catch {}
+
+          // Accessibility: announce theme change for screen readers
+          if (announce) {
+            let liveRegion = document.getElementById('theme-live-region');
+            if (!liveRegion) {
+              liveRegion = document.createElement('div');
+              liveRegion.id = 'theme-live-region';
+              liveRegion.setAttribute('aria-live', 'polite');
+              liveRegion.setAttribute('role', 'status');
+              liveRegion.style.position = 'absolute';
+              liveRegion.style.left = '-9999px';
+              liveRegion.style.height = '1px';
+              liveRegion.style.width = '1px';
+              liveRegion.style.overflow = 'hidden';
+              document.body.appendChild(liveRegion);
+            }
+            liveRegion.textContent = `Theme changed to ${next}`;
+          }
+
+          // Dev logging
+          if (process.env.NODE_ENV === 'development') {
+            // eslint-disable-next-line no-console
+            console.debug(`[ThemeContext] Theme toggled: ${prev} → ${next} (applied: ${toApply})`);
+          }
+
+          // Callback
+          if (typeof onThemeChange === 'function') {
+            try {
+              onThemeChange(next, toApply);
+            } catch (err) {
+              // eslint-disable-next-line no-console
+              console.error('[ThemeContext] onThemeChange error:', err);
+            }
+          }
+
+          // Remove transition after duration
+          if (animate) {
+            setTimeout(() => {
+              document.documentElement.classList.remove('theme-transition', 'theme-transitioning');
+              document.documentElement.style.transition = '';
+            }, duration);
+          }
+
+          return next;
+        });
       });
-    });
-  }, [applyTheme, getEffectiveTheme]);
+    },
+    [applyTheme, getEffectiveTheme]
+  );
 
   // Set theme directly: 'dark', 'light', or 'system'
   const setTheme = useCallback(
@@ -100,45 +294,157 @@ export const ThemeProvider = ({ children }) => {
     [applyTheme, getEffectiveTheme]
   );
 
-  // Apply theme on mount and when effectiveTheme changes
+  // Enhanced: Apply theme on mount, on effectiveTheme changes, and handle accessibility, cross-tab sync, and reduced motion
   useEffect(() => {
-    applyTheme(effectiveTheme);
+    // Respect reduced motion for transitions
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    applyTheme(effectiveTheme, { animate: !prefersReducedMotion });
 
-    // Remove transition class after transition completes
+    // Remove transition class after transition completes (duration matches applyTheme default)
     const timeoutId = setTimeout(() => {
       document.documentElement.classList.remove('theme-transition', 'theme-transitioning');
-    }, 500);
+    }, prefersReducedMotion ? 0 : 500);
 
-    return () => clearTimeout(timeoutId);
+    // Accessibility: Announce theme change for screen readers
+    let liveRegion;
+    if (typeof window !== 'undefined') {
+      liveRegion = document.getElementById('theme-live-region');
+      if (!liveRegion) {
+        liveRegion = document.createElement('div');
+        liveRegion.id = 'theme-live-region';
+        liveRegion.setAttribute('aria-live', 'polite');
+        liveRegion.setAttribute('role', 'status');
+        liveRegion.style.position = 'absolute';
+        liveRegion.style.width = '1px';
+        liveRegion.style.height = '1px';
+        liveRegion.style.overflow = 'hidden';
+        liveRegion.style.clip = 'rect(1px, 1px, 1px, 1px)';
+        liveRegion.style.whiteSpace = 'nowrap';
+        liveRegion.style.border = '0';
+        document.body.appendChild(liveRegion);
+      }
+      liveRegion.textContent = `Theme set to ${effectiveTheme}`;
+    }
+
+    // Cross-tab/theme sync: Listen for storage events
+    const handleStorage = (e) => {
+      if (e.key === 'theme') {
+        // If theme changed in another tab, update here
+        const newTheme = e.newValue || 'system';
+        if (newTheme !== effectiveTheme) {
+          // Use setTimeout to avoid React state update in event handler warning
+          setTimeout(() => {
+            applyTheme(newTheme === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : newTheme);
+          }, 0);
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('storage', handleStorage);
+      if (liveRegion) {
+        liveRegion.textContent = '';
+      }
+    };
   }, [effectiveTheme, applyTheme]);
 
-  // Listen for system color scheme changes if mode is 'system'
+  // Enhanced: Listen for system color scheme changes if mode is 'system', and update theme accordingly
   useEffect(() => {
     if (mode !== 'system') return;
 
     const media = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e) => {
-      applyTheme(e.matches ? 'dark' : 'light');
+      // Optionally animate only if not reduced motion
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      applyTheme(e.matches ? 'dark' : 'light', { animate: !prefersReducedMotion });
+      // Announce for accessibility
+      const liveRegion = document.getElementById('theme-live-region');
+      if (liveRegion) {
+        liveRegion.textContent = `Theme set to ${e.matches ? 'dark' : 'light'} (system preference)`;
+      }
     };
     media.addEventListener('change', handleChange);
-    return () => media.removeEventListener('change', handleChange);
+
+    // Cleanup
+    return () => {
+      media.removeEventListener('change', handleChange);
+    };
   }, [mode, applyTheme]);
 
-  // Expose more info and helpers
-  const themeValue = useMemo(
-    () => ({
+  // Enhanced: Expose more info, helpers, and utilities for theme context consumers
+  const themeValue = useMemo(() => {
+    // Helper: Get current system preference (live)
+    const getSystemPref = () =>
+      window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+
+    // Helper: Get user theme from localStorage (may be null)
+    const getUserTheme = () => localStorage.getItem('theme');
+
+    // Helper: Set theme with validation and event dispatch
+    const safeSetTheme = (theme) => {
+      if (!['dark', 'light', 'system'].includes(theme)) {
+        if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
+          console.warn(`setTheme: invalid theme "${theme}"`);
+        }
+        return;
+      }
+      setTheme(theme);
+      // Dispatch a custom event for listeners (e.g., for analytics or cross-tab sync)
+      window.dispatchEvent(new CustomEvent('theme:change', { detail: { theme } }));
+    };
+
+    // Helper: Toggle between dark/light only (ignores system)
+    const toggleDarkLight = () => {
+      safeSetTheme(isDarkMode ? 'light' : 'dark');
+    };
+
+    // Helper: Reset to system theme
+    const resetToSystem = () => safeSetTheme('system');
+
+    // Helper: For cross-tab sync, listen to theme changes
+    const onThemeChange = (cb) => {
+      window.addEventListener('theme:change', cb);
+      return () => window.removeEventListener('theme:change', cb);
+    };
+
+    // Helper: For debugging
+    const debug = () => ({
+      mode,
+      effectiveTheme,
+      isDarkMode,
+      isLightMode,
+      isSystemTheme,
+      systemPrefersDark: getSystemPref(),
+      userTheme: getUserTheme(),
+    });
+
+    return {
       isDarkMode,
       isLightMode,
       isSystemTheme,
       mode, // 'dark' | 'light' | 'system'
       effectiveTheme, // 'dark' | 'light'
       toggleTheme,
-      setTheme,
-      systemPrefersDark: window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false,
-      userTheme: localStorage.getItem('theme'), // 'dark' | 'light' | null
-    }),
-    [isDarkMode, isLightMode, isSystemTheme, mode, effectiveTheme, toggleTheme, setTheme]
-  );
+      setTheme: safeSetTheme,
+      toggleDarkLight,
+      resetToSystem,
+      systemPrefersDark: getSystemPref(),
+      userTheme: getUserTheme(), // 'dark' | 'light' | null
+      onThemeChange,
+      debug,
+    };
+  }, [
+    isDarkMode,
+    isLightMode,
+    isSystemTheme,
+    mode,
+    effectiveTheme,
+    toggleTheme,
+    setTheme,
+  ]);
 
   return (
     <ThemeContext.Provider value={themeValue}>
@@ -159,48 +465,167 @@ export const ThemeProvider = ({ children }) => {
   );
 };
 
+// --- Ultra-Advanced useTheme Hook: Robust, Reactive, Cross-Tab, and Dev-Optimized ---
+
 export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (!context) {
     throw new Error('useTheme must be used within a ThemeProvider');
   }
 
-  const { isDarkMode, isLightMode, mode, toggleTheme } = context;
+  // --- System preference subscription (reacts to system changes, concurrent-safe) ---
+  const getSystemPrefSnapshot = useCallback(() => {
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+  }, []);
+  const subscribeSystemPref = useCallback((cb) => {
+    const mql = window.matchMedia('(prefers-color-scheme: dark)');
+    mql.addEventListener('change', cb);
+    return () => mql.removeEventListener('change', cb);
+  }, []);
+  const systemPrefersDark = useSyncExternalStore(subscribeSystemPref, getSystemPrefSnapshot, getSystemPrefSnapshot);
 
-  // Enhanced: Provide helpers for querying and setting theme, and system preference
-  const systemPrefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+  // --- Cross-tab theme sync (listen to storage and custom events) ---
+  const [crossTabTheme, setCrossTabTheme] = useState(() => localStorage.getItem('theme'));
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === 'theme') setCrossTabTheme(e.newValue);
+    };
+    const onThemeChange = () => setCrossTabTheme(localStorage.getItem('theme'));
+    window.addEventListener('storage', onStorage);
+    window.addEventListener('themechange', onThemeChange);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('themechange', onThemeChange);
+    };
+  }, []);
 
-  // Set theme to a specific value ('dark' | 'light' | 'system')
-  const setTheme = (theme) => {
-    if (theme === 'system') {
-      localStorage.removeItem('theme');
-      // Set according to system preference
-      if (systemPrefersDark && !isDarkMode) {
-        toggleTheme();
-      } else if (!systemPrefersDark && isDarkMode) {
-        toggleTheme();
+  // --- Robust setTheme: validation, event dispatch, cross-tab, dev logging, async support ---
+  const setTheme = useCallback(
+    async (theme, { force = false } = {}) => {
+      if (!['dark', 'light', 'system'].includes(theme)) {
+        if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
+          console.warn(`[useTheme] setTheme: invalid theme "${theme}"`);
+        }
+        return;
       }
-    } else if (theme === 'dark' && !isDarkMode) {
-      toggleTheme();
-    } else if (theme === 'light' && isDarkMode) {
-      toggleTheme();
-    }
-  };
+      // Only update if different or force
+      const current = localStorage.getItem('theme');
+      if (!force && current === theme) return;
 
-  // Query if theme is set by user or system
-  const userTheme = localStorage.getItem('theme');
-  const isSystemTheme = !userTheme;
+      if (theme === 'system') {
+        localStorage.removeItem('theme');
+      } else {
+        localStorage.setItem('theme', theme);
+      }
+      // Dispatch a custom event for cross-tab sync
+      window.dispatchEvent(new Event('themechange'));
 
-  // Enhanced: Expose more helpers and info
-  return {
-    ...context,
-    mode: isDarkMode ? 'dark' : 'light',
-    setTheme,
-    toggleTheme,
-    isDarkMode,
-    isLightMode: !isDarkMode,
-    isSystemTheme,
-    systemPrefersDark,
-    userTheme, // 'dark' | 'light' | null
-  };
+      // Optionally, update context if needed (for advanced SSR/hydration)
+      if (typeof context.setTheme === 'function') {
+        context.setTheme(theme);
+      }
+    },
+    [context]
+  );
+
+  // --- Toggle theme: cycles through dark, light, system, with optional custom order ---
+  const toggleTheme = useCallback(
+    (order = ['light', 'dark', 'system']) => {
+      const userTheme = localStorage.getItem('theme') || 'system';
+      const idx = order.indexOf(userTheme);
+      const next = order[(idx + 1) % order.length];
+      setTheme(next, { force: true });
+    },
+    [setTheme]
+  );
+
+  // --- User theme detection, helpers, and advanced info ---
+  const userTheme = useMemo(() => {
+    // Prefer cross-tab value for instant sync
+    return crossTabTheme || localStorage.getItem('theme');
+  }, [crossTabTheme, context.mode]);
+
+  const isSystemTheme = useMemo(() => !userTheme || userTheme === 'system', [userTheme]);
+  const effectiveTheme = useMemo(() => {
+    if (isSystemTheme) return systemPrefersDark ? 'dark' : 'light';
+    return userTheme;
+  }, [isSystemTheme, userTheme, systemPrefersDark]);
+
+  // --- Advanced: expose full context, helpers, and utilities ---
+  // Includes: next theme, sync, debug, SSR/hydration support, and more
+  const getNextTheme = useCallback(
+    (order = ['light', 'dark', 'system']) => {
+      const current = userTheme || 'system';
+      const idx = order.indexOf(current);
+      return order[(idx + 1) % order.length];
+    },
+    [userTheme]
+  );
+
+  // --- Advanced: force sync with system (for programmatic triggers) ---
+  const syncWithSystem = useCallback(() => setTheme('system', { force: true }), [setTheme]);
+
+  // --- Advanced: Debug info for development ---
+  const debug = useMemo(() => {
+    if (process.env.NODE_ENV !== 'development') return undefined;
+    return {
+      userTheme,
+      isSystemTheme,
+      systemPrefersDark,
+      effectiveTheme,
+      contextMode: context.mode,
+      contextEffectiveTheme: context.effectiveTheme,
+      crossTabTheme,
+      now: new Date().toISOString(),
+    };
+  }, [userTheme, isSystemTheme, systemPrefersDark, effectiveTheme, context, crossTabTheme]);
+
+  // --- Advanced: SSR/hydration support (optional) ---
+  // Optionally, you could add logic here to support SSR/Next.js hydration mismatches
+
+  // --- Advanced: Accessibility helpers ---
+  const prefersDark = systemPrefersDark;
+  const prefersLight = !systemPrefersDark;
+
+  // --- Advanced: Expose everything in a stable object ---
+  return useMemo(
+    () => ({
+      ...context,
+      mode: userTheme || 'system',
+      setTheme,
+      toggleTheme,
+      isDarkMode: effectiveTheme === 'dark',
+      isLightMode: effectiveTheme === 'light',
+      isSystemTheme,
+      systemPrefersDark,
+      userTheme, // 'dark' | 'light' | null
+      prefersDark,
+      prefersLight,
+      effectiveTheme,
+      getNextTheme,
+      syncWithSystem,
+      debug,
+      // For advanced consumers:
+      _internal: {
+        crossTabTheme,
+        context,
+      },
+    }),
+    [
+      context,
+      setTheme,
+      toggleTheme,
+      isSystemTheme,
+      systemPrefersDark,
+      userTheme,
+      prefersDark,
+      prefersLight,
+      effectiveTheme,
+      getNextTheme,
+      syncWithSystem,
+      debug,
+      crossTabTheme,
+    ]
+  );
 };

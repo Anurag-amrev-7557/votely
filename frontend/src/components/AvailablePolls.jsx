@@ -7,6 +7,7 @@ import { useDebounce } from '../hooks/useDebounce';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
+import landingHero from '../assets/landing-hero.png';
 
 /**
  * Ultra-Advanced Date Utility Suite
@@ -283,6 +284,7 @@ const AvailablePolls = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userVotes, setUserVotes] = useState({});
+  const [favorites, setFavorites] = useState([]);
 
   // Status options for filtering
   const statusOptions = [
@@ -311,14 +313,15 @@ const AvailablePolls = () => {
    * - Memoized for performance, extensible for future ML integration
    */
   const generateSearchSuggestions = useCallback((query) => {
-    if (!query.trim()) {
+    const safeQuery = (typeof query === 'string') ? query : '';
+    if (!safeQuery.trim()) {
       setSearchSuggestions([]);
       setShowSearchSuggestions(false);
       return;
     }
 
     // --- Helper utilities ---
-    const normalize = str => (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const normalize = str => String(str == null ? '' : str).toLowerCase().normalize('NFD').replace(/\u0300-\u036f/g, '');
     const levenshtein = (a, b) => {
       if (a === b) return 0;
       if (!a.length) return b.length;
@@ -547,7 +550,7 @@ const AvailablePolls = () => {
 
   const filteredPolls = useMemo(() => {
     // Advanced fuzzy search using all poll fields, including partial and typo-tolerant matches
-    const normalize = str => (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const normalize = str => String(str == null ? '' : str).toLowerCase().normalize('NFD').replace(/\u0300-\u036f/g, '');
     const searchTokens = normalize(debouncedSearchQuery).split(/\s+/).filter(Boolean);
 
     const fuzzyMatch = (text, tokens) => {
@@ -739,82 +742,133 @@ const AvailablePolls = () => {
   const handlePollClick = useCallback((poll) => {
     if (!user && !authLoading) {
       setShowLoginModal(true);
+      toast.info('Please log in to participate in polls.');
       return;
     }
     setSelectedPoll(poll);
-    // Voting logic here...
-    // After successful vote:
-    const showResultsAfterVote = poll.settings?.showResultsAfterVote;
-    const resultDate = poll.resultDate ? new Date(poll.resultDate) : null;
-    const now = new Date();
-    if (showResultsAfterVote || (resultDate && now >= resultDate)) {
-      navigate(`/vote/${poll.id}?showResults=1`);
-    } else if (resultDate) {
-      toast.success(`Results will be available on ${resultDate.toLocaleString('en-US', {
-        weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
-      })}`);
-    } else {
-      toast.success('Results will be available after the poll ends.');
-    }
+    // Navigate to the voting page for this poll
+    navigate(`/vote/${poll.id}`);
   }, [navigate, user, authLoading]);
 
   const handleViewResults = useCallback((poll) => {
     navigate(`/vote/${poll.id}?showResults=1`);
   }, [navigate]);
 
-  const handlePollFavorite = useCallback((pollId, e) => {
+  const handlePollFavorite = useCallback(async (pollId, e) => {
     e.stopPropagation();
-    // Add to favorites logic here
-    console.log('Added to favorites:', pollId);
-  }, []);
+    if (!user) {
+      toast.error('You must be logged in to favorite polls.');
+      setShowLoginModal(true);
+      return;
+    }
+    const isFav = favorites.includes(pollId);
+    try {
+      if (isFav) {
+        await axios.post('/api/profile/favorites/remove', { pollId }, { withCredentials: true });
+        setFavorites(favs => favs.filter(id => id !== pollId));
+        toast('Removed from favorites', { icon: '💔' });
+      } else {
+        await axios.post('/api/profile/favorites/add', { pollId }, { withCredentials: true });
+        setFavorites(favs => [...favs, pollId]);
+        toast('Added to favorites', { icon: '❤️' });
+      }
+    } catch (err) {
+      toast.error('Failed to update favorites.');
+    }
+  }, [user, favorites]);
 
-  const handlePollShare = useCallback((poll, e) => {
+  const handlePollShare = useCallback(async (poll, e) => {
     e.stopPropagation();
+    const shareUrl = `${window.location.origin}/vote/${poll.id}`;
+    const shareData = {
+      title: poll.title,
+      text: poll.description ? poll.description : 'Check out this poll!',
+      url: shareUrl
+    };
+
+    // Try Web Share API first
     if (navigator.share) {
-      navigator.share({
-        title: poll.title,
-        text: poll.description,
-        url: `${window.location.origin}/vote/${poll.id}`
-      });
+      try {
+        await navigator.share(shareData);
+        toast.success('Poll link shared!');
+      } catch (err) {
+        // User cancelled or error, fallback to clipboard
+        try {
+          await navigator.clipboard.writeText(shareUrl);
+          toast('Link copied to clipboard!', { icon: '🔗' });
+        } catch (clipErr) {
+          toast.error('Failed to copy link.');
+        }
+      }
+    } else if (navigator.clipboard) {
+      // Clipboard API fallback
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toast('Link copied to clipboard!', { icon: '🔗' });
+      } catch (err) {
+        toast.error('Failed to copy link.');
+      }
     } else {
-      // Fallback: copy to clipboard
-      navigator.clipboard.writeText(`${window.location.origin}/vote/${poll.id}`);
+      // Legacy fallback: prompt
+      window.prompt('Copy this poll link:', shareUrl);
     }
   }, []);
 
   const validateDateRange = useCallback(() => {
     const errors = { startError: '', endError: '' };
-    
-    if (dateRange.start && dateRange.end) {
-      const startDate = new Date(dateRange.start);
-      const endDate = new Date(dateRange.end);
-      
-      if (startDate > endDate) {
-        errors.startError = 'Start date cannot be after end date';
-        errors.endError = 'End date cannot be before start date';
+
+    // Helper: is valid date
+    const isValidDate = (d) => d instanceof Date && !isNaN(d);
+
+    // Parse dates
+    const startDate = dateRange.start ? new Date(dateRange.start) : null;
+    const endDate = dateRange.end ? new Date(dateRange.end) : null;
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    // Check for invalid date formats
+    if (dateRange.start && !isValidDate(startDate)) {
+      errors.startError = 'Invalid start date format';
+    }
+    if (dateRange.end && !isValidDate(endDate)) {
+      errors.endError = 'Invalid end date format';
+    }
+
+    // Only proceed if dates are valid
+    if (!errors.startError && !errors.endError) {
+      // Check start > end
+      if (startDate && endDate) {
+        if (startDate > endDate) {
+          errors.startError = 'Start date cannot be after end date';
+          errors.endError = 'End date cannot be before start date';
+        }
+      }
+
+      // Check start in past (allow today)
+      if (startDate) {
+        if (startDate < now && startDate.getTime() !== now.getTime()) {
+          errors.startError = 'Start date cannot be in the past';
+        }
+      }
+
+      // Check end in future (max 30 days)
+      if (endDate) {
+        const maxFutureDate = new Date(now);
+        maxFutureDate.setDate(maxFutureDate.getDate() + 30);
+        if (endDate > maxFutureDate) {
+          errors.endError = 'End date cannot be more than 30 days in the future';
+        }
+        if (endDate < now) {
+          errors.endError = 'End date cannot be in the past';
+        }
+      }
+
+      // Warn if range is too long (e.g., > 30 days)
+      if (startDate && endDate && (endDate - startDate) / (1000 * 60 * 60 * 24) > 30) {
+        errors.endError = 'Date range cannot exceed 30 days';
       }
     }
-    
-    if (dateRange.start) {
-      const startDate = new Date(dateRange.start);
-      const currentDate = new Date();
-      currentDate.setHours(0, 0, 0, 0);
-      
-      if (startDate < currentDate && startDate.getTime() !== currentDate.getTime()) {
-        errors.startError = 'Start date cannot be in the past';
-      }
-    }
-    
-    if (dateRange.end) {
-      const endDate = new Date(dateRange.end);
-      const maxFutureDate = new Date();
-      maxFutureDate.setDate(maxFutureDate.getDate() + 30); // Allow up to 30 days in future
-      
-      if (endDate > maxFutureDate) {
-        errors.endError = 'End date cannot be more than 30 days in the future';
-      }
-    }
-    
+
     setDateValidation(errors);
   }, [dateRange]);
 
@@ -908,7 +962,6 @@ const AvailablePolls = () => {
             poll.status === 'completed' ? 'Past' : (poll.status || 'Active'),
           category: poll.category || 'General',
         }));
-        console.log('Loaded polls:', normalized);
         setPolls(normalized);
         setError(null);
       } catch (err) {
@@ -920,50 +973,295 @@ const AvailablePolls = () => {
     fetchPolls();
   }, []);
 
-  // Fetch user's vote status for each poll after polls are loaded and user is logged in
-  useEffect(() => {
-    const fetchUserVotes = async () => {
-      if (!user || !polls.length) return;
-      const votesStatus = {};
-      await Promise.all(
-        polls.map(async (poll) => {
-          try {
-            const res = await axios.get(`http://localhost:5001/api/votes/${poll.id || poll._id}`, { withCredentials: true });
-            votesStatus[poll.id || poll._id] = !!res.data;
-          } catch (err) {
-            votesStatus[poll.id || poll._id] = false;
-          }
-        })
-      );
-      setUserVotes(votesStatus);
-    };
-    fetchUserVotes();
+  // Enhanced: Fetch user's vote status for each poll after polls are loaded and user is logged in
+  const fetchUserVotes = useCallback(async () => {
+    if (!user || !polls.length) {
+      setUserVotes({});
+      return;
+    }
+    try {
+      const pollIds = polls.map(poll => poll.id || poll._id);
+      let votesStatus = {};
+      // Try batch endpoint first
+      try {
+        const res = await axios.post(
+          '/api/votes/batch',
+          { pollIds },
+          { withCredentials: true }
+        );
+        votesStatus = res.data || {};
+      } catch (batchErr) {
+        // Fallback to individual requests if batch fails
+        await Promise.all(
+          pollIds.map(async (pollId) => {
+            try {
+              const res = await axios.get(`/api/votes/${pollId}`, { withCredentials: true });
+              votesStatus[pollId] = !!res.data;
+            } catch (err) {
+              votesStatus[pollId] = false;
+            }
+          })
+        );
+      }
+      setUserVotes({ ...votesStatus, _fetchedAt: Date.now() });
+    } catch (err) {
+      setUserVotes({});
+    }
   }, [user, polls]);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchUserVotes();
+    return () => { isMounted = false; };
+  }, [user, polls, fetchUserVotes]);
+
+  // Refetch userVotes when the page/tab becomes visible again
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchUserVotes();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [fetchUserVotes]);
+
+  // Fetch user favorites on mount if logged in
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      if (!user) return;
+      try {
+        const res = await axios.get('/api/profile/favorites', { withCredentials: true });
+        setFavorites(res.data.favorites.map(fav => fav._id || fav.id));
+      } catch (err) {
+        setFavorites([]);
+      }
+    };
+    fetchFavorites();
+  }, [user]);
+
+  const handleSetReminder = async (poll) => {
+    if (!user) {
+      setShowLoginModal(true);
+      toast.info('Please log in to set poll reminders.');
+      return;
+    }
+
+    // Check if browser supports notifications
+    if (!('Notification' in window)) {
+      toast.error('Browser notifications are not supported.');
+      return;
+    }
+
+    // Helper: Check if poll already has a reminder set
+    const reminders = JSON.parse(localStorage.getItem('pollReminders') || '[]');
+    const alreadySet = reminders.some(r => r.pollId === poll.id);
+    if (alreadySet) {
+      toast('Reminder already set for this poll.', { icon: '🔔' });
+      return;
+    }
+
+    // Ask for notification permission if not already granted
+    if (Notification.permission === 'default') {
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          toast.error('Please allow notifications to set reminders.');
+          return;
+        }
+      } catch (err) {
+        toast.error('Failed to request notification permission.');
+        return;
+      }
+    }
+
+    if (Notification.permission === 'granted') {
+      // Try to register a service worker for persistent notifications (if available)
+      if ('serviceWorker' in navigator) {
+        try {
+          // Register service worker if not already registered
+          let reg = await navigator.serviceWorker.getRegistration();
+          if (!reg) {
+            reg = await navigator.serviceWorker.register('/sw.js');
+          }
+          // Send a message to the service worker to schedule the reminder (if supported)
+          if (reg.active) {
+            reg.active.postMessage({
+              type: 'SCHEDULE_POLL_REMINDER',
+              poll: {
+                id: poll.id,
+                title: poll.title,
+                startDate: poll.startDate,
+              }
+            });
+          }
+        } catch (err) {
+          // Fallback to in-tab reminder
+        }
+      }
+      scheduleReminder(poll);
+      toast.success('Reminder set! You will be notified when the poll opens.', { icon: '⏰' });
+    } else {
+      toast.error('Notifications are blocked. Please enable them in your browser settings.');
+    }
+  };
+
+  /**
+   * Enhanced scheduleReminder:
+   * - Stores reminders in localStorage (deduplicated)
+   * - Schedules notification with fallback to toast if Notification API fails
+   * - Optionally vibrates device (if supported)
+   * - Handles tab close/reopen by checking for due reminders on load
+   * - Shows time remaining in toast
+   */
+  const scheduleReminder = (poll) => {
+    const startDate = new Date(poll.startDate);
+    const now = new Date();
+    const msUntilStart = startDate - now;
+
+    if (msUntilStart <= 0) {
+      toast('Poll is starting soon!', { icon: '⏰' });
+      return;
+    }
+
+    // Deduplicate reminders
+    let reminders = [];
+    try {
+      reminders = JSON.parse(localStorage.getItem('pollReminders') || '[]');
+    } catch {
+      reminders = [];
+    }
+    if (!reminders.some(r => r.pollId === poll.id)) {
+      reminders.push({ pollId: poll.id, title: poll.title, time: poll.startDate });
+      localStorage.setItem('pollReminders', JSON.stringify(reminders));
+    }
+
+    // Helper: format time remaining
+    const formatTime = ms => {
+      const min = Math.floor(ms / 60000);
+      const sec = Math.floor((ms % 60000) / 1000);
+      if (min > 0) return `${min}m ${sec}s`;
+      return `${sec}s`;
+    };
+
+    // Schedule notification (best effort, will only work if tab is open)
+    const notify = () => {
+      try {
+        new Notification(`Poll Reminder: ${poll.title}`, {
+          body: 'This poll is now open for voting!',
+          icon: '/favicon.ico'
+        });
+        // Optional: vibrate device if supported
+        if (navigator.vibrate) {
+          navigator.vibrate([200, 100, 200]);
+        }
+      } catch (err) {
+        toast(`Poll "${poll.title}" is now open for voting!`, { icon: '⏰' });
+      }
+    };
+
+    // Use a unique timeout key to avoid duplicate timeouts for the same poll
+    const timeoutKey = `pollReminderTimeout_${poll.id}`;
+    if (window[timeoutKey]) clearTimeout(window[timeoutKey]);
+    window[timeoutKey] = setTimeout(() => {
+      notify();
+      // Remove reminder from localStorage after firing
+      let updatedReminders = [];
+      try {
+        updatedReminders = JSON.parse(localStorage.getItem('pollReminders') || '[]');
+      } catch {
+        updatedReminders = [];
+      }
+      updatedReminders = updatedReminders.filter(r => r.pollId !== poll.id);
+      localStorage.setItem('pollReminders', JSON.stringify(updatedReminders));
+    }, msUntilStart);
+
+    toast.success(
+      <>
+        Reminder set! You will be notified when the poll opens.<br />
+        <span className="text-xs text-gray-500">
+          Starts in {formatTime(msUntilStart)}
+        </span>
+      </>,
+      { icon: '⏰' }
+    );
+  };
+
+  // On mount: check for any due reminders (in case tab was closed)
+  useEffect(() => {
+    const checkReminders = () => {
+      let reminders = [];
+      try {
+        reminders = JSON.parse(localStorage.getItem('pollReminders') || '[]');
+      } catch {
+        reminders = [];
+      }
+      const now = new Date();
+      reminders.forEach(reminder => {
+        const startDate = new Date(reminder.time);
+        if (startDate <= now) {
+          // Fire notification and remove from storage
+          try {
+            new Notification(`Poll Reminder: ${reminder.title}`, {
+              body: 'This poll is now open for voting!',
+              icon: '/favicon.ico'
+            });
+            if (navigator.vibrate) {
+              navigator.vibrate([200, 100, 200]);
+            }
+          } catch {
+            toast(`Poll "${reminder.title}" is now open for voting!`, { icon: '⏰' });
+          }
+        }
+      });
+      // Remove all past reminders
+      const futureReminders = reminders.filter(r => new Date(r.time) > now);
+      localStorage.setItem('pollReminders', JSON.stringify(futureReminders));
+    };
+    checkReminders();
+    // Optionally, check every minute for overdue reminders
+    const interval = setInterval(checkReminders, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="relative flex size-full min-h-screen flex-col bg-white dark:bg-gray-900 dark:group/design-root overflow-x-hidden transition-colors duration-200" style={{ fontFamily: 'Inter, "Noto Sans", sans-serif' }}>
       <div className="layout-container flex h-full grow flex-col">
-        <div className="px-4 md:px-10 lg:px-20 flex flex-1 justify-center py-4 sm:py-5 mt-16 sm:mt-10">
-          <div className="layout-content-container flex flex-col max-w-[1200px] flex-1 mt-2 sm:mt-5">
+        <div className="px-4 md:px-10 lg:px-20 flex flex-1 justify-center py-4 sm:py-5">
+          <div className="layout-content-container flex flex-col max-w-[1200px] flex-1">
             {/* Header Section */}
             <div className="flex flex-col gap-4 sm:gap-6 p-3 sm:p-4 mb-6 sm:mb-8">
               {/* Animated Title & Description */}
               <div className="flex flex-col gap-1.5 sm:gap-2 relative">
-                <div
-                  aria-hidden="true"
-                  className="pointer-events-none absolute inset-0 -top-3 -bottom-1 z-0"
-                >
-                  <div
-                    className="w-full h-full rounded-2xl bg-blue-400/10 dark:bg-blue-900/10 blur-xl opacity-70 dark:opacity-40 animate-[pulse_3s_ease-in-out_infinite]"
-                  />
+                <div className="flex items-center gap-3 mb-1">
+                  {/* Enhanced Back Button Section */}
+                  <button
+                    onClick={() => navigate(-1)}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-gradient-to-r from-white/90 via-blue-50/80 to-white/90 dark:from-gray-800/90 dark:via-blue-900/30 dark:to-gray-800/90 shadow-lg border border-gray-200 dark:border-gray-700 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/60 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 group/back"
+                    aria-label="Go back"
+                    tabIndex={0}
+                  >
+                    <span className="relative flex items-center">
+                      <svg className="w-4 h-4 mr-1 group-hover/back:-translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                      </svg>
+                      <span className="font-medium text-sm">Back</span>
+                    </span>
+                  </button>
+                  <h1
+                    className="relative z-10 flex items-center gap-2 text-2xl sm:text-3xl md:text-4xl font-extrabold leading-tight tracking-tight text-gray-900 dark:text-white"
+                    tabIndex={0}
+                    aria-label="Available Polls"
+                  >
+                    <span className="inline-block bg-gradient-to-r from-blue-500 via-blue-400 to-blue-600 bg-clip-text text-transparent drop-shadow-sm">
+                      Available Polls
+                    </span>
+                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-xs font-semibold text-blue-700 dark:text-blue-200 animate-fade-in">
+                      Live
+                      <span className="ml-1 w-2 h-2 rounded-full bg-green-400 animate-pulse" aria-hidden="true"></span>
+                    </span>
+                  </h1>
                 </div>
-                <h1
-                  className="relative z-10 text-2xl sm:text-3xl md:text-4xl font-bold leading-tight tracking-tight text-gray-900 dark:text-white"
-                  tabIndex={0}
-                  aria-label="Available Polls"
-                >
-                  Available Polls
-                </h1>
                 <p
                   className="relative z-10 text-gray-600 dark:text-[#a0acbb] text-sm sm:text-base font-normal leading-relaxed transition-colors duration-300"
                   tabIndex={0}
@@ -973,7 +1271,10 @@ const AvailablePolls = () => {
                     <svg className="w-4 h-4 text-blue-500 animate-bounce" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 19V6m0 0l-5 5m5-5l5 5" />
                     </svg>
-                    Browse and participate in current polls. <span className="font-semibold text-blue-600 dark:text-blue-400">Your vote matters!</span>
+                    <span>
+                      Browse and participate in <span className="font-semibold text-blue-600 dark:text-blue-400">current polls</span>.
+                      <span className="ml-1 font-semibold text-green-600 dark:text-green-400">Your vote matters!</span>
+                    </span>
                   </span>
                 </p>
               </div>
@@ -994,7 +1295,7 @@ const AvailablePolls = () => {
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onKeyDown={handleSearchKeyDown}
                       onFocus={() => {
-                        if (searchQuery.trim() && searchSuggestions.length > 0) {
+                        if (typeof searchQuery === 'string' && searchQuery.trim() && searchSuggestions.length > 0) {
                           setShowSearchSuggestions(true);
                         }
                       }}
@@ -1086,8 +1387,8 @@ const AvailablePolls = () => {
                         <div className="p-2">
                           {searchSuggestions.map((suggestion, index) => (
                             <motion.button
-                              key={`suggestion-${suggestion}-${index}`}
-                              onClick={() => handleSuggestionClick(suggestion)}
+                              key={`suggestion-${suggestion.value}-${index}`}
+                              onClick={() => handleSuggestionClick(suggestion.value)}
                               className={`
                                 w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all duration-150
                                 ${selectedSuggestionIndex === index
@@ -1121,16 +1422,17 @@ const AvailablePolls = () => {
                                     <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                     </svg>
-                                    <span className="font-medium">{suggestion}</span>
+                                    <span className="font-medium" dangerouslySetInnerHTML={{ __html: suggestion.display || suggestion.value }} />
                                   </div>
                                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                                     {(() => {
-                                      // Determine suggestion type
-                                      if (polls.some(poll => poll.title === suggestion)) {
+                                      if (polls.some(poll => poll.title === suggestion.value)) {
                                         return 'Poll title';
-                                      } else if (polls.some(poll => poll.category === suggestion)) {
+                                      } else if (polls.some(poll => poll.category === suggestion.value)) {
                                         return 'Category';
-                                      } else if (['active', 'upcoming', 'past'].includes(suggestion.toLowerCase())) {
+                                      } else if ([
+                                        'active', 'upcoming', 'past'
+                                      ].includes(suggestion.value.toLowerCase())) {
                                         return 'Status filter';
                                       } else {
                                         return 'Keyword';
@@ -1790,7 +2092,7 @@ const AvailablePolls = () => {
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <span className="text-xs text-gray-500 dark:text-gray-400">
-                                    {count} polls
+                                    {typeof poll.totalVotes === 'number' ? poll.totalVotes : 0} participants
                                   </span>
                                   {isSelected && (
                                     <motion.span
@@ -2031,7 +2333,7 @@ const AvailablePolls = () => {
                     {/* Poll Image */}
                     <div className="relative overflow-hidden group/image h-40 sm:h-48">
                       <motion.img
-                        src={poll.image}
+                        src={poll.image || landingHero}
                         alt={poll.title}
                         className="w-full h-full object-cover"
                         initial={{ scale: 1 }}
@@ -2058,10 +2360,17 @@ const AvailablePolls = () => {
                           initial={{ opacity: 0, scale: 0 }}
                           animate={{ opacity: 1, scale: 1 }}
                           transition={{ duration: 0.3, delay: 0.2 }}
+                          aria-label={favorites.includes(poll.id) ? 'Remove from favorites' : 'Add to favorites'}
                         >
-                          <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                          </svg>
+                          {favorites.includes(poll.id) ? (
+                            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                          )}
                         </motion.button>
                         
                         <motion.button
@@ -2250,7 +2559,7 @@ const AvailablePolls = () => {
                               ))}
                             </div>
                             <span className="text-xs sm:text-sm text-gray-600 dark:text-[#a0acbb]">
-                              {poll.participants} participants
+                              {typeof poll.totalVotes === 'number' ? poll.totalVotes : 0} participants
                             </span>
                           </div>
                           {poll.status === 'Active' && (
@@ -2289,20 +2598,43 @@ const AvailablePolls = () => {
                               handlePollClick(poll);
                             } else if (poll.status === 'Past' || userVotes[poll.id || poll._id]) {
                               handleViewResults(poll);
+                            } else if (poll.status === 'Upcoming') {
+                              handleSetReminder(poll);
                             }
                           }}
-                          disabled={poll.status === 'Upcoming' || userVotes[poll.id || poll._id]}
+                          disabled={
+                            poll.status === 'Upcoming'
+                              ? false
+                              : (poll.status !== 'Active' && !userVotes[poll.id || poll._id]) ||
+                                (poll.status === 'Active' && userVotes[poll.id || poll._id])
+                          }
+                          aria-label={
+                            poll.status === 'Active' && userVotes[poll.id || poll._id]
+                              ? 'You have already voted in this poll'
+                              : poll.status === 'Active'
+                              ? 'Vote Now'
+                              : poll.status === 'Upcoming'
+                              ? 'Set Reminder'
+                              : 'View Results'
+                          }
+                          title={
+                            poll.status === 'Active' && userVotes[poll.id || poll._id]
+                              ? 'You have already voted in this poll'
+                              : undefined
+                          }
                           className={`w-full py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-medium transition-colors duration-200 ${
                             poll.status === 'Active'
-                              ? 'bg-blue-600 dark:bg-[#c7d7e9] text-white dark:text-[#15191e] hover:bg-blue-700 dark:hover:bg-[#b3c7e0]'
+                              ? userVotes[poll.id || poll._id]
+                                ? 'bg-blue-100 dark:bg-[#2c353f] text-blue-700 dark:text-blue-300 cursor-not-allowed flex items-center justify-center gap-2'
+                                : 'bg-blue-600 dark:bg-[#c7d7e9] text-white dark:text-[#15191e] hover:bg-blue-700 dark:hover:bg-[#b3c7e0]'
                               : poll.status === 'Upcoming'
-                              ? 'bg-gray-100 dark:bg-[#2c353f] text-gray-700 dark:text-[#a0acbb] hover:bg-gray-200 dark:hover:bg-[#3f4c5a]'
+                              ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-800'
                               : 'bg-gray-100 dark:bg-[#2c353f] text-gray-700 dark:text-[#a0acbb] hover:bg-gray-200 dark:hover:bg-[#3f4c5a]'
                           }`}
                         >
                           {poll.status === 'Active'
                             ? userVotes[poll.id || poll._id]
-                              ? 'Voted'
+                              ? <><svg className="w-4 h-4 mr-1 inline-block text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 11V7a4 4 0 10-8 0v4a4 4 0 008 0zm0 0v4a4 4 0 008 0v-4a4 4 0 00-8 0z" /></svg>Already Voted</>
                               : 'Vote Now'
                             : poll.status === 'Upcoming'
                             ? 'Set Reminder'
@@ -2315,22 +2647,324 @@ const AvailablePolls = () => {
               </motion.div>
             </AnimatePresence>
 
-            {/* Empty State */}
+            {/* Advanced Custom Illustration Empty State */}
             {filteredPolls.length === 0 && (
               <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center py-8 sm:py-12"
+                initial={{ opacity: 0, y: 32, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ type: "spring", stiffness: 180, damping: 18 }}
+                className="text-center  flex flex-col items-center justify-center"
               >
-                <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 text-gray-400 dark:text-[#a0acbb]">
-                  <svg className="w-full h-full" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                {/* Enhanced Custom SVG Illustration - Light/Dark Mode Adaptable */}
+                <motion.div
+                  className="relative w-44 h-44 sm:w-64 sm:h-64 mx-auto mb-8 sm:mb-12 flex items-center justify-center"
+                  initial={{ opacity: 0, scale: 0.9, rotate: -6 }}
+                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                  transition={{ type: "spring", stiffness: 120, damping: 10, delay: 0.08 }}
+                >
+                  {/* Main illustration: ballot box with floating papers, question mark, and more */}
+                  <svg
+                    className="w-full h-full"
+                    viewBox="0 0 240 240"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    {/* Shadow */}
+                    <ellipse
+                      cx="120"
+                      cy="210"
+                      rx="65"
+                      ry="13"
+                      fill="var(--polls-shadow, #B6C2D1)"
+                      opacity="0.16"
+                    />
+                    {/* Ballot box base */}
+                    <rect
+                      x="40"
+                      y="120"
+                      width="160"
+                      height="64"
+                      rx="14"
+                      fill="var(--polls-box-base, #e5eaf1)"
+                    />
+                    {/* Ballot box lid */}
+                    <rect
+                      x="54"
+                      y="104"
+                      width="132"
+                      height="24"
+                      rx="7"
+                      fill="var(--polls-box-lid, #c7d7e9)"
+                    />
+                    {/* Slot */}
+                    <rect
+                      x="104"
+                      y="112"
+                      width="32"
+                      height="7"
+                      rx="2.5"
+                      fill="var(--polls-slot, #a0acbb)"
+                      opacity="0.5"
+                    />
+                    {/* Paper 1 (animated float) */}
+                    <motion.rect
+                      x="86"
+                      y="62"
+                      width="34"
+                      height="48"
+                      rx="5"
+                      fill="var(--polls-paper, #fff)"
+                      stroke="var(--polls-paper-stroke, #b6c2d1)"
+                      strokeWidth="2"
+                      initial={{ y: 0, rotate: -10 }}
+                      animate={{ y: [0, -12, 0], rotate: [-10, 2, -10] }}
+                      transition={{ repeat: Infinity, duration: 2.1, delay: 0.18, repeatType: "mirror" }}
+                      style={{ filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.06))" }}
+                    />
+                    {/* Paper 2 (animated float) */}
+                    <motion.rect
+                      x="124"
+                      y="74"
+                      width="30"
+                      height="38"
+                      rx="4"
+                      fill="var(--polls-paper, #fff)"
+                      stroke="var(--polls-paper-stroke, #b6c2d1)"
+                      strokeWidth="2"
+                      initial={{ y: 0, rotate: 12 }}
+                      animate={{ y: [0, -14, 0], rotate: [12, -2, 12] }}
+                      transition={{ repeat: Infinity, duration: 2.3, delay: 0.5, repeatType: "mirror" }}
+                      style={{ filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.06))" }}
+                    />
+                    {/* Paper 3 (new, animated float) */}
+                    <motion.rect
+                      x="108"
+                      y="44"
+                      width="24"
+                      height="32"
+                      rx="3"
+                      fill="var(--polls-paper-alt, #f3f4f6)"
+                      stroke="var(--polls-paper-stroke, #b6c2d1)"
+                      strokeWidth="1.5"
+                      initial={{ y: 0, rotate: 0, opacity: 0.7 }}
+                      animate={{ y: [0, -10, 0], rotate: [0, 8, 0], opacity: [0.7, 1, 0.7] }}
+                      transition={{ repeat: Infinity, duration: 2.7, delay: 0.9, repeatType: "mirror" }}
+                      style={{ filter: "drop-shadow(0 1.5px 6px rgba(0,0,0,0.04))" }}
+                    />
+                    {/* Question mark bubble */}
+                    <motion.g
+                      initial={{ opacity: 0, scale: 0.8, y: 16 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{ delay: 1.1, duration: 0.5, type: "spring", stiffness: 120 }}
+                    >
+                      <ellipse
+                        cx="192"
+                        cy="62"
+                        rx="24"
+                        ry="24"
+                        fill="var(--polls-question-bg, #e0edfa)"
+                        opacity="0.97"
+                      />
+                      <text
+                        x="192"
+                        y="74"
+                        textAnchor="middle"
+                        fontSize="36"
+                        fontWeight="bold"
+                        fill="var(--polls-question, #60a5fa)"
+                        opacity="0.88"
+                        style={{ fontFamily: "inherit" }}
+                      >?</text>
+                    </motion.g>
+                    {/* Confetti (subtle, animated) */}
+                    <motion.circle
+                      cx="60"
+                      cy="54"
+                      r="3"
+                      fill="var(--polls-confetti-blue, #60a5fa)"
+                      initial={{ opacity: 0, scale: 0.7 }}
+                      animate={{ opacity: [0, 1, 0], scale: [0.7, 1.1, 0.7] }}
+                      transition={{ repeat: Infinity, duration: 2.5, delay: 0.7, repeatType: "mirror" }}
+                    />
+                    <motion.circle
+                      cx="180"
+                      cy="38"
+                      r="2.5"
+                      fill="var(--polls-confetti-yellow, #fbbf24)"
+                      initial={{ opacity: 0, scale: 0.7 }}
+                      animate={{ opacity: [0, 1, 0], scale: [0.7, 1, 0.7] }}
+                      transition={{ repeat: Infinity, duration: 2.1, delay: 1.1, repeatType: "mirror" }}
+                    />
+                    <motion.circle
+                      cx="130"
+                      cy="28"
+                      r="2.5"
+                      fill="var(--polls-confetti-green, #34d399)"
+                      initial={{ opacity: 0, scale: 0.7 }}
+                      animate={{ opacity: [0, 1, 0], scale: [0.7, 1, 0.7] }}
+                      transition={{ repeat: Infinity, duration: 2.3, delay: 1.5, repeatType: "mirror" }}
+                    />
+                    {/* New: animated sparkle stars */}
+                    <motion.g
+                      initial={{ opacity: 0, scale: 0.7 }}
+                      animate={{ opacity: [0, 1, 0], scale: [0.7, 1.1, 0.7] }}
+                      transition={{ repeat: Infinity, duration: 2.8, delay: 1.2, repeatType: "mirror" }}
+                    >
+                      <polygon
+                        points="40,80 42,84 46,85 42,86 40,90 38,86 34,85 38,84"
+                        fill="var(--polls-star-pink, #f472b6)"
+                        opacity="0.7"
+                      />
+                    </motion.g>
+                    <motion.g
+                      initial={{ opacity: 0, scale: 0.7 }}
+                      animate={{ opacity: [0, 1, 0], scale: [0.7, 1.1, 0.7] }}
+                      transition={{ repeat: Infinity, duration: 2.6, delay: 1.7, repeatType: "mirror" }}
+                    >
+                      <polygon
+                        points="200,120 202,124 206,125 202,126 200,130 198,126 194,125 198,124"
+                        fill="var(--polls-star-indigo, #818cf8)"
+                        opacity="0.7"
+                      />
+                    </motion.g>
+                    {/* New: animated "no entry" sign for extra clarity */}
+                    <motion.g
+                      initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                      animate={{ opacity: [0, 0.7, 0], scale: [0.8, 1, 0.8], y: [10, 0, 10] }}
+                      transition={{ repeat: Infinity, duration: 3.2, delay: 2.1, repeatType: "mirror" }}
+                    >
+                      <circle
+                        cx="60"
+                        cy="170"
+                        r="10"
+                        fill="var(--polls-noentry-bg, #fee2e2)"
+                        stroke="var(--polls-noentry-stroke, #ef4444)"
+                        strokeWidth="2"
+                        opacity="0.7"
+                      />
+                      <rect
+                        x="54"
+                        y="168"
+                        width="12"
+                        height="4"
+                        rx="2"
+                        fill="var(--polls-noentry-stroke, #ef4444)"
+                        opacity="0.8"
+                      />
+                    </motion.g>
                   </svg>
-                </div>
-                <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-1.5 sm:mb-2">No polls found</h3>
-                <p className="text-sm text-gray-600 dark:text-[#a0acbb]">
-                  Try adjusting your search or filter criteria
-                </p>
+                  {/* Animated "No Results" text floating above box */}
+                  <motion.div
+                    className="absolute left-1/2 -translate-x-1/2 top-2 text-center pointer-events-none"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 0.7, y: [ -10, 0, -10 ] }}
+                    transition={{ repeat: Infinity, duration: 2.8, delay: 1.3, repeatType: "mirror" }}
+                  >
+                    <span className="text-xs sm:text-sm font-semibold tracking-wide drop-shadow"
+                      style={{
+                        color: "var(--polls-noresults, #60a5fa)",
+                      }}
+                    >
+                      No Results
+                    </span>
+                  </motion.div>
+                </motion.div>
+                {/* 
+                  CSS variables for light/dark mode (add to your global CSS or a parent container):
+                  :root {
+                    --polls-shadow: #B6C2D1;
+                    --polls-box-base: #e5eaf1;
+                    --polls-box-lid: #c7d7e9;
+                    --polls-slot: #a0acbb;
+                    --polls-paper: #fff;
+                    --polls-paper-alt: #f3f4f6;
+                    --polls-paper-stroke: #b6c2d1;
+                    --polls-question-bg: #e0edfa;
+                    --polls-question: #60a5fa;
+                    --polls-confetti-blue: #60a5fa;
+                    --polls-confetti-yellow: #fbbf24;
+                    --polls-confetti-green: #34d399;
+                    --polls-star-pink: #f472b6;
+                    --polls-star-indigo: #818cf8;
+                    --polls-noentry-bg: #fee2e2;
+                    --polls-noentry-stroke: #ef4444;
+                    --polls-noresults: #60a5fa;
+                  }
+                  .dark {
+                    --polls-shadow: #232a33;
+                    --polls-box-base: #232a33;
+                    --polls-box-lid: #2c353f;
+                    --polls-slot: #a0acbb;
+                    --polls-paper: #232a33;
+                    --polls-paper-alt: #2c353f;
+                    --polls-paper-stroke: #3f4c5a;
+                    --polls-question-bg: #28303a;
+                    --polls-question: #93c5fd;
+                    --polls-confetti-blue: #60a5fa;
+                    --polls-confetti-yellow: #fbbf24;
+                    --polls-confetti-green: #34d399;
+                    --polls-star-pink: #f472b6;
+                    --polls-star-indigo: #818cf8;
+                    --polls-noentry-bg: #232a33;
+                    --polls-noentry-stroke: #ef4444;
+                    --polls-noresults: #93c5fd;
+                  }
+                */}
+                <motion.h3
+                  className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2"
+                  initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.3 }}
+                >
+                  No polls found
+                </motion.h3>
+                <motion.p
+                  className="text-base sm:text-lg text-gray-600 dark:text-[#a0acbb] mb-4"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6, duration: 0.3 }}
+                >
+                  We couldn't find any polls matching your criteria.<br className="hidden sm:inline" />
+                  Try adjusting your search or filters to discover more!
+                </motion.p>
+                <motion.div
+                  className="flex flex-col sm:flex-row gap-2 items-center justify-center mt-2"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7, duration: 0.3 }}
+                >
+                  <button
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-blue-50 dark:bg-[#232a33] text-blue-700 dark:text-blue-300 font-medium text-xs sm:text-sm hover:bg-blue-100 dark:hover:bg-[#28303a] transition"
+                    onClick={() => {
+                      // Clear filters and search
+                      setSearchQuery('');
+                      setSelectedCategories([]);
+                      setSelectedStatuses([]);
+                      setDateRange({ start: '', end: '' });
+                    }}
+                  >
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 20 20">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                    Clear All Filters
+                  </button>
+                  <button
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-gray-100 dark:bg-[#2c353f] text-gray-700 dark:text-[#a0acbb] font-medium text-xs sm:text-sm hover:bg-gray-200 dark:hover:bg-[#3f4c5a] transition"
+                    onClick={() => {
+                      // Focus the search input if available
+                      if (typeof document !== "undefined") {
+                        const input = document.querySelector('input[type="search"], input[aria-label="Search"]');
+                        if (input) input.focus();
+                      }
+                    }}
+                  >
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 20 20">
+                      <circle cx="9" cy="9" r="7" stroke="currentColor" strokeWidth="2" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 16l-3.5-3.5" />
+                    </svg>
+                    Refine Search
+                  </button>
+                </motion.div>
               </motion.div>
             )}
           </div>

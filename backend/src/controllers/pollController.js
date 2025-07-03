@@ -63,7 +63,7 @@ exports.createPoll = async (req, res) => {
 // List all polls
 exports.getPolls = async (req, res) => {
   try {
-    await Poll.updateStatuses();
+    // await Poll.updateStatuses(); // Removed for performance, now handled by cron
     const polls = await Poll.find().sort({ createdAt: -1 });
     res.json(polls);
   } catch (err) {

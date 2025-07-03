@@ -943,6 +943,7 @@ const AdminLogin = () => {
               type="submit"
               disabled={securityState.isLoading || isLockedOut || !validationState.formValid}
               className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+              aria-label="Admin login"
             >
               {securityState.isLoading ? (
                 <div className="flex items-center space-x-2">
@@ -1061,6 +1062,7 @@ const AdminLogin = () => {
               type="button"
               onClick={toggleTwoFactor}
               className="w-full text-sm text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors duration-200"
+              aria-label={securityState.showTwoFactor ? 'Hide Two-Factor Authentication' : 'Enable Two-Factor Authentication'}
             >
               {securityState.showTwoFactor ? 'Hide Two-Factor' : 'Enable Two-Factor Authentication'}
             </button>
@@ -1073,6 +1075,7 @@ const AdminLogin = () => {
             type="button"
             onClick={toggleSecurityTips}
             className="w-full text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-200"
+            aria-label={securityState.showSecurityTips ? 'Hide Security Tips' : 'Show Security Tips'}
           >
             {securityState.showSecurityTips ? 'Hide Security Tips' : 'Show Security Tips'}
           </button>

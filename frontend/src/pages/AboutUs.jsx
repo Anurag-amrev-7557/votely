@@ -32,6 +32,8 @@ const AboutUs = () => {
     <div
       className={`relative flex size-full min-h-screen flex-col bg-gray-50 dark:bg-gray-900 group/design-root overflow-x-hidden ${isDarkMode ? 'dark' : ''}`}
       style={{ fontFamily: 'Inter, Noto Sans, sans-serif' }}
+      role="main"
+      aria-label="About Votely main content"
     >
       <div className="layout-container flex h-full grow flex-col">
         <div className="px-4 sm:px-8 md:px-16 lg:px-40 flex flex-1 justify-center py-5">
@@ -63,6 +65,8 @@ const AboutUs = () => {
                       alt={member.name}
                       className="w-full aspect-square object-cover rounded-full border-4 border-gray-200 dark:border-gray-700"
                       loading="lazy"
+                      aria-hidden="true"
+                      focusable="false"
                     />
                   </div>
                   <div>
@@ -81,6 +85,7 @@ const AboutUs = () => {
               <Link to="/contact">
                 <button
                   className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                  aria-label="Contact Us"
                 >
                   <span className="truncate">Contact Us</span>
                 </button>

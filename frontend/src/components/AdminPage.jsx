@@ -64,7 +64,7 @@ const AdminPage = () => {
     {
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-          <path d="M216,40H136V24a8,8,0,0,0-16,0V40H40A16,16,0,0,0,24,56V176a16,16,0,0,0,16,16H79.36L57.75,219a8,8,0,0,0,12.5,10l29.59-37h56.32l29.59,37a8,8,0,1,0,12.5-10l-21.61-27H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,136H40V56H216V176ZM104,120v24a8,8,0,0,1-16,0V120a8,8,0,0,1,16,0Zm32-16v40a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm32-16v56a8,8,0,0,1-16,0V88a8,8,0,0,1,16,0Z"></path>
+          <path d="M216,40H48A16,16,0,0,0,32,56V58.78c0,89.61,75.82,119.34,91,124.39a15.53,15.53,0,0,0,10,0c15.2-5.05,91-34.78,91-124.39V56A16,16,0,0,0,208,40Zm0,74.79c0,78.42-66.35,104.62-80,109.18-13.53-4.51-80-30.69-80-109.18V56H208ZM82.34,141.66a8,8,0,0,1,11.32-11.32L112,148.68l50.34-50.34a8,8,0,0,1,11.32,11.32l-56,56a8,8,0,0,1-11.32,0Z"></path>
         </svg>
       ),
       label: 'Results',
@@ -142,7 +142,7 @@ const AdminPage = () => {
 
   if (isLoading) {
     return (
-      <div className={`flex items-center justify-center min-h-screen ${isDarkMode ? 'bg-[#15191e]' : 'bg-gray-50'}`}>
+      <div className={`flex items-center justify-center min-h-screen ${isDarkMode ? 'bg-[#15191e]' : 'bg-gray-50'}`} role="status" aria-live="polite">
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
           <p className={`text-lg font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Loading Dashboard...</p>
@@ -152,18 +152,18 @@ const AdminPage = () => {
   }
 
   return (
-    <>
+    <div role="main" aria-label="Admin main content" tabIndex={0}>
       {/* Session Expiry Warning Modal */}
       {showSessionWarning && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fadeIn">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fadeIn" role="dialog" aria-modal="true" aria-labelledby="session-expiry-heading">
           <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 max-w-md w-full border border-blue-200 dark:border-blue-800 animate-popIn">
             <div className="flex flex-col items-center gap-4">
               <div className="flex items-center justify-center w-16 h-16 rounded-full bg-yellow-100 dark:bg-yellow-900/30">
-                <svg className="w-10 h-10 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-10 h-10 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white text-center">Session Expiring Soon</h2>
+              <h2 id="session-expiry-heading" className="text-xl font-bold text-gray-900 dark:text-white text-center">Session Expiring Soon</h2>
               <p className="text-gray-600 dark:text-gray-300 text-center">Your admin session will expire in less than 2 minutes due to inactivity or session timeout.<br/>Would you like to stay logged in?</p>
               <div className="flex gap-4 mt-2">
                 <button
@@ -188,7 +188,7 @@ const AdminPage = () => {
         <div className="layout-container flex h-full grow flex-col">
           <div className="gap-1 px-6 mt-16 flex flex-1 justify-center py-5">
             {/* Sidebar */}
-            <div className="layout-content-container flex flex-col w-90">
+            <aside className="layout-content-container flex flex-col w-90" role="complementary" aria-label="Admin sidebar navigation" tabIndex={0}>
               <div className={`flex h-full min-h-[700px] flex-col ${isDarkMode ? 'bg-[#15191e]' : 'bg-white'} p-6 rounded-xl shadow-sm transition-all duration-200 relative overflow-hidden`}>
                 {/* Background Pattern */}
                 <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
@@ -358,10 +358,10 @@ const AdminPage = () => {
                   Logout
                 </button>
               </div>
-            </div>
-
+            </aside>
             {/* Main Content */}
-            <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
+            <main className="flex-1" role="region" aria-labelledby="admin-main-heading" tabIndex={0}>
+              <h1 id="admin-main-heading" className="sr-only">Admin Dashboard Main Content</h1>
               <Routes>
                 <Route path="polls" element={<PollsPage />} />
                 <Route path="users" element={<UsersPage />} />
@@ -370,7 +370,7 @@ const AdminPage = () => {
                 <Route path="settings" element={<SettingsPage />} />
                 <Route path="*" element={<AdminDashboard isDarkMode={isDarkMode} />} />
               </Routes>
-            </div>
+            </main>
           </div>
         </div>
       </div>
@@ -596,7 +596,7 @@ const AdminPage = () => {
           }
         `}
       </style>
-    </>
+    </div>
   );
 };
 

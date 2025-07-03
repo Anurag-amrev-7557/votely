@@ -205,7 +205,8 @@ const FaqSection = ({ isVisible }) => {
     };
     
     return (
-        <section className={`max-w-7xl mx-auto ${sectionBg} transition-all duration-500 will-change-[background-color,color,box-shadow,filter]`}>
+        <section className={`faq-section ${sectionBg}`} aria-labelledby="faq-main-heading" role="region" tabIndex={0}>
+            <h2 id="faq-main-heading" className="sr-only">Frequently Asked Questions</h2>
             <div className="flex flex-col gap-8 px-4 py-12">
                 <motion.div 
                     initial={{ opacity: 0, y: -20 }}

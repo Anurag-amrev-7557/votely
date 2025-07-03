@@ -1,9 +1,21 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import React, { useState } from 'react';
 
 const Footer = () => {
+    const [modalOpen, setModalOpen] = useState(false);
+    const [modalContent, setModalContent] = useState('');
+
+    const handleStubClick = (label) => (e) => {
+        e.preventDefault();
+        setModalContent(label);
+        setModalOpen(true);
+    };
+
     return (
-        <footer className="bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
+        <footer className="bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800" role="contentinfo" aria-label="Footer" tabIndex={0}>
+            {/* Skip to content link for keyboard users */}
+            <a href="#main-content" className="sr-only focus:not-sr-only absolute top-2 left-2 z-50 bg-blue-600 text-white px-4 py-2 rounded focus-visible:ring-2 focus-visible:ring-blue-400/70" tabIndex={0}>Skip to main content</a>
             {/* Top Border Gradient */}
             <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500"></div>
 
@@ -643,7 +655,7 @@ const Footer = () => {
                         <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-3 sm:mt-4 text-center animate-fade-in" tabIndex={0}>
                             By subscribing, you agree to our{" "}
                             <a
-                                href="#"
+                                onClick={handleStubClick('Privacy Policy')}
                                 className="text-blue-600 dark:text-blue-400 hover:underline focus:underline underline-offset-2 transition-colors duration-150 relative"
                                 tabIndex={0}
                                 aria-label="Read our Privacy Policy"
@@ -653,7 +665,7 @@ const Footer = () => {
                             </a>
                             {" "}and{" "}
                             <a
-                                href="#"
+                                onClick={handleStubClick('Terms of Service')}
                                 className="text-blue-600 dark:text-blue-400 hover:underline focus:underline underline-offset-2 transition-colors duration-150 relative"
                                 tabIndex={0}
                                 aria-label="Read our Terms of Service"
@@ -803,19 +815,19 @@ const Footer = () => {
                         </p>
                         <div className="flex gap-4">
                             {/* Twitter/X */}
-                            <a href="#" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                            <a onClick={handleStubClick('Votely on Twitter')} aria-label="Votely on Twitter" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors focus-visible:ring-2 focus-visible:ring-blue-400/70" tabIndex={0}>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                                 </svg>
                             </a>
                             {/* LinkedIn */}
-                            <a href="#" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                            <a onClick={handleStubClick('Votely on LinkedIn')} aria-label="Votely on LinkedIn" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors focus-visible:ring-2 focus-visible:ring-blue-400/70" tabIndex={0}>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                                 </svg>
                             </a>
                             {/* GitHub */}
-                            <a href="#" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                            <a onClick={handleStubClick('Votely on GitHub')} aria-label="Votely on GitHub" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors focus-visible:ring-2 focus-visible:ring-blue-400/70" tabIndex={0}>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
                                 </svg>
@@ -827,11 +839,11 @@ const Footer = () => {
                     <div className="flex flex-col gap-3 sm:gap-4">
                         <h3 className="text-gray-900 dark:text-white text-sm font-semibold">Product</h3>
                         <div className="flex flex-col gap-2">
-                            <a href="#" className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Features</a>
-                            <a href="#" className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Pricing</a>
-                            <a href="#" className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Security</a>
-                            <a href="#" className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Enterprise</a>
-                            <a href="#" className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Changelog</a>
+                            <a href="/#features-heading" className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors focus-visible:ring-2 focus-visible:ring-blue-400/70" tabIndex={0}>Features</a>
+                            <a href="/#pricing" className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors focus-visible:ring-2 focus-visible:ring-blue-400/70" tabIndex={0}>Pricing</a>
+                            <a href="/#security" className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors focus-visible:ring-2 focus-visible:ring-blue-400/70" tabIndex={0}>Security</a>
+                            <a onClick={handleStubClick('Enterprise')} className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors focus-visible:ring-2 focus-visible:ring-blue-400/70" tabIndex={0}>Enterprise</a>
+                            <a onClick={handleStubClick('Changelog')} className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors focus-visible:ring-2 focus-visible:ring-blue-400/70" tabIndex={0}>Changelog</a>
                         </div>
                     </div>
 
@@ -839,11 +851,11 @@ const Footer = () => {
                     <div className="flex flex-col gap-3 sm:gap-4">
                         <h3 className="text-gray-900 dark:text-white text-sm font-semibold">Resources</h3>
                         <div className="flex flex-col gap-2">
-                            <a href="#" className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Documentation</a>
-                            <a href="#" className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Guides</a>
-                            <a href="#" className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors">API Reference</a>
-                            <a href="#" className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Community</a>
-                            <a href="#" className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Status</a>
+                            <a onClick={handleStubClick('Documentation')} className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors focus-visible:ring-2 focus-visible:ring-blue-400/70" tabIndex={0}>Documentation</a>
+                            <a onClick={handleStubClick('Guides')} className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors focus-visible:ring-2 focus-visible:ring-blue-400/70" tabIndex={0}>Guides</a>
+                            <a onClick={handleStubClick('API Reference')} className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors focus-visible:ring-2 focus-visible:ring-blue-400/70" tabIndex={0}>API Reference</a>
+                            <a onClick={handleStubClick('Community')} className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors focus-visible:ring-2 focus-visible:ring-blue-400/70" tabIndex={0}>Community</a>
+                            <a onClick={handleStubClick('Status')} className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors focus-visible:ring-2 focus-visible:ring-blue-400/70" tabIndex={0}>Status</a>
                         </div>
                     </div>
 
@@ -851,44 +863,124 @@ const Footer = () => {
                     <div className="flex flex-col gap-3 sm:gap-4">
                         <h3 className="text-gray-900 dark:text-white text-sm font-semibold">Company</h3>
                         <div className="flex flex-col gap-2">
-                            <Link to="/about" className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors">About</Link>
-                            <a href="#" className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Blog</a>
-                            <a href="#" className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Careers</a>
-                            <Link to="/contact" className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Contact</Link>
-                            <a href="#" className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Partners</a>
+                            <Link to="/about" className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors focus-visible:ring-2 focus-visible:ring-blue-400/70" tabIndex={0}>About</Link>
+                            <a onClick={handleStubClick('Blog')} className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors focus-visible:ring-2 focus-visible:ring-blue-400/70" tabIndex={0}>Blog</a>
+                            <a onClick={handleStubClick('Careers')} className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors focus-visible:ring-2 focus-visible:ring-blue-400/70" tabIndex={0}>Careers</a>
+                            <Link to="/contact" className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors focus-visible:ring-2 focus-visible:ring-blue-400/70" tabIndex={0}>Contact</Link>
+                            <a onClick={handleStubClick('Partners')} className="text-gray-600 dark:text-gray-300 text-sm hover:text-blue-600 dark:hover:text-blue-400 transition-colors focus-visible:ring-2 focus-visible:ring-blue-400/70" tabIndex={0}>Partners</a>
                         </div>
                     </div>
                 </div>
 
-                {/* Bottom Section */}
+                {/* Enhanced Bottom Section */}
                 <div className="pt-8 border-t border-gray-100 dark:border-gray-800/50">
                     <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
+                        {/* Copyright & Tagline */}
                         <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
-                            <span>© 2025 Votely</span>
+                            <span>
+                                <svg className="inline-block w-4 h-4 mr-1 text-blue-500 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                    <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-14.5A6.5 6.5 0 1110 17.5 6.5 6.5 0 0110 3.5zm0 2.25a4.25 4.25 0 100 8.5 4.25 4.25 0 000-8.5zm0 1.5a2.75 2.75 0 110 5.5 2.75 2.75 0 010-5.5z"/>
+                                </svg>
+                                2025 Votely
+                            </span>
                             <span className="w-1 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></span>
-                            <span>Democracy powered by technology</span>
+                            <span className="hidden sm:inline">Democracy powered by technology</span>
+                            <span className="sm:hidden">Empowering voters</span>
                         </div>
-                        <nav className="flex items-center gap-6">
-                            {[
-                                { label: 'Privacy', href: '/privacy' },
-                                { label: 'Terms', href: '/terms' },
-                                { label: 'Cookies', href: '/cookies' },
-                                { label: 'Accessibility', href: '/accessibility' }
-                            ].map((link) => (
-                                <a
-                                    key={link.label}
-                                    href={link.href}
-                                    className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
-                                >
-                                    {link.label}
-                                </a>
-                            ))}
+                        {/* Footer Navigation with tooltips and icons */}
+                        <nav className="flex items-center gap-4 sm:gap-6" role="navigation" aria-label="Footer navigation">
+                            <Link
+                                to="/privacy-policy"
+                                className="group relative flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-blue-400/70"
+                                aria-label="Privacy Policy"
+                                tabIndex={0}
+                            >
+                                <svg className="w-4 h-4 mr-1 text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-200 transition" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M12 3v1m0 0a9 9 0 019 9v7a2 2 0 01-2 2H5a2 2 0 01-2-2v-7a9 9 0 019-9z" />
+                                </svg>
+                                Privacy
+                                <span className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-1 rounded bg-gray-900 text-white text-xs opacity-0 group-hover:opacity-90 group-focus:opacity-90 transition-opacity duration-200 shadow-lg whitespace-nowrap z-20">
+                                    Read our privacy policy
+                                </span>
+                            </Link>
+                            <a
+                                href="/terms"
+                                className="group relative flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-blue-400/70"
+                                aria-label="Terms"
+                                tabIndex={0}
+                            >
+                                <svg className="w-4 h-4 mr-1 text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-200 transition" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M8 17l4 4 4-4m-4-5v9" />
+                                </svg>
+                                Terms
+                                <span className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-1 rounded bg-gray-900 text-white text-xs opacity-0 group-hover:opacity-90 group-focus:opacity-90 transition-opacity duration-200 shadow-lg whitespace-nowrap z-20">
+                                    View terms of service
+                                </span>
+                            </a>
+                            <a
+                                href="/cookies"
+                                className="group relative flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-blue-400/70"
+                                aria-label="Cookies"
+                                tabIndex={0}
+                            >
+                                <svg className="w-4 h-4 mr-1 text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-200 transition" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <circle cx="12" cy="12" r="1.5" />
+                                    <circle cx="16" cy="8" r="1" />
+                                    <circle cx="8" cy="16" r="1" />
+                                </svg>
+                                Cookies
+                                <span className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-1 rounded bg-gray-900 text-white text-xs opacity-0 group-hover:opacity-90 group-focus:opacity-90 transition-opacity duration-200 shadow-lg whitespace-nowrap z-20">
+                                    Cookie preferences
+                                </span>
+                            </a>
+                            <a
+                                href="/accessibility"
+                                className="group relative flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-blue-400/70"
+                                aria-label="Accessibility"
+                                tabIndex={0}
+                            >
+                                <svg className="w-4 h-4 mr-1 text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-200 transition" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
+                                    <circle cx="12" cy="7" r="4" />
+                                    <path d="M12 11v7m-4 0h8" />
+                                </svg>
+                                Accessibility
+                                <span className="absolute left-1/2 -translate-x-1/2 top-full mt-1 px-2 py-1 rounded bg-gray-900 text-white text-xs opacity-0 group-hover:opacity-90 group-focus:opacity-90 transition-opacity duration-200 shadow-lg whitespace-nowrap z-20">
+                                    Accessibility statement
+                                </span>
+                            </a>
                         </nav>
                     </div>
+                    {/* Subtle animated accent bar */}
+                    <div className="mt-6 h-1 w-24 mx-auto bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 rounded-full blur-[2px] opacity-70 animate-pulse" aria-hidden="true"></div>
                 </div>
             </div>
+
+            {modalOpen && (
+                <div
+                    className="fixed inset-0 z-50 bg-black bg-opacity-50"
+                    style={{ pointerEvents: 'auto' }}
+                >
+                    <div
+                        className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-900 rounded-xl p-8 max-w-md w-full shadow-lg"
+                        style={{ minWidth: 320 }}
+                    >
+                        <button
+                            className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 dark:hover:text-white"
+                            onClick={() => setModalOpen(false)}
+                            aria-label="Close modal"
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                        <h2 className="text-xl font-bold mb-2">{modalContent}</h2>
+                        <p className="mb-4">This page is under construction. Please check back soon!</p>
+                    </div>
+                </div>
+            )}
         </footer>
     );
-}
+};
 
 export default Footer;

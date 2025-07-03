@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import Modal from 'react-modal';
+import { showNotification } from '../../utils/toastUtils';
 
 // Utility to export audit logs as CSV
 function exportAuditLogsToCSV(auditLogs) {
@@ -68,6 +69,12 @@ const PollsPage = () => {
   const [showVotingSettingsHelp, setShowVotingSettingsHelp] = useState(false);
   const [showNotificationSettingsHelp, setShowNotificationSettingsHelp] = useState(false);
   const [activeTab, setActiveTab] = useState('General');
+  const [analyticsModalOpen, setAnalyticsModalOpen] = useState(false);
+  const [analyticsData, setAnalyticsData] = useState(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [analyticsError, setAnalyticsError] = useState(null);
+  const [analyticsPoll, setAnalyticsPoll] = useState(null);
+  const [analyticsCandidate, setAnalyticsCandidate] = useState(null);
 
   useEffect(() => {
     const fetchPolls = async () => {
@@ -251,14 +258,28 @@ const PollsPage = () => {
     }));
   };
 
-  const handleSettingsChange = (setting) => {
-    setPollForm(prev => ({
-      ...prev,
-      settings: {
-        ...prev.settings,
-        [setting]: !prev.settings[setting]
-      }
-    }));
+  const handleSettingsChange = async (setting, value) => {
+    if (!selectedPoll || !selectedPoll.id) {
+      toast.error('No poll selected.');
+      return;
+    }
+    const newSettings = {
+      ...pollForm.settings,
+      [setting]: typeof value !== 'undefined' ? value : !pollForm.settings[setting]
+    };
+    try {
+      await axios.put(`/api/polls/${selectedPoll.id}`, {
+        ...selectedPoll,
+        settings: newSettings
+      });
+      setPollForm(prev => ({
+        ...prev,
+        settings: newSettings
+      }));
+      toast.success('Settings updated');
+    } catch (err) {
+      toast.error('Failed to update settings');
+    }
   };
 
   const handleCandidateFormChange = (e) => {
@@ -512,12 +533,42 @@ const PollsPage = () => {
     setAuditError(null);
     setAuditPollTitle(poll.title);
     try {
-      const res = await axios.get(`/api/polls/${poll.id}/audit-logs`);
+      const res = await axios.get(`/api/polls/${poll.id}/audit-logs`, { withCredentials: true });
       setAuditLogs(res.data);
     } catch (err) {
       setAuditError('Failed to load audit logs');
     } finally {
       setAuditLoading(false);
+    }
+  };
+
+  const handleDuplicatePoll = (poll) => {
+    setShowModal(true);
+    setIsEditing(false);
+    setSelectedPoll(null);
+    setPollForm({
+      ...poll,
+      title: poll.title + ' (Copy)',
+      startDate: '', // Reset for new poll
+      endDate: '',   // Reset for new poll
+      resultDate: '',
+      candidates: poll.candidates ? [...poll.candidates] : [],
+      settings: { ...poll.settings },
+      totalVotes: 0,
+      // Remove id if present
+      ...(poll.id ? {} : { id: undefined }),
+      ...(poll._id ? {} : { _id: undefined })
+    });
+  };
+
+  const handleCopyPollLink = (poll) => {
+    const link = `${window.location.origin}/polls/${poll.id}`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(link)
+        .then(() => toast.success('Poll link copied to clipboard!'))
+        .catch(() => toast.error('Failed to copy link.'));
+    } else {
+      window.prompt('Copy this poll link:', link);
     }
   };
 
@@ -1014,7 +1065,7 @@ const PollsPage = () => {
               </div>
 
               {/* Form */}
-              <form onSubmit={handleSubmit} className="space-y-6 max-h-[calc(100vh-12rem)] overflow-y-auto">
+              <div className="space-y-6 max-h-[calc(100vh-12rem)] overflow-y-auto">
                 {/* General Tab */}
                 {activeTab === 'General' && (
                   <>
@@ -1067,7 +1118,7 @@ const PollsPage = () => {
                             viewBox="0 0 24 24"
                           >
                             <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
-                            <path d="M12 8v4m0 4h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                            <path d="M12 16v-4M12 8h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                           </svg>
                           Basic Information
                           <span
@@ -1618,7 +1669,6 @@ const PollsPage = () => {
                               <button
                                 type="button"
                                 onClick={() => {
-                                  // Advanced: Export candidates as CSV
                                   if (pollForm.candidates && pollForm.candidates.length > 0) {
                                     const header = ['Name', 'Party', 'Description', 'Website', 'Twitter', 'Instagram'];
                                     const rows = pollForm.candidates.map(c => [
@@ -1639,6 +1689,9 @@ const PollsPage = () => {
                                     a.click();
                                     document.body.removeChild(a);
                                     URL.revokeObjectURL(url);
+                                    showNotification('Candidates exported as CSV!', 'success');
+                                  } else {
+                                    showNotification('No candidates to export.', 'warning');
                                   }
                                 }}
                                 className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-200 flex items-center gap-1 border border-blue-400/30 hover:bg-blue-100 dark:hover:bg-blue-900 ${
@@ -1657,8 +1710,8 @@ const PollsPage = () => {
                               <button
                                 type="button"
                                 onClick={() => {
-                                  // Advanced: Show candidate analytics modal (stub)
-                                  window.alert('Candidate analytics coming soon! (e.g., vote share, engagement, demographics)');
+                                  setAnalyticsCandidate(candidate);
+                                  setAnalyticsModalOpen(true);
                                 }}
                                 className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-200 flex items-center gap-1 border border-purple-400/30 hover:bg-purple-100 dark:hover:bg-purple-900 ${
                                   isDarkMode
@@ -1736,19 +1789,7 @@ const PollsPage = () => {
                           </svg>
                           {editingCandidateId ? 'Edit Candidate Details' : 'Add New Candidate'}
                         </h5>
-                        <form
-                          className="space-y-6"
-                          autoComplete="off"
-                          spellCheck={false}
-                          onSubmit={e => {
-                            e.preventDefault();
-                            (editingCandidateId ? handleUpdateCandidate : addCandidate)();
-                          }}
-                          aria-describedby="candidate-form-desc"
-                        >
-                          <div id="candidate-form-desc" className="sr-only">
-                            Enter or edit all relevant candidate details. Fields marked with * are required.
-                          </div>
+                        <div className="space-y-6">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Name */}
                             <div>
@@ -1898,7 +1939,7 @@ const PollsPage = () => {
                                 <div className="flex-1 relative">
                                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-pink-400">
                                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                      <path d="M7.75 2h8.5A5.75 5.75 0 0122 7.75v8.5A5.75 5.75 0 0116.25 22h-8.5A5.75 5.75 0 012 16.25v-8.5A5.75 5.75 0 017.75 2zm0 1.5A4.25 4.25 0 003.5 7.75v8.5A4.25 4.25 0 007.75 20.5h8.5a4.25 4.25 0 004.25-4.25v-8.5A4.25 4.25 0 0016.25 3.5h-8.5zm4.25 2.75a5.25 5.25 0 110 10.5 5.25 5.25 0 010-10.5zm0 1.5a3.75 3.75 0 100 7.5 3.75 3.75 0 000-7.5zm6.25.75a1.25 1.25 0 110 2.5 1.25 1.25 0 010-2.5z" />
+                                      <path d="M7.75 2h8.5A5.75 5.75 0 0122 7.75v8.5A5.75 5.75 0 0116.25 22h-8.5A5.75 5.75 0 012 16.25v-8.5A5.75 5.75 0 017.75 3.5h-8.5zm4.25 2.75a5.25 5.25 0 110 10.5 5.25 5.25 0 010-10.5zm0 1.5a3.75 3.75 0 100 7.5 3.75 3.75 0 000-7.5zm6.25.75a1.25 1.25 0 110 2.5 1.25 1.25 0 010-2.5z" />
                                     </svg>
                                   </span>
                                   <input
@@ -2024,7 +2065,7 @@ const PollsPage = () => {
                             className="sr-only"
                             id="candidate-form-errors"
                           ></div>
-                        </form>
+                        </div>
                         {/* Advanced: Keyboard shortcut hints */}
                         <div
                           className={`absolute top-2 right-4 flex gap-2 items-center text-xs font-mono ${
@@ -3226,7 +3267,7 @@ const PollsPage = () => {
                     {isEditing ? 'Save Changes' : 'Create Poll'}
                   </button>
                 </div>
-              </form>
+              </div>
             </div>
           </div>
         </div>
@@ -3335,6 +3376,48 @@ const PollsPage = () => {
           </div>
         </div>
       </Modal>
+
+      {analyticsModalOpen && analyticsCandidate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl p-8 max-w-md w-full relative">
+            <button
+              onClick={() => setAnalyticsModalOpen(false)}
+              className="absolute top-3 right-3 text-gray-400 hover:text-red-500"
+              aria-label="Close analytics modal"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Candidate Analytics</h2>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">Name:</span>
+                <span>{analyticsCandidate.name}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">Party:</span>
+                <span>{analyticsCandidate.party || 'N/A'}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">Votes:</span>
+                <span>{analyticsCandidate.votes ?? analyticsCandidate.analytics?.votes ?? 0}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">Vote Share:</span>
+                <span>{pollForm.totalVotes ? `${((analyticsCandidate.votes ?? analyticsCandidate.analytics?.votes ?? 0) / pollForm.totalVotes * 100).toFixed(1)}%` : 'N/A'}</span>
+              </div>
+              {analyticsCandidate.analytics?.lastUpdated && (
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold">Last Updated:</span>
+                  <span>{analyticsCandidate.analytics.lastUpdated}</span>
+                </div>
+              )}
+              {/* Add more analytics fields as needed */}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
