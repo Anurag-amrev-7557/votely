@@ -271,3 +271,23 @@ exports.getMe = async (req, res) => {
     });
   }
 };
+
+// Placeholder: Refresh Token
+exports.refreshToken = async (req, res) => {
+  res.status(501).json({ success: false, message: 'refreshToken not implemented' });
+};
+
+// Placeholder: Verify Email
+exports.verifyEmail = async (req, res) => {
+  res.status(501).json({ success: false, message: 'verifyEmail not implemented' });
+};
+
+// Placeholder: Forgot Password
+exports.forgotPassword = async (req, res) => {
+  res.status(501).json({ success: false, message: 'forgotPassword not implemented' });
+};
+
+// Placeholder: Reset Password
+exports.resetPassword = async (req, res) => {
+  res.status(501).json({ success: false, message: 'resetPassword not implemented' });
+};

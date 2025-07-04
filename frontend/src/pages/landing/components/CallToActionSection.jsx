@@ -7,7 +7,7 @@ const CallToActionSection = ({ isVisible }) => {
     const sectionBg = useMemo(() => isDarkMode ? 'dark:bg-gray-900' : 'from-blue-50 to-indigo-50', [isDarkMode]);
 
     return (
-        <section className="relative overflow-hidden transition-all duration-500 will-change-[background-color,color,box-shadow,filter]" aria-labelledby="cta-main-heading" role="region" tabIndex={0}>
+        <section className="relative rounded-2xl overflow-hidden transition-all duration-500 will-change-[background-color,color,box-shadow,filter]" aria-labelledby="cta-main-heading" role="region" tabIndex={0}>
             {/* Visually hidden heading for accessibility */}
             <h2 id="cta-main-heading" className="sr-only">Get Started with Votely</h2>
             {/* Background gradient */}

@@ -29,7 +29,7 @@ export const ThemeProvider = ({ children }) => {
   const isLightMode = effectiveTheme === 'light';
   const isSystemTheme = mode === 'system';
 
-  // Enhanced helper to apply theme to DOM with accessibility, animation, and palette support
+  // Ultra-Enhanced helper to apply theme to DOM with accessibility, animation, palette, prefers-color-scheme, and contrast support
   const applyTheme = useCallback(
     (theme, options = {}) => {
       const {
@@ -39,14 +39,20 @@ export const ThemeProvider = ({ children }) => {
         announce = true,
         palette = {},
         customVars = {},
+        contrast = 'normal', // 'normal' | 'high'
+        focusRing = true,    // show focus ring for accessibility
+        scrollbars = true,   // style scrollbars for theme
+        metaThemeColor = true, // set <meta name="theme-color">
       } = options;
 
       // Remove all known theme classes, add current
+      const customThemes = palette?.customThemes || [];
+      document.documentElement.classList.remove('light', 'dark', ...customThemes, 'high-contrast');
       if (!isLandingPage) {
-        document.documentElement.classList.remove('light', 'dark', ...(palette?.customThemes || []));
         document.documentElement.classList.add(theme);
-      } else {
-        document.documentElement.classList.remove('light', 'dark', ...(palette?.customThemes || []));
+        if (contrast === 'high') {
+          document.documentElement.classList.add('high-contrast');
+        }
       }
 
       // Animate background and color transitions for smoothness
@@ -68,7 +74,18 @@ export const ThemeProvider = ({ children }) => {
       }
       colorSchemeMeta.setAttribute('content', theme === 'dark' ? 'dark light' : 'light dark');
 
-      // Theme palettes (extendable)
+      // Set <meta name="theme-color"> for mobile browser UI
+      if (metaThemeColor) {
+        let themeColorMeta = document.querySelector('meta[name="theme-color"]');
+        if (!themeColorMeta) {
+          themeColorMeta = document.createElement('meta');
+          themeColorMeta.setAttribute('name', 'theme-color');
+          document.head.appendChild(themeColorMeta);
+        }
+        // We'll set this below after picking the palette
+      }
+
+      // Theme palettes (extendable, with high-contrast support)
       const palettes = {
         light: {
           bg: '#f8fafc',
@@ -76,6 +93,8 @@ export const ThemeProvider = ({ children }) => {
           border: '#d1d5db',
           accent: '#3b82f6',
           muted: '#f1f5f9',
+          scrollbar: '#e5e7eb',
+          focus: '#2563eb',
         },
         dark: {
           bg: '#181f29',
@@ -83,12 +102,36 @@ export const ThemeProvider = ({ children }) => {
           border: '#3a4552',
           accent: '#2563eb',
           muted: '#232b36',
+          scrollbar: '#232b36',
+          focus: '#60a5fa',
+        },
+        'high-contrast-light': {
+          bg: '#ffffff',
+          text: '#000000',
+          border: '#000000',
+          accent: '#ff0000',
+          muted: '#f5f5f5',
+          scrollbar: '#cccccc',
+          focus: '#ff0000',
+        },
+        'high-contrast-dark': {
+          bg: '#000000',
+          text: '#ffffff',
+          border: '#ffffff',
+          accent: '#ffff00',
+          muted: '#222222',
+          scrollbar: '#222222',
+          focus: '#ffff00',
         },
         ...(palette || {}),
       };
 
-      // Pick palette for theme, fallback to light
-      const currentPalette = palettes[theme] || palettes.light;
+      // Pick palette for theme, fallback to light, support high-contrast
+      let paletteKey = theme;
+      if (contrast === 'high') {
+        paletteKey = `high-contrast-${theme}`;
+      }
+      const currentPalette = palettes[paletteKey] || palettes[theme] || palettes.light;
 
       // Set background and text color for both modes for smooth transitions
       document.body.style.backgroundColor = currentPalette.bg;
@@ -100,12 +143,22 @@ export const ThemeProvider = ({ children }) => {
       document.documentElement.style.setProperty('--theme-border', currentPalette.border);
       document.documentElement.style.setProperty('--theme-accent', currentPalette.accent);
       document.documentElement.style.setProperty('--theme-muted', currentPalette.muted);
+      document.documentElement.style.setProperty('--theme-scrollbar', currentPalette.scrollbar);
+      document.documentElement.style.setProperty('--theme-focus', currentPalette.focus);
 
       // Set any custom CSS variables
       if (customVars && typeof customVars === 'object') {
         Object.entries(customVars).forEach(([key, value]) => {
           document.documentElement.style.setProperty(key, value);
         });
+      }
+
+      // Set <meta name="theme-color"> for browser UI
+      if (metaThemeColor) {
+        let themeColorMeta = document.querySelector('meta[name="theme-color"]');
+        if (themeColorMeta) {
+          themeColorMeta.setAttribute('content', currentPalette.bg);
+        }
       }
 
       // Accessibility: Announce theme change for screen readers
@@ -125,13 +178,61 @@ export const ThemeProvider = ({ children }) => {
           liveRegion.style.border = '0';
           document.body.appendChild(liveRegion);
         }
-        liveRegion.textContent = `Theme changed to ${theme}`;
+        liveRegion.textContent = `Theme changed to ${contrast === 'high' ? 'high-contrast ' : ''}${theme}`;
+      }
+
+      // Accessibility: Focus ring for keyboard navigation
+      if (focusRing) {
+        // Only show focus ring when using keyboard (not mouse)
+        const handleKeyDown = (e) => {
+          if (e.key === 'Tab') {
+            document.body.classList.add('show-focus-outline');
+          }
+        };
+        const handleMouseDown = () => {
+          document.body.classList.remove('show-focus-outline');
+        };
+        window.addEventListener('keydown', handleKeyDown, { passive: true });
+        window.addEventListener('mousedown', handleMouseDown, { passive: true });
+        // Clean up on theme change
+        setTimeout(() => {
+          window.removeEventListener('keydown', handleKeyDown);
+          window.removeEventListener('mousedown', handleMouseDown);
+        }, duration + 100);
+      }
+
+      // Style scrollbars for theme
+      if (scrollbars) {
+        const styleId = 'theme-scrollbar-style';
+        let styleTag = document.getElementById(styleId);
+        if (!styleTag) {
+          styleTag = document.createElement('style');
+          styleTag.id = styleId;
+          document.head.appendChild(styleTag);
+        }
+        styleTag.textContent = `
+          ::-webkit-scrollbar {
+            width: 12px;
+            background: var(--theme-scrollbar, ${currentPalette.scrollbar});
+          }
+          ::-webkit-scrollbar-thumb {
+            background: var(--theme-border, ${currentPalette.border});
+            border-radius: 6px;
+          }
+          ::-webkit-scrollbar-thumb:hover {
+            background: var(--theme-accent, ${currentPalette.accent});
+          }
+          html {
+            scrollbar-color: var(--theme-border, ${currentPalette.border}) var(--theme-scrollbar, ${currentPalette.scrollbar});
+            scrollbar-width: thin;
+          }
+        `;
       }
 
       // Dev: Log theme changes
       if (process.env.NODE_ENV === 'development') {
         // eslint-disable-next-line no-console
-        console.debug(`[Theme] Applied theme: ${theme}`, { palette: currentPalette });
+        console.debug(`[Theme] Applied theme: ${theme}${contrast === 'high' ? ' (high-contrast)' : ''}`, { palette: currentPalette });
       }
     },
     [isLandingPage]

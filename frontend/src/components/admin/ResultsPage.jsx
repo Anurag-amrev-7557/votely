@@ -69,10 +69,12 @@ const ResultsPage = () => {
       setLoading(true);
       try {
         const response = await axios.get('/api/polls');
-        setPolls(response.data);
+        // Defensive: handle both array and object response
+        setPolls(Array.isArray(response.data) ? response.data : (response.data.polls || []));
         setError(null);
       } catch (err) {
         setError('Failed to load polls');
+        setPolls([]); // Ensure polls is always an array
       } finally {
         setLoading(false);
       }
@@ -540,14 +542,14 @@ const ResultsPage = () => {
                 Filters
               </button>
               <CSVLink
-                data={polls.map(poll => ({
+                data={Array.isArray(polls) ? polls.map(poll => ({
                   title: poll.title,
                   status: poll.status,
                   totalVotes: poll.totalVotes,
                   participation: `${poll.participation}%`,
                   createdAt: format(new Date(poll.createdAt), 'yyyy-MM-dd'),
                   endDate: format(new Date(poll.endDate), 'yyyy-MM-dd'),
-                }))}
+                })) : []}
                 headers={[
                   { label: "Poll Title", key: "title" },
                   { label: "Status", key: "status" },
@@ -626,7 +628,7 @@ const ResultsPage = () => {
         <section role="region" aria-labelledby="admin-poll-results-heading" tabIndex={0}>
           <h2 id="admin-poll-results-heading" className="sr-only">Poll Results</h2>
           <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8' : 'space-y-6'}>
-            {polls.map((poll, index) => (
+            {Array.isArray(polls) && polls.map((poll, index) => (
               <React.Fragment key={poll.id || poll._id || index}>
                 {renderResultCard(poll, index)}
               </React.Fragment>

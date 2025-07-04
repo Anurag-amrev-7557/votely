@@ -190,6 +190,7 @@ export const AuthProvider = ({ children }) => {
     };
   };
 
+  // --- REWRITE loginWithGoogle to avoid popup.close() due to COOP policy ---
   const loginWithGoogle = async () => {
     try {
       // Open Google OAuth popup
@@ -206,31 +207,26 @@ export const AuthProvider = ({ children }) => {
 
       // Listen for the OAuth response
       return new Promise((resolve, reject) => {
+        let popupClosed = false;
+        let checkPopup = null;
+
+        const cleanup = () => {
+          if (checkPopup) clearInterval(checkPopup);
+          window.removeEventListener('message', handleMessage);
+        };
+
         const handleMessage = async (event) => {
           // Verify the origin of the message
           if (event.origin !== window.location.origin) return;
 
           if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
-            // Close the popup
-            popup.close();
-            
-            // Remove the event listener
-            window.removeEventListener('message', handleMessage);
-            
-            // Update user state
+            // Instead of popup.close(), just let the popup close itself or let the user close it.
+            cleanup();
             setUser(event.data.user);
-
-            // Redirect to homepage
             window.location.replace('/');
-
             resolve({ success: true });
           } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
-            // Close the popup
-            popup.close();
-            
-            // Remove the event listener
-            window.removeEventListener('message', handleMessage);
-            
+            cleanup();
             reject(new Error(event.data.error));
           }
         };
@@ -238,10 +234,19 @@ export const AuthProvider = ({ children }) => {
         window.addEventListener('message', handleMessage);
 
         // Handle popup closed
-        const checkPopup = setInterval(() => {
-          if (popup.closed) {
-            clearInterval(checkPopup);
-            window.removeEventListener('message', handleMessage);
+        checkPopup = setInterval(() => {
+          // Instead of accessing popup.closed (which may throw due to COOP), use try/catch
+          let closed = false;
+          try {
+            // Accessing popup.closed may throw if COOP/COEP is set, so wrap in try/catch
+            closed = popup == null || popup.closed;
+          } catch (e) {
+            // If we can't access popup.closed, assume it's closed
+            closed = true;
+          }
+          if (closed && !popupClosed) {
+            popupClosed = true;
+            cleanup();
             reject(new Error('Authentication cancelled'));
           }
         }, 1000);

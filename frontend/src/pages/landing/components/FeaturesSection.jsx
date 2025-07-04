@@ -95,18 +95,30 @@ const FeatureCard = ({ icon, title, description, imageUrl, index, onLearnMore })
       </div>
     </div>
 
-    {/* Learn More Link */}
-    <div className="px-4 pb-4 min-h-[40px]">
+    {/* Enhanced Learn More Link */}
+    <div className="px-4 pb-4 min-h-[40px] flex items-end">
       <button
         type="button"
         onClick={onLearnMore}
-        className="inline-flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 focus:outline-none"
+        className="inline-flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 font-semibold opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 dark:focus-visible:ring-blue-500 rounded-full px-3 py-1 hover:bg-blue-50 dark:hover:bg-blue-900/30 active:scale-95 shadow-sm"
         aria-label={`Learn more about ${title}`}
       >
-        Learn more
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-        </svg>
+        <span className="relative flex items-center">
+          Learn more
+          {/* Animated underline */}
+          <span className="absolute left-0 -bottom-0.5 w-full h-0.5 bg-gradient-to-r from-blue-400 via-blue-600 to-blue-400 rounded-full scale-x-0 group-hover:scale-x-100 group-focus:scale-x-100 transition-transform duration-300 origin-left" />
+        </span>
+        <span className="relative flex items-center">
+          <svg
+            className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1 group-focus:translate-x-1"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </span>
       </button>
     </div>
 
@@ -128,89 +140,154 @@ const FeaturesSection = ({ isVisible }) => {
   };
 
   const features = [
-    {
-      index: 0,
-      icon: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="text-blue-600 dark:text-blue-400"
-        >
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-          <path d="M9 12l2 2 4-4" />
-          <path d="M12 2v4" />
-          <path d="M12 18v4" />
-        </svg>
-      ),
-      title: "End-to-End Security",
-      description: "Advanced encryption and security measures to protect the integrity of every vote.",
-      imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuCImRpMJbw6NJe3sKp-VwJSkIZEx3qS859OjXDQay1ID6trYEDjwE4uUZLB-N6AInzS_FdPNM71YGUk0jndqKi7OFlqxyKb24dAFd3gIoIQmDIf-oAKE2btPc53ZGDYueyvtgq07EoWkEYHc_CoU8JhFZFLN5_7ROYRoHcsZ4FDnSMlimGbeT1B30Rm7er0En3phHH9RyLyXWeTDzHySfwDZDgY_Jw0bdipVfYTepktEt3CTLQ-KlA159St8iBhkiV0TKW8fV8isfg",
-      details: "Our platform uses industry-standard encryption (AES-256, TLS 1.3) to ensure all votes are private and tamper-proof. Security audits are performed regularly."
-    },
-    {
-      index: 1,
-      icon: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="text-blue-600 dark:text-blue-400"
-        >
-          <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5" />
-          <path d="M8.5 8.5v.01" />
-          <path d="M16 15.5v.01" />
-          <path d="M12 12v.01" />
-          <path d="M11 17v.01" />
-          <path d="M7 14v.01" />
-        </svg>
-      ),
-      title: "Universal Accessibility",
-      description: "Designed for everyone with support for screen readers, keyboard navigation, and high contrast modes.",
-      imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuCEmbNMcibtHC0idiNIshqEceQlpt00c5onlLbHmKYJuOJIL4D71lJ7ker7-FtRssWO03uNQ7vFbPeO4NKsL-dmqED8axLmzhdTbVfabs83-fFmSZdL7qGZEP0UJSlQLPP01UFEQzZKABYSARRwODsyePkFncsWvkLqK_hIwEVhaPehPXkMqw5NgTJ8Wfnh_fEYw3OOYQlq4c7ZklSvclmbY4vLFNolTgfVpWnvA1vDqM74tOiXgthO05GM34mYxOC6OQVFe_5HuxA"
-    },
-    {
-      index: 2,
-      icon: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="text-blue-600 dark:text-blue-400"
-        >
-          <path d="M12 2v4" />
-          <path d="M12 18v4" />
-          <path d="M4.93 4.93l2.83 2.83" />
-          <path d="M16.24 16.24l2.83 2.83" />
-          <path d="M2 12h4" />
-          <path d="M18 12h4" />
-          <path d="M4.93 19.07l2.83-2.83" />
-          <path d="M16.24 7.76l2.83-2.83" />
-        </svg>
-      ),
-      title: "Intuitive Experience",
-      description: "Simple and straightforward interface that makes voting easy for everyone, from first-time users to administrators.",
-      imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuBksrhtFAIdg2kwABWsJP1BiX8s23v42Jp5alMqjEJFDr1pMwV2ZOjNlFZh_1ogdqeaz0xyXNXpM9Wa3SbnbGVwcq0_ObkfmaF6xr98PA1I_sfJFL4YmmU9geX707-hvegI8mVjjCl4oi2lg8t9_753ymVMFjHMWpMMjJZzIyx-lJqspSpr-sHHKeM07TptJu_Stk2RuNlcL0WpcB7Pp-TbAq2xe1fegKn3v7rxmJ7_6tpHDJmrYwOK7rxqOFwwDCdb_LQIYCwtA4Y"
-    }
-  ];
+      {
+        index: 0,
+        icon: (
+          <span className="relative flex items-center justify-center w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-full shadow-inner">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-blue-600 dark:text-blue-400 drop-shadow"
+            >
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
+              <path d="M9 12l2 2 4-4" />
+              <path d="M12 2v4">
+                <animate attributeName="opacity" values="1;0.5;1" dur="1.2s" repeatCount="indefinite" />
+              </path>
+              <path d="M12 18v4">
+                <animate attributeName="opacity" values="1;0.5;1" dur="1.2s" begin="0.6s" repeatCount="indefinite" />
+              </path>
+            </svg>
+            <span className="absolute -right-1 -top-1 w-2 h-2 bg-green-400 dark:bg-green-500 rounded-full animate-pulse shadow" aria-hidden="true" />
+          </span>
+        ),
+        title: "End-to-End Security",
+        description: (
+          <>
+            <span className="font-semibold text-blue-700 dark:text-blue-300">Advanced encryption</span> and security measures to protect the integrity of every vote.
+            <span className="block mt-1 text-xs text-gray-500 dark:text-gray-400">AES-256, TLS 1.3, regular audits</span>
+          </>
+        ),
+        imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuCImRpMJbw6NJe3sKp-VwJSkIZEx3qS859OjXDQay1ID6trYEDjwE4uUZLB-N6AInzS_FdPNM71YGUk0jndqKi7OFlqxyKb24dAFd3gIoIQmDIf-oAKE2btPc53ZGDYueyvtgq07EoWkEYHc_CoU8JhFZFLN5_7ROYRoHcsZ4FDnSMlimGbeT1B30Rm7er0En3phHH9RyLyXWeTDzHySfwDZDgY_Jw0bdipVfYTepktEt3CTLQ-KlA159St8iBhkiV0TKW8fV8isfg",
+        details: (
+          <>
+            <strong>Industry-standard encryption</strong> (AES-256, TLS 1.3) ensures all votes are private and tamper-proof.<br />
+            <span className="text-green-600 dark:text-green-400">Regular security audits</span> and <span className="text-blue-600 dark:text-blue-400">real-time monitoring</span> keep your data safe.
+          </>
+        ),
+        badges: [
+          { label: "AES-256", color: "bg-blue-100 text-blue-700" },
+          { label: "TLS 1.3", color: "bg-green-100 text-green-700" },
+          { label: "Audit Ready", color: "bg-yellow-100 text-yellow-700" }
+        ]
+      },
+      {
+        index: 1,
+        icon: (
+          <span className="relative flex items-center justify-center w-10 h-10 bg-indigo-50 dark:bg-indigo-900/30 rounded-full shadow-inner">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-blue-600 dark:text-blue-400"
+            >
+              <circle cx="12" cy="12" r="10" className="opacity-30" />
+              <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5" />
+              <path d="M8.5 8.5v.01" />
+              <path d="M16 15.5v.01" />
+              <path d="M12 12v.01" />
+              <path d="M11 17v.01" />
+              <path d="M7 14v.01" />
+            </svg>
+            <span className="absolute -left-1 -bottom-1 w-2 h-2 bg-yellow-400 dark:bg-yellow-500 rounded-full animate-pulse shadow" aria-hidden="true" />
+          </span>
+        ),
+        title: "Universal Accessibility",
+        description: (
+          <>
+            <span className="font-semibold text-blue-700 dark:text-blue-300">Accessible for all</span> with support for screen readers, keyboard navigation, and high contrast modes.
+            <span className="block mt-1 text-xs text-gray-500 dark:text-gray-400">WCAG 2.2, ARIA, keyboard shortcuts</span>
+          </>
+        ),
+        imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuCEmbNMcibtHC0idiNIshqEceQlpt00c5onlLbHmKYJuOJIL4D71lJ7ker7-FtRssWO03uNQ7vFbPeO4NKsL-dmqED8axLmzhdTbVfabs83-fFmSZdL7qGZEP0UJSlQLPP01UFEQzZKABYSARRwODsyePkFncsWvkLqK_hIwEVhaPehPXkMqw5NgTJ8Wfnh_fEYw3OOYQlq4c7ZklSvclmbY4vLFNolTgfVpWnvA1vDqM74tOiXgthO05GM34mYxOC6OQVFe_5HuxA",
+        details: (
+          <>
+            <strong>Screen reader support</strong> and <strong>keyboard navigation</strong> for seamless use.<br />
+            <span className="text-indigo-600 dark:text-indigo-400">High contrast</span> and <span className="text-yellow-600 dark:text-yellow-400">color-blind friendly</span> themes included.
+          </>
+        ),
+        badges: [
+          { label: "WCAG 2.2", color: "bg-indigo-100 text-indigo-700" },
+          { label: "ARIA", color: "bg-yellow-100 text-yellow-700" },
+          { label: "Keyboard Nav", color: "bg-blue-100 text-blue-700" }
+        ]
+      },
+      {
+        index: 2,
+        icon: (
+          <span className="relative flex items-center justify-center w-10 h-10 bg-purple-50 dark:bg-purple-900/30 rounded-full shadow-inner">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-blue-600 dark:text-blue-400"
+            >
+              <path d="M12 2v4">
+                <animate attributeName="opacity" values="1;0.5;1" dur="1.2s" repeatCount="indefinite" />
+              </path>
+              <path d="M12 18v4">
+                <animate attributeName="opacity" values="1;0.5;1" dur="1.2s" begin="0.6s" repeatCount="indefinite" />
+              </path>
+              <path d="M4.93 4.93l2.83 2.83" />
+              <path d="M16.24 16.24l2.83 2.83" />
+              <path d="M2 12h4" />
+              <path d="M18 12h4" />
+              <path d="M4.93 19.07l2.83-2.83" />
+              <path d="M16.24 7.76l2.83-2.83" />
+            </svg>
+            <span className="absolute -right-1 -bottom-1 w-2 h-2 bg-purple-400 dark:bg-purple-500 rounded-full animate-pulse shadow" aria-hidden="true" />
+          </span>
+        ),
+        title: "Intuitive Experience",
+        description: (
+          <>
+            <span className="font-semibold text-blue-700 dark:text-blue-300">Simple &amp; straightforward</span> interface that makes voting easy for everyone, from first-time users to administrators.
+            <span className="block mt-1 text-xs text-gray-500 dark:text-gray-400">Guided flows, tooltips, and instant feedback</span>
+          </>
+        ),
+        imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuBksrhtFAIdg2kwABWsJP1BiX8s23v42Jp5alMqjEJFDr1pMwV2ZOjNlFZh_1ogdqeaz0xyXNXpM9Wa3SbnbGVwcq0_ObkfmaF6xr98PA1I_sfJFL4YmmU9geX707-hvegI8mVjjCl4oi2lg8t9_753ymVMFjHMWpMMjJZzIyx-lJqspSpr-sHHKeM07TptJu_Stk2RuNlcL0WpcB7Pp-TbAq2xe1fegKn3v7rxmJ7_6tpHDJmrYwOK7rxqOFwwDCdb_LQIYCwtA4Y",
+        details: (
+          <>
+            <strong>Guided voting flows</strong> and <strong>contextual tooltips</strong> help users at every step.<br />
+            <span className="text-purple-600 dark:text-purple-400">Instant feedback</span> and <span className="text-blue-600 dark:text-blue-400">responsive design</span> for all devices.
+          </>
+        ),
+        badges: [
+          { label: "Guided", color: "bg-purple-100 text-purple-700" },
+          { label: "Tooltips", color: "bg-blue-100 text-blue-700" },
+          { label: "Responsive", color: "bg-green-100 text-green-700" }
+        ]
+      }
+    ]
 
   return (
     <section className={`w-full flex flex-col gap-8 sm:gap-12 px-4 @container rounded-xl relative overflow-hidden ${sectionBg} transition-all duration-500 will-change-[background-color,color,box-shadow,filter]`} aria-labelledby="features-main-heading" role="region" tabIndex={0}>

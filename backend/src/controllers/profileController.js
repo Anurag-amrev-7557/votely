@@ -7,10 +7,17 @@ const Vote = require('../models/Vote');
 const Poll = require('../models/Poll');
 const sendEmail = require('../utils/sendEmail');
 
-// Configure multer for file uploads
+// Enhanced multer configuration for profile photo uploads
+
+// Allowed image mime types and extensions
+const ALLOWED_IMAGE_TYPES = [
+  'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/svg+xml', 'image/heic', 'image/heif'
+];
+const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg', '.heic', '.heif'];
+
 const storage = multer.diskStorage({
   destination: async (req, file, cb) => {
-    const uploadDir = 'uploads/profile-photos';
+    const uploadDir = path.join('uploads', 'profile-photos', req.user.id ? String(req.user.id) : 'unknown');
     try {
       await fs.mkdir(uploadDir, { recursive: true });
       cb(null, uploadDir);
@@ -19,27 +26,56 @@ const storage = multer.diskStorage({
     }
   },
   filename: (req, file, cb) => {
+    // Sanitize original name and ensure extension is valid
+    const ext = path.extname(file.originalname).toLowerCase();
+    const baseName = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9-_]/g, '_').slice(0, 32);
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, `profile-${req.user.id}-${uniqueSuffix}${path.extname(file.originalname)}`);
+    cb(null, `profile-${req.user.id}-${baseName}-${uniqueSuffix}${ext}`);
   }
 });
 
 const fileFilter = (req, file, cb) => {
-  // Accept only image files
-  if (file.mimetype.startsWith('image/')) {
+  // Accept only allowed image types and extensions
+  const ext = path.extname(file.originalname).toLowerCase();
+  if (
+    ALLOWED_IMAGE_TYPES.includes(file.mimetype) &&
+    ALLOWED_EXTENSIONS.includes(ext)
+  ) {
     cb(null, true);
   } else {
-    cb(new Error('Only image files are allowed'), false);
+    cb(new Error('Only image files (jpg, png, gif, webp, bmp, svg, heic) are allowed'), false);
   }
 };
 
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+    files: 1 // Only one file per upload
   },
   fileFilter: fileFilter
 });
+
+// Helper middleware for single profile photo upload with error handling
+exports.uploadProfilePhoto = (req, res, next) => {
+  upload.single('profilePhoto')(req, res, function (err) {
+    if (err instanceof multer.MulterError) {
+      // Multer-specific errors
+      return res.status(400).json({
+        success: false,
+        message: err.message || 'File upload error'
+      });
+    } else if (err) {
+      // Other errors
+      return res.status(400).json({
+        success: false,
+        message: err.message || 'File upload error'
+      });
+    }
+    // File uploaded successfully
+    next();
+  });
+};
 
 // Enhanced Get user profile with computed fields, avatar, and activity summary
 exports.getProfile = async (req, res) => {

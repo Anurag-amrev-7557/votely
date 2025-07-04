@@ -88,6 +88,10 @@ app.use('/api/polls', pollRoutes);
 const voteRoutes = require('./routes/voteRoutes');
 app.use('/api/votes', voteRoutes);
 
+// Comment routes
+const commentRoutes = require('./routes/commentRoutes');
+app.use('/api', commentRoutes);
+
 // Google OAuth configuration
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,

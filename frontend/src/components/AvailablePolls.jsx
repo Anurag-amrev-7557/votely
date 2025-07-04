@@ -285,6 +285,11 @@ const AvailablePolls = () => {
   const [error, setError] = useState(null);
   const [userVotes, setUserVotes] = useState({});
   const [favorites, setFavorites] = useState([]);
+  // --- POLL CREATOR FILTER STATE ---
+  const [selectedCreators, setSelectedCreators] = useState([]);
+  const [creatorSearch, setCreatorSearch] = useState('');
+  // Move participantsRange state up here
+  const [participantsRange, setParticipantsRange] = useState({ min: '', max: '' });
 
   // Status options for filtering
   const statusOptions = [
@@ -690,6 +695,14 @@ const AvailablePolls = () => {
       };
     };
 
+    const matchesParticipantsRange = (poll) => {
+      const min = participantsRange.min ? parseInt(participantsRange.min, 10) : null;
+      const max = participantsRange.max ? parseInt(participantsRange.max, 10) : null;
+      if (min !== null && (poll.participants == null || poll.participants < min)) return false;
+      if (max !== null && (poll.participants == null || poll.participants > max)) return false;
+      return true;
+    };
+
     return polls
       .filter(poll => {
         // Fuzzy search across title, category, and description
@@ -703,11 +716,12 @@ const AvailablePolls = () => {
           matchesSearch &&
           matchesStatus(poll, activeTab, selectedStatuses) &&
           matchesCategory(poll, selectedCategories) &&
-          isWithinDateRange(poll, dateRange)
+          isWithinDateRange(poll, dateRange) &&
+          matchesParticipantsRange(poll)
         );
       })
       .sort(getSortFn(sortBy, secondarySort, sortDirection));
-  }, [polls, debouncedSearchQuery, activeTab, selectedCategories, selectedStatuses, dateRange, sortBy, secondarySort, sortDirection]);
+  }, [polls, debouncedSearchQuery, activeTab, selectedCategories, selectedStatuses, dateRange, sortBy, secondarySort, sortDirection, participantsRange]);
 
   const handleCategoryToggle = (category) => {
     setSelectedCategories(prev => 
@@ -923,7 +937,7 @@ const AvailablePolls = () => {
       case 'Enter':
         e.preventDefault();
         if (selectedSuggestionIndex >= 0 && searchSuggestions[selectedSuggestionIndex]) {
-          setSearchQuery(searchSuggestions[selectedSuggestionIndex]);
+          setSearchQuery(searchSuggestions[selectedSuggestionIndex].value);
           setShowSearchSuggestions(false);
         }
         break;
@@ -935,7 +949,7 @@ const AvailablePolls = () => {
   };
 
   const handleSuggestionClick = (suggestion) => {
-    setSearchQuery(suggestion);
+    setSearchQuery(suggestion.value);
     setShowSearchSuggestions(false);
     setSelectedSuggestionIndex(-1);
   };
@@ -953,7 +967,7 @@ const AvailablePolls = () => {
       try {
         const response = await axios.get('/api/polls');
         // Normalize status values for frontend filtering
-        const normalized = response.data.map(poll => ({
+        const normalized = (response.data.polls || []).map(poll => ({
           ...poll,
           id: poll._id || poll.id,
           status:
@@ -1224,6 +1238,215 @@ const AvailablePolls = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // --- FILTER PRESETS STATE & LOGIC ---
+  const [filterPresets, setFilterPresets] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('pollFilterPresets') || '[]');
+    } catch {
+      return [];
+    }
+  });
+  const [presetName, setPresetName] = useState('');
+  const [showPresetDialog, setShowPresetDialog] = useState(false);
+
+  const savePreset = () => {
+    if (!presetName.trim()) return;
+    const newPreset = {
+      name: presetName.trim(),
+      categories: selectedCategories,
+      statuses: selectedStatuses,
+      dateRange: { ...dateRange },
+      sortBy,
+      secondarySort,
+      sortDirection,
+    };
+    const updated = [...filterPresets.filter(p => p.name !== newPreset.name), newPreset];
+    setFilterPresets(updated);
+    localStorage.setItem('pollFilterPresets', JSON.stringify(updated));
+    setShowPresetDialog(false);
+    setPresetName('');
+  };
+  const applyPreset = (preset) => {
+    setSelectedCategories(preset.categories || []);
+    setSelectedStatuses(preset.statuses || []);
+    setDateRange(preset.dateRange || { start: '', end: '' });
+    setSortBy(preset.sortBy || 'newest');
+    setSecondarySort(preset.secondarySort || null);
+    setSortDirection(preset.sortDirection || 'desc');
+  };
+  const deletePreset = (name) => {
+    const updated = filterPresets.filter(p => p.name !== name);
+    setFilterPresets(updated);
+    localStorage.setItem('pollFilterPresets', JSON.stringify(updated));
+  };
+
+  // --- FILTER PRESETS UI ---
+  // Place this UI in the advanced filter section, above the filter cards:
+  <div className="mb-4">
+    <div className="flex flex-wrap gap-2 items-center">
+      <button
+        className="text-xs px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50"
+        onClick={() => setShowPresetDialog(true)}
+      >
+        Save Current Filters as Preset
+      </button>
+      {filterPresets.length > 0 && (
+        <div className="flex flex-wrap gap-2 items-center">
+          <span className="text-xs text-gray-500 dark:text-gray-400">Presets:</span>
+          {filterPresets.map(preset => (
+            <span key={preset.name} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 mr-1">
+              <button onClick={() => applyPreset(preset)} className="font-medium mr-1 hover:underline">{preset.name}</button>
+              <button onClick={() => deletePreset(preset.name)} className="ml-1 text-red-500 hover:text-red-700 dark:text-red-300 dark:hover:text-red-100" aria-label={`Delete preset ${preset.name}`}>&times;</button>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+    {showPresetDialog && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+        <div className="bg-white dark:bg-[#232a33] p-6 rounded-xl shadow-xl w-full max-w-xs">
+          <h4 className="text-lg font-bold mb-2 text-gray-900 dark:text-white">Save Filter Preset</h4>
+          <input
+            type="text"
+            value={presetName}
+            onChange={e => setPresetName(e.target.value)}
+            placeholder="Preset name"
+            className="w-full px-3 py-2 mb-3 border rounded bg-white dark:bg-[#232a33] text-gray-900 dark:text-white border-gray-300 dark:border-[#2c353f] focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+          />
+          <div className="flex gap-2 justify-end">
+            <button onClick={() => setShowPresetDialog(false)} className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-800">Cancel</button>
+            <button onClick={savePreset} className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700">Save</button>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+
+  // --- COLLAPSIBLE FILTER CARDS STATE ---
+  const [openFilterCards, setOpenFilterCards] = useState({
+    category: true,
+    date: true,
+    status: true,
+    sort: true,
+    participants: true,
+  });
+  const toggleFilterCard = (key) => setOpenFilterCards(prev => ({ ...prev, [key]: !prev[key] }));
+
+  // --- PARTICIPANTS RANGE FILTER STATE ---
+  const handleParticipantsRangeChange = (key, value) => {
+    if (/^\d*$/.test(value)) setParticipantsRange(prev => ({ ...prev, [key]: value }));
+  };
+  const clearParticipantsRange = () => setParticipantsRange({ min: '', max: '' });
+
+  // --- Add to openFilterCards state ---
+  // (already defined, add 'participants' key)
+  // const [openFilterCards, setOpenFilterCards] = useState({ ... , participants: true });
+  // if (!openFilterCards.participants) openFilterCards.participants = true;
+
+  // --- In the advanced filter section grid, add a new card for participants range ---
+  <div className="bg-gray-50 dark:bg-[#232a33] rounded-xl p-4 border border-gray-200 dark:border-[#2c353f] shadow-sm flex flex-col gap-3">
+    <div className="flex items-center justify-between mb-2">
+      <label className="block text-sm font-medium text-gray-700 dark:text-[#a0acbb] flex items-center gap-2">
+        <svg className="w-4 h-4 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m9-4V6a4 4 0 00-8 0v4m8 0a4 4 0 01-8 0" /></svg>
+        Participants
+      </label>
+      <button onClick={() => toggleFilterCard('participants')} aria-label={openFilterCards.participants ? 'Collapse' : 'Expand'} className="ml-2 text-gray-400 hover:text-blue-500 dark:hover:text-blue-300 focus:outline-none">
+        <svg className={`w-4 h-4 transition-transform ${openFilterCards.participants ? '' : 'rotate-180'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+    </button>
+    </div>
+    {openFilterCards.participants && (
+      <div className="flex items-center gap-2">
+        <input
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          value={participantsRange.min}
+          onChange={e => handleParticipantsRangeChange('min', e.target.value)}
+          placeholder="Min"
+          className="w-20 px-2 py-1 text-sm border rounded bg-white dark:bg-[#232a33] text-gray-900 dark:text-white border-gray-300 dark:border-[#2c353f] focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+          aria-label="Minimum participants"
+        />
+        <span className="text-gray-500 dark:text-gray-400">-</span>
+        <input
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          value={participantsRange.max}
+          onChange={e => handleParticipantsRangeChange('max', e.target.value)}
+          placeholder="Max"
+          className="w-20 px-2 py-1 text-sm border rounded bg-white dark:bg-[#232a33] text-gray-900 dark:text-white border-gray-300 dark:border-[#2c353f] focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+          aria-label="Maximum participants"
+        />
+        <button onClick={clearParticipantsRange} className="ml-2 text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-800">Clear</button>
+      </div>
+    )}
+  </div>
+
+  // Extract unique creators from polls (support both poll.creator and poll.createdBy)
+  const creators = useMemo(() => {
+    const all = polls
+      .map(poll => poll.createdBy?.username || poll.createdBy?.email || poll.creator || null)
+      .filter(Boolean);
+    return Array.from(new Set(all));
+  }, [polls]);
+
+  const filteredCreators = useMemo(() => {
+    if (!creatorSearch) return creators;
+    const searchLower = creatorSearch.toLowerCase();
+    return creators.filter(c => c.toLowerCase().includes(searchLower));
+  }, [creators, creatorSearch]);
+
+  const handleCreatorToggle = (creator) => {
+    setSelectedCreators(prev =>
+      prev.includes(creator)
+        ? prev.filter(c => c !== creator)
+        : [...prev, creator]
+    );
+  };
+
+  const clearCreators = () => setSelectedCreators([]);
+
+  // --- Add to openFilterCards state ---
+  if (!openFilterCards.creator) openFilterCards.creator = true;
+
+  // --- In the advanced filter section grid, add a new card for creator filter ---
+  <div className="bg-gray-50 dark:bg-[#232a33] rounded-xl p-4 border border-gray-200 dark:border-[#2c353f] shadow-sm flex flex-col gap-3">
+    <div className="flex items-center justify-between mb-2">
+      <label className="block text-sm font-medium text-gray-700 dark:text-[#a0acbb] flex items-center gap-2">
+        <svg className="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+        Creator
+      </label>
+      <button onClick={() => toggleFilterCard('creator')} aria-label={openFilterCards.creator ? 'Collapse' : 'Expand'} className="ml-2 text-gray-400 hover:text-blue-500 dark:hover:text-blue-300 focus:outline-none">
+        <svg className={`w-4 h-4 transition-transform ${openFilterCards.creator ? '' : 'rotate-180'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+    </button>
+    </div>
+    {openFilterCards.creator && (
+      <>
+        <input
+          type="text"
+          value={creatorSearch}
+          onChange={e => setCreatorSearch(e.target.value)}
+          placeholder="Search creators..."
+          className="w-full px-2 py-1 text-sm border rounded bg-white dark:bg-[#232a33] text-gray-900 dark:text-white border-gray-300 dark:border-[#2c353f] focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent mb-2"
+        />
+        <div className="space-y-2 max-h-32 overflow-y-auto">
+          {filteredCreators.map((creator, index) => (
+            <label key={`creator-${creator}-${index}`} className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={selectedCreators.includes(creator)}
+                onChange={() => handleCreatorToggle(creator)}
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+              />
+              <span className="text-sm text-gray-700 dark:text-[#a0acbb]">{creator}</span>
+            </label>
+          ))}
+        </div>
+        <button onClick={clearCreators} className="mt-2 text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-800">Clear</button>
+      </>
+    )}
+  </div>
+
   return (
     <div className="relative flex size-full min-h-screen flex-col bg-white dark:bg-gray-900 dark:group/design-root overflow-x-hidden transition-colors duration-200" style={{ fontFamily: 'Inter, "Noto Sans", sans-serif' }}>
       <div className="layout-container flex h-full grow flex-col">
@@ -1388,7 +1611,7 @@ const AvailablePolls = () => {
                           {searchSuggestions.map((suggestion, index) => (
                             <motion.button
                               key={`suggestion-${suggestion.value}-${index}`}
-                              onClick={() => handleSuggestionClick(suggestion.value)}
+                              onClick={() => handleSuggestionClick(suggestion)}
                               className={`
                                 w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all duration-150
                                 ${selectedSuggestionIndex === index
@@ -1575,21 +1798,16 @@ const AvailablePolls = () => {
                   transition={{ duration: 0.3, ease: "easeInOut" }}
                   className="mb-6 sm:mb-8"
                 >
-                  <div className="bg-white dark:bg-[#1e242c] rounded-xl border border-gray-200 dark:border-[#2c353f] p-4 sm:p-6">
-                    <motion.div 
-                      className="flex items-center justify-between mb-4"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.4, ease: "easeOut" }}
-                    >
+                  <div className="bg-white dark:bg-[#1e242c] rounded-2xl border border-gray-200 dark:border-[#2c353f] p-6 shadow-md">
+                    <div className="flex items-center justify-between mb-6">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                          <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow">
+                          <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
                           </svg>
                         </div>
                         <div>
-                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Advanced Filters</h3>
+                          <h3 className="text-xl font-bold text-gray-900 dark:text-white">Advanced Filters</h3>
                           <p className="text-xs text-gray-500 dark:text-[#a0acbb] mt-0.5">
                             {(selectedCategories.length > 0 || selectedStatuses.length > 0 || dateRange.start || dateRange.end) ? 
                               `${[selectedCategories.length, selectedStatuses.length, dateRange.start ? 1 : 0, dateRange.end ? 1 : 0].reduce((a, b) => a + b, 0)} active filters` : 
@@ -1598,7 +1816,6 @@ const AvailablePolls = () => {
                           </p>
                         </div>
                       </div>
-                      
                       <div className="flex items-center gap-2">
                         {(selectedCategories.length > 0 || selectedStatuses.length > 0 || dateRange.start || dateRange.end) && (
                           <motion.span 
@@ -1610,7 +1827,6 @@ const AvailablePolls = () => {
                             {[selectedCategories.length, selectedStatuses.length, dateRange.start ? 1 : 0, dateRange.end ? 1 : 0].reduce((a, b) => a + b, 0)}
                           </motion.span>
                         )}
-                        
                         <motion.button
                           onClick={clearFilters}
                           className="group relative inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-all duration-200 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20"
@@ -1622,20 +1838,15 @@ const AvailablePolls = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                           </svg>
                           <span>Clear All</span>
-                          
-                          {/* Tooltip */}
-                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-                            Reset all filter selections
-                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
-                          </div>
                         </motion.button>
                       </div>
-                    </motion.div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                      {/* Advanced Categories Filter with Search, Grouping, and Smart Features */}
-                                              <div className="space-y-3">
-                          <label className="block text-sm font-medium text-gray-700 dark:text-[#a0acbb]">
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                      {/* Categories Filter Card */}
+                      <div className="bg-gray-50 dark:bg-[#232a33] rounded-xl p-4 border border-gray-200 dark:border-[#2c353f] shadow-sm flex flex-col gap-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-[#a0acbb] flex items-center gap-2">
+                            <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
                             Categories
                             {selectedCategories.length > 0 && (
                               <motion.span 
@@ -1648,7 +1859,37 @@ const AvailablePolls = () => {
                               </motion.span>
                             )}
                           </label>
+                          <button onClick={() => toggleFilterCard('category')} aria-label={openFilterCards.category ? 'Collapse' : 'Expand'} className="ml-2 text-gray-400 hover:text-blue-500 dark:hover:text-blue-300 focus:outline-none">
+                            <svg className={`w-4 h-4 transition-transform ${openFilterCards.category ? '' : 'rotate-180'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                          </button>
+                        </div>
+                        {openFilterCards.category && (
                           <div className="space-y-2 max-h-32 overflow-y-auto">
+                            <div className="flex items-center gap-2 mb-2">
+                              <input
+                                type="text"
+                                value={categorySearch}
+                                onChange={e => setCategorySearch(e.target.value)}
+                                placeholder="Search categories..."
+                                className="w-full px-2 py-1 text-sm border rounded bg-white dark:bg-[#232a33] text-gray-900 dark:text-white border-gray-300 dark:border-[#2c353f] focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+                              />
+                              <button
+                                type="button"
+                                className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50"
+                                onClick={() => setSelectedCategories(filteredCategories)}
+                                disabled={filteredCategories.length === 0}
+                              >
+                                Select All
+                              </button>
+                              <button
+                                type="button"
+                                className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-800"
+                                onClick={() => setSelectedCategories([])}
+                                disabled={selectedCategories.length === 0}
+                              >
+                                Deselect All
+                              </button>
+                            </div>
                             {filteredCategories.map((category, index) => (
                               <label key={`category-${category}-${index}`} className="flex items-center gap-2 cursor-pointer">
                                 <input
@@ -1661,534 +1902,300 @@ const AvailablePolls = () => {
                               </label>
                             ))}
                           </div>
-                        </div>
-
-                      {/* Advanced Date Range Filter with Presets and Validation */}
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <label className="block text-sm font-medium text-gray-700 dark:text-[#a0acbb]">
+                        )}
+                      </div>
+                      {/* Date Range Filter Card */}
+                      <div className="bg-gray-50 dark:bg-[#232a33] rounded-xl p-4 border border-gray-200 dark:border-[#2c353f] shadow-sm flex flex-col gap-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-[#a0acbb] flex items-center gap-2">
+                            <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                             Date Range
                           </label>
-                          <motion.button
-                            onClick={() => setShowDatePresets(prev => !prev)}
-                            className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            {showDatePresets ? 'Hide' : 'Show'} Presets
-                          </motion.button>
-                        </div>
-
-                        {/* Quick Date Presets */}
-                        <AnimatePresence>
-                          {showDatePresets && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: 'auto', opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.2 }}
-                              className="overflow-hidden"
-                            >
-                              <div className="grid grid-cols-2 gap-2 p-3 bg-gray-50 dark:bg-[#2c353f] rounded-lg border border-gray-200 dark:border-[#3a424a]">
-                                {[
-                                  { label: 'Today', start: getCurrentDate(), end: getCurrentDate() },
-                                  { label: 'This Week', start: getDateDaysAgo(7), end: getCurrentDate() },
-                                  { label: 'This Month', start: getDateDaysAgo(30), end: getCurrentDate() },
-                                  { label: 'Last 3 Months', start: getDateDaysAgo(90), end: getCurrentDate() },
-                                  { label: 'This Year', start: `${new Date().getFullYear()}-01-01`, end: getCurrentDate() },
-                                  { label: 'Custom', start: '', end: '' }
-                                ].map((preset) => (
-                                  <motion.button
-                                    key={preset.label}
-                                    onClick={() => {
-                                      setDateRange({ start: preset.start, end: preset.end });
-                                      if (preset.label === 'Custom') {
-                                        setShowDatePresets(false);
-                                      }
-                                    }}
-                                    className="px-3 py-2 text-xs font-medium text-gray-700 dark:text-[#a0acbb] bg-white dark:bg-[#1e242c] border border-gray-200 dark:border-[#3a424a] rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200"
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                  >
-                                    {preset.label}
-                                  </motion.button>
-                                ))}
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-
-                        {/* Advanced Date Inputs with Validation */}
-                        <div className="space-y-3">
-                          <div className="relative">
-                            <input
-                              type="date"
-                              value={dateRange.start}
-                              onChange={(e) => {
-                                const newStart = e.target.value;
-                                setDateRange(prev => ({ 
-                                  ...prev, 
-                                  start: newStart,
-                                  end: prev.end && newStart > prev.end ? newStart : prev.end
-                                }));
-                                setDateValidation(prev => ({ ...prev, startError: '' }));
-                              }}
-                              onBlur={() => validateDateRange()}
-                              max={dateRange.end || getCurrentDate()}
-                              className={`w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-[#1e242c] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all duration-200 ${
-                                dateValidation.startError 
-                                  ? 'border-red-300 dark:border-red-600 focus:ring-red-500 dark:focus:ring-red-400' 
-                                  : 'border-gray-300 dark:border-[#2c353f]'
-                              }`}
-                              placeholder="Start date"
-                            />
-                            {dateValidation.startError && (
-                              <motion.div
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="absolute -bottom-6 left-0 text-xs text-red-600 dark:text-red-400"
-                              >
-                                {dateValidation.startError}
-                              </motion.div>
-                            )}
-                          </div>
-
-                          <div className="relative">
-                            <input
-                              type="date"
-                              value={dateRange.end}
-                              onChange={(e) => {
-                                const newEnd = e.target.value;
-                                setDateRange(prev => ({ 
-                                  ...prev, 
-                                  end: newEnd,
-                                  start: prev.start && newEnd < prev.start ? newEnd : prev.start
-                                }));
-                                setDateValidation(prev => ({ ...prev, endError: '' }));
-                              }}
-                              onBlur={() => validateDateRange()}
-                              min={dateRange.start || getDateDaysAgo(365)}
-                              max={getDateDaysAgo(-30)} // Allow future dates up to 30 days
-                              className={`w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-[#1e242c] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all duration-200 ${
-                                dateValidation.endError 
-                                  ? 'border-red-300 dark:border-red-600 focus:ring-red-500 dark:focus:ring-red-400' 
-                                  : 'border-gray-300 dark:border-[#2c353f]'
-                              }`}
-                              placeholder="End date"
-                            />
-                            {dateValidation.endError && (
-                              <motion.div
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="absolute -bottom-6 left-0 text-xs text-red-600 dark:text-red-400"
-                              >
-                                {dateValidation.endError}
-                              </motion.div>
-                            )}
-                          </div>
-
-                          {/* Date Range Summary */}
-                          {(dateRange.start || dateRange.end) && (
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.95 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              className="p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md"
-                            >
-                              <div className="text-xs text-blue-800 dark:text-blue-300">
-                                <div className="flex items-center justify-between">
-                                  <span>Selected Range:</span>
-                                  <span className="font-medium">
-                                    {dateRange.start || 'Any'} → {dateRange.end || 'Any'}
-                                  </span>
-                                </div>
-                                {dateRange.start && dateRange.end && (
-                                  <div className="mt-1 text-blue-600 dark:text-blue-400">
-                                    {Math.ceil((new Date(dateRange.end) - new Date(dateRange.start)) / (1000 * 60 * 60 * 24))} days
-                                  </div>
-                                )}
-                              </div>
-                            </motion.div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Advanced Sort By Filter with Multi-Sort and Custom Logic */}
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <label className="block text-sm font-medium text-gray-700 dark:text-[#a0acbb]">
-                            Sort By
-                          </label>
-                          <button
-                            onClick={() => setSortBy('newest')}
-                            className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-                          >
-                            Reset
+                          <button onClick={() => toggleFilterCard('date')} aria-label={openFilterCards.date ? 'Collapse' : 'Expand'} className="ml-2 text-gray-400 hover:text-blue-500 dark:hover:text-blue-300 focus:outline-none">
+                            <svg className={`w-4 h-4 transition-transform ${openFilterCards.date ? '' : 'rotate-180'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                           </button>
                         </div>
-                        
-                        {/* Primary Sort */}
-                        <div className="space-y-2">
-                          <select
-                            value={sortBy}
-                            onChange={(e) => {
-                              setSortBy(e.target.value);
-                              // Clear secondary sort when changing primary
-                              setSecondarySort && setSecondarySort(null);
-                            }}
-                            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-[#2c353f] rounded-lg bg-white dark:bg-[#1e242c] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all duration-200 hover:border-blue-400 dark:hover:border-blue-500"
-                          >
-                            <option value="newest">🕒 Newest First</option>
-                            <option value="oldest">📅 Oldest First</option>
-                            <option value="participants">👥 Most Participants</option>
-                            <option value="participants_asc">👤 Least Participants</option>
-                            <option value="title">📝 Title A-Z</option>
-                            <option value="title_desc">📝 Title Z-A</option>
-                            <option value="category">🏷️ Category</option>
-                            <option value="status">📊 Status</option>
-                            <option value="end_date">⏰ Ending Soon</option>
-                            <option value="start_date">🚀 Starting Soon</option>
-                            <option value="relevance">🎯 Relevance Score</option>
-                            <option value="trending">📈 Trending</option>
-                            <option value="random">🎲 Random</option>
-                          </select>
-                        </div>
-
-                        {/* Secondary Sort (Conditional) */}
-                        {sortBy && sortBy !== 'random' && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="space-y-2"
-                          >
-                            <label className="block text-xs font-medium text-gray-600 dark:text-[#8b9bb4]">
-                              Then by (Optional)
-                            </label>
-                            <select
-                              value={secondarySort || ''}
-                              onChange={(e) => setSecondarySort && setSecondarySort(e.target.value || null)}
-                              className="w-full px-3 py-2 text-xs border border-gray-200 dark:border-[#374151] rounded-md bg-gray-50 dark:bg-[#2a3441] text-gray-700 dark:text-[#a0acbb] focus:ring-1 focus:ring-blue-400 dark:focus:ring-blue-500 focus:border-transparent"
-                            >
-                              <option value="">None</option>
-                              <option value="title" disabled={sortBy === 'title' || sortBy === 'title_desc'}>Title</option>
-                              <option value="participants" disabled={sortBy === 'participants' || sortBy === 'participants_asc'}>Participants</option>
-                              <option value="category" disabled={sortBy === 'category'}>Category</option>
-                              <option value="start_date" disabled={sortBy === 'start_date'}>Start Date</option>
-                              <option value="end_date" disabled={sortBy === 'end_date'}>End Date</option>
-                            </select>
-                          </motion.div>
-                        )}
-
-                        {/* Sort Direction Toggle */}
-                        {sortBy && sortBy !== 'random' && (
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="flex items-center justify-between p-2 bg-gray-50 dark:bg-[#2a3441] rounded-md"
-                          >
-                            <span className="text-xs text-gray-600 dark:text-[#8b9bb4]">Direction:</span>
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => setSortDirection && setSortDirection('asc')}
-                                className={`p-1 rounded text-xs transition-all ${
-                                  sortDirection === 'asc' 
-                                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' 
-                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                                }`}
-                                title="Ascending"
-                              >
-                                ↑
-                              </button>
-                              <button
-                                onClick={() => setSortDirection && setSortDirection('desc')}
-                                className={`p-1 rounded text-xs transition-all ${
-                                  sortDirection === 'desc' 
-                                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' 
-                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                                }`}
-                                title="Descending"
-                              >
-                                ↓
-                              </button>
-                            </div>
-                          </motion.div>
-                        )}
-
-                        {/* Sort Preview */}
-                        {sortBy && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md"
-                          >
-                            <div className="text-xs text-blue-800 dark:text-blue-300">
-                              <div className="flex items-center justify-between">
-                                <span>Sorting by:</span>
-                                <span className="font-medium">
-                                  {sortBy.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                                  {secondarySort && ` → ${secondarySort.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}`}
-                                  {sortDirection && ` (${sortDirection.toUpperCase()})`}
-                                </span>
+                        {openFilterCards.date && (
+                          <div className="space-y-3">
+                            {showDatePresets && (
+                              <div className="flex flex-wrap gap-2 mb-2">
+                                <button type="button" className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-800" onClick={() => setDateRange({ start: getCurrentDate(), end: getCurrentDate() })}>Today</button>
+                                <button type="button" className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-800" onClick={() => setDateRange({ start: getDateDaysAgo(6), end: getCurrentDate() })}>Last 7 Days</button>
+                                <button type="button" className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-800" onClick={() => setDateRange({ start: getDateDaysAgo(29), end: getCurrentDate() })}>Last 30 Days</button>
+                                <button type="button" className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-800" onClick={() => setDateRange({ start: '', end: '' })}>Any</button>
                               </div>
+                            )}
+                            <div className="relative">
+                              <input
+                                type="date"
+                                value={dateRange.start}
+                                onChange={(e) => {
+                                  const newStart = e.target.value;
+                                  setDateRange(prev => ({ 
+                                    ...prev, 
+                                    start: newStart,
+                                    end: prev.end && newStart > prev.end ? newStart : prev.end
+                                  }));
+                                  setDateValidation(prev => ({ ...prev, startError: '' }));
+                                }}
+                                onBlur={() => validateDateRange()}
+                                max={dateRange.end || getCurrentDate()}
+                                className={`w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-[#1e242c] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all duration-200 ${
+                                  dateValidation.startError 
+                                    ? 'border-red-300 dark:border-red-600 focus:ring-red-500 dark:focus:ring-red-400' 
+                                    : 'border-gray-300 dark:border-[#2c353f]'
+                                }`}
+                                placeholder="Start date"
+                              />
+                              {dateValidation.startError && (
+                                <motion.div
+                                  initial={{ opacity: 0, y: -10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  className="absolute -bottom-6 left-0 text-xs text-red-600 dark:text-red-400"
+                                >
+                                  {dateValidation.startError}
+                                </motion.div>
+                              )}
                             </div>
-                          </motion.div>
+
+                            <div className="relative">
+                              <input
+                                type="date"
+                                value={dateRange.end}
+                                onChange={(e) => {
+                                  const newEnd = e.target.value;
+                                  setDateRange(prev => ({ 
+                                    ...prev, 
+                                    end: newEnd,
+                                    start: prev.start && newEnd < prev.start ? newEnd : prev.start
+                                  }));
+                                  setDateValidation(prev => ({ ...prev, endError: '' }));
+                                }}
+                                onBlur={() => validateDateRange()}
+                                min={dateRange.start || getDateDaysAgo(365)}
+                                max={getDateDaysAgo(-30)} // Allow future dates up to 30 days
+                                className={`w-full px-3 py-2 text-sm border rounded-lg bg-white dark:bg-[#1e242c] text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all duration-200 ${
+                                  dateValidation.endError 
+                                    ? 'border-red-300 dark:border-red-600 focus:ring-red-500 dark:focus:ring-red-400' 
+                                    : 'border-gray-300 dark:border-[#2c353f]'
+                                }`}
+                                placeholder="End date"
+                              />
+                              {dateValidation.endError && (
+                                <motion.div
+                                  initial={{ opacity: 0, y: -10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  className="absolute -bottom-6 left-0 text-xs text-red-600 dark:text-red-400"
+                                >
+                                  {dateValidation.endError}
+                                </motion.div>
+                              )}
+                            </div>
+
+                            {/* Date Range Summary */}
+                            {(dateRange.start || dateRange.end) && (
+                              <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md"
+                              >
+                                <div className="text-xs text-blue-800 dark:text-blue-300">
+                                  <div className="flex items-center justify-between">
+                                    <span>Selected Range:</span>
+                                    <span className="font-medium">
+                                      {dateRange.start || 'Any'} → {dateRange.end || 'Any'}
+                                    </span>
+                                  </div>
+                                  {dateRange.start && dateRange.end && (
+                                    <div className="mt-1 text-blue-600 dark:text-blue-400">
+                                      {Math.ceil((new Date(dateRange.end) - new Date(dateRange.start)) / (1000 * 60 * 60 * 24))} days
+                                    </div>
+                                  )}
+                                </div>
+                              </motion.div>
+                            )}
+                          </div>
                         )}
                       </div>
-
-                      {/* Advanced Status Filter with Multi-Select, Smart Grouping, and Real-time Analytics */}
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <label className="block text-sm font-medium text-gray-700 dark:text-[#a0acbb]">
-                            Status Filter
-                            {selectedStatuses.length > 0 && (
-                              <motion.span 
-                                className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ duration: 0.2 }}
-                              >
-                                {selectedStatuses.length}
-                              </motion.span>
-                            )}
+                      {/* Sort By Filter Card */}
+                      <div className="bg-gray-50 dark:bg-[#232a33] rounded-xl p-4 border border-gray-200 dark:border-[#2c353f] shadow-sm flex flex-col gap-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-[#a0acbb] flex items-center gap-2">
+                            <svg className="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h2l1 2h13l1-2h2" /></svg>
+                            Sort By
                           </label>
-                          <div className="flex items-center gap-2">
-                            <motion.button
-                              onClick={() => setShowStatusAnalytics(prev => !prev)}
-                              className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200"
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                            >
-                              {showStatusAnalytics ? 'Hide' : 'Show'} Analytics
-                            </motion.button>
-                            <motion.button
-                              onClick={() => setSelectedStatuses([])}
-                              className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-200"
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              disabled={selectedStatuses.length === 0}
-                            >
-                              Clear
-                            </motion.button>
-                          </div>
+                          <button onClick={() => toggleFilterCard('sort')} aria-label={openFilterCards.sort ? 'Collapse' : 'Expand'} className="ml-2 text-gray-400 hover:text-blue-500 dark:hover:text-blue-300 focus:outline-none">
+                            <svg className={`w-4 h-4 transition-transform ${openFilterCards.sort ? '' : 'rotate-180'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                          </button>
                         </div>
-
-                        {/* Status Analytics Panel */}
-                        <AnimatePresence>
-                          {showStatusAnalytics && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: 'auto', opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.3, ease: 'easeInOut' }}
-                              className="overflow-hidden"
-                            >
-                              <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                                <div className="grid grid-cols-3 gap-3 text-xs">
-                                  {statusOptions.map((status, index) => {
-                                    const count = polls.filter(poll => poll.status === status.value).length;
-                                    const percentage = polls.length > 0 ? Math.round((count / polls.length) * 100) : 0;
-                                    const isSelected = selectedStatuses.includes(status.value);
-                                    
-                                    return (
-                                      <motion.div
-                                        key={`status-${status.value}-${index}`}
-                                        className={`p-2 rounded-md cursor-pointer transition-all duration-200 ${
-                                          isSelected 
-                                            ? 'bg-blue-200 dark:bg-blue-800/40 border border-blue-300 dark:border-blue-700' 
-                                            : 'bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                                        }`}
-                                        onClick={() => handleStatusToggle(status.value)}
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                      >
-                                        <div className="flex items-center justify-between mb-1">
-                                          <span className={`font-medium ${
-                                            isSelected 
-                                              ? 'text-blue-800 dark:text-blue-300' 
-                                              : 'text-gray-700 dark:text-gray-300'
-                                          }`}>
-                                            {status.label}
-                                          </span>
-                                          <span className={`text-xs ${
-                                            isSelected 
-                                              ? 'text-blue-600 dark:text-blue-400' 
-                                              : 'text-gray-500 dark:text-gray-400'
-                                          }`}>
-                                            {count}
-                                          </span>
-                                        </div>
-                                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-                                          <motion.div
-                                            className="bg-blue-500 h-1.5 rounded-full"
-                                            initial={{ width: 0 }}
-                                            animate={{ width: `${percentage}%` }}
-                                            transition={{ duration: 0.5, delay: 0.1 }}
-                                          />
-                                        </div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                          {percentage}%
-                                        </div>
-                                      </motion.div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-
-                        {/* Enhanced Status Selection */}
-                        <div className="space-y-2">
-                          {statusOptions.map((status, index) => {
-                            const count = polls.filter(poll => poll.status === status.value).length;
-                            const isSelected = selectedStatuses.includes(status.value);
-                            
-                            return (
-                              <motion.label
-                                key={`status-label-${status.value}-${index}`}
-                                className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                                  isSelected 
-                                    ? 'bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700' 
-                                    : 'hover:bg-gray-50 dark:hover:bg-gray-800/50 border border-transparent'
-                                }`}
-                                whileHover={{ scale: 1.01 }}
-                                whileTap={{ scale: 0.99 }}
+                        {openFilterCards.sort && (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <label className="block text-xs font-medium text-gray-600 dark:text-[#8b9bb4]">
+                                Then by (Optional)
+                              </label>
+                              <select
+                                value={secondarySort || ''}
+                                onChange={(e) => setSecondarySort && setSecondarySort(e.target.value || null)}
+                                className="w-full px-3 py-2 text-xs border border-gray-200 dark:border-[#374151] rounded-md bg-gray-50 dark:bg-[#2a3441] text-gray-700 dark:text-[#a0acbb] focus:ring-1 focus:ring-blue-400 dark:focus:ring-blue-500 focus:border-transparent"
                               >
-                                <div className="flex items-center gap-3">
-                                  <div className="relative">
-                                    <input
-                                      type="checkbox"
-                                      checked={isSelected}
-                                      onChange={() => handleStatusToggle(status.value)}
-                                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                                    />
-                                    {isSelected && (
-                                      <motion.div
-                                        className="absolute inset-0 flex items-center justify-center"
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        transition={{ duration: 0.2 }}
-                                      >
-                                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                        </svg>
-                                      </motion.div>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <div className={`w-2 h-2 rounded-full ${
-                                      status.value === 'Active' ? 'bg-green-500' :
-                                      status.value === 'Upcoming' ? 'bg-blue-500' :
-                                      'bg-gray-500'
-                                    }`} />
-                                    <span className={`text-sm font-medium ${
-                                      isSelected 
-                                        ? 'text-blue-800 dark:text-blue-300' 
-                                        : 'text-gray-700 dark:text-[#a0acbb]'
-                                    }`}>
-                                      {status.label}
+                                <option value="">None</option>
+                                <option value="title" disabled={sortBy === 'title' || sortBy === 'title_desc'}>Title</option>
+                                <option value="participants" disabled={sortBy === 'participants' || sortBy === 'participants_asc'}>Participants</option>
+                                <option value="category" disabled={sortBy === 'category'}>Category</option>
+                                <option value="start_date" disabled={sortBy === 'start_date'}>Start Date</option>
+                                <option value="end_date" disabled={sortBy === 'end_date'}>End Date</option>
+                              </select>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <label className="block text-xs font-medium text-gray-600 dark:text-[#8b9bb4]">
+                                Sort Direction
+                              </label>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => setSortDirection && setSortDirection('asc')}
+                                  className={`p-1 rounded text-xs transition-all ${
+                                    sortDirection === 'asc' 
+                                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' 
+                                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                                  }`}
+                                  title="Ascending"
+                                >
+                                  ↑
+                                </button>
+                                <button
+                                  onClick={() => setSortDirection && setSortDirection('desc')}
+                                  className={`p-1 rounded text-xs transition-all ${
+                                    sortDirection === 'desc' 
+                                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' 
+                                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                                  }`}
+                                  title="Descending"
+                                >
+                                  ↓
+                                </button>
+                              </div>
+                            </div>
+                            {/* Sort Preview */}
+                            {sortBy && (
+                              <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md"
+                              >
+                                <div className="text-xs text-blue-800 dark:text-blue-300">
+                                  <div className="flex items-center justify-between">
+                                    <span>Sorting by:</span>
+                                    <span className="font-medium">
+                                      {sortBy.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                      {secondarySort && ` → ${secondarySort.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}`}
+                                      {sortDirection && ` (${sortDirection.toUpperCase()})`}
                                     </span>
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                                    {typeof poll.totalVotes === 'number' ? poll.totalVotes : 0} participants
-                                  </span>
-                                  {isSelected && (
-                                    <motion.span
-                                      className="text-xs text-blue-600 dark:text-blue-400"
-                                      initial={{ opacity: 0 }}
-                                      animate={{ opacity: 1 }}
-                                      transition={{ duration: 0.2 }}
-                                    >
-                                      ✓
-                                    </motion.span>
-                                  )}
-                                </div>
-                              </motion.label>
-                            );
-                          })}
+                              </motion.div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      {/* Status Filter Card */}
+                      <div className="bg-gray-50 dark:bg-[#232a33] rounded-xl p-4 border border-gray-200 dark:border-[#2c353f] shadow-sm flex flex-col gap-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-[#a0acbb] flex items-center gap-2">
+                            <svg className="w-4 h-4 text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            Status Filter
+                          </label>
+                          <button onClick={() => toggleFilterCard('status')} aria-label={openFilterCards.status ? 'Collapse' : 'Expand'} className="ml-2 text-gray-400 hover:text-blue-500 dark:hover:text-blue-300 focus:outline-none">
+                            <svg className={`w-4 h-4 transition-transform ${openFilterCards.status ? '' : 'rotate-180'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                          </button>
                         </div>
-
-                        {/* Quick Actions */}
-                        <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                          <motion.button
-                            onClick={() => setSelectedStatuses(['Active', 'Upcoming'])}
-                            className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-md hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors duration-200"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            Active + Upcoming
-                          </motion.button>
-                          <motion.button
-                            onClick={() => setSelectedStatuses(['Active'])}
-                            className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-md hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors duration-200"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            Active Only
-                          </motion.button>
+                        {openFilterCards.status && (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <label className="block text-xs font-medium text-gray-600 dark:text-[#8b9bb4]">
+                                Status
+                              </label>
+                              <div className="flex items-center gap-2">
+                                <motion.button
+                                  onClick={() => setShowStatusAnalytics(prev => !prev)}
+                                  className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200"
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                >
+                                  {showStatusAnalytics ? 'Hide' : 'Show'} Analytics
+                                </motion.button>
+                                <motion.button
+                                  onClick={() => setSelectedStatuses([])}
+                                  className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-200"
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  disabled={selectedStatuses.length === 0}
+                                >
+                                  Clear
+                                </motion.button>
+                              </div>
+                            </div>
+                            <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                              <motion.button
+                                onClick={() => setSelectedStatuses(['Active', 'Upcoming'])}
+                                className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-md hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors duration-200"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                              >
+                                Active + Upcoming
+                              </motion.button>
+                              <motion.button
+                                onClick={() => setSelectedStatuses(['Active'])}
+                                className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-md hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors duration-200"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                              >
+                                Active Only
+                              </motion.button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      {/* Participants Range Filter Card */}
+                      <div className="bg-gray-50 dark:bg-[#232a33] rounded-xl p-4 border border-gray-200 dark:border-[#2c353f] shadow-sm flex flex-col gap-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-[#a0acbb] flex items-center gap-2">
+                            <svg className="w-4 h-4 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m9-4V6a4 4 0 00-8 0v4m8 0a4 4 0 01-8 0" /></svg>
+                            Participants
+                          </label>
+                          <button onClick={() => toggleFilterCard('participants')} aria-label={openFilterCards.participants ? 'Collapse' : 'Expand'} className="ml-2 text-gray-400 hover:text-blue-500 dark:hover:text-blue-300 focus:outline-none">
+                            <svg className={`w-4 h-4 transition-transform ${openFilterCards.participants ? '' : 'rotate-180'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                          </button>
                         </div>
+                        {openFilterCards.participants && (
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              value={participantsRange.min}
+                              onChange={e => handleParticipantsRangeChange('min', e.target.value)}
+                              placeholder="Min"
+                              className="w-20 px-2 py-1 text-sm border rounded bg-white dark:bg-[#232a33] text-gray-900 dark:text-white border-gray-300 dark:border-[#2c353f] focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+                              aria-label="Minimum participants"
+                            />
+                            <span className="text-gray-500 dark:text-gray-400">-</span>
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              value={participantsRange.max}
+                              onChange={e => handleParticipantsRangeChange('max', e.target.value)}
+                              placeholder="Max"
+                              className="w-20 px-2 py-1 text-sm border rounded bg-white dark:bg-[#232a33] text-gray-900 dark:text-white border-gray-300 dark:border-[#2c353f] focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+                              aria-label="Maximum participants"
+                            />
+                            <button onClick={clearParticipantsRange} className="ml-2 text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-800">Clear</button>
+                          </div>
+                        )}
                       </div>
                     </div>
-
-                    {/* Active Filters Display */}
-                    {(selectedCategories.length > 0 || selectedStatuses.length > 0 || dateRange.start || dateRange.end) && (
-                      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-[#2c353f]">
-                        <div className="flex flex-wrap gap-2">
-                          {selectedCategories.map((category) => (
-                            <span
-                              key={`selected-category-${category}-${index}`}
-                              className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 rounded-full"
-                            >
-                              {category}
-                              <button
-                                onClick={() => handleCategoryToggle(category)}
-                                className="ml-1 hover:text-blue-600 dark:hover:text-blue-300"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </span>
-                          ))}
-                          {selectedStatuses.map((status) => (
-                            <span
-                              key={`selected-status-${status}-${index}`}
-                              className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400 rounded-full"
-                            >
-                              {status}
-                              <button
-                                onClick={() => handleStatusToggle(status)}
-                                className="ml-1 hover:text-purple-600 dark:hover:text-purple-300"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </span>
-                          ))}
-                          {dateRange.start && (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 rounded-full">
-                              From: {new Date(dateRange.start).toLocaleDateString()}
-                              <button
-                                onClick={() => setDateRange(prev => ({ ...prev, start: '' }))}
-                                className="ml-1 hover:text-green-600 dark:hover:text-green-300"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </span>
-                          )}
-                          {dateRange.end && (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 rounded-full">
-                              To: {new Date(dateRange.end).toLocaleDateString()}
-                              <button
-                                onClick={() => setDateRange(prev => ({ ...prev, end: '' }))}
-                                className="ml-1 hover:text-green-600 dark:hover:text-green-300"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    )}
+                    {/* ...existing code for active filters display... */}
                   </div>
                 </motion.div>
               )}
@@ -2310,6 +2317,37 @@ const AvailablePolls = () => {
                 )}
               </div>
             </motion.div>
+
+            {/* Active Filter Chips */}
+            {(selectedCategories.length > 0 || selectedStatuses.length > 0 || dateRange.start || dateRange.end) && (
+              <div className="flex flex-wrap gap-2 mb-4">
+                {selectedCategories.map(cat => (
+                  <span key={cat} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+                    {cat}
+                    <button onClick={() => setSelectedCategories(selectedCategories.filter(c => c !== cat))} className="ml-1 text-blue-500 hover:text-blue-700 dark:text-blue-300 dark:hover:text-blue-100">&times;</button>
+                  </span>
+                ))}
+                {selectedStatuses.map(status => (
+                  <span key={status} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-pink-100 dark:bg-pink-900/30 text-pink-800 dark:text-pink-300">
+                    {status}
+                    <button onClick={() => setSelectedStatuses(selectedStatuses.filter(s => s !== status))} className="ml-1 text-pink-500 hover:text-pink-700 dark:text-pink-300 dark:hover:text-pink-100">&times;</button>
+                  </span>
+                ))}
+                {dateRange.start && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
+                    Start: {dateRange.start}
+                    <button onClick={() => setDateRange({ ...dateRange, start: '' })} className="ml-1 text-green-500 hover:text-green-700 dark:text-green-300 dark:hover:text-green-100">&times;</button>
+                  </span>
+                )}
+                {dateRange.end && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
+                    End: {dateRange.end}
+                    <button onClick={() => setDateRange({ ...dateRange, end: '' })} className="ml-1 text-green-500 hover:text-green-700 dark:text-green-300 dark:hover:text-green-100">&times;</button>
+                  </span>
+                )}
+                <button onClick={clearFilters} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-800 ml-2">Clear All</button>
+              </div>
+            )}
 
             {/* Enhanced Polls Grid */}
             <AnimatePresence mode="wait">

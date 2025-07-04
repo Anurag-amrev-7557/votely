@@ -158,7 +158,28 @@ const StepIllustration = ({ step, isActive }) => {
                 animate={{ opacity: isActive ? 1 : 0 }}
                 className="relative w-full aspect-[4/3] flex items-center justify-center overflow-visible"
             >
-                <svg viewBox="0 0 400 300" className="w-full max-w-[400px] h-full mx-auto" preserveAspectRatio="xMidYMid meet">
+                <svg
+                    viewBox="0 0 400 300"
+                    className="w-full max-w-[400px] h-full mx-auto"
+                    preserveAspectRatio="xMidYMid meet"
+                    // Use CSS variables for theme-adaptable SVG colors
+                    style={{
+                        '--email-bg': 'var(--color-email-bg, #fff)',
+                        '--email-bg-dark': 'var(--color-email-bg-dark, #1e293b)',
+                        '--email-header': 'var(--color-email-header, #f3f4f6)',
+                        '--email-header-dark': 'var(--color-email-header-dark, #334155)',
+                        '--email-border': 'var(--color-email-border, #e5e7eb)',
+                        '--email-border-dark': 'var(--color-email-border-dark, #334155)',
+                        '--email-list': 'var(--color-email-list, #f9fafb)',
+                        '--email-list-dark': 'var(--color-email-list-dark, #334155)',
+                        '--email-avatar': 'var(--color-email-avatar, #3b82f6)',
+                        '--email-avatar-dark': 'var(--color-email-avatar-dark, #60a5fa)',
+                        '--email-avatar-bg': 'var(--color-email-avatar-bg, #3b82f633)',
+                        '--email-avatar-bg-dark': 'var(--color-email-avatar-bg-dark, #60a5fa33)',
+                        '--email-text': 'var(--color-email-text, #9ca3af)',
+                        '--email-text-dark': 'var(--color-email-text-dark, #6b7280)',
+                    }}
+                >
                     {/* Email Interface */}
                     <motion.rect
                         layoutId="container"
@@ -170,9 +191,9 @@ const StepIllustration = ({ step, isActive }) => {
                         width="300"
                         height="200"
                         rx="8"
-                        fill="currentColor"
-                        stroke="currentColor"
-                        className="text-white dark:text-gray-800 stroke-gray-200 dark:stroke-gray-700"
+                        fill="var(--email-bg)"
+                        stroke="var(--email-border)"
+                        className="dark:fill-[var(--email-bg-dark)] dark:stroke-[var(--email-border-dark)]"
                         strokeWidth="2"
                     />
                     {/* Email Header */}
@@ -185,8 +206,8 @@ const StepIllustration = ({ step, isActive }) => {
                         y="50"
                         height="40"
                         rx="8"
-                        fill="currentColor"
-                        className="text-gray-100 dark:text-gray-700"
+                        fill="var(--email-header)"
+                        className="dark:fill-[var(--email-header-dark)]"
                     />
                     {/* Email Icon */}
                     <motion.path
@@ -195,8 +216,8 @@ const StepIllustration = ({ step, isActive }) => {
                         animate={{ pathLength: 1 }}
                         transition={{ duration: 1 }}
                         d="M70,70 L330,70 L330,230 L70,230 Z M70,70 L200,150 L330,70"
-                        stroke="currentColor"
-                        className="stroke-blue-500 dark:stroke-blue-400"
+                        stroke="#3b82f6"
+                        className="dark:stroke-blue-400"
                         strokeWidth="2"
                         fill="none"
                     />
@@ -212,9 +233,9 @@ const StepIllustration = ({ step, isActive }) => {
                                 width="260"
                                 height="30"
                                 rx="4"
-                                fill="currentColor"
-                                stroke="currentColor"
-                                className="text-gray-50 dark:text-gray-700 stroke-gray-200 dark:stroke-gray-600"
+                                fill="var(--email-list)"
+                                stroke="var(--email-border)"
+                                className="dark:fill-[var(--email-list-dark)] dark:stroke-[var(--email-border-dark)]"
                             />
                             <motion.circle
                                 layoutId={`avatar${i}`}
@@ -224,8 +245,8 @@ const StepIllustration = ({ step, isActive }) => {
                                 cx="90"
                                 cy={115 + i * 40}
                                 r="8"
-                                fill="currentColor"
-                                className="text-blue-500/20 dark:text-blue-400/20"
+                                fill="var(--email-avatar-bg)"
+                                className="dark:fill-[var(--email-avatar-bg-dark)]"
                             />
                             <motion.rect
                                 layoutId={`text${i}`}
@@ -236,8 +257,8 @@ const StepIllustration = ({ step, isActive }) => {
                                 y={110 + i * 40}
                                 height="10"
                                 rx="2"
-                                fill="currentColor"
-                                className="text-gray-400 dark:text-gray-500"
+                                fill="var(--email-text)"
+                                className="dark:fill-[var(--email-text-dark)]"
                             />
                         </motion.g>
                     ))}
@@ -254,6 +275,7 @@ const StepIllustration = ({ step, isActive }) => {
                             height="36"
                             rx="18"
                             fill="#3b82f6"
+                            className="dark:fill-blue-600"
                         />
                         <motion.rect
                             layoutId="buttonInner"
@@ -266,6 +288,7 @@ const StepIllustration = ({ step, isActive }) => {
                             height="32"
                             rx="16"
                             fill="#2563eb"
+                            className="dark:fill-blue-700"
                         />
                         <motion.text
                             layoutId="buttonText"
@@ -275,6 +298,7 @@ const StepIllustration = ({ step, isActive }) => {
                             x="190"
                             y="282"
                             fill="white"
+                            className="dark:fill-white"
                             fontSize="14"
                             fontWeight="500"
                             textAnchor="middle"
@@ -291,7 +315,40 @@ const StepIllustration = ({ step, isActive }) => {
                 animate={{ opacity: isActive ? 1 : 0 }}
                 className="relative w-full aspect-[4/3] flex items-center justify-center overflow-visible"
             >
-                <svg viewBox="0 0 400 400" className="w-full max-w-[400px] h-full mx-auto" preserveAspectRatio="xMidYMid meet">
+                <svg
+                    viewBox="0 0 400 400"
+                    className="w-full max-w-[400px] h-full mx-auto"
+                    preserveAspectRatio="xMidYMid meet"
+                    // Use CSS variables for theme-adaptable SVG colors
+                    style={{
+                        '--mobile-bg': 'var(--color-mobile-bg, #fff)',
+                        '--mobile-bg-dark': 'var(--color-mobile-bg-dark, #1e293b)',
+                        '--mobile-border': 'var(--color-mobile-border, #e5e7eb)',
+                        '--mobile-border-dark': 'var(--color-mobile-border-dark, #334155)',
+                        '--screen-bg': 'var(--color-screen-bg, #f9fafb)',
+                        '--screen-bg-dark': 'var(--color-screen-bg-dark, #334155)',
+                        '--header-bg': 'var(--color-header-bg, #f3f4f6)',
+                        '--header-bg-dark': 'var(--color-header-bg-dark, #334155)',
+                        '--card-bg': 'var(--color-card-bg, #fff)',
+                        '--card-bg-dark': 'var(--color-card-bg-dark, #1e293b)',
+                        '--card-border': 'var(--color-card-border, #e5e7eb)',
+                        '--card-border-dark': 'var(--color-card-border-dark, #334155)',
+                        '--avatar-bg': 'var(--color-avatar-bg, #3b82f633)',
+                        '--avatar-bg-dark': 'var(--color-avatar-bg-dark, #60a5fa33)',
+                        '--avatar': 'var(--color-avatar, #3b82f6)',
+                        '--avatar-dark': 'var(--color-avatar-dark, #60a5fa)',
+                        '--name-text': 'var(--color-name-text, #9ca3af)',
+                        '--name-text-dark': 'var(--color-name-text-dark, #6b7280)',
+                        '--desc-text': 'var(--color-desc-text, #d1d5db)',
+                        '--desc-text-dark': 'var(--color-desc-text-dark, #6b7280)',
+                        '--button-bg': 'var(--color-button-bg, #3b82f6)',
+                        '--button-bg-dark': 'var(--color-button-bg-dark, #2563eb)',
+                        '--button-inner': 'var(--color-button-inner, #2563eb)',
+                        '--button-inner-dark': 'var(--color-button-inner-dark, #1d4ed8)',
+                        '--button-text': 'var(--color-button-text, #fff)',
+                        '--button-text-dark': 'var(--color-button-text-dark, #fff)',
+                    }}
+                >
                     {/* Mobile Device */}
                     <motion.rect
                         layoutId="container"
@@ -303,9 +360,9 @@ const StepIllustration = ({ step, isActive }) => {
                         width="200"
                         height="300"
                         rx="20"
-                        fill="currentColor"
-                        stroke="currentColor"
-                        className="text-white dark:text-gray-800 stroke-gray-200 dark:stroke-gray-700"
+                        fill="var(--mobile-bg)"
+                        stroke="var(--mobile-border)"
+                        className="dark:fill-[var(--mobile-bg-dark)] dark:stroke-[var(--mobile-border-dark)]"
                         strokeWidth="2"
                     />
                     {/* Screen Content */}
@@ -318,8 +375,8 @@ const StepIllustration = ({ step, isActive }) => {
                         y="70"
                         width="160"
                         rx="8"
-                        fill="currentColor"
-                        className="text-gray-100 dark:text-gray-700"
+                        fill="var(--screen-bg)"
+                        className="dark:fill-[var(--screen-bg-dark)]"
                     />
                     {/* Mobile Header */}
                     <motion.rect
@@ -331,8 +388,8 @@ const StepIllustration = ({ step, isActive }) => {
                         y="70"
                         height="40"
                         rx="8"
-                        fill="currentColor"
-                        className="text-gray-100 dark:text-gray-700"
+                        fill="var(--header-bg)"
+                        className="dark:fill-[var(--header-bg-dark)]"
                     />
                     {/* Candidate Cards */}
                     {[...Array(2)].map((_, i) => (
@@ -346,9 +403,9 @@ const StepIllustration = ({ step, isActive }) => {
                                 width="140"
                                 height="80"
                                 rx="8"
-                                fill="currentColor"
-                                stroke="currentColor"
-                                className="text-white dark:text-gray-800 stroke-gray-200 dark:stroke-gray-700"
+                                fill="var(--card-bg)"
+                                stroke="var(--card-border)"
+                                className="dark:fill-[var(--card-bg-dark)] dark:stroke-[var(--card-border-dark)]"
                             />
                             <motion.circle
                                 layoutId={`avatar${i}`}
@@ -358,8 +415,19 @@ const StepIllustration = ({ step, isActive }) => {
                                 cx="153"
                                 cy={110 + i * 100}
                                 r="15"
-                                fill="currentColor"
-                                className="text-blue-500/20 dark:text-blue-400/20"
+                                fill="var(--avatar-bg)"
+                                className="dark:fill-[var(--avatar-bg-dark)]"
+                            />
+                            <motion.circle
+                                layoutId={`avatarInner${i}`}
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ delay: 0.75 + i * 0.2 }}
+                                cx="153"
+                                cy={110 + i * 100}
+                                r="10"
+                                fill="var(--avatar)"
+                                className="dark:fill-[var(--avatar-dark)]"
                             />
                             <motion.rect
                                 layoutId={`name${i}`}
@@ -370,8 +438,8 @@ const StepIllustration = ({ step, isActive }) => {
                                 y={95 + i * 100}
                                 height="10"
                                 rx="2"
-                                fill="currentColor"
-                                className="text-gray-400 dark:text-gray-500"
+                                fill="var(--name-text)"
+                                className="dark:fill-[var(--name-text-dark)]"
                             />
                             <motion.rect
                                 layoutId={`desc${i}`}
@@ -382,8 +450,8 @@ const StepIllustration = ({ step, isActive }) => {
                                 y={115 + i * 100}
                                 height="8"
                                 rx="2"
-                                fill="currentColor"
-                                className="text-gray-300 dark:text-gray-600"
+                                fill="var(--desc-text)"
+                                className="dark:fill-[var(--desc-text-dark)]"
                             />
                         </motion.g>
                     ))}
@@ -399,7 +467,8 @@ const StepIllustration = ({ step, isActive }) => {
                             width="100"
                             height="36"
                             rx="18"
-                            fill="#3b82f6"
+                            fill="var(--button-bg)"
+                            className="dark:fill-[var(--button-bg-dark)]"
                         />
                         <motion.rect
                             layoutId="buttonInner"
@@ -411,7 +480,8 @@ const StepIllustration = ({ step, isActive }) => {
                             width="96"
                             height="32"
                             rx="16"
-                            fill="#2563eb"
+                            fill="var(--button-inner)"
+                            className="dark:fill-[var(--button-inner-dark)]"
                         />
                         <motion.text
                             layoutId="buttonText"
@@ -420,7 +490,8 @@ const StepIllustration = ({ step, isActive }) => {
                             transition={{ delay: 1.2 }}
                             x="200"
                             y="307"
-                            fill="white"
+                            fill="var(--button-text)"
+                            className="dark:fill-[var(--button-text-dark)]"
                             fontSize="14"
                             fontWeight="500"
                             textAnchor="middle"
@@ -437,7 +508,34 @@ const StepIllustration = ({ step, isActive }) => {
                 animate={{ opacity: isActive ? 1 : 0 }}
                 className="relative w-full aspect-[4/3] flex items-center justify-center overflow-visible"
             >
-                <svg viewBox="0 0 400 400" className="w-full max-w-[400px] h-full mx-auto" preserveAspectRatio="xMidYMid meet">
+                <svg
+                    viewBox="0 0 400 400"
+                    className="w-full max-w-[400px] h-full mx-auto"
+                    preserveAspectRatio="xMidYMid meet"
+                    // Use CSS variables for theme-adaptable SVG colors
+                    style={{
+                        '--dashboard-bg': 'var(--color-dashboard-bg, #fff)',
+                        '--dashboard-bg-dark': 'var(--color-dashboard-bg-dark, #1e293b)',
+                        '--dashboard-border': 'var(--color-dashboard-border, #e5e7eb)',
+                        '--dashboard-border-dark': 'var(--color-dashboard-border-dark, #334155)',
+                        '--header-bg': 'var(--color-header-bg, #f3f4f6)',
+                        '--header-bg-dark': 'var(--color-header-bg-dark, #334155)',
+                        '--chart-bg': 'var(--color-chart-bg, #f9fafb)',
+                        '--chart-bg-dark': 'var(--color-chart-bg-dark, #334155)',
+                        '--bar': 'var(--color-bar, #3b82f6)',
+                        '--bar-dark': 'var(--color-bar-dark, #60a5fa)',
+                        '--label': 'var(--color-label, #6b7280)',
+                        '--label-dark': 'var(--color-label-dark, #d1d5db)',
+                        '--percent': 'var(--color-percent, #3b82f6)',
+                        '--percent-dark': 'var(--color-percent-dark, #60a5fa)',
+                        '--button-bg': 'var(--color-button-bg, #3b82f6)',
+                        '--button-bg-dark': 'var(--color-button-bg-dark, #2563eb)',
+                        '--button-inner': 'var(--color-button-inner, #2563eb)',
+                        '--button-inner-dark': 'var(--color-button-inner-dark, #1d4ed8)',
+                        '--button-text': 'var(--color-button-text, #fff)',
+                        '--button-text-dark': 'var(--color-button-text-dark, #fff)',
+                    }}
+                >
                     {/* Dashboard */}
                     <motion.rect
                         layoutId="container"
@@ -449,9 +547,9 @@ const StepIllustration = ({ step, isActive }) => {
                         width="300"
                         height="200"
                         rx="8"
-                        fill="currentColor"
-                        stroke="currentColor"
-                        className="text-white dark:text-gray-800 stroke-gray-200 dark:stroke-gray-700"
+                        fill="var(--dashboard-bg)"
+                        stroke="var(--dashboard-border)"
+                        className="dark:fill-[var(--dashboard-bg-dark)] dark:stroke-[var(--dashboard-border-dark)]"
                         strokeWidth="2"
                     />
                     {/* Header */}
@@ -464,8 +562,8 @@ const StepIllustration = ({ step, isActive }) => {
                         y="50"
                         height="40"
                         rx="8"
-                        fill="currentColor"
-                        className="text-gray-100 dark:text-gray-700"
+                        fill="var(--header-bg)"
+                        className="dark:fill-[var(--header-bg-dark)]"
                     />
                     {/* Chart Area */}
                     <motion.rect
@@ -477,8 +575,8 @@ const StepIllustration = ({ step, isActive }) => {
                         y="100"
                         width="260"
                         rx="4"
-                        fill="currentColor"
-                        className="text-gray-50 dark:text-gray-700"
+                        fill="var(--chart-bg)"
+                        className="dark:fill-[var(--chart-bg-dark)]"
                     />
                     {/* Bar Chart */}
                     {[...Array(4)].map((_, i) => (
@@ -486,11 +584,11 @@ const StepIllustration = ({ step, isActive }) => {
                             <motion.rect
                                 layoutId={`bar${i}`}
                                 initial={{ height: 0, y: 250 }}
-                                animate={{ 
+                                animate={{
                                     height: [0, 100, 80],
                                     y: [250, 150, 170]
                                 }}
-                                transition={{ 
+                                transition={{
                                     delay: 0.5 + i * 0.2,
                                     duration: 1,
                                     times: [0, 0.6, 1]
@@ -498,8 +596,8 @@ const StepIllustration = ({ step, isActive }) => {
                                 x={100 + i * 50}
                                 width="30"
                                 rx="4"
-                                fill="currentColor"
-                                className="text-blue-500/60 dark:text-blue-400/60"
+                                fill="var(--bar)"
+                                className="dark:fill-[var(--bar-dark)]"
                             />
                             <motion.text
                                 layoutId={`label${i}`}
@@ -508,8 +606,8 @@ const StepIllustration = ({ step, isActive }) => {
                                 transition={{ delay: 0.8 + i * 0.2 }}
                                 x={115 + i * 50}
                                 y="265"
-                                fill="currentColor"
-                                className="text-gray-500 dark:text-gray-400"
+                                fill="var(--label)"
+                                className="dark:fill-[var(--label-dark)]"
                                 fontSize="12"
                                 textAnchor="middle"
                             >
@@ -527,8 +625,8 @@ const StepIllustration = ({ step, isActive }) => {
                             transition={{ delay: 1 + i * 0.2 }}
                             x={115 + i * 50}
                             y={150 + i * 20}
-                            fill="currentColor"
-                            className="text-blue-500 dark:text-blue-400"
+                            fill="var(--percent)"
+                            className="dark:fill-[var(--percent-dark)]"
                             fontSize="12"
                             textAnchor="middle"
                         >
@@ -547,7 +645,8 @@ const StepIllustration = ({ step, isActive }) => {
                             width="120"
                             height="36"
                             rx="18"
-                            fill="#3b82f6"
+                            fill="var(--button-bg)"
+                            className="dark:fill-[var(--button-bg-dark)]"
                         />
                         <motion.rect
                             layoutId="buttonInner"
@@ -559,7 +658,8 @@ const StepIllustration = ({ step, isActive }) => {
                             width="116"
                             height="32"
                             rx="16"
-                            fill="#2563eb"
+                            fill="var(--button-inner)"
+                            className="dark:fill-[var(--button-inner-dark)]"
                         />
                         <motion.text
                             layoutId="buttonText"
@@ -568,7 +668,8 @@ const StepIllustration = ({ step, isActive }) => {
                             transition={{ delay: 1.4 }}
                             x="185"
                             y="297"
-                            fill="white"
+                            fill="var(--button-text)"
+                            className="dark:fill-[var(--button-text-dark)]"
                             fontSize="14"
                             fontWeight="500"
                             textAnchor="middle"
@@ -595,15 +696,26 @@ const StepCard = ({ step, isActive, onClick }) => (
                 : 'hover:shadow-md dark:hover:shadow-gray-700/50'
         }`}
     >
-        {/* Active Indicator */}
+        {/* Enhanced Active Indicator */}
         {isActive && (
             <motion.div
                 layoutId="activeStep"
-                className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-12 bg-blue-500 rounded-full"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-            />
+                className="absolute -left-2 top-1/2 -translate-y-1/2 w-2 h-14 bg-gradient-to-b from-blue-400 via-blue-500 to-blue-600 shadow-lg rounded-full flex items-center justify-center z-10"
+                initial={{ opacity: 0, scaleY: 0.7 }}
+                animate={{ opacity: 1, scaleY: 1 }}
+                exit={{ opacity: 0, scaleY: 0.7 }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            >
+                {/* Animated pulse effect */}
+                <motion.span
+                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-blue-400 rounded-full opacity-60"
+                    initial={{ scale: 0.7, opacity: 0.4 }}
+                    animate={{ scale: [0.7, 1.2, 0.7], opacity: [0.4, 0.2, 0.4] }}
+                    transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
+                />
+                {/* Subtle glow */}
+                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-blue-400/20 rounded-full blur-md pointer-events-none" />
+            </motion.div>
         )}
         
         <div className="flex items-center gap-4">
@@ -662,21 +774,52 @@ const StepCard = ({ step, isActive, onClick }) => (
             </div>
         </div>
 
-        {/* Progress Indicator */}
+        {/* Enhanced Progress Indicator */}
         <motion.div 
-            className="absolute bottom-0 left-0 h-1 bg-blue-500 rounded-b-xl"
-            initial={{ width: 0 }}
-            animate={{ width: isActive ? '100%' : '0%' }}
-            transition={{ duration: 0.3 }}
-        />
+            className="absolute bottom-0 left-0 h-1.5 bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 rounded-b-xl shadow-md"
+            initial={{ width: 0, opacity: 0.5 }}
+            animate={{ width: isActive ? '100%' : '0%', opacity: isActive ? 1 : 0.5 }}
+            transition={{ duration: 0.4, type: "spring", bounce: 0.2 }}
+        >
+            {/* Animated shimmer effect */}
+            {isActive && (
+                <motion.div
+                    className="absolute top-0 left-0 h-full w-1/4 bg-white/30 rounded-b-xl blur-sm"
+                    initial={{ x: '-100%' }}
+                    animate={{ x: '400%' }}
+                    transition={{
+                        repeat: Infinity,
+                        repeatType: "loop",
+                        duration: 1.2,
+                        ease: "linear"
+                    }}
+                />
+            )}
+        </motion.div>
 
-        {/* Hover Effect */}
+        {/* Enhanced Hover Effect */}
         <motion.div
-            className="absolute inset-0 rounded-xl bg-blue-500/5 dark:bg-blue-400/5"
-            initial={{ opacity: 0 }}
-            whileHover={{ opacity: 1 }}
-            transition={{ duration: 0.2 }}
+            className="absolute inset-0 rounded-xl bg-blue-500/10 dark:bg-blue-400/10 pointer-events-none"
+            initial={{ opacity: 0, scale: 0.98 }}
+            whileHover={{ opacity: 1, scale: 1 }}
+            animate={{ opacity: isActive ? 1 : 0, scale: isActive ? 1 : 0.98 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            style={{
+                boxShadow: isActive
+                    ? "0 4px 24px 0 rgba(59,130,246,0.10), 0 1.5px 6px 0 rgba(59,130,246,0.08)"
+                    : undefined
+            }}
         />
+        {/* Subtle border highlight for active step */}
+        {isActive && (
+            <motion.div
+                className="absolute inset-0 rounded-xl border-2 border-blue-400/60 dark:border-blue-500/60 pointer-events-none"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+            />
+        )}
     </motion.div>
 );
 
@@ -692,24 +835,57 @@ const HowItWorksSection = () => {
             number: 1,
             title: "Create Your Election",
             description: "Set up your election in minutes with our intuitive interface. Customize settings, add candidates, and set voting parameters.",
+            icon: (
+                <svg className="w-7 h-7 text-blue-500" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                    <rect x="4" y="4" width="16" height="16" rx="3" className="stroke-current" />
+                    <path d="M8 10h8M8 14h5" className="stroke-current" strokeLinecap="round" />
+                </svg>
+            ),
+            highlight: "Fast & Flexible"
         },
         {
             number: 2,
             title: "Invite Voters",
             description: "Send secure invitations to your voters. They'll receive unique access codes to ensure one vote per person.",
+            icon: (
+                <svg className="w-7 h-7 text-green-500" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                    <path d="M16 12a4 4 0 1 0-8 0 4 4 0 0 0 8 0Z" className="stroke-current" />
+                    <path d="M2 20c0-2.21 3.582-4 8-4s8 1.79 8 4" className="stroke-current" strokeLinecap="round" />
+                    <path d="M19 8v2m0 0v2m0-2h2m-2 0h-2" className="stroke-current" strokeLinecap="round" />
+                </svg>
+            ),
+            highlight: "Secure & Private"
         },
         {
             number: 3,
             title: "Cast Votes",
             description: "Voters can securely cast their votes from any device. Our platform ensures accessibility and ease of use.",
+            icon: (
+                <svg className="w-7 h-7 text-purple-500" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                    <rect x="3" y="11" width="18" height="8" rx="2" className="stroke-current" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" className="stroke-current" strokeLinecap="round" />
+                    <path d="M12 15v2" className="stroke-current" strokeLinecap="round" />
+                </svg>
+            ),
+            highlight: "Accessible Anywhere"
         },
         {
             number: 4,
             title: "View Results",
             description: "Watch results come in real-time with our live analytics dashboard. Generate detailed reports instantly.",
+            icon: (
+                <svg className="w-7 h-7 text-yellow-500" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                    <rect x="4" y="13" width="3" height="7" rx="1" className="stroke-current" />
+                    <rect x="10.5" y="9" width="3" height="11" rx="1" className="stroke-current" />
+                    <rect x="17" y="5" width="3" height="15" rx="1" className="stroke-current" />
+                    <path d="M4 4h16" className="stroke-current" strokeLinecap="round" />
+                </svg>
+            ),
+            highlight: "Live Analytics"
         }
     ];
 
+    // Enhanced: Pause autoplay on user interaction, resume after inactivity, and allow keyboard navigation
     useEffect(() => {
         let interval;
         if (isAutoPlaying) {
@@ -720,9 +896,48 @@ const HowItWorksSection = () => {
         return () => clearInterval(interval);
     }, [isAutoPlaying, steps.length]);
 
-    const handleStepClick = (index) => {
+    // Resume autoplay after 15s of inactivity
+    useEffect(() => {
+        if (!isAutoPlaying) {
+            const timeout = setTimeout(() => {
+                setIsAutoPlaying(true);
+            }, 15000);
+            return () => clearTimeout(timeout);
+        }
+    }, [isAutoPlaying, activeStep]);
+
+    // Keyboard navigation for accessibility
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === "ArrowRight") {
+                setActiveStep((prev) => (prev + 1) % steps.length);
+                setIsAutoPlaying(false);
+            } else if (e.key === "ArrowLeft") {
+                setActiveStep((prev) => (prev - 1 + steps.length) % steps.length);
+                setIsAutoPlaying(false);
+            }
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [steps.length]);
+
+    // Enhanced: Support keyboard and mouse interaction, focus management, and analytics event
+    const handleStepClick = (index, event) => {
         setActiveStep(index);
         setIsAutoPlaying(false);
+
+        // Optionally focus the step for accessibility
+        if (event && event.currentTarget) {
+            event.currentTarget.focus();
+        }
+
+        // Example: Track step click for analytics (pseudo-code)
+        if (window?.gtag) {
+            window.gtag('event', 'live_demo_step_click', {
+                step_index: index,
+                step_title: steps[index]?.title || '',
+            });
+        }
     };
 
     return (
