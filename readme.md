@@ -27,17 +27,17 @@
 
 ## ✨ Features
 
-- 📝 **Create & Manage Polls** — Intuitive poll creation with images, options, and deadlines
-- 🔒 **Authentication** — Secure user registration, login, and profile management
-- 📊 **Real-Time Voting** — Live updates of poll results as users vote
-- 💬 **Comments** — Engage in discussions on each poll
-- 🛡️ **Admin Dashboard** — Manage users, polls, and monitor activity
-- 📱 **Responsive Design** — Mobile-first, accessible, and fast
-- 🌗 **Dark Mode** — Seamless light/dark theme switching
-- 🔗 **Social Sharing** — Share polls via social media
-- 📧 **Email Notifications** — Stay updated on poll activity
-- 🏆 **Gamification** — Activity tracking and leaderboards (optional)
-- 🧑‍💻 **Developer Friendly** — Modular, well-documented codebase
+- <img src="https://cdn.jsdelivr.net/npm/lucide-static/icons/edit-3.svg" width="20" /> **Create & Manage Polls** — Intuitive poll creation with images, options, and deadlines
+- <img src="https://cdn.jsdelivr.net/npm/lucide-static/icons/lock.svg" width="20" /> **Authentication** — Secure user registration, login, and profile management
+- <img src="https://cdn.jsdelivr.net/npm/lucide-static/icons/bar-chart-2.svg" width="20" /> **Real-Time Voting** — Live updates of poll results as users vote
+- <img src="https://cdn.jsdelivr.net/npm/lucide-static/icons/message-circle.svg" width="20" /> **Comments** — Engage in discussions on each poll
+- <img src="https://cdn.jsdelivr.net/npm/lucide-static/icons/shield-check.svg" width="20" /> **Admin Dashboard** — Manage users, polls, and monitor activity
+- <img src="https://cdn.jsdelivr.net/npm/lucide-static/icons/smartphone.svg" width="20" /> **Responsive Design** — Mobile-first, accessible, and fast
+- <img src="https://cdn.jsdelivr.net/npm/lucide-static/icons/moon-star.svg" width="20" /> **Dark Mode** — Seamless light/dark theme switching
+- <img src="https://cdn.jsdelivr.net/npm/lucide-static/icons/share-2.svg" width="20" /> **Social Sharing** — Share polls via social media
+- <img src="https://cdn.jsdelivr.net/npm/lucide-static/icons/mail.svg" width="20" /> **Email Notifications** — Stay updated on poll activity
+- <img src="https://cdn.jsdelivr.net/npm/lucide-static/icons/award.svg" width="20" /> **Gamification** — Activity tracking and leaderboards (optional)
+- <img src="https://cdn.jsdelivr.net/npm/lucide-static/icons/code.svg" width="20" /> **Developer Friendly** — Modular, well-documented codebase
 
 ---
 
