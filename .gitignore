@@ -3,16 +3,29 @@
 .env.local
 .env.*.local
 
-# Dependencies
+# Dependency directories
 node_modules/
+bower_components/
+jspm_packages/
 dist/
 build/
+.cache/
+.next/
+out/
+coverage/
+tmp/
+temp/
 
 # Logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+
+# Test coverage
+coverage/
+.nyc_output/
 
 # Editor directories and files
 .idea/
@@ -22,6 +35,7 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
+*.code-workspace
 
 # OS generated files
 .DS_Store
@@ -30,4 +44,33 @@ yarn-error.log*
 .Spotlight-V100
 .Trashes
 ehthumbs.db
-Thumbs.db 
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# Misc
+.env.test
+.env.production
+.env.development
+*.local
+*.env.*
+*.bak
+*.orig
+*.rej
+
+# Mac system files
+.AppleDouble
+.LSOverride
+
+# Linux system files
+*~
+.nfs*
+
+# Windows system files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Optional: Ignore IDE settings for JetBrains Rider/WebStorm
+.idea/
+# End of Selection

@@ -436,48 +436,51 @@ const AboutUs = () => {
               <div className="absolute left-1/2 transform -translate-x-px h-full w-1 bg-gradient-to-b from-blue-500 via-purple-500 to-indigo-500 rounded-full"></div>
               
               <div className="space-y-12">
-                {milestones.map((milestone, index) => (
-                  <motion.div
-                    key={milestone.year}
-                    initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.8, delay: index * 0.2 }}
-                    viewport={{ once: true }}
-                    className={`flex items-center ${index % 2 === 0 ? 'flex-row' : 'flex-row-reverse'}`}
-                  >
-                    <div className={`w-1/2 ${index % 2 === 0 ? 'pr-8 text-right' : 'pl-8 text-left'}`}>
-                      <div className="group bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border border-gray-100/50 dark:border-gray-700/50">
-                        <div className="flex items-center mb-4">
-                          <motion.div 
-                            className={`w-12 h-12 bg-gradient-to-r ${milestone.color} rounded-xl flex items-center justify-center mr-4 shadow-lg`}
-                            whileHover={{ scale: 1.1, rotate: 360 }}
-                            transition={{ duration: 0.3 }}
-                          >
-                            <milestone.icon className="w-6 h-6 text-white" />
-                          </motion.div>
-                          <div>
-                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{milestone.title}</h3>
-                            <p className="text-blue-600 dark:text-blue-400 font-semibold">{milestone.year}</p>
+                {milestones.map((milestone, index) => {
+                  const Icon = milestone.icon;
+                  return (
+                    <motion.div
+                      key={milestone.year}
+                      initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.8, delay: index * 0.2 }}
+                      viewport={{ once: true }}
+                      className={`flex items-center ${index % 2 === 0 ? 'flex-row' : 'flex-row-reverse'}`}
+                    >
+                      <div className={`w-1/2 ${index % 2 === 0 ? 'pr-8 text-right' : 'pl-8 text-left'}`}>
+                        <div className="group bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 border border-gray-100/50 dark:border-gray-700/50">
+                          <div className="flex items-center mb-4">
+                            <motion.div 
+                              className={`w-12 h-12 bg-gradient-to-r ${milestone.color} rounded-xl flex items-center justify-center mr-4 shadow-lg`}
+                              whileHover={{ scale: 1.1, rotate: 360 }}
+                              transition={{ duration: 0.3 }}
+                            >
+                              <Icon className="w-6 h-6 text-white" />
+                            </motion.div>
+                            <div>
+                              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{milestone.title}</h3>
+                              <p className="text-blue-600 dark:text-blue-400 font-semibold">{milestone.year}</p>
+                            </div>
                           </div>
+                          <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                            {milestone.description}
+                          </p>
                         </div>
-                        <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                          {milestone.description}
-                        </p>
                       </div>
-                    </div>
-                    
-                    {/* Timeline dot */}
-                    <div className="relative z-10">
-                      <motion.div 
-                        className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full shadow-lg border-4 border-white dark:border-gray-800"
-                        whileHover={{ scale: 1.3 }}
-                        transition={{ duration: 0.3 }}
-                      />
-                    </div>
-                    
-                    <div className="w-1/2"></div>
-                  </motion.div>
-                ))}
+                      
+                      {/* Timeline dot */}
+                      <div className="relative z-10">
+                        <motion.div 
+                          className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full shadow-lg border-4 border-white dark:border-gray-800"
+                          whileHover={{ scale: 1.3 }}
+                          transition={{ duration: 0.3 }}
+                        />
+                      </div>
+                      
+                      <div className="w-1/2"></div>
+                    </motion.div>
+                  );
+                })}
               </div>
             </div>
           </div>
