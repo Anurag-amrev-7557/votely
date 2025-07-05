@@ -20,6 +20,7 @@ import {
   EyeIcon,
   EyeSlashIcon,
 } from '@heroicons/react/24/outline';
+import axiosInstance from '../../utils/api/axiosConfig';
 
 const mockUsers = [
   { id: 1, name: 'Alice Admin', email: 'alice@votely.com', role: 'Admin', status: 'Active' },

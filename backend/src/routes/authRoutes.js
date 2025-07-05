@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { register, login, logout, getMe, refreshToken, verifyEmail, forgotPassword, resetPassword } = require('../controllers/authController');
-const validateRegister = require('../middleware/validateRegister');
-const { protect } = require('../middleware/auth');
+const validateRegister = require('../middleware/validation/validateRegister');
+const { protect } = require('../middleware/auth/auth');
 const { body, validationResult } = require('express-validator');
 
 // Centralized error handler for validation
@@ -194,5 +194,59 @@ router.post(
   handleValidationErrors,
   resetPassword
 );
+
+// Debug endpoint to check authentication state
+router.get('/debug', (req, res) => {
+  res.json({
+    cookies: req.cookies,
+    headers: {
+      authorization: req.headers.authorization,
+      cookie: req.headers.cookie
+    },
+    user: req.user || null,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Development-only endpoint to create a test token (remove in production)
+if (process.env.NODE_ENV === 'development') {
+  router.post('/dev-login', async (req, res) => {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+      }
+      
+      const User = require('../models/User');
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      const jwt = require('jsonwebtoken');
+      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+      
+      res.cookie('token', token, { 
+        httpOnly: true, 
+        sameSite: 'lax', 
+        secure: false,
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+        path: '/'
+      });
+      
+      res.json({ 
+        success: true, 
+        message: 'Test token created',
+        user: {
+          id: user._id,
+          email: user.email,
+          name: user.name
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+}
 
 module.exports = router;

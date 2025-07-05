@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pollController = require('../controllers/pollController');
 const Activity = require('../models/Activity');
-const auth = require('../middleware/auth');
+const auth = require('../middleware/auth/auth');
 
 // Enhanced: Middleware for input validation and sanitization
 const { body, param, validationResult } = require('express-validator');
@@ -23,7 +23,10 @@ router.post(
   [
     body('title').isString().trim().notEmpty().withMessage('Title is required'),
     body('options').isArray({ min: 2 }).withMessage('At least two options are required'),
-    body('options.*').isString().trim().notEmpty().withMessage('Option text is required'),
+    body('options.*.text').isString().trim().notEmpty().withMessage('Option text is required'),
+    body('options.*.description').optional().isString(),
+    body('options.*.party').optional().isString(),
+    body('options.*.image').optional().isString(),
     // Add more validations as needed
   ],
   handleValidationErrors,

@@ -2,7 +2,7 @@ const Poll = require('../models/Poll');
 const Vote = require('../models/Vote');
 const { io } = require('../server');
 const Activity = require('../models/Activity');
-const sendEmail = require('../utils/sendEmail');
+const sendEmail = require('../utils/email/sendEmail');
 const mongoose = require('mongoose');
 const rateLimit = require('express-rate-limit');
 
@@ -149,8 +149,13 @@ const suspiciousUserAgents = [
 
 // Enhanced suspicious header patterns with more checks and comments
 const suspiciousHeaderPatterns = [
-  // Missing Accept-Language or Accept headers is suspicious
-  (headers) => !headers['accept-language'] || !headers['accept'],
+  // Missing Accept-Language or Accept headers is suspicious (only in production)
+  (headers) => {
+    if (process.env.NODE_ENV === 'production') {
+      return !headers['accept-language'] || !headers['accept'];
+    }
+    return false; // Allow in development
+  },
 
   // Suspicious referer (empty or localhost for production)
   (headers, req) => {
@@ -163,11 +168,15 @@ const suspiciousHeaderPatterns = [
       }
       return referer === '' || referer.startsWith('http://localhost');
     }
-    return false;
+    return false; // Allow in development
   },
 
   // Unusual content-type for POST (should be JSON or form)
   (headers, req) => {
+    // Allow in development mode
+    if (process.env.NODE_ENV === 'development') {
+      return false;
+    }
     if (req.method === 'POST') {
       const ct = headers['content-type'] || '';
       // Accept JSON, form, or multipart (for file uploads)
@@ -179,10 +188,20 @@ const suspiciousHeaderPatterns = [
   },
 
   // Suspicious: missing User-Agent header
-  (headers) => !headers['user-agent'],
+  (headers) => {
+    // Allow in development mode
+    if (process.env.NODE_ENV === 'development') {
+      return false;
+    }
+    return !headers['user-agent'];
+  },
 
   // Suspicious: X-Requested-With header set to "XMLHttpRequest" from non-browser UA
   (headers, req) => {
+    // Allow in development mode
+    if (process.env.NODE_ENV === 'development') {
+      return false;
+    }
     const xrw = headers['x-requested-with'] || '';
     const ua = headers['user-agent'] || '';
     if (xrw.toLowerCase() === 'xmlhttprequest' && !/mozilla|chrome|safari|firefox|edge/i.test(ua)) {
@@ -193,24 +212,40 @@ const suspiciousHeaderPatterns = [
 
   // Suspicious: custom headers often used by bots/scripts
   (headers) => {
+    // Allow in development mode
+    if (process.env.NODE_ENV === 'development') {
+      return false;
+    }
     const customHeaders = ['x-crawler', 'x-bot', 'x-bot-version', 'x-bot-id', 'x-bot-name'];
     return customHeaders.some(h => h in headers);
   },
 
   // Suspicious: Accept header is */* only (very common for bots)
   (headers) => {
+    // Allow in development mode
+    if (process.env.NODE_ENV === 'development') {
+      return false;
+    }
     const accept = headers['accept'] || '';
     return accept.trim() === '*/*';
   },
 
   // Suspicious: Connection header is "close" (bots/scripts often do this)
   (headers) => {
+    // Allow in development mode
+    if (process.env.NODE_ENV === 'development') {
+      return false;
+    }
     const conn = headers['connection'] || '';
     return conn.trim().toLowerCase() === 'close';
   },
 
   // Suspicious: Pragma or Cache-Control set to "no-cache" (bots/scripts)
   (headers) => {
+    // Allow in development mode
+    if (process.env.NODE_ENV === 'development') {
+      return false;
+    }
     const pragma = headers['pragma'] || '';
     const cacheControl = headers['cache-control'] || '';
     return pragma.toLowerCase() === 'no-cache' || cacheControl.toLowerCase() === 'no-cache';
@@ -235,58 +270,67 @@ const FAILED_ATTEMPT_MAX = 5;
 const BLOCK_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 
 function botDetection(req, res, next) {
+  console.log('Bot detection - NODE_ENV:', process.env.NODE_ENV);
   const ua = req.headers['user-agent'] || '';
   const ip = req.ip || req.connection?.remoteAddress || 'unknown';
   const userId = req.user ? String(req.user._id) : null;
   const sessionId = req.sessionID || null;
 
-  // 0. Check if IP is temporarily blocked due to repeated suspicious activity
-  const blockRecord = failedAttemptMap.get(ip);
-  if (blockRecord && blockRecord.blockedUntil && Date.now() < blockRecord.blockedUntil) {
-    logSuspiciousAttempt(req, 'ip-blocked', { ip, blockedUntil: new Date(blockRecord.blockedUntil) });
-    return res.status(429).json({ error: 'Too many suspicious attempts. Try again later.' });
-  }
-
-  // 1. User-Agent checks (block known bots)
-  for (const pattern of suspiciousUserAgents) {
-    if (pattern.test(ua)) {
-      logSuspiciousAttempt(req, 'user-agent', ua);
-      recordFailedAttempt(ip);
-      return res.status(400).json({ error: 'Automated voting is not allowed.' });
+  // 0. Check if IP is temporarily blocked due to repeated suspicious activity - Skip in development
+  if (process.env.NODE_ENV !== 'development') {
+    const blockRecord = failedAttemptMap.get(ip);
+    if (blockRecord && blockRecord.blockedUntil && Date.now() < blockRecord.blockedUntil) {
+      logSuspiciousAttempt(req, 'ip-blocked', { ip, blockedUntil: new Date(blockRecord.blockedUntil) });
+      return res.status(429).json({ error: 'Too many suspicious attempts. Try again later.' });
     }
   }
 
-  // 2. Header pattern checks (block suspicious headers)
-  for (const check of suspiciousHeaderPatterns) {
-    if (check(req.headers, req)) {
-      logSuspiciousAttempt(req, 'headers', req.headers);
-      recordFailedAttempt(ip);
-      return res.status(400).json({ error: 'Suspicious request headers detected.' });
+  // 1. User-Agent checks (block known bots) - Skip in development
+  if (process.env.NODE_ENV !== 'development') {
+    for (const pattern of suspiciousUserAgents) {
+      if (pattern.test(ua)) {
+        logSuspiciousAttempt(req, 'user-agent', ua);
+        recordFailedAttempt(ip);
+        return res.status(400).json({ error: 'Automated voting is not allowed.' });
+      }
     }
   }
 
-  // 3. Rapid-fire behavioral check (per IP)
-  const now = Date.now();
-  let record = rapidFireMap.get(ip) || [];
-  record = record.filter(ts => now - ts < RAPID_FIRE_WINDOW_MS);
-  record.push(now);
-  rapidFireMap.set(ip, record);
-  if (record.length > RAPID_FIRE_MAX) {
-    logSuspiciousAttempt(req, 'rapid-fire', { ip, count: record.length });
-    recordFailedAttempt(ip);
-    return res.status(429).json({ error: 'Too many rapid requests. Please slow down.' });
+  // 2. Header pattern checks (block suspicious headers) - Skip in development
+  if (process.env.NODE_ENV !== 'development') {
+    for (const check of suspiciousHeaderPatterns) {
+      if (check(req.headers, req)) {
+        logSuspiciousAttempt(req, 'headers', req.headers);
+        recordFailedAttempt(ip);
+        return res.status(400).json({ error: 'Suspicious request headers detected.' });
+      }
+    }
   }
 
-  // 4. Advanced: User-Agent/IP combo check (detect botnets or distributed scripts)
-  const uaIpKey = `${ip}::${ua}`;
-  let uaIpRecord = userAgentIpMap.get(uaIpKey) || [];
-  uaIpRecord = uaIpRecord.filter(ts => now - ts < USER_AGENT_IP_WINDOW_MS);
-  uaIpRecord.push(now);
-  userAgentIpMap.set(uaIpKey, uaIpRecord);
-  if (uaIpRecord.length > USER_AGENT_IP_MAX) {
-    logSuspiciousAttempt(req, 'ua-ip-burst', { ip, ua, count: uaIpRecord.length });
-    recordFailedAttempt(ip);
-    return res.status(429).json({ error: 'Too many requests from this device. Please slow down.' });
+  // 3. Rapid-fire behavioral check (per IP) - Skip in development
+  if (process.env.NODE_ENV !== 'development') {
+    const now = Date.now();
+    let record = rapidFireMap.get(ip) || [];
+    record = record.filter(ts => now - ts < RAPID_FIRE_WINDOW_MS);
+    record.push(now);
+    rapidFireMap.set(ip, record);
+    if (record.length > RAPID_FIRE_MAX) {
+      logSuspiciousAttempt(req, 'rapid-fire', { ip, count: record.length });
+      recordFailedAttempt(ip);
+      return res.status(429).json({ error: 'Too many rapid requests. Please slow down.' });
+    }
+
+    // 4. Advanced: User-Agent/IP combo check (detect botnets or distributed scripts)
+    const uaIpKey = `${ip}::${ua}`;
+    let uaIpRecord = userAgentIpMap.get(uaIpKey) || [];
+    uaIpRecord = uaIpRecord.filter(ts => now - ts < USER_AGENT_IP_WINDOW_MS);
+    uaIpRecord.push(now);
+    userAgentIpMap.set(uaIpKey, uaIpRecord);
+    if (uaIpRecord.length > USER_AGENT_IP_MAX) {
+      logSuspiciousAttempt(req, 'ua-ip-burst', { ip, ua, count: uaIpRecord.length });
+      recordFailedAttempt(ip);
+      return res.status(429).json({ error: 'Too many requests from this device. Please slow down.' });
+    }
   }
 
   // 5. Optionally: Check for missing cookies (bots often don't send cookies)
@@ -312,6 +356,10 @@ function botDetection(req, res, next) {
 
 // Enhanced logging for suspicious attempts (could be extended to use Winston, Sentry, etc.)
 function logSuspiciousAttempt(req, reason, details) {
+  // Skip logging in development mode
+  if (process.env.NODE_ENV === 'development') {
+    return;
+  }
   // You can replace this with a more robust logger or external service
   const ip = req.ip || req.connection?.remoteAddress || 'unknown';
   const userId = req.user ? String(req.user._id) : null;
@@ -336,6 +384,10 @@ function logSuspiciousAttempt(req, reason, details) {
 
 // Track failed attempts and temporarily block IPs after repeated suspicious activity
 function recordFailedAttempt(ip) {
+  // Skip in development mode
+  if (process.env.NODE_ENV === 'development') {
+    return;
+  }
   const now = Date.now();
   let record = failedAttemptMap.get(ip) || { attempts: [], blockedUntil: null };
   // Remove old attempts
@@ -380,6 +432,8 @@ exports.castVote = async (req, res) => {
     const requireAuth = poll.settings?.requireAuthentication || false;
     const requireReferrer = poll.settings?.requireReferrer || false;
     const allowedOrigins = poll.settings?.allowedOrigins || [];
+    
+    console.log('Poll settings - isAnonymous:', isAnonymous, 'requireAuth:', requireAuth, 'poll.settings:', poll.settings);
 
     // 4. Security: Require authentication if poll demands it
     if (requireAuth && !userId) {
@@ -423,15 +477,31 @@ exports.castVote = async (req, res) => {
 
     // 7. Check if user already voted (by user or by session/IP for anonymous)
     let existingVote;
+    console.log('Checking for existing vote - pollId:', pollId, 'userId:', userId, 'isAnonymous:', isAnonymous);
+    
     if (isAnonymous) {
       // Use IP as identifier for anonymous (in production, use better anon ID)
       const anonId = ip;
       existingVote = await Vote.findOne({ poll: pollId, isAnonymous: true, 'meta.anonId': anonId });
+      console.log('Anonymous vote check - anonId:', anonId, 'existingVote:', existingVote);
       if (existingVote) {
         return res.status(400).json({ error: 'You have already voted in this poll.' });
       }
     } else {
       existingVote = await Vote.findOne({ poll: pollId, user: userId });
+      console.log('Authenticated vote check - userId:', userId, 'existingVote:', existingVote);
+      
+      // Fallback: also check for votes without user field that should belong to this user
+      if (!existingVote) {
+        console.log('No vote found with user field, checking for votes without user field...');
+        existingVote = await Vote.findOne({ 
+          poll: pollId, 
+          isAnonymous: false, 
+          user: { $exists: false } 
+        });
+        console.log('Fallback vote check - existingVote:', existingVote);
+      }
+      
       if (existingVote) {
         return res.status(400).json({ error: 'You have already voted in this poll.' });
       }
@@ -453,7 +523,16 @@ exports.castVote = async (req, res) => {
         ip,
       }
     };
-    if (!isAnonymous) voteData.user = userId;
+    
+    // Always set user field for authenticated users, regardless of poll anonymity setting
+    if (userId) {
+      voteData.user = userId;
+      console.log('Setting user field for vote:', userId);
+    } else {
+      console.log('No userId available, creating anonymous vote');
+    }
+    
+    console.log('Vote data before save:', JSON.stringify(voteData, null, 2));
     const vote = new Vote(voteData);
     await vote.save();
 
@@ -557,7 +636,29 @@ exports.getUserVote = async (req, res) => {
     }
 
     // 4. Find the user's vote (never leak votes of others)
-    const vote = await Vote.findOne({ poll: pollId, user: userId }).select('-__v -isAnonymous');
+    console.log('Individual vote check - pollId:', pollId, 'userId:', userId);
+    let vote = await Vote.findOne({ poll: pollId, user: userId }).select('-__v -isAnonymous');
+    console.log('Individual vote check - found vote:', vote);
+    
+    // Fallback: check for votes without user field that should belong to this user
+    if (!vote) {
+      console.log('No vote found with user field, checking for votes without user field...');
+      const fallbackVote = await Vote.findOne({ 
+        poll: pollId, 
+        isAnonymous: false, 
+        user: { $exists: false } 
+      }).select('-__v -isAnonymous');
+      
+      if (fallbackVote) {
+        console.log('Found vote without user field, updating it...');
+        await Vote.updateOne(
+          { _id: fallbackVote._id },
+          { user: userId }
+        );
+        vote = await Vote.findOne({ poll: pollId, user: userId }).select('-__v -isAnonymous');
+        console.log('Updated vote:', vote);
+      }
+    }
 
     // 5. Advanced privacy: If poll is anonymized, do not return user info
     let responseVote = null;
@@ -633,10 +734,46 @@ exports.getUserVotesBatch = async (req, res) => {
     const uniquePollIds = [...new Set(pollIds.map(id => String(id)))];
 
     // Fetch all votes by this user for the given pollIds
+    console.log('Batch vote check - userId:', req.user._id, 'pollIds:', uniquePollIds);
     const votes = await Vote.find({
       user: req.user._id,
       poll: { $in: uniquePollIds }
     }).lean();
+    console.log('Batch vote check - found votes:', votes);
+    
+    // Also check for votes that might not have user field set properly (fallback)
+    if (votes.length === 0) {
+      console.log('No votes found with user field, checking for votes without user field...');
+      const fallbackVotes = await Vote.find({
+        poll: { $in: uniquePollIds },
+        isAnonymous: false,
+        user: { $exists: false }
+      }).lean();
+      console.log('Fallback votes found:', fallbackVotes);
+      
+      // If we found votes without user field, update them
+      if (fallbackVotes.length > 0) {
+        console.log('Updating votes without user field...');
+        await Vote.updateMany(
+          { 
+            poll: { $in: uniquePollIds }, 
+            isAnonymous: false, 
+            user: { $exists: false } 
+          },
+          { user: req.user._id }
+        );
+        
+        // Fetch the updated votes
+        const updatedVotes = await Vote.find({
+          user: req.user._id,
+          poll: { $in: uniquePollIds }
+        }).lean();
+        console.log('Updated votes:', updatedVotes);
+        
+        // Use the updated votes
+        votes.push(...updatedVotes);
+      }
+    }
 
     // Optionally, fetch poll info for privacy settings
     const polls = await Poll.find({ _id: { $in: uniquePollIds } })

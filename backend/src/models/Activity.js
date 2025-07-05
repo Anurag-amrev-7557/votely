@@ -28,7 +28,7 @@ const activitySchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['Voted', 'Created', 'Commented', 'Shared', 'Login', 'Profile_Update', 'Vote_View_Batch'],
+    enum: ['Voted', 'Created', 'Commented', 'Shared', 'Login', 'Profile_Update', 'Vote_View', 'Vote_View_Batch'],
     required: true
   },
   description: {
@@ -69,7 +69,7 @@ activitySchema.statics.createActivity = async function(userId, type, description
   if (!type) throw new Error('type is required');
   if (!description) throw new Error('description is required');
 
-  const allowedTypes = ['Voted', 'Created', 'Commented', 'Shared', 'Login', 'Profile_Update', 'Vote_View_Batch'];
+  const allowedTypes = ['Voted', 'Created', 'Commented', 'Shared', 'Login', 'Profile_Update', 'Vote_View', 'Vote_View_Batch'];
   if (!allowedTypes.includes(type)) {
     throw new Error(`Invalid activity type: ${type}`);
   }

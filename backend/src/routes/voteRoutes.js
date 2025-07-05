@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const voteController = require('../controllers/voteController');
-const auth = require('../middleware/auth');
+const auth = require('../middleware/auth/auth');
 const { castVote, voteLimiter, botDetection } = require('../controllers/voteController');
 const { body, param, validationResult } = require('express-validator');
 

@@ -3,7 +3,7 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const path = require('path');
-const connectDB = require('./config/db');
+const connectDB = require('./config/database/db');
 const authRoutes = require('./routes/authRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const passport = require('passport');
@@ -40,7 +40,17 @@ module.exports.io = io;
 
 // CORS configuration
 const corsOptions = {
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173'];
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
@@ -72,6 +82,43 @@ app.get('/api/test', (req, res) => {
 // Debug route to check if profile routes are accessible
 app.get('/api/profile/test', (req, res) => {
   res.json({ message: 'Profile route is accessible', timestamp: new Date().toISOString() });
+});
+
+// Proxy endpoint for Google profile photos to handle CORS
+app.get('/api/proxy/google-photo', async (req, res) => {
+  try {
+    const { url } = req.query;
+    
+    console.log('Google photo proxy request:', { url });
+    
+    if (!url || !url.includes('googleusercontent.com')) {
+      console.log('Invalid URL provided:', url);
+      return res.status(400).json({ error: 'Invalid Google photo URL' });
+    }
+    
+    console.log('Fetching Google photo from:', url);
+    const response = await fetch(url);
+    
+    console.log('Google photo response status:', response.status);
+    console.log('Google photo response headers:', Object.fromEntries(response.headers.entries()));
+    
+    if (!response.ok) {
+      console.log('Google photo not found, status:', response.status);
+      return res.status(404).json({ error: 'Photo not found' });
+    }
+    
+    const buffer = await response.arrayBuffer();
+    const contentType = response.headers.get('content-type') || 'image/jpeg';
+    
+    console.log('Successfully proxied Google photo, size:', buffer.byteLength, 'bytes');
+    
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+    res.send(Buffer.from(buffer));
+  } catch (error) {
+    console.error('Error proxying Google photo:', error);
+    res.status(500).json({ error: 'Failed to load photo', details: error.message });
+  }
 });
 
 // Auth routes
@@ -147,19 +194,90 @@ app.get('/api/auth/google',
 
 // Google OAuth callback
 app.get('/api/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/login', session: false }),
+  passport.authenticate('google', { failureRedirect: '/api/auth/google/error', session: false }),
   (req, res) => {
     // Issue JWT and set cookie
     const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, { expiresIn: '30d' });
-    res.cookie('token', token, { httpOnly: true, sameSite: 'lax', maxAge: 30 * 24 * 60 * 60 * 1000 });
-    // PostMessage to frontend
+    res.cookie('token', token, { 
+      httpOnly: true, 
+      sameSite: 'lax', 
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+      path: '/'
+    });
+    
+    // Set security headers to allow cross-origin communication
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
+    
+    // PostMessage to frontend with better error handling
     const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
-    res.send(`<script>
-      window.opener.postMessage({ type: 'GOOGLE_AUTH_SUCCESS', user: ${JSON.stringify(req.user)} }, '${FRONTEND_ORIGIN}');
-      window.close();
-    </script>`);
+    res.send(`<!DOCTYPE html>
+<html>
+<head>
+    <title>Authentication Complete</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <script>
+      try {
+        if (window.opener) {
+          window.opener.postMessage({ 
+            type: 'GOOGLE_AUTH_SUCCESS', 
+            user: ${JSON.stringify(req.user)} 
+          }, '${FRONTEND_ORIGIN}');
+          window.close();
+        } else {
+          // Fallback: redirect to frontend with success parameter
+          window.location.href = '${FRONTEND_ORIGIN}/auth-success?token=${token}';
+        }
+      } catch (error) {
+        console.error('PostMessage error:', error);
+        // Fallback: redirect to frontend with success parameter
+        window.location.href = '${FRONTEND_ORIGIN}/auth-success?token=${token}';
+      }
+    </script>
+    <p>Authentication complete. You can close this window.</p>
+</body>
+</html>`);
   }
 );
+
+// Google OAuth error callback
+app.get('/api/auth/google/error', (req, res) => {
+  const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+  res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
+  
+  res.send(`<!DOCTYPE html>
+<html>
+<head>
+    <title>Authentication Failed</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <script>
+      try {
+        if (window.opener) {
+          window.opener.postMessage({ 
+            type: 'GOOGLE_AUTH_ERROR', 
+            error: 'Authentication failed. Please try again.' 
+          }, '${FRONTEND_ORIGIN}');
+          window.close();
+        } else {
+          // Fallback: redirect to frontend with error parameter
+          window.location.href = '${FRONTEND_ORIGIN}/auth-error?error=authentication_failed';
+        }
+      } catch (error) {
+        console.error('PostMessage error:', error);
+        // Fallback: redirect to frontend with error parameter
+        window.location.href = '${FRONTEND_ORIGIN}/auth-error?error=authentication_failed';
+      }
+    </script>
+    <p>Authentication failed. You can close this window and try again.</p>
+</body>
+</html>`);
+});
 
 io.on('connection', (socket) => {
   // Client requests to join a poll room for real-time updates

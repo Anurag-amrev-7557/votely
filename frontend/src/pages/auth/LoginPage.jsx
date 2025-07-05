@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { motion } from 'framer-motion';
 import { MoonIcon, SunIcon } from '@heroicons/react/24/outline';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api/auth';
+const API_URL = '/api/auth';
 
 const LoginPage = () => {
   const { isDarkMode, toggleTheme } = useTheme();

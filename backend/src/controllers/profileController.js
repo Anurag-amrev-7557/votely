@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs').promises;
 const Vote = require('../models/Vote');
 const Poll = require('../models/Poll');
-const sendEmail = require('../utils/sendEmail');
+const sendEmail = require('../utils/email/sendEmail');
 
 // Enhanced multer configuration for profile photo uploads
 
@@ -471,7 +471,7 @@ exports.deleteAccount = async (req, res) => {
     const Activity = require('../models/Activity');
     const Poll = require('../models/Poll');
     const fs = require('fs').promises;
-    const sendEmail = require('../utils/sendEmail');
+    const sendEmail = require('../utils/email/sendEmail');
 
     // Get user before deletion for email
     const user = await User.findById(userId);

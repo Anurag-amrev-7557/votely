@@ -81,8 +81,10 @@ const PollsPage = () => {
       setLoading(true);
       try {
         const response = await axios.get('/api/polls');
+        // The backend returns { polls: [...], page, limit, total, totalPages }
+        const pollsData = response.data.polls || response.data;
         // Normalize poll IDs for consistent usage
-        const normalizedPolls = response.data.map(poll => ({
+        const normalizedPolls = pollsData.map(poll => ({
           ...poll,
           id: poll._id || poll.id
         }));
@@ -109,15 +111,38 @@ const PollsPage = () => {
     setIsEditing(true);
     setShowModal(true);
     
+    // Convert options to candidates format and format dates for datetime-local inputs
+    const candidates = (poll.options || []).map((option, index) => ({
+      id: index,
+      name: option.text,
+      description: option.description || '',
+      party: option.party || '',
+      image: option.image || null
+    }));
+
+    // Format dates for datetime-local inputs (YYYY-MM-DDTHH:MM)
+    const formatDateForInput = (dateString) => {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      // Get the date in local timezone but preserve the original time
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    };
+    
     // Populate poll form with existing poll data
     setPollForm({
-      title: poll.title,
-      description: poll.description,
-      startDate: poll.startDate,
-      endDate: poll.endDate,
-      resultDate: poll.resultDate || '',
-      totalVotes: poll.totalVotes,
-      candidates: poll.candidates || [],
+      title: poll.title || '',
+      description: poll.description || '',
+      category: poll.category || '',
+      startDate: formatDateForInput(poll.startDate),
+      endDate: formatDateForInput(poll.endDate),
+      resultDate: formatDateForInput(poll.resultDate),
+      totalVotes: poll.totalVotes || 0,
+      candidates: candidates,
       settings: {
         allowMultipleVotes: poll.settings?.allowMultipleVotes || false,
         showResultsBeforeEnd: poll.settings?.showResultsBeforeEnd || false,
@@ -411,16 +436,21 @@ const PollsPage = () => {
     }
 
     // Map candidates to options for backend
-    const options = pollForm.candidates.map(c => ({
-      text: c.name,
-      description: c.description,
-      party: c.party,
-      image: c.image, // If image upload is needed, handle separately
-    }));
+    const options = pollForm.candidates.map(c => {
+      const option = {
+        text: c.name,
+        description: c.description,
+        party: c.party,
+      };
+      if (typeof c.image === 'string' && c.image.trim() !== '') {
+        option.image = c.image;
+      }
+      return option;
+    });
     const payload = {
       ...pollForm,
       options,
-      resultDate: pollForm.resultDate,
+      resultDate: pollForm.resultDate || null, // Convert empty string to null
       settings: {
         ...pollForm.settings,
         showResultsAfterVote: pollForm.settings.showResultsAfterVote,
@@ -2128,7 +2158,13 @@ const PollsPage = () => {
                                 {candidate.image && (
                                   <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-300 dark:border-[#3f4c5a] flex-shrink-0">
                                     <img
-                                      src={typeof candidate.image === 'string' ? candidate.image : URL.createObjectURL(candidate.image)}
+                                      src={
+                                        typeof candidate.image === 'string' 
+                                          ? (candidate.image.startsWith('/uploads') 
+                                              ? `http://localhost:5001${candidate.image}` 
+                                              : candidate.image)
+                                          : URL.createObjectURL(candidate.image)
+                                      }
                                       alt={candidate.name}
                                       className="w-full h-full object-cover rounded-full"
                                       loading="lazy"

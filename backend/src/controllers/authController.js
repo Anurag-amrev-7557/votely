@@ -15,6 +15,7 @@ const generateToken = (user, options = {}) => {
   Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
 
   const expiresIn = options.expiresIn || '30d';
+  console.log('[JWT] Generating token for user:', payload.id, 'with payload:', payload);
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn });
 };
 
@@ -24,8 +25,9 @@ const setTokenCookie = (res, token, opts = {}) => {
   const cookieOptions = {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? 'none' : 'lax',
-    maxAge: opts.maxAge || 30 * 24 * 60 * 60 * 1000 // 30 days
+    sameSite: 'lax', // Changed from conditional to always 'lax' for better compatibility
+    maxAge: opts.maxAge || 30 * 24 * 60 * 60 * 1000, // 30 days
+    path: '/'
   };
   res.cookie(opts.cookieName || 'token', token, cookieOptions);
 
@@ -34,8 +36,9 @@ const setTokenCookie = (res, token, opts = {}) => {
     res.cookie('refreshToken', opts.refreshToken, {
       httpOnly: true,
       secure: isProduction,
-      sameSite: isProduction ? 'none' : 'lax',
-      maxAge: opts.refreshMaxAge || 60 * 24 * 60 * 60 * 1000 // 60 days
+      sameSite: 'lax', // Changed from conditional to always 'lax' for better compatibility
+      maxAge: opts.refreshMaxAge || 60 * 24 * 60 * 60 * 1000, // 60 days
+      path: '/'
     });
   }
 };
@@ -200,7 +203,17 @@ exports.logout = (req, res) => {
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
-    expires: new Date(0)
+    expires: new Date(0),
+    path: '/'
+  });
+
+  // Also clear refresh token if it exists
+  res.cookie('refreshToken', '', {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    expires: new Date(0),
+    path: '/'
   });
 
   // Destroy session if using express-session (for OAuth or passport)
@@ -224,7 +237,7 @@ exports.getMe = async (req, res) => {
   try {
     // Populate additional fields if needed (e.g., roles, profile, etc.)
     // Also populate Google auth info if present
-    const user = await User.findById(req.user.id)
+    const user = await User.findById(req.user._id)
       .select('-password -__v -resetPasswordToken -resetPasswordExpires')
       .lean();
 

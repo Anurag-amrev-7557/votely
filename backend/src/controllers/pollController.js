@@ -5,13 +5,17 @@ const mongoose = require('mongoose');
 // Create a new poll
 exports.createPoll = async (req, res) => {
   try {
+    console.log('Incoming poll payload:', req.body); // Log the incoming payload
     // --- Robust Validation ---
-    const { title, description, startDate, endDate, options, resultDate, settings } = req.body;
+    const { title, description, startDate, endDate, options, resultDate, settings, category } = req.body;
     if (!title || typeof title !== 'string' || title.trim().length < 3 || title.length > 100) {
       return res.status(400).json({ error: 'Title is required (min 3, max 100 chars)' });
     }
     if (description && description.length > 500) {
       return res.status(400).json({ error: 'Description must be at most 500 characters' });
+    }
+    if (!category || typeof category !== 'string' || !category.trim()) {
+      return res.status(400).json({ error: 'Category is required' });
     }
     if (!startDate || !endDate) {
       return res.status(400).json({ error: 'Start and end date are required' });
@@ -56,7 +60,8 @@ exports.createPoll = async (req, res) => {
     await poll.save();
     res.status(201).json(poll);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    console.error('Error in createPoll:', err);
+    res.status(400).json({ error: err.message, details: err });
   }
 };
 
@@ -135,25 +140,122 @@ exports.getPolls = async (req, res) => {
 
     // Count total for pagination
     const total = await Poll.countDocuments(query);
-
-    // Fetch polls
-    const polls = await Poll.find(query)
-      .sort(sortObj)
-      .skip(skip)
-      .limit(pageSize)
-      .lean();
-
-    // Optionally, add totalVotes and participant count for each poll (aggregation)
-    // (Assumes Poll has a votes array or similar)
-    // If you want to include stats, uncomment below and adjust as needed:
-    /*
-    for (const poll of polls) {
-      poll.totalVotes = poll.votes ? poll.votes.length : 0;
-      poll.participantCount = poll.votes
-        ? new Set(poll.votes.map(v => String(v.user))).size
-        : 0;
+    
+    // Debug: Check if there are any votes in the database
+    const Vote = require('../models/Vote');
+    const voteCount = await Vote.countDocuments();
+    console.log('Total votes in database:', voteCount);
+    if (voteCount > 0) {
+      const sampleVotes = await Vote.find().limit(3).lean();
+      console.log('Sample votes:', JSON.stringify(sampleVotes, null, 2));
     }
-    */
+
+    // Fetch polls with vote statistics using aggregation
+    console.log('Executing aggregation with query:', JSON.stringify(query, null, 2));
+    
+    let polls;
+    try {
+      polls = await Poll.aggregate([
+        { $match: query },
+        {
+          $lookup: {
+            from: 'votes',
+            localField: '_id',
+            foreignField: 'poll',
+            as: 'votes'
+          }
+        },
+        {
+          $addFields: {
+            totalVotes: { $size: '$votes' },
+            participantCount: {
+              $size: {
+                $setUnion: {
+                  $filter: {
+                    input: {
+                      $map: {
+                        input: '$votes',
+                        as: 'vote',
+                        in: '$$vote.user'
+                      }
+                    },
+                    cond: { $ne: ['$$this', null] }
+                  }
+                }
+              }
+            },
+            status: {
+              $switch: {
+                branches: [
+                  { case: { $gt: ['$startDate', new Date()] }, then: 'upcoming' },
+                  { case: { $and: [{ $lte: ['$startDate', new Date()] }, { $gte: ['$endDate', new Date()] }] }, then: 'active' }
+                ],
+                default: 'completed'
+              }
+            }
+          }
+        },
+        { $sort: sortObj },
+        { $skip: skip },
+        { $limit: pageSize },
+        {
+          $project: {
+            votes: 0, // Remove votes array from response
+            __v: 0
+          }
+        }
+      ]);
+    } catch (aggregationError) {
+      console.error('Aggregation failed, falling back to simple approach:', aggregationError);
+      
+      // Fallback: Get polls and manually calculate stats
+      const rawPolls = await Poll.find(query).sort(sortObj).skip(skip).limit(pageSize).lean();
+      
+      // Get vote stats for these polls
+      const pollIds = rawPolls.map(p => p._id);
+      const votes = await Vote.find({ poll: { $in: pollIds } }).lean();
+      
+      // Group votes by poll
+      const votesByPoll = {};
+      votes.forEach(vote => {
+        const pollId = String(vote.poll);
+        if (!votesByPoll[pollId]) {
+          votesByPoll[pollId] = { totalVotes: 0, users: new Set() };
+        }
+        votesByPoll[pollId].totalVotes++;
+        if (vote.user) {
+          votesByPoll[pollId].users.add(String(vote.user));
+        }
+      });
+      
+      // Add stats to polls
+      polls = rawPolls.map(poll => {
+        const pollId = String(poll._id);
+        const stats = votesByPoll[pollId] || { totalVotes: 0, users: new Set() };
+        
+        // Calculate status
+        const now = new Date();
+        const start = new Date(poll.startDate);
+        const end = new Date(poll.endDate);
+        let status = 'completed';
+        if (now < start) status = 'upcoming';
+        else if (now >= start && now <= end) status = 'active';
+        
+        return {
+          ...poll,
+          totalVotes: stats.totalVotes,
+          participantCount: stats.users.size,
+          status
+        };
+      });
+    }
+    
+    console.log('Aggregation results:', JSON.stringify(polls.map(p => ({ 
+      id: p._id, 
+      title: p.title, 
+      totalVotes: p.totalVotes, 
+      participantCount: p.participantCount 
+    })), null, 2));
 
     res.json({
       polls,
@@ -178,7 +280,7 @@ exports.getPollById = async (req, res) => {
     // Populate options and optionally votes (if needed)
     // .lean() for performance, but we can add computed fields after
     let poll = await Poll.findById(pollId)
-      .populate('createdBy', 'username email') // Example: populate creator info
+      .populate('createdBy', 'name email') // Populate creator info with correct field names
       .lean();
 
     if (!poll) return res.status(404).json({ error: 'Poll not found' });
@@ -190,16 +292,16 @@ exports.getPollById = async (req, res) => {
       ? new Set(poll.votes.map(v => String(v.user))).size
       : 0;
 
-    // Compute status (Active, Upcoming, Past)
+    // Compute status (Active, Upcoming, Completed)
     const now = new Date();
     const start = new Date(poll.startDate);
     const end = new Date(poll.endDate);
     if (now < start) {
-      poll.status = 'Upcoming';
+      poll.status = 'upcoming';
     } else if (now >= start && now <= end) {
-      poll.status = 'Active';
+      poll.status = 'active';
     } else {
-      poll.status = 'Past';
+      poll.status = 'completed';
     }
 
     // Optionally, include option vote counts
@@ -209,8 +311,16 @@ exports.getPollById = async (req, res) => {
         optionCounts[String(opt._id)] = 0;
       });
       poll.votes.forEach(vote => {
-        if (vote.option && optionCounts.hasOwnProperty(String(vote.option))) {
-          optionCounts[String(vote.option)] += 1;
+        if (vote.options && Array.isArray(vote.options)) {
+          vote.options.forEach(optionText => {
+            const optionIndex = poll.options.findIndex(opt => opt.text === optionText);
+            if (optionIndex !== -1) {
+              const optionId = String(poll.options[optionIndex]._id);
+              if (optionCounts.hasOwnProperty(optionId)) {
+                optionCounts[optionId] += 1;
+              }
+            }
+          });
         }
       });
       poll.options = poll.options.map(opt => ({
@@ -330,16 +440,16 @@ exports.updatePoll = async (req, res) => {
     updatedPoll.totalVotes = votes.length;
     updatedPoll.participantCount = new Set(votes.map(v => String(v.user))).size;
 
-    // Compute status (Active, Upcoming, Past)
+    // Compute status (Active, Upcoming, Completed)
     const now2 = new Date();
     const start2 = new Date(updatedPoll.startDate);
     const end2 = new Date(updatedPoll.endDate);
     if (now2 < start2) {
-      updatedPoll.status = 'Upcoming';
+      updatedPoll.status = 'upcoming';
     } else if (now2 >= start2 && now2 <= end2) {
-      updatedPoll.status = 'Active';
+      updatedPoll.status = 'active';
     } else {
-      updatedPoll.status = 'Past';
+      updatedPoll.status = 'completed';
     }
 
     // Optionally, include option vote counts
@@ -349,8 +459,16 @@ exports.updatePoll = async (req, res) => {
         optionCounts[String(opt._id)] = 0;
       });
       votes.forEach(vote => {
-        if (vote.option && optionCounts.hasOwnProperty(String(vote.option))) {
-          optionCounts[String(vote.option)] += 1;
+        if (vote.options && Array.isArray(vote.options)) {
+          vote.options.forEach(optionText => {
+            const optionIndex = updatedPoll.options.findIndex(opt => opt.text === optionText);
+            if (optionIndex !== -1) {
+              const optionId = String(updatedPoll.options[optionIndex]._id);
+              if (optionCounts.hasOwnProperty(optionId)) {
+                optionCounts[optionId] += 1;
+              }
+            }
+          });
         }
       });
       updatedPoll.options = updatedPoll.options.map(opt => ({
@@ -413,11 +531,16 @@ exports.getPollResults = async (req, res) => {
     // Count votes per option
     const optionVoteCounts = {};
     poll.options.forEach(opt => {
-      optionVoteCounts[String(opt._id)] = 0;
+      optionVoteCounts[opt.text] = 0; // Use option text as key
     });
     votes.forEach(vote => {
-      if (vote.option && optionVoteCounts.hasOwnProperty(String(vote.option))) {
-        optionVoteCounts[String(vote.option)] += 1;
+      // Each vote has an array of options (option texts)
+      if (vote.options && Array.isArray(vote.options)) {
+        vote.options.forEach(optionText => {
+          if (optionVoteCounts.hasOwnProperty(optionText)) {
+            optionVoteCounts[optionText] += 1;
+          }
+        });
       }
     });
 
@@ -426,7 +549,7 @@ exports.getPollResults = async (req, res) => {
 
     // Calculate percentages and build detailed options array
     const options = poll.options.map(opt => {
-      const count = optionVoteCounts[String(opt._id)] || 0;
+      const count = optionVoteCounts[opt.text] || 0;
       const percent = totalVotes > 0 ? (count / totalVotes) * 100 : 0;
       return {
         _id: opt._id,
@@ -443,7 +566,7 @@ exports.getPollResults = async (req, res) => {
       const userVoteDoc = await Vote.findOne({ poll: poll._id, user: req.user._id });
       if (userVoteDoc) {
         userVote = {
-          option: userVoteDoc.option,
+          options: userVoteDoc.options, // Use options (plural) instead of option (singular)
           votedAt: userVoteDoc.createdAt,
         };
       }
@@ -451,10 +574,10 @@ exports.getPollResults = async (req, res) => {
 
     // Optionally, include poll status and resultDate
     const now = new Date();
-    let status = "Upcoming";
-    if (now < new Date(poll.startDate)) status = "Upcoming";
-    else if (now > new Date(poll.endDate)) status = "Past";
-    else status = "Active";
+    let status = "upcoming";
+    if (now < new Date(poll.startDate)) status = "upcoming";
+    else if (now > new Date(poll.endDate)) status = "completed";
+    else status = "active";
 
     res.json({
       pollId: poll._id,

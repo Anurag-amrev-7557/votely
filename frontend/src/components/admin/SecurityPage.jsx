@@ -13,6 +13,8 @@ import {
   EyeIcon
 } from '@heroicons/react/24/outline';
 import { CSVLink } from 'react-csv';
+import { useTheme } from '../../context/ThemeContext';
+import axiosInstance from '../../utils/api/axiosConfig';
 
 const dummyActivity = [
   { type: 'login', desc: 'Logged in', time: '2024-06-01 10:23', device: 'Chrome on Mac', ip: '192.168.1.2', location: 'New York, USA', icon: <KeyIcon className="w-5 h-5 text-blue-500" aria-hidden="true" /> },

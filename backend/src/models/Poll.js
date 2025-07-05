@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const sendEmail = require('../utils/sendEmail');
+const sendEmail = require('../utils/email/sendEmail');
 
 const optionSchema = new mongoose.Schema({
   text: { type: String, required: true },

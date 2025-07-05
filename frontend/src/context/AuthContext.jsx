@@ -13,19 +13,25 @@ export const AuthProvider = ({ children }) => {
     // Check if user is logged in
     const checkAuth = async () => {
       try {
+        console.log('[Auth] Checking authentication status...');
         const res = await fetch(`${API_URL}/me`, {
           credentials: 'include'
         });
         
+        console.log('[Auth] Response status:', res.status);
+        
         if (res.ok) {
           const data = await res.json();
+          console.log('[Auth] User authenticated:', data.user);
           setUser(data.user);
           setError(null);
         } else {
+          console.log('[Auth] Authentication failed:', res.status);
           setUser(null);
           setError(null);
         }
       } catch (error) {
+        console.error('[Auth] Network error during auth check:', error);
         setUser(null);
         setError('Network error. Please try again.');
       } finally {
@@ -205,6 +211,11 @@ export const AuthProvider = ({ children }) => {
         `width=${width},height=${height},left=${left},top=${top}`
       );
 
+      // Check if popup was blocked
+      if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+        throw new Error('Popup was blocked. Please allow popups for this site and try again.');
+      }
+
       // Listen for the OAuth response
       return new Promise((resolve, reject) => {
         let popupClosed = false;
@@ -212,6 +223,7 @@ export const AuthProvider = ({ children }) => {
 
         const cleanup = () => {
           if (checkPopup) clearInterval(checkPopup);
+          if (popupTimeout) clearTimeout(popupTimeout);
           window.removeEventListener('message', handleMessage);
         };
 
@@ -221,11 +233,13 @@ export const AuthProvider = ({ children }) => {
 
           if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
             // Instead of popup.close(), just let the popup close itself or let the user close it.
+            popupClosed = true;
             cleanup();
             setUser(event.data.user);
             window.location.replace('/');
             resolve({ success: true });
           } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
+            popupClosed = true;
             cleanup();
             reject(new Error(event.data.error));
           }
@@ -233,19 +247,43 @@ export const AuthProvider = ({ children }) => {
 
         window.addEventListener('message', handleMessage);
 
-        // Handle popup closed
-        checkPopup = setInterval(() => {
-          // Instead of accessing popup.closed (which may throw due to COOP), use try/catch
-          let closed = false;
-          try {
-            // Accessing popup.closed may throw if COOP/COEP is set, so wrap in try/catch
-            closed = popup == null || popup.closed;
-          } catch (e) {
-            // If we can't access popup.closed, assume it's closed
-            closed = true;
+        // Handle popup closed - use a timeout-based approach to avoid COOP errors entirely
+        const popupTimeout = setTimeout(() => {
+          if (!popupClosed) {
+            popupClosed = true;
+            cleanup();
+            reject(new Error('Authentication timed out'));
           }
+        }, 300000); // 5 minute timeout
+
+        // Alternative approach: use a more reliable method to detect popup closure
+        checkPopup = setInterval(() => {
+          let closed = false;
+          
+          // First check if popup reference is null
+          if (popup == null) {
+            closed = true;
+          } else {
+            // Try to access popup.closed, but handle COOP errors gracefully
+            try {
+              closed = popup.closed;
+            } catch (e) {
+              // If we can't access popup.closed due to COOP, use alternative detection
+              // Try to access a property that should exist on the window object
+              try {
+                // This will throw if the popup is closed or COOP blocks access
+                const test = popup.location.href;
+                closed = false;
+              } catch (locationError) {
+                // If we can't access location, the popup is likely closed
+                closed = true;
+              }
+            }
+          }
+          
           if (closed && !popupClosed) {
             popupClosed = true;
+            clearTimeout(popupTimeout);
             cleanup();
             reject(new Error('Authentication cancelled'));
           }
@@ -439,7 +477,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, error, login, loginWithGoogle, register, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, error, login, loginWithGoogle, register, logout, setUser }}>
       {children}
     </AuthContext.Provider>
   );

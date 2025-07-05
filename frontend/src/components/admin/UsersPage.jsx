@@ -7,6 +7,7 @@ import { CSVLink } from 'react-csv';
 import format from 'date-fns/format';
 import { motion, AnimatePresence } from 'framer-motion';
 import { showNotification, showSuccessToast, showErrorToast, showWarningToast, showInfoToast, showLoadingToast, showCustomToast } from '../../utils/toastUtils';
+import axiosInstance from '../../utils/api/axiosConfig';
 
 const UsersPage = () => {
   const { isDarkMode } = useTheme();

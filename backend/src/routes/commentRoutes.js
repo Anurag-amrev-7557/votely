@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const commentController = require('../controllers/commentController');
-const auth = require('../middleware/auth');
+const auth = require('../middleware/auth/auth');
 
 // Fetch comments for a poll
 router.get('/polls/:pollId/comments', commentController.getComments);

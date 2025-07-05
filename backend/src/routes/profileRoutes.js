@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { protect, admin } = require('../middleware/auth');
+const { protect, admin } = require('../middleware/auth/auth');
 const {
   getProfile,
   updateProfile,
@@ -93,8 +93,7 @@ router.get('/favorites', getFavorites);
 router.post(
   '/favorites/add',
   [
-    body('itemId').isString().notEmpty().withMessage('Item ID is required'),
-    body('itemType').isString().notEmpty().withMessage('Item type is required')
+    body('pollId').isString().notEmpty().withMessage('Poll ID is required')
   ],
   handleValidationErrors,
   addFavorite
@@ -102,8 +101,7 @@ router.post(
 router.post(
   '/favorites/remove',
   [
-    body('itemId').isString().notEmpty().withMessage('Item ID is required'),
-    body('itemType').isString().notEmpty().withMessage('Item type is required')
+    body('pollId').isString().notEmpty().withMessage('Poll ID is required')
   ],
   handleValidationErrors,
   removeFavorite

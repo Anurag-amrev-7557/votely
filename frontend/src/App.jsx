@@ -1,28 +1,50 @@
 import { Suspense, lazy, useEffect, memo, useCallback, useState, useMemo } from 'react'
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft } from './components/icons'
+import { ArrowLeft } from './components/ui/icons'
 import { ErrorBoundary } from 'react-error-boundary'
 import { ThemeProvider } from './context/ThemeContext'
 import { AdminAuthProvider } from './context/AdminAuthContext'
 import { AuthProvider } from './context/AuthContext'
 import { Toaster } from 'react-hot-toast'
-import Navbar from './components/navbar/Navbar'
-import Footer from './components/Footer/Footer'
-import ProfilePage from './pages/ProfilePage'
-import PrivacyPolicy from './pages/PrivacyPolicy'
+import Navbar from './components/layout/navbar/Navbar'
+import Footer from './components/layout/Footer/Footer'
+import ProfilePage from './pages/profile/ProfilePage'
+import PrivacyPolicy from './pages/legal/PrivacyPolicy'
+import TermsOfService from './pages/legal/TermsOfService'
+import CookiesPolicy from './pages/legal/CookiesPolicy'
+import AccessibilityStatement from './pages/legal/AccessibilityStatement'
 
 // Lazy load components with prefetching and chunk naming for better debugging
 const LandingPage = lazy(() => import(/* webpackChunkName: "LandingPage" */'./pages/landing/LandingPage'))
-const AvailablePolls = lazy(() => import(/* webpackChunkName: "AvailablePolls" */'./components/AvailablePolls'))
-const VotingPage = lazy(() => import(/* webpackChunkName: "VotingPage" */'./components/VotingPage'))
-const AdminPage = lazy(() => import(/* webpackChunkName: "AdminPage" */'./components/AdminPage'))
-const AdminLogin = lazy(() => import(/* webpackChunkName: "AdminLogin" */'./components/AdminLogin'))
-const ProtectedAdminRoute = lazy(() => import(/* webpackChunkName: "ProtectedAdminRoute" */'./components/ProtectedAdminRoute'))
+const AvailablePolls = lazy(() => import(/* webpackChunkName: "AvailablePolls" */'./components/voting/AvailablePolls'))
+const VotingPage = lazy(() => import(/* webpackChunkName: "VotingPage" */'./components/voting/VotingPage'))
+const AdminPage = lazy(() => import(/* webpackChunkName: "AdminPage" */'./components/admin/AdminPage'))
+const AdminLogin = lazy(() => import(/* webpackChunkName: "AdminLogin" */'./components/admin/AdminLogin'))
+const ProtectedAdminRoute = lazy(() => import(/* webpackChunkName: "ProtectedAdminRoute" */'./components/routes/ProtectedAdminRoute'))
+const ProtectedVotingRoute = lazy(() => import(/* webpackChunkName: "ProtectedVotingRoute" */'./components/routes/ProtectedVotingRoute'))
 const AboutUs = lazy(() => import(/* webpackChunkName: "AboutUs" */'./pages/AboutUs'))
 const ContactUs = lazy(() => import(/* webpackChunkName: "ContactUs" */'./pages/ContactUs'))
 const LoginPage = lazy(() => import(/* webpackChunkName: "LoginPage" */'./pages/auth/LoginPage'))
 const RegisterPage = lazy(() => import(/* webpackChunkName: "RegisterPage" */'./pages/auth/RegisterPage'))
+const AuthSuccessPage = lazy(() => import(/* webpackChunkName: "AuthSuccessPage" */'./pages/auth-result/AuthSuccessPage'))
+const AuthErrorPage = lazy(() => import(/* webpackChunkName: "AuthErrorPage" */'./pages/auth-result/AuthErrorPage'))
+
+// Product pages
+const Enterprise = lazy(() => import(/* webpackChunkName: "Enterprise" */'./pages/product/Enterprise'))
+const Changelog = lazy(() => import(/* webpackChunkName: "Changelog" */'./pages/product/Changelog'))
+
+// Resources pages
+const Documentation = lazy(() => import(/* webpackChunkName: "Documentation" */'./pages/resources/Documentation'))
+const Guides = lazy(() => import(/* webpackChunkName: "Guides" */'./pages/resources/Guides'))
+const ApiReference = lazy(() => import(/* webpackChunkName: "ApiReference" */'./pages/resources/ApiReference'))
+const Community = lazy(() => import(/* webpackChunkName: "Community" */'./pages/resources/Community'))
+const Status = lazy(() => import(/* webpackChunkName: "Status" */'./pages/resources/Status'))
+
+// Company pages
+const Blog = lazy(() => import(/* webpackChunkName: "Blog" */'./pages/company/Blog'))
+const Careers = lazy(() => import(/* webpackChunkName: "Careers" */'./pages/company/Careers'))
+const Partners = lazy(() => import(/* webpackChunkName: "Partners" */'./pages/company/Partners'))
 
 // Advanced Loading Component with Progressive States, Accessibility, and Performance Optimizations
 const LoadingSpinner = memo(() => {
@@ -354,9 +376,9 @@ const RouteChangeHandler = memo(() => {
       import('./pages/AboutUs')
       import('./pages/ContactUs')
     } else if (location.pathname.startsWith('/polls')) {
-      import('./components/VotingPage')
+      import('./components/voting/VotingPage')
     } else if (location.pathname.startsWith('/admin')) {
-      import('./components/AdminPage')
+      import('./components/admin/AdminPage')
     }
 
     // Simple page view analytics (can be replaced with real analytics)
@@ -392,7 +414,7 @@ const App = () => {
       try {
         await Promise.all([
           import('./pages/landing/LandingPage'),
-          import('./components/AvailablePolls'),
+          import('./components/voting/AvailablePolls'),
           import('./pages/auth/LoginPage'),
           import('./pages/auth/RegisterPage')
         ])
@@ -425,11 +447,32 @@ const App = () => {
       { path: '/about', element: AboutUs, priority: 'normal' },
       { path: '/contact', element: ContactUs, priority: 'normal' },
       { path: '/polls', element: AvailablePolls, priority: 'high' },
-      { path: '/vote/:pollId', element: VotingPage, priority: 'high' },
+      { path: '/vote/:pollId', element: VotingPage, priority: 'high', protected: 'voting' },
       { path: '/login', element: LoginPage, priority: 'high' },
       { path: '/register', element: RegisterPage, priority: 'high' },
       { path: '/profile', element: ProfilePage, priority: 'normal' },
-      { path: '/privacy-policy', element: PrivacyPolicy, priority: 'normal' }
+      { path: '/privacy-policy', element: PrivacyPolicy, priority: 'normal' },
+      { path: '/terms-of-service', element: TermsOfService, priority: 'normal' },
+      { path: '/cookies-policy', element: CookiesPolicy, priority: 'normal' },
+      { path: '/accessibility-statement', element: AccessibilityStatement, priority: 'normal' },
+      { path: '/auth-success', element: AuthSuccessPage, priority: 'high' },
+      { path: '/auth-error', element: AuthErrorPage, priority: 'high' },
+      
+      // Product pages
+      { path: '/enterprise', element: Enterprise, priority: 'normal' },
+      { path: '/changelog', element: Changelog, priority: 'normal' },
+      
+      // Resources pages
+      { path: '/documentation', element: Documentation, priority: 'normal' },
+      { path: '/guides', element: Guides, priority: 'normal' },
+      { path: '/api-reference', element: ApiReference, priority: 'normal' },
+      { path: '/community', element: Community, priority: 'normal' },
+      { path: '/status', element: Status, priority: 'normal' },
+      
+      // Company pages
+      { path: '/blog', element: Blog, priority: 'normal' },
+      { path: '/careers', element: Careers, priority: 'normal' },
+      { path: '/partners', element: Partners, priority: 'normal' }
     ],
     admin: [
       { path: '/admin-login', element: AdminLogin, priority: 'normal' },
@@ -508,13 +551,22 @@ const App = () => {
         );
       });
 
-      return isProtected ? (
-        <ProtectedAdminRoute key={routeConfig.path}>
-          <EnhancedComponent />
-        </ProtectedAdminRoute>
-      ) : (
-        <EnhancedComponent key={routeConfig.path} />
-      );
+      // Handle different types of protection
+      if (isProtected === true) {
+        return (
+          <ProtectedAdminRoute key={routeConfig.path}>
+            <EnhancedComponent />
+          </ProtectedAdminRoute>
+        );
+      } else if (isProtected === 'voting') {
+        return (
+          <ProtectedVotingRoute key={routeConfig.path}>
+            <EnhancedComponent />
+          </ProtectedVotingRoute>
+        );
+      } else {
+        return <EnhancedComponent key={routeConfig.path} />;
+      }
     };
 
     return (

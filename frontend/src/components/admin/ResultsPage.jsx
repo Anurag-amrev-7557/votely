@@ -18,6 +18,8 @@ import {
   Filler
 } from 'chart.js';
 import axios from 'axios';
+import { useTheme } from '../../context/ThemeContext';
+import axiosInstance from '../../utils/api/axiosConfig';
 
 // Register ChartJS components
 ChartJS.register(
@@ -304,10 +306,11 @@ const ResultsPage = () => {
   };
 
   const renderResultCard = (poll, index) => {
-    const totalVotes = poll.options.reduce((sum, option) => sum + option.votes, 0);
-    const leadingOption = poll.options.reduce((prev, current) => 
-      (prev.percentage > current.percentage) ? prev : current
-    );
+    // Use the totalVotes from the backend response, not calculate from options
+    const totalVotes = poll.totalVotes || 0;
+    // For the leading option, we need to get the results to determine this
+    // For now, just use the first option as placeholder
+    const leadingOption = poll.options && poll.options.length > 0 ? poll.options[0] : { label: 'N/A', percentage: 0 };
 
     // Accent color for status
     const statusAccent = poll.status === 'active' ? 'bg-green-500' : poll.status === 'completed' ? 'bg-blue-500' : 'bg-gray-400';
@@ -335,9 +338,8 @@ const ResultsPage = () => {
               <span className="font-semibold text-gray-900 dark:text-white">{totalVotes} votes</span>
             </div>
             <div className="flex items-center gap-4">
-              <span className="inline-block px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400">Participation: <span className="font-bold text-gray-900 dark:text-white">{poll.participation}%</span></span>
-              <span className="inline-block px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400">Leading: <span className="font-bold text-gray-900 dark:text-white">{leadingOption.label}</span></span>
-              <span className="inline-block px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">Lead Margin: <span className="font-bold text-gray-900 dark:text-white">{leadingOption.percentage}%</span></span>
+              <span className="inline-block px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400">Total Votes: <span className="font-bold text-gray-900 dark:text-white">{totalVotes}</span></span>
+              <span className="inline-block px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400">Status: <span className="font-bold text-gray-900 dark:text-white">{poll.status}</span></span>
             </div>
           </div>
           {/* Right: Results Preview & Actions */}
@@ -350,13 +352,13 @@ const ResultsPage = () => {
               <div className="space-y-1">
                 {poll.options.slice(0, 2).map((option, optionIndex) => (
                   <div key={option.id || option.label || optionIndex} className="flex items-center">
-                    <span className="text-xs text-gray-700 dark:text-gray-300 truncate max-w-[80px]">{option.label}</span>
+                    <span className="text-xs text-gray-700 dark:text-gray-300 truncate max-w-[80px]">{option.text}</span>
                     <div className="flex-1 mx-2">
                       <div className="h-1.5 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
-                        <motion.div initial={{ width: 0 }} animate={{ width: `${option.percentage}%` }} transition={{ duration: 1, delay: 0.5 + optionIndex * 0.1 }} className={`${styles.progressFill} ${getProgressColor(option.percentage)} h-full rounded-full`} />
+                        <div className="h-full rounded-full bg-gray-300 dark:bg-gray-600" style={{ width: '50%' }} />
                       </div>
                     </div>
-                    <span className="text-xs font-medium text-gray-900 dark:text-white">{option.percentage}%</span>
+                    <span className="text-xs font-medium text-gray-900 dark:text-white">--</span>
                   </div>
                 ))}
                 {poll.options.length > 2 && (
@@ -414,18 +416,18 @@ const ResultsPage = () => {
         {/* Stats Section */}
         <div className="px-7 py-4 bg-white dark:bg-gray-900 flex items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800">
           <div className="flex-1 text-center">
-            <div className="inline-block px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Participation</div>
-            <div className="text-lg font-bold text-gray-900 dark:text-white">{poll.participation}%</div>
+            <div className="inline-block px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Total Votes</div>
+            <div className="text-lg font-bold text-gray-900 dark:text-white">{totalVotes}</div>
           </div>
           <div className="w-px h-8 bg-gray-200 dark:bg-gray-800 mx-2" />
           <div className="flex-1 text-center">
-            <div className="inline-block px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Leading</div>
-            <div className="text-lg font-bold text-gray-900 dark:text-white truncate">{leadingOption.label}</div>
+            <div className="inline-block px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Status</div>
+            <div className="text-lg font-bold text-gray-900 dark:text-white truncate">{poll.status}</div>
           </div>
           <div className="w-px h-8 bg-gray-200 dark:bg-gray-800 mx-2" />
           <div className="flex-1 text-center">
-            <div className="inline-block px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400 font-medium mb-1 whitespace-nowrap">Lead Margin</div>
-            <div className="text-lg font-bold text-gray-900 dark:text-white">{leadingOption.percentage}%</div>
+            <div className="inline-block px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400 font-medium mb-1 whitespace-nowrap">Options</div>
+            <div className="text-lg font-bold text-gray-900 dark:text-white">{poll.options?.length || 0}</div>
           </div>
         </div>
         {/* Results Preview */}
@@ -436,14 +438,17 @@ const ResultsPage = () => {
           </div>
           <div className="space-y-2">
             {poll.options.slice(0, 3).map((option, optionIndex) => (
-              <div key={option.id || option.label || optionIndex} className="flex items-center">
+              <div key={option.id || option.label || optionIndex} className="flex items-center group">
                 <div className="flex-1">
                   <div className="flex items-center justify-between text-xs mb-0.5">
-                    <span className="text-gray-700 dark:text-gray-300 truncate max-w-[120px]">{option.label}</span>
-                    <span className="font-medium text-gray-900 dark:text-white ml-2">{option.percentage}%</span>
+                    <span className="text-gray-700 dark:text-gray-300 truncate max-w-[120px]">{option.text}</span>
+                    <span className="font-medium text-gray-900 dark:text-white ml-2">
+                      {option.count !== undefined ? `${option.count} votes` : '--'}
+                      {option.percent !== undefined ? ` (${option.percent}%)` : ''}
+                    </span>
                   </div>
-                  <div className={`${styles.progressBar} h-2.5 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700`}>
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${option.percentage}%` }} transition={{ duration: 1, delay: 0.5 + optionIndex * 0.1 }} className={`${styles.progressFill} ${getProgressColor(option.percentage)} h-full rounded-full`} />
+                  <div className={`${styles.progressBar} h-2.5 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700`} title={option.count !== undefined ? `${option.count} votes (${option.percent || 0}%)` : 'No data'}>
+                    <div className="h-full rounded-full bg-blue-500 group-hover:bg-blue-600 transition-all duration-300" style={{ width: `${option.percent || 0}%` }} />
                   </div>
                 </div>
               </div>
@@ -653,12 +658,14 @@ const ResultsPage = () => {
               className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2a4 4 0 018 0v2m-4-4a4 4 0 100-8 4 4 0 000 8z" /></svg>
                   {selectedPoll.title}
                 </h3>
                 <button
                   onClick={() => setSelectedPoll(null)}
                   className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
+                  aria-label="Close poll details"
                 >
                   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -666,108 +673,119 @@ const ResultsPage = () => {
                 </button>
               </div>
 
-              <div className="space-y-6">
-                {/* Poll Details */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">Status</div>
-                    <div className="mt-1">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedPoll.status)}`}>
-                        {selectedPoll.status}
-                      </span>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">Total Votes</div>
-                    <div className="mt-1 text-lg font-medium text-gray-900 dark:text-white">
-                      {selectedPoll.totalVotes}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">Created</div>
-                    <div className="mt-1 text-gray-900 dark:text-white">
-                      {format(new Date(selectedPoll.createdAt), 'MMM d, yyyy')}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">End Date</div>
-                    <div className="mt-1 text-gray-900 dark:text-white">
-                      {format(new Date(selectedPoll.endDate), 'MMM d, yyyy')}
-                    </div>
-                  </div>
+              {/* Enhanced Poll Summary */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 15c2.485 0 4.797.755 6.879 2.047M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                  <span className="text-sm text-gray-700 dark:text-gray-300" title="Poll Creator">{selectedPoll.creatorName || 'Unknown'}</span>
                 </div>
-
-                {/* Results Chart */}
-                <div className="mt-6">
-                  <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                    Results
-                  </h4>
-                  {resultsLoading ? (
-                    <div aria-live="polite" role="status">Loading poll results...</div>
-                  ) : resultsError ? (
-                    <div className="py-8 text-center text-red-500 dark:text-red-400">{resultsError}</div>
-                  ) : pollResults && (
-                    <>
-                      {selectedPoll.settings?.voterNameDisplay === 'anonymized' && (
-                        <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-yellow-800 dark:text-yellow-200 text-sm">
-                          <strong>This poll is anonymized.</strong> Voter identities are hidden for privacy.
-                        </div>
-                      )}
-                      <div className="space-y-4">
-                        {pollResults.options.map((option, index) => {
-                          const percent = pollResults.totalVotes ? Math.round((option.votes / pollResults.totalVotes) * 100) : 0;
-                          return (
-                            <div key={option.id || option.label || index}>
-                              <div className="flex items-center justify-between text-sm mb-1">
-                                <span className="text-gray-700 dark:text-gray-300">{option.text}</span>
-                                <span className="font-medium text-gray-900 dark:text-white">
-                                  {option.votes} votes ({percent}%)
-                                </span>
-                              </div>
-                              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                <div className="bg-blue-600 h-3 rounded-full transition-all duration-500" style={{ width: `${percent}%` }} />
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                      {/* Participation Rate */}
-                      <div className="mt-6">
-                        <h5 className="text-md font-semibold mb-2">Participation Rate</h5>
-                        <div className="text-lg font-bold">
-                          {/* If you have total eligible voters, use it here. For now, just show total votes. */}
-                          {pollResults.totalVotes} total votes
-                        </div>
-                      </div>
-                      {/* Option Votes Bar Chart */}
-                      <div className="mt-6">
-                        <h5 className="text-md font-semibold mb-2">Votes by Option</h5>
-                        <Bar
-                          data={{
-                            labels: pollResults.options.map(opt => opt.text),
-                            datasets: [{
-                              label: 'Votes',
-                              data: pollResults.options.map(opt => opt.votes),
-                              backgroundColor: 'rgba(59, 130, 246, 0.8)'
-                            }]
-                          }}
-                          options={{
-                            responsive: true,
-                            plugins: { legend: { display: false } },
-                            scales: { y: { beginAtZero: true } }
-                          }}
-                        />
-                      </div>
-                    </>
-                  )}
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                  <span className="text-sm text-gray-700 dark:text-gray-300" title="Duration">{format(new Date(selectedPoll.createdAt), 'MMM d, yyyy')} - {format(new Date(selectedPoll.endDate), 'MMM d, yyyy')}</span>
                 </div>
-
-                {/* Demographics */}
-                {renderDemographicsCharts(selectedPoll)}
-
-                {/* Voting Trends */}
-                {renderVotingTrends(selectedPoll)}
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m4 0h-1V8h-1m-4 0h-1v4H7m4 0h-1v4h-1" /></svg>
+                  <span className="text-sm text-gray-700 dark:text-gray-300" title="Participation Rate">{selectedPoll.participation ? `${selectedPoll.participation}%` : '--'}</span>
+                </div>
+                <div className="flex items-center gap-2 col-span-2 md:col-span-1">
+                  <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3" /></svg>
+                  <span className="text-sm text-gray-700 dark:text-gray-300" title="Status">{selectedPoll.status}</span>
+                </div>
+                <div className="flex items-center gap-2 col-span-2 md:col-span-1">
+                  <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                  <span className="text-sm text-gray-700 dark:text-gray-300" title="Options Count">{selectedPoll.options?.length || 0} options</span>
+                </div>
               </div>
+
+              {/* Poll Description */}
+              {selectedPoll.description && (
+                <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-blue-900 dark:text-blue-200 text-sm">
+                  <strong>Description:</strong> {selectedPoll.description}
+                </div>
+              )}
+
+              {/* Top Voted Option */}
+              {pollResults && pollResults.options && pollResults.options.length > 0 && (
+                <div className="mb-6 flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                  <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  <span className="font-semibold text-green-700 dark:text-green-300">Top Voted Option:</span>
+                  <span className="text-gray-900 dark:text-white font-medium">{pollResults.options.reduce((a, b) => (a.count > b.count ? a : b)).text}</span>
+                  <span className="text-gray-500 dark:text-gray-400">({pollResults.options.reduce((a, b) => (a.count > b.count ? a : b)).count} votes)</span>
+                </div>
+              )}
+
+              {/* Results Chart */}
+              <div className="mt-6">
+                <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                  Results
+                </h4>
+                {resultsLoading ? (
+                  <div aria-live="polite" role="status">Loading poll results...</div>
+                ) : resultsError ? (
+                  <div className="py-8 text-center text-red-500 dark:text-red-400">{resultsError}</div>
+                ) : pollResults && (
+                  <>
+                    {selectedPoll.settings?.voterNameDisplay === 'anonymized' && (
+                      <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-yellow-800 dark:text-yellow-200 text-sm">
+                        <strong>This poll is anonymized.</strong> Voter identities are hidden for privacy.
+                      </div>
+                    )}
+                    <div className="space-y-4">
+                      {pollResults.options.map((option, index) => {
+                        // Use the count and percent from backend response
+                        const voteCount = option.count || 0;
+                        const percentage = option.percent || 0;
+                        return (
+                          <div key={option.id || option.label || index}>
+                            <div className="flex items-center justify-between text-sm mb-1">
+                              <span className="text-gray-700 dark:text-gray-300">{option.text}</span>
+                              <span className="font-medium text-gray-900 dark:text-white">
+                                {voteCount} votes ({percentage}%)
+                              </span>
+                            </div>
+                            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                              <div className="bg-blue-600 h-3 rounded-full transition-all duration-500" style={{ width: `${percentage}%` }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {/* Participation Rate */}
+                    <div className="mt-6">
+                      <h5 className="text-md font-semibold mb-2">Participation Rate</h5>
+                      <div className="text-lg font-bold">
+                        {/* If you have total eligible voters, use it here. For now, just show total votes. */}
+                        {pollResults.totalVotes} total votes
+                      </div>
+                    </div>
+                    {/* Option Votes Bar Chart */}
+                    <div className="mt-6">
+                      <h5 className="text-md font-semibold mb-2">Votes by Option</h5>
+                      <Bar
+                        data={{
+                          labels: pollResults.options.map(opt => opt.text),
+                          datasets: [{
+                            label: 'Votes',
+                            data: pollResults.options.map(opt => opt.count || 0),
+                            backgroundColor: 'rgba(59, 130, 246, 0.8)'
+                          }]
+                        }}
+                        options={{
+                          responsive: true,
+                          plugins: { legend: { display: false } },
+                          scales: { y: { beginAtZero: true } }
+                        }}
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Demographics */}
+              {renderDemographicsCharts(selectedPoll)}
+
+              {/* Voting Trends */}
+              {renderVotingTrends(selectedPoll)}
             </motion.div>
           </motion.div>
         )}
