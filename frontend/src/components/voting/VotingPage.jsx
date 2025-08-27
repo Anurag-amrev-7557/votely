@@ -1167,4 +1167,6 @@ const isPollUpcoming = poll => poll && poll.status === 'upcoming';
   );
 };
 
+MemoRadioOption.displayName = 'MemoRadioOption';
+
 export default VotingPage;

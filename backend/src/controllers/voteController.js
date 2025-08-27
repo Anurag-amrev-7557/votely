@@ -576,21 +576,23 @@ exports.castVote = async (req, res) => {
       metadata: { pollId: String(pollId) }
     });
 
-    // 13. Send email notification to admin (with more info)
-    try {
-      await sendEmail({
-        to: process.env.ADMIN_EMAIL || 'admin@example.com',
-        subject: `New Vote Cast in Poll: ${poll.title}`,
-        text: `A new vote was cast in the poll "${poll.title}" by ${isAnonymous ? 'an anonymous user' : `user ${userId}`}.`,
-        html: `<p>A new vote was cast in the poll <strong>${poll.title}</strong> by <strong>${isAnonymous ? 'an anonymous user' : `user ${userId}`}</strong>.</p>
-               <p>Options: <strong>${uniqueOptions.join(', ')}</strong></p>
-               <p>IP: ${ip}</p>
-               <p>User-Agent: ${userAgent}</p>
-               <p>Referrer: ${referrer}</p>`
-      });
-    } catch (e) {
-      console.error('Failed to send vote notification email:', e);
-    }
+    // 13. Send email notification to admin (with more info) - make it non-blocking
+    setImmediate(async () => {
+      try {
+        await sendEmail({
+          to: process.env.ADMIN_EMAIL || 'admin@example.com',
+          subject: `New Vote Cast in Poll: ${poll.title}`,
+          text: `A new vote was cast in the poll "${poll.title}" by ${isAnonymous ? 'an anonymous user' : `user ${userId}`}.`,
+          html: `<p>A new vote was cast in the poll <strong>${poll.title}</strong> by <strong>${isAnonymous ? 'an anonymous user' : `user ${userId}`}</strong>.</p>
+                 <p>Options: <strong>${uniqueOptions.join(', ')}</strong></p>
+                 <p>IP: ${ip}</p>
+                 <p>User-Agent: ${userAgent}</p>
+                 <p>Referrer: ${referrer}</p>`
+        });
+      } catch (e) {
+        console.error('Failed to send vote notification email:', e);
+      }
+    });
 
     // 14. Respond with enhanced feedback
     res.status(201).json({

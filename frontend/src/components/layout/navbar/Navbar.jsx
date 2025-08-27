@@ -1065,4 +1065,7 @@ const Navbar = () => {
     );
 };
 
+AdvancedNavLink.displayName = 'AdvancedNavLink';
+ThemeToggle.displayName = 'ThemeToggle';
+
 export default Navbar;

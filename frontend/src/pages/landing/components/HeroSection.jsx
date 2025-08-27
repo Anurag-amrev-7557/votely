@@ -1,12 +1,10 @@
 import { memo, useCallback, useMemo, useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import landingHeroWebp from '../../../assets/landing-hero.webp';
-import landingHeroPng from '../../../assets/landing-hero.png';
+import landingHero from '../../../assets/landing-hero.webp';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../../../context/AdminAuthContext';
 import CountUp from 'react-countup';
 import { useTheme } from '../../../context/ThemeContext';
-import { useTranslation } from 'react-i18next';
 
 const AVATAR_IDS = [11, 12, 13, 14, 15, 16];
 
@@ -40,7 +38,6 @@ const HeroSection = ({ isVisible }) => {
   const { isAdmin } = useAdminAuth();
   const { isDarkMode } = useTheme();
   const navigate = useNavigate();
-  const { t } = useTranslation();
 
   // Memoize theme-dependent classes
   const headlineColor = useMemo(() => isDarkMode ? 'text-white' : 'text-gray-900', [isDarkMode]);
@@ -115,9 +112,9 @@ const HeroSection = ({ isVisible }) => {
           </svg>
         </span>
       ),
-      text: t('End-to-End Encryption'),
-      subtext: t('Your vote is private and tamper-proof.'),
-      tooltip: t('Votes are encrypted on your device and never exposed.')
+      text: 'End-to-End Encryption',
+      subtext: 'Your vote is private and tamper-proof.',
+      tooltip: 'Votes are encrypted on your device and never exposed.'
     },
     {
       key: 'results',
@@ -166,9 +163,9 @@ const HeroSection = ({ isVisible }) => {
           </svg>
         </span>
       ),
-      text: t('Real-time Results'),
-      subtext: t('Instant, transparent tallying.'),
-      tooltip: t('See live updates as votes are counted.')
+      text: 'Real-time Results',
+      subtext: 'Instant, transparent tallying.',
+      tooltip: 'See live updates as votes are counted.'
     },
     {
       key: 'support',
@@ -205,9 +202,9 @@ const HeroSection = ({ isVisible }) => {
           </span>
         </span>
       ),
-      text: t('24/7 Support'),
-      subtext: t('Global help, anytime you need it.'),
-      tooltip: t('Our team is always available to assist you.')
+      text: '24/7 Support',
+      subtext: 'Global help, anytime you need it.',
+      tooltip: 'Our team is always available to assist you.'
     }
   ];
 
@@ -268,7 +265,7 @@ const HeroSection = ({ isVisible }) => {
             transition={{ type: "spring", stiffness: 320, damping: 24, duration: 0.7 }}
             tabIndex={0}
             role="status"
-            aria-label={t('Trusted by Organizations Worldwide')}
+            aria-label="Trusted by Organizations Worldwide"
           >
             {/* Animated Glow Effect */}
             <motion.span
@@ -306,7 +303,7 @@ const HeroSection = ({ isVisible }) => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.7, delay: 0.35, type: "spring", stiffness: 200, damping: 18 }}
             >
-              {t('Trusted by')} <span className="font-bold underline decoration-wavy decoration-blue-400/60 dark:decoration-blue-300/60 underline-offset-2">{t('Organizations Worldwide')}</span>
+              Trusted by <span className="font-bold underline decoration-wavy decoration-blue-400/60 dark:decoration-blue-300/60 underline-offset-2">Organizations Worldwide</span>
             </motion.span>
             {/* Tooltip on focus/hover for accessibility */}
             <motion.div
@@ -318,7 +315,7 @@ const HeroSection = ({ isVisible }) => {
               aria-hidden="true"
             >
               <span>
-                <strong>{t('Verified')}</strong> {t('by leading institutions for security and reliability.')}
+                <strong>Verified</strong> by leading institutions for security and reliability.
               </span>
             </motion.div>
           </motion.div>
@@ -345,7 +342,7 @@ const HeroSection = ({ isVisible }) => {
                 transition={{ duration: 0.7, delay: 0.05, type: "spring", stiffness: 180, damping: 18 }}
               >
                 <span className="inline-block relative">
-                  <span className="pr-2">{t('Secure')}</span>
+                  <span className="pr-2">Secure</span>
                   {/* Animated lock icon */}
                   <motion.span
                     className="inline-block align-middle"
@@ -366,7 +363,7 @@ const HeroSection = ({ isVisible }) => {
                       />
                     </svg>
                   </motion.span>
-                  <span className="pl-2">{t('Online Voting')}</span>
+                  <span className="pl-2">Online Voting</span>
                 </span>
                 <br />
                 <span className="relative inline-block">
@@ -382,7 +379,7 @@ const HeroSection = ({ isVisible }) => {
                       WebkitTextFillColor: "transparent"
                     }}
                   >
-                    {t('Made Simple')}
+                    Made Simple
                   </motion.span>
                   {/* Animated underline shimmer */}
                   <motion.span
@@ -450,9 +447,9 @@ const HeroSection = ({ isVisible }) => {
               transition={{ duration: 0.7, delay: 0.18, ease: [0.4, 0, 0.2, 1] }}
             >
               <span className="inline-block via-transparent to-green-400/10 dark:bg-none rounded-lg py-0.5">
-                {t('Effortless, secure, and transparent online elections.')}<br className="hidden sm:inline" />
+                {`Effortless, secure, and transparent online elections.`}<br className="hidden sm:inline" />
                 <span className="text-gray-500 dark:text-gray-400 font-light">
-                  {t('Integrity and accessibility for every vote.')}
+                  Integrity and accessibility for every vote.
                 </span>
               </span>
             </motion.p>
@@ -461,7 +458,7 @@ const HeroSection = ({ isVisible }) => {
           {/* Advanced Features Grid - now batched/staggered */}
           <motion.div
             className="relative grid grid-cols-1 sm:grid-cols-3 gap-6 min-h-[96px] py-2 px-1 sm:px-0"
-            aria-label={t('Platform Features')}
+            aria-label="Platform Features"
             variants={featuresContainer}
             initial="hidden"
             whileInView="show"
@@ -500,10 +497,10 @@ const HeroSection = ({ isVisible }) => {
             viewport={{ once: true, amount: 0.7 }}
             transition={{ duration: 0.7, delay: 0.2, type: "spring", stiffness: 80 }}
             role="group"
-            aria-label={t('Primary actions')}
+            aria-label="Primary actions"
           >
             {/* Enhanced Get Started Button */}
-            <Link to="/polls" tabIndex={-1} aria-label={t('Go to Polls')}>
+            <Link to="/polls" tabIndex={-1} aria-label="Go to Polls">
               <motion.button
                 whileHover={{
                   scale: 1.07,
@@ -512,7 +509,7 @@ const HeroSection = ({ isVisible }) => {
                 }}
                 whileTap={{ scale: 0.96 }}
                 className="relative flex w-full @[480px]:w-auto min-w-[140px] max-w-[480px] items-center justify-center rounded-xl h-12 px-7 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-base font-bold tracking-tight shadow-lg hover:shadow-xl transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
-                aria-label={t('Get Started')}
+                aria-label="Get Started"
                 type="button"
               >
                 {/* Animated gradient border */}
@@ -528,7 +525,7 @@ const HeroSection = ({ isVisible }) => {
                   aria-hidden="true"
                 />
                 <span className="truncate z-10 flex items-center gap-2">
-                  {t('Get Started')}
+                  Get Started
                   {/* Animated arrow with shimmer */}
                   <motion.svg
                     className="w-5 h-5 ml-2 z-10"
@@ -602,7 +599,7 @@ const HeroSection = ({ isVisible }) => {
                 group
                 border border-transparent
                 `}
-              aria-label={isAdmin ? t('Go to Admin Dashboard') : t('Admin Access')}
+              aria-label={isAdmin ? 'Go to Admin Dashboard' : 'Admin Access'}
               type="button"
             >
               <span className="absolute left-0 top-0 w-full h-full rounded-lg pointer-events-none z-0">
@@ -644,23 +641,23 @@ const HeroSection = ({ isVisible }) => {
                 <span className="truncate">
                   {isAdmin ? (
                     <span className="flex items-center gap-1">
-                      {t('Admin Dashboard')}
+                      Admin Dashboard
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-white/10 text-white/90 ml-1 border border-white/20">
                         <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                         </svg>
-                        {t('Active')}
+                        Active
                       </span>
                     </span>
                   ) : (
                     <span className="flex items-center gap-1">
-                      {t('Admin Access')}
+                      Admin Access
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-800/60 text-gray-200 ml-1 border border-gray-700/40">
                         <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                           <circle cx="12" cy="12" r="10" strokeWidth="2" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01" />
                         </svg>
-                        {t('Restricted')}
+                        Restricted
                       </span>
                     </span>
                   )}
@@ -696,22 +693,22 @@ const HeroSection = ({ isVisible }) => {
           */}
           <div
             className="flex flex-col @[480px]:flex-row items-center gap-6 mt-6 justify-center @[864px]:justify-start relative"
-            aria-label={t('Active voters and trusted organizations')}
+            aria-label="Active voters and trusted organizations"
           >
             {/* Animated Avatars with Tooltip Popover */}
-            <div className="flex -space-x-3 relative group" role="list" aria-label={t('Recent voters')}>
+            <div className="flex -space-x-3 relative group" role="list" aria-label="Recent voters">
               {AVATAR_IDS.map((imgId, idx) => (
                 <div
                   key={imgId}
                   className="relative"
                   tabIndex={0}
                   role="listitem"
-                  aria-label={`${t('Voter avatar')} ${idx + 1}`}
+                  aria-label="Voter avatar 1"
                   style={{ zIndex: 10 - idx }}
                 >
                   <img
                     src={`https://i.pravatar.cc/150?img=${imgId}`}
-                    alt={`${t('Voter avatar')} ${idx + 1}`}
+                    alt="Voter avatar 1"
                     className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-800 bg-gray-200 dark:bg-gray-700 shadow-md transition-all duration-300 will-change-[background-color,transform] cursor-pointer focus:ring-2 focus:ring-blue-400 focus:z-20 hover:scale-110"
                     loading="lazy"
                   />
@@ -722,7 +719,7 @@ const HeroSection = ({ isVisible }) => {
                     className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-2 z-30 px-3 py-1.5 rounded-lg bg-gray-900 text-xs text-white opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200 shadow-lg whitespace-nowrap"
                     role="tooltip"
                   >
-                    {t('Active Voter')}
+                    Active Voter
                   </span>
                 </div>
               ))}
@@ -730,7 +727,7 @@ const HeroSection = ({ isVisible }) => {
               <div
                 className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-800 bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-semibold shadow-md transition-all duration-300 will-change-[background-color,transform] cursor-pointer hover:scale-110 focus:ring-2 focus:ring-blue-400 focus:z-20"
                 tabIndex={0}
-                aria-label={t('More than 1,000 voters')}
+                aria-label="More than 1,000 voters"
               >
                 +994
               </div>
@@ -764,13 +761,13 @@ const HeroSection = ({ isVisible }) => {
                   </motion.span>
                 </span>
                 <span className="text-gray-600 dark:text-gray-300 text-base font-medium sr-only">
-                  {t('active voters')}
+                  active voters
                 </span>
                 <span
                   className="text-gray-600 dark:text-gray-300 text-base font-medium inline-flex items-center"
                   aria-hidden="true"
                 >
-                  {t('active voters')}
+                  active voters
                 </span>
                 {/* Animated checkmark with subtle pulse */}
                 <motion.svg
@@ -798,13 +795,13 @@ const HeroSection = ({ isVisible }) => {
                   className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-2 z-30 px-3 py-1.5 rounded-lg bg-gray-900 text-xs text-white opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200 shadow-lg whitespace-nowrap"
                   role="tooltip"
                 >
-                  {t('Live active voters right now')}
+                  Live active voters right now
                 </span>
               </span>
               {/* Ultra-Advanced Animated Trust Badges - batched/staggered, reduce infinite animation complexity */}
               <motion.div
                 className="flex flex-wrap gap-2 mt-1"
-                aria-label={t('Trusted by organizations')}
+                aria-label="Trusted by organizations"
                 role="list"
                 variants={badgesContainer}
                 initial="hidden"
@@ -836,7 +833,7 @@ const HeroSection = ({ isVisible }) => {
               </motion.div>
               {/* Subtext */}
               <p className="text-gray-500 dark:text-gray-400 text-xs mt-1 transition-colors duration-300">
-                {t('Trusted by organizations worldwide')}
+                Trusted by organizations worldwide
               </p>
             </div>
           </div>
@@ -844,21 +841,18 @@ const HeroSection = ({ isVisible }) => {
 
         {/* Advanced Image Section with Parallax, Animated Overlay, and Accessibility */}
         <div className="flex-1 flex items-center justify-center">
-          <picture>
-            <source srcSet={landingHeroWebp} type="image/webp" />
-            <img
-              src={landingHeroPng}
-              alt={t('Online voting platform hero')}
-              className="max-w-full h-auto rounded-xl transition-all duration-500"
-              loading="lazy"
-              width={600}
-              height={400}
-              style={{ objectFit: 'cover' }}
-              onLoad={() => setIsImageLoaded(true)}
-              decoding="async"
-              fetchpriority="low"
-            />
-          </picture>
+          <img
+            src={landingHero}
+            alt="Online voting platform hero"
+            className="max-w-full h-auto rounded-xl transition-all duration-500"
+            loading="lazy"
+            width={600}
+            height={400}
+            style={{ objectFit: 'cover' }}
+            onLoad={() => setIsImageLoaded(true)}
+            decoding="async"
+            fetchpriority="low"
+          />
         </div>
       </div>
 
@@ -868,7 +862,7 @@ const HeroSection = ({ isVisible }) => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.7, duration: 0.6, type: "spring", stiffness: 60 }}
-        aria-label={t('Scroll down indicator')}
+        aria-label="Scroll down indicator"
         tabIndex={0}
         role="presentation"
       >
@@ -879,7 +873,7 @@ const HeroSection = ({ isVisible }) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.5 }}
         >
-          <span className="relative z-10">{t('Scroll to explore')}</span>
+          <span className="relative z-10">Scroll to explore</span>
           <motion.span
             className="absolute left-0 top-0 h-full w-full bg-gradient-to-r from-blue-400/30 via-transparent to-blue-400/30 rounded blur-sm pointer-events-none"
             initial={{ opacity: 0 }}
@@ -896,7 +890,7 @@ const HeroSection = ({ isVisible }) => {
         {/* Interactive Mouse/Touch Scroll Icon */}
         <motion.button
           type="button"
-          aria-label={t('Scroll down')}
+          aria-label="Scroll down"
           tabIndex={0}
           className="group w-8 h-14 rounded-full border-2 border-gray-300 dark:border-gray-600 flex flex-col items-center justify-start p-1.5 bg-white/70 dark:bg-[#23272f]/70 shadow-lg hover:scale-105 focus:scale-105 active:scale-95 transition-all duration-200 will-change-[transform,border-color,background-color] outline-none ring-0 focus-visible:ring-2 focus-visible:ring-blue-400"
           initial={{ opacity: 0, scale: 0.95 }}
@@ -991,11 +985,12 @@ const HeroSection = ({ isVisible }) => {
           aria-hidden="true"
         >
           <kbd className="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-xs font-mono">↓</kbd>
-          <span>{t('or scroll')}</span>
+          <span>or scroll</span>
         </motion.div>
       </motion.div>
     </section>
   );
 };
 
+HeroSection.displayName = 'HeroSection';
 export default memo(HeroSection); 

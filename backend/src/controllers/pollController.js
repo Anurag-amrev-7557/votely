@@ -6,6 +6,8 @@ const mongoose = require('mongoose');
 exports.createPoll = async (req, res) => {
   try {
     console.log('Incoming poll payload:', req.body); // Log the incoming payload
+    console.log('User creating poll:', req.user?._id); // Log the user creating the poll
+    
     // --- Robust Validation ---
     const { title, description, startDate, endDate, options, resultDate, settings, category } = req.body;
     if (!title || typeof title !== 'string' || title.trim().length < 3 || title.length > 100) {
@@ -56,12 +58,35 @@ exports.createPoll = async (req, res) => {
       }
     }
     // --- End Validation ---
+    
+    console.log('Validation passed, creating poll...'); // Log validation success
+    
     const poll = new Poll({ ...req.body, createdBy: req.user._id });
+    console.log('Poll model created, saving to database...'); // Log before save
+    
     await poll.save();
+    console.log('Poll saved successfully:', poll._id); // Log successful save
+    
     res.status(201).json(poll);
   } catch (err) {
     console.error('Error in createPoll:', err);
-    res.status(400).json({ error: err.message, details: err });
+    console.error('Error stack:', err.stack); // Log full error stack
+    console.error('Error details:', {
+      name: err.name,
+      message: err.message,
+      code: err.code,
+      keyPattern: err.keyPattern,
+      keyValue: err.keyValue
+    });
+    
+    // Send appropriate error response
+    if (err.name === 'ValidationError') {
+      return res.status(400).json({ error: 'Validation failed', details: err.message });
+    } else if (err.name === 'MongoError' || err.name === 'MongoServerError') {
+      return res.status(400).json({ error: 'Database error', details: err.message });
+    } else {
+      res.status(500).json({ error: 'Internal server error', details: err.message });
+    }
   }
 };
 

@@ -479,4 +479,5 @@ const FeaturesSection = ({ isVisible }) => {
   );
 };
 
+FeaturesSection.displayName = 'FeaturesSection';
 export default React.memo(FeaturesSection); 

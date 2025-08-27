@@ -344,4 +344,5 @@ const TestimonialSection = ({ isVisible }) => {
     );
 }
 
+TestimonialSection.displayName = 'TestimonialSection';
 export default React.memo(TestimonialSection);

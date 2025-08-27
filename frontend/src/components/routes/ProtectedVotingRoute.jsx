@@ -222,4 +222,6 @@ const ProtectedVotingRoute = ({ children }) => {
   return children;
 };
 
+ProtectedVotingRoute.displayName = 'ProtectedVotingRoute';
+
 export default ProtectedVotingRoute; 

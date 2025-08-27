@@ -674,4 +674,5 @@ const PriceSection = ({ isVisible }) => {
     );
 }
 
+PriceSection.displayName = 'PriceSection';
 export default React.memo(PriceSection);

@@ -6,7 +6,7 @@ import debounce from 'lodash/debounce';
 import { CSVLink } from 'react-csv';
 import format from 'date-fns/format';
 import { motion, AnimatePresence } from 'framer-motion';
-import { showNotification, showSuccessToast, showErrorToast, showWarningToast, showInfoToast, showLoadingToast, showCustomToast } from '../../utils/toastUtils';
+import { showNotification, showSuccessToast, showErrorToast, showWarningToast, showInfoToast, showLoadingToast, showCustomToast } from '../../utils/toastUtils.jsx';
 import axiosInstance from '../../utils/api/axiosConfig';
 
 const UsersPage = () => {

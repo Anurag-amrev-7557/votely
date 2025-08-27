@@ -165,11 +165,56 @@ if (typeof document !== 'undefined' && !document.getElementById('admindashboard-
   document.head.appendChild(style);
 }
 
-const UsersPage = lazy(() => import('./UsersPage'));
-const PollsPage = lazy(() => import('./PollsPage'));
-const ResultsPage = lazy(() => import('./ResultsPage'));
-const SecurityPage = lazy(() => import('./SecurityPage'));
-const SettingsPage = lazy(() => import('./SettingsPage'));
+// Enhanced lazy loading wrapper with better error handling
+const createLazyComponent = (importFn, displayName) => {
+  return lazy(() => 
+    importFn().then(module => {
+      // Ensure the module has a default export
+      if (!module || !module.default) {
+        console.error(`Lazy component ${displayName} failed to load properly:`, module);
+        throw new Error(`Failed to load component: ${displayName}`);
+      }
+      
+      // Set displayName after successful load
+      if (module.default) {
+        module.default.displayName = displayName;
+      }
+      
+      return module;
+    }).catch(error => {
+      console.error(`Error loading lazy component ${displayName}:`, error);
+      // Return a fallback component
+      return {
+        default: () => (
+          <div className="flex items-center justify-center min-h-[200px] text-red-500">
+            Failed to load {displayName}
+          </div>
+        )
+      };
+    })
+  );
+};
+
+const UsersPage = createLazyComponent(
+  () => import('./UsersPage'),
+  'UsersPage'
+);
+const PollsPage = createLazyComponent(
+  () => import('./PollsPage'),
+  'PollsPage'
+);
+const ResultsPage = createLazyComponent(
+  () => import('./ResultsPage'),
+  'ResultsPage'
+);
+const SecurityPage = createLazyComponent(
+  () => import('./SecurityPage'),
+  'SecurityPage'
+);
+const SettingsPage = createLazyComponent(
+  () => import('./SettingsPage'),
+  'SettingsPage'
+);
 
 const AdminDashboard = React.memo(({ isDarkMode }) => {
   // Memoize theme-dependent variables
@@ -670,5 +715,7 @@ const AdminDashboard = React.memo(({ isDarkMode }) => {
     </div>
   );
 });
+
+AdminDashboard.displayName = 'AdminDashboard';
 
 export default AdminDashboard; 

@@ -18,9 +18,19 @@ const jwt = require('jsonwebtoken');
 dotenv.config();
 
 // Connect to MongoDB
-connectDB();
+connectDB().then((dbConnection) => {
+  if (dbConnection) {
+    console.log('Database connected successfully');
+  } else {
+    console.log('Database connection failed, but server will continue running');
+    console.log('Some features may not work without database connection');
+  }
+}).catch((error) => {
+  console.log('Database connection error:', error.message);
+  console.log('Server will continue running without database connection');
+});
 
-// Start poll status cron job after DB connection
+// Start poll status cron job after DB connection attempt
 const startStatusCron = require('./statusCron');
 startStatusCron();
 
@@ -121,29 +131,28 @@ app.get('/api/proxy/google-photo', async (req, res) => {
   }
 });
 
-// Auth routes
-app.use('/api/auth', authRoutes);
-
-// Profile routes
-app.use('/api/profile', profileRoutes);
-
-// Poll routes
+// Import all route files at the top
 const pollRoutes = require('./routes/pollRoutes');
-app.use('/api/polls', pollRoutes);
-
-// Vote routes
 const voteRoutes = require('./routes/voteRoutes');
-app.use('/api/votes', voteRoutes);
-
-// Comment routes
 const commentRoutes = require('./routes/commentRoutes');
-app.use('/api', commentRoutes);
+
+// Register all API routes
+app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/polls', pollRoutes);
+app.use('/api/votes', voteRoutes);
+app.use('/api/comments', commentRoutes);
 
 // Google OAuth configuration
+const googleCallbackURL = process.env.GOOGLE_CALLBACK_URL;
+if (!googleCallbackURL) {
+  console.warn('GOOGLE_CALLBACK_URL not set, using default');
+}
+
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: process.env.GOOGLE_CALLBACK_URL,
+  callbackURL: googleCallbackURL || 'http://localhost:5001/api/auth/google/callback',
 },
 async (accessToken, refreshToken, profile, done) => {
   try {
@@ -287,6 +296,25 @@ io.on('connection', (socket) => {
     }
   });
   // Optionally handle disconnects or other events here
+});
+
+// Global error handler for unhandled errors
+app.use((error, req, res, next) => {
+  console.error('Global error handler caught:', error);
+  
+  // Don't expose internal errors to client
+  const statusCode = error.statusCode || 500;
+  const message = statusCode === 500 ? 'Internal server error' : error.message;
+  
+  res.status(statusCode).json({
+    error: message,
+    ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+  });
+});
+
+// Handle 404 errors
+app.use('*', (req, res) => {
+  res.status(404).json({ error: 'Route not found' });
 });
 
 const PORT = process.env.PORT || 5001;

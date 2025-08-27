@@ -94,6 +94,30 @@
       }
     </style>
     <script>
+      // Intercept React's internal getDisplayNameForFiber function to prevent displayName errors
+      (function() {
+        // Override React's internal getDisplayNameForFiber function before it's called
+        if (typeof window !== 'undefined') {
+          // Create a safe version that never throws
+          window.getDisplayNameForFiber = function(fiber) {
+            try {
+              if (fiber && fiber.type) {
+                // Ensure the type has the required properties
+                if (fiber.type && typeof fiber.type === 'object') {
+                  return fiber.type.displayName || fiber.type.name || 'Unknown';
+                } else if (typeof fiber.type === 'function') {
+                  return fiber.type.displayName || fiber.type.name || 'Function';
+                }
+              }
+              return 'Unknown';
+            } catch (error) {
+              console.warn('Error getting display name for fiber:', error);
+              return 'Unknown';
+            }
+          };
+        }
+      })();
+
       // On page load or when changing themes, best to add inline in `head` to avoid FOUC
       (function() {
         try {

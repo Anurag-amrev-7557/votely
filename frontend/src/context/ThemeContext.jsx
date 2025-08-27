@@ -3,6 +3,8 @@ import { useLocation } from 'react-router-dom';
 
 const ThemeContext = createContext();
 
+ThemeContext.displayName = 'ThemeContext';
+
 export const ThemeProvider = ({ children }) => {
   // Track theme mode: 'light', 'dark', or 'system'
   const [mode, setMode] = useState(() => {

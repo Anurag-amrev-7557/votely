@@ -168,7 +168,7 @@ export default defineConfig({
   build: {
     target: 'esnext',
     minify: 'terser',
-    sourcemap: false, // Disable sourcemaps in production
+    sourcemap: true,
     // Optimize chunk size
     chunkSizeWarningLimit: 1000,
     // Enable CSS code splitting

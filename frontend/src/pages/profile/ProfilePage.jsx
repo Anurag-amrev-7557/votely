@@ -2467,4 +2467,6 @@ const ProfilePage = () => {
   );
 };
 
+ProfilePage.displayName = 'ProfilePage';
+
 export default ProfilePage;

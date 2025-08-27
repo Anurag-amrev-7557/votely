@@ -4,6 +4,8 @@ const API_URL = '/api/auth';
 
 const AuthContext = createContext(null);
 
+AuthContext.displayName = 'AuthContext';
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);

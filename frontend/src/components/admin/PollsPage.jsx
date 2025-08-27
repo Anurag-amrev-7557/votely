@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import Modal from 'react-modal';
-import { showNotification } from '../../utils/toastUtils';
+import { showNotification } from '../../utils/toastUtils.jsx';
 
 // Utility to export audit logs as CSV
 function exportAuditLogsToCSV(auditLogs) {
@@ -502,7 +502,42 @@ const PollsPage = () => {
       });
     } catch (error) {
       console.error('Error saving poll:', error);
-      toast.error('Failed to save poll');
+      
+      // Enhanced error handling with more specific error messages
+      let errorMessage = 'Failed to save poll';
+      
+      if (error.response) {
+        // Server responded with error status
+        if (error.response.data && error.response.data.error) {
+          errorMessage = error.response.data.error;
+        } else if (error.response.status === 400) {
+          errorMessage = 'Invalid poll data. Please check your inputs.';
+        } else if (error.response.status === 401) {
+          errorMessage = 'Authentication required. Please log in again.';
+        } else if (error.response.status === 403) {
+          errorMessage = 'You are not authorized to create polls.';
+        } else if (error.response.status === 500) {
+          errorMessage = 'Server error. Please try again later.';
+        }
+      } else if (error.request) {
+        // Request was made but no response received
+        errorMessage = 'Network error. Please check your connection.';
+      } else if (error.message) {
+        // Something else happened
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
+      
+      // Log additional error details for debugging
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Poll creation error details:', {
+          error: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+          payload: payload
+        });
+      }
     }
   };
 

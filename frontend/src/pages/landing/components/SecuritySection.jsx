@@ -276,5 +276,6 @@ const SecuritySection = ({ isVisible }) => {
     );
 }
 
+SecuritySection.displayName = 'SecuritySection';
 export default React.memo(SecuritySection);
 

@@ -39,6 +39,10 @@ function warnIfDeprecatedOptions(options) {
 async function connectWithRetry(uri, options = {}) {
   // Remove deprecated options if present
   warnIfDeprecatedOptions(options);
+  
+  log(`Attempting to connect to MongoDB...`);
+  log(`Connection URI: ${uri.replace(/\/\/[^:]+:[^@]+@/, '//***:***@')}`); // Hide credentials in logs
+  
   try {
     const conn = await mongoose.connect(uri, { ...DEFAULT_OPTIONS, ...options });
     log(`Connected: ${conn.connection.host}`);
@@ -47,14 +51,30 @@ async function connectWithRetry(uri, options = {}) {
     return conn;
   } catch (error) {
     log(`Connection error: ${error.message}`);
+    log(`Error code: ${error.code || 'N/A'}`);
+    log(`Error name: ${error.name || 'N/A'}`);
+    
+    if (error.code === 'ENOTFOUND') {
+      log('DNS resolution failed. Check if the hostname is correct.');
+    } else if (error.code === 'ECONNREFUSED') {
+      log('Connection refused. Check if MongoDB is running and accessible.');
+    } else if (error.code === 'ETIMEDOUT') {
+      log('Connection timeout. Check network connectivity and firewall settings.');
+    } else if (error.message.includes('Authentication failed')) {
+      log('Authentication failed. Check username and password.');
+    } else if (error.message.includes('ENODATA')) {
+      log('No data returned from DNS lookup.');
+    }
+    
     retryCount++;
     if (retryCount <= MAX_RETRIES) {
       log(`Retrying to connect in ${RETRY_DELAY}ms (attempt ${retryCount}/${MAX_RETRIES})`);
       await new Promise(res => setTimeout(res, RETRY_DELAY));
       return connectWithRetry(uri, options);
     } else {
-      log('Max retries reached. Exiting process.');
-      process.exit(1);
+      log('Max retries reached. Continuing without database connection...');
+      // Don't exit process, just return null to indicate connection failed
+      return null;
     }
   }
 }
@@ -63,7 +83,8 @@ const connectDB = async (options = {}) => {
   const uri = process.env.MONGO_URI;
   if (!uri) {
     log('MONGO_URI not set in environment variables.');
-    process.exit(1);
+    log('Continuing without database connection...');
+    return null;
   }
 
   // Listen for connection events
@@ -73,20 +94,27 @@ const connectDB = async (options = {}) => {
 
   mongoose.connection.on('error', err => {
     log('Mongoose connection error:', err);
+    log('Error details:', {
+      code: err.code,
+      name: err.name,
+      message: err.message
+    });
   });
 
   mongoose.connection.on('disconnected', () => {
     log('Mongoose disconnected');
     if (!isConnectedBefore) {
-      log('Initial connection lost. Exiting.');
-      process.exit(1);
+      log('Initial connection lost. Will retry on next operation...');
+      // Don't exit process, just log the disconnection
     }
   });
 
   // Graceful shutdown
   process.on('SIGINT', async () => {
-    await mongoose.connection.close();
-    log('Mongoose disconnected on app termination');
+    if (mongoose.connection.readyState === 1) {
+      await mongoose.connection.close();
+      log('Mongoose disconnected on app termination');
+    }
     process.exit(0);
   });
 

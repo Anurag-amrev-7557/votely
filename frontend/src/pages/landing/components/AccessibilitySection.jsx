@@ -325,4 +325,5 @@ const AccessibilitySection = ({ isVisible }) => {
     );
 }
 
+AccessibilitySection.displayName = 'AccessibilitySection';
 export default React.memo(AccessibilitySection);

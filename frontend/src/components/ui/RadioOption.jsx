@@ -100,4 +100,6 @@ RadioOption.propTypes = {
   index: PropTypes.number,
 };
 
+RadioOption.displayName = 'RadioOption';
+
 export default RadioOption; 

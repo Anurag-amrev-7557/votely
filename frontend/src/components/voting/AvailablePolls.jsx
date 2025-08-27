@@ -7,7 +7,7 @@ import { useDebounce } from '../../hooks/useDebounce';
 // Remove direct axios import since we're using axiosInstance
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
-import landingHero from '../../assets/landing-hero.png';
+import landingHero from '../../assets/landing-hero.webp';
 import axiosInstance from '../../utils/api/axiosConfig';
 import RadioOption from '../ui/RadioOption';
 import ShareButtons from '../ui/ShareButtons';

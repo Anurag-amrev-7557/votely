@@ -46,18 +46,23 @@ pollSchema.pre('save', async function(next) {
   } else {
     this.status = 'upcoming';
   }
-  // Send notification if poll just completed
+  
+  // Send notification if poll just completed - make it non-blocking
   if (wasCompleted) {
-    try {
-      await sendEmail({
-        to: process.env.ADMIN_EMAIL || 'admin@example.com',
-        subject: `Poll Ended: ${this.title}`,
-        text: `The poll "${this.title}" has ended.`,
-        html: `<p>The poll <strong>${this.title}</strong> has ended.</p>`
-      });
-    } catch (e) {
-      console.error('Failed to send poll end notification email:', e);
-    }
+    // Use setImmediate to make this non-blocking and prevent poll creation from failing
+    setImmediate(async () => {
+      try {
+        await sendEmail({
+          to: process.env.ADMIN_EMAIL || 'admin@example.com',
+          subject: `Poll Ended: ${this.title}`,
+          text: `The poll "${this.title}" has ended.`,
+          html: `<p>The poll <strong>${this.title}</strong> has ended.</p>`
+        });
+      } catch (e) {
+        // Log error but don't fail the poll creation/update
+        console.error('Failed to send poll end notification email:', e);
+      }
+    });
   }
   next();
 });

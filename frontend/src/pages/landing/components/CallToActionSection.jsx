@@ -553,4 +553,5 @@ const CallToActionSection = ({ isVisible }) => {
     );
 }
 
+CallToActionSection.displayName = 'CallToActionSection';
 export default React.memo(CallToActionSection);

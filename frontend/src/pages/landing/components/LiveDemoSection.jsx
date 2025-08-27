@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../../context/ThemeContext';
 
@@ -823,7 +823,7 @@ const StepCard = ({ step, isActive, onClick }) => (
     </motion.div>
 );
 
-const HowItWorksSection = () => {
+const LiveDemoSection = () => {
     const { isDarkMode } = useTheme();
     const sectionBg = useMemo(() => isDarkMode ? 'dark:bg-gray-900' : 'bg-white', [isDarkMode]);
     const [activeStep, setActiveStep] = useState(0);
@@ -1089,4 +1089,5 @@ const HowItWorksSection = () => {
     );
 };
 
-export default React.memo(HowItWorksSection);
+LiveDemoSection.displayName = 'LiveDemoSection';
+export default memo(LiveDemoSection);

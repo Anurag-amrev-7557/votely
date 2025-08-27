@@ -1,8 +1,10 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 // Import the theme context to detect dark/light mode
 import { useTheme } from './ThemeContext';
 
 const AdminAuthContext = createContext(null);
+
+AdminAuthContext.displayName = 'AdminAuthContext';
 
 // Master credentials for testing
 const MASTER_EMAIL = 'anuragverma08002@gmail.com';
@@ -31,6 +33,11 @@ export const AdminAuthProvider = ({ children }) => {
   const [adminEmail, setAdminEmail] = useState(null);
   const [showSessionWarning, setShowSessionWarning] = useState(false);
   const [lastActivity, setLastActivity] = useState(Date.now());
+
+  const lastActivityRef = useRef(lastActivity);
+  useEffect(() => {
+    lastActivityRef.current = lastActivity;
+  }, [lastActivity]);
 
   const updateAdminData = useCallback((tokenTimestamp, email) => {
     const now = Date.now();
@@ -77,7 +84,7 @@ export const AdminAuthProvider = ({ children }) => {
     window.addEventListener('mousemove', handleActivity);
     window.addEventListener('keydown', handleActivity);
     const interval = setInterval(() => {
-      if (Date.now() - lastActivity > INACTIVITY_TIMEOUT) {
+      if (Date.now() - lastActivityRef.current > INACTIVITY_TIMEOUT) {
         logout();
       }
     }, 10000);
@@ -86,7 +93,9 @@ export const AdminAuthProvider = ({ children }) => {
       window.removeEventListener('keydown', handleActivity);
       clearInterval(interval);
     };
-  }, [isAdmin, lastActivity]);
+    // Only depend on isAdmin!
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin]);
 
   // Effect: Session expiry warning
   useEffect(() => {

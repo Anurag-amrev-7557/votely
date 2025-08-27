@@ -1,16 +1,72 @@
 import { Suspense, lazy, useState, useEffect, memo } from 'react';
 import { useTheme } from '../../context/ThemeContext';
-import { useTranslation } from 'react-i18next';
 
-const HeroSection = lazy(() => import('./components/HeroSection'));
-const FeaturesSection = lazy(() => import('./components/FeaturesSection'));
-const HowItWorksSection = lazy(() => import('./components/LiveDemoSection'));
-const SecuritySection = lazy(() => import('./components/SecuritySection'));
-const AccessibilitySection = lazy(() => import('./components/AccessibilitySection'));
-const TestimonialSection = lazy(() => import('./components/TestimonialSection'));
-const PriceSection = lazy(() => import('./components/PriceSection'));
-const FaqSection = lazy(() => import('./components/FaqSection'));
-const CallToActionSection = lazy(() => import('./components/CallToActionSection'));
+// Enhanced lazy loading wrapper with better error handling
+const createLazyComponent = (importFn, displayName) => {
+  return lazy(() => 
+    importFn().then(module => {
+      // Ensure the module has a default export
+      if (!module || !module.default) {
+        console.error(`Lazy component ${displayName} failed to load properly:`, module);
+        throw new Error(`Failed to load component: ${displayName}`);
+      }
+      
+      // Set displayName after successful load
+      if (module.default) {
+        module.default.displayName = displayName;
+      }
+      
+      return module;
+    }).catch(error => {
+      console.error(`Error loading lazy component ${displayName}:`, error);
+      // Return a fallback component
+      return {
+        default: () => (
+          <div className="flex items-center justify-center min-h-[200px] text-red-500">
+            Failed to load {displayName}
+          </div>
+        )
+      };
+    })
+  );
+};
+
+const HeroSection = createLazyComponent(
+  () => import('./components/HeroSection'),
+  'HeroSection'
+);
+const FeaturesSection = createLazyComponent(
+  () => import('./components/FeaturesSection'),
+  'FeaturesSection'
+);
+const HowItWorksSection = createLazyComponent(
+  () => import('./components/LiveDemoSection'),
+  'HowItWorksSection'
+);
+const SecuritySection = createLazyComponent(
+  () => import('./components/SecuritySection'),
+  'SecuritySection'
+);
+const AccessibilitySection = createLazyComponent(
+  () => import('./components/AccessibilitySection'),
+  'AccessibilitySection'
+);
+const TestimonialSection = createLazyComponent(
+  () => import('./components/TestimonialSection'),
+  'TestimonialSection'
+);
+const PriceSection = createLazyComponent(
+  () => import('./components/PriceSection'),
+  'PriceSection'
+);
+const FaqSection = createLazyComponent(
+  () => import('./components/FaqSection'),
+  'FaqSection'
+);
+const CallToActionSection = createLazyComponent(
+  () => import('./components/CallToActionSection'),
+  'CallToActionSection'
+);
 
 // Add a simple skeleton loader component
 const SectionSkeleton = () => (
@@ -23,7 +79,6 @@ const LandingPage = () => {
     const [isVisible, setIsVisible] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
     const { isDarkMode } = useTheme();
-    const { t } = useTranslation();
 
     useEffect(() => {
         // Fade in the landing page with a slight delay for a smoother UX
@@ -57,63 +112,63 @@ const LandingPage = () => {
                             <div className="min-h-[80vh] flex items-center justify-center" aria-labelledby="hero-heading" role="region" tabIndex="0">
                                 <h2 id="hero-heading" className="sr-only">Hero Section</h2>
                                 <Suspense fallback={<div className="h-40 flex items-center justify-center" role="status" aria-live="polite">Loading hero...</div>}>
-                                    <HeroSection t={t} isVisible={isVisible} />
+                                    <HeroSection isVisible={isVisible} />
                                 </Suspense>
                             </div>
                             {/* Features Section */}
                             <div className="min-h-[50vh] flex items-center justify-center" aria-labelledby="features-heading" role="region" tabIndex="0">
                                 <h2 id="features-heading" className="sr-only">Features</h2>
                                 <Suspense fallback={<SectionSkeleton role="status" aria-live="polite" />}> 
-                                    <FeaturesSection t={t} isVisible={isVisible} />
+                                    <FeaturesSection isVisible={isVisible} />
                                 </Suspense>
                             </div>
                             {/* How It Works Section */}
                             <div id="how-it-works" className="min-h-[60vh] flex items-center justify-center" aria-labelledby="howitworks-heading" role="region" tabIndex="0">
                                 <h2 id="howitworks-heading" className="sr-only">How It Works</h2>
                                 <Suspense fallback={<SectionSkeleton role="status" aria-live="polite" />}> 
-                                    <HowItWorksSection t={t} isVisible={isVisible} />
+                                    <HowItWorksSection isVisible={isVisible} />
                                 </Suspense>
                             </div>
                             {/* Security Section */}
                             <div id="security" className="min-h-[50vh] flex items-center justify-center" aria-labelledby="security-heading" role="region" tabIndex="0">
                                 <h2 id="security-heading" className="sr-only">Security</h2>
                                 <Suspense fallback={<SectionSkeleton role="status" aria-live="polite" />}> 
-                                    <SecuritySection t={t} isVisible={isVisible} />
+                                    <SecuritySection isVisible={isVisible} />
                                 </Suspense>
                             </div>
                             {/* Accessibility Section */}
                             <div id="accessibility" className="min-h-[50vh] flex items-center justify-center" aria-labelledby="accessibility-heading" role="region" tabIndex="0">
                                 <h2 id="accessibility-heading" className="sr-only">Accessibility</h2>
                                 <Suspense fallback={<SectionSkeleton role="status" aria-live="polite" />}> 
-                                    <AccessibilitySection t={t} isVisible={isVisible} />
+                                    <AccessibilitySection isVisible={isVisible} />
                                 </Suspense>
                             </div>
                             {/* Testimonial Section */}
                             <div className="min-h-[50vh] flex items-center justify-center" aria-labelledby="testimonial-heading" role="region" tabIndex="0">
                                 <h2 id="testimonial-heading" className="sr-only">Testimonials</h2>
                                 <Suspense fallback={<SectionSkeleton role="status" aria-live="polite" />}> 
-                                    <TestimonialSection t={t} isVisible={isVisible} />
+                                    <TestimonialSection isVisible={isVisible} />
                                 </Suspense>
                             </div>
                             {/* Pricing Section */}
                             <div id="pricing" className="min-h-[60vh] flex items-center justify-center" aria-labelledby="pricing-heading" role="region" tabIndex="0">
                                 <h2 id="pricing-heading" className="sr-only">Pricing</h2>
                                 <Suspense fallback={<SectionSkeleton role="status" aria-live="polite" />}> 
-                                    <PriceSection t={t} isVisible={isVisible} />
+                                    <PriceSection isVisible={isVisible} />
                                 </Suspense>
                             </div>
                             {/* FAQ Section */}
                             <div className="min-h-[50vh] flex items-center justify-center" aria-labelledby="faq-heading" role="region" tabIndex="0">
                                 <h2 id="faq-heading" className="sr-only">Frequently Asked Questions</h2>
                                 <Suspense fallback={<SectionSkeleton role="status" aria-live="polite" />}> 
-                                    <FaqSection t={t} isVisible={isVisible} />
+                                    <FaqSection isVisible={isVisible} />
                                 </Suspense>
                             </div>
                             {/* Call To Action Section */}
                             <div className="min-h-[40vh] flex items-center justify-center" aria-labelledby="cta-heading" role="region" tabIndex="0">
                                 <h2 id="cta-heading" className="sr-only">Call To Action</h2>
                                 <Suspense fallback={<SectionSkeleton role="status" aria-live="polite" />}> 
-                                    <CallToActionSection t={t} isVisible={isVisible} />
+                                    <CallToActionSection isVisible={isVisible} />
                                 </Suspense>
                             </div>
                         </div>
@@ -124,4 +179,5 @@ const LandingPage = () => {
     );
 };
 
+LandingPage.displayName = 'LandingPage';
 export default memo(LandingPage);

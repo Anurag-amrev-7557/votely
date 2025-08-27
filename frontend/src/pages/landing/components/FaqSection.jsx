@@ -684,4 +684,5 @@ const FaqSection = ({ isVisible }) => {
     );
 }
 
+FaqSection.displayName = 'FaqSection';
 export default React.memo(FaqSection);
