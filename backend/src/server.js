@@ -42,7 +42,26 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      
+      // Get allowed origins from environment variables or use defaults
+      const allowedOrigins = process.env.ALLOWED_ORIGINS 
+        ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+        : ['http://localhost:5173', 'http://127.0.0.1:5173'];
+      
+      // Add production domains if specified
+      if (process.env.FRONTEND_ORIGIN) {
+        allowedOrigins.push(process.env.FRONTEND_ORIGIN);
+      }
+      
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   },
 });
@@ -56,10 +75,23 @@ const corsOptions = {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    const allowedOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173'];
+    // Get allowed origins from environment variables or use defaults
+    const allowedOrigins = process.env.ALLOWED_ORIGINS 
+      ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+      : ['http://localhost:5173', 'http://127.0.0.1:5173'];
+    
+    // Add production domains if specified
+    if (process.env.FRONTEND_ORIGIN) {
+      allowedOrigins.push(process.env.FRONTEND_ORIGIN);
+    }
+    
+    // Log CORS check for debugging
+    console.log('CORS check:', { origin, allowedOrigins, isAllowed: allowedOrigins.indexOf(origin) !== -1 });
+    
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
+      console.warn('CORS blocked origin:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -100,6 +132,22 @@ app.get('/api/test', (req, res) => {
 // Debug route to check if profile routes are accessible
 app.get('/api/profile/test', (req, res) => {
   res.json({ message: 'Profile route is accessible', timestamp: new Date().toISOString() });
+});
+
+// Admin health check route
+app.get('/api/admin/health', (req, res) => {
+  res.json({ 
+    message: 'Admin API is accessible', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    cors: {
+      allowedOrigins: process.env.ALLOWED_ORIGINS 
+        ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+        : ['http://localhost:5173', 'http://127.0.0.1:5173'],
+      frontendOrigin: process.env.FRONTEND_ORIGIN || 'not set'
+    }
+  });
 });
 
 // Proxy endpoint for Google profile photos to handle CORS

@@ -79,6 +79,14 @@ exports.createPoll = async (req, res) => {
       keyValue: err.keyValue
     });
     
+    // Log additional context for debugging
+    console.error('Request context:', {
+      user: req.user?._id,
+      body: req.body,
+      headers: req.headers,
+      timestamp: new Date().toISOString()
+    });
+    
     // Send appropriate error response
     if (err.name === 'ValidationError') {
       return res.status(400).json({ error: 'Validation failed', details: err.message });

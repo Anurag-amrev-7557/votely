@@ -40,6 +40,9 @@ GOOGLE_CALLBACK_URL=http://localhost:5001/api/auth/google/callback
 # Frontend Configuration
 FRONTEND_ORIGIN=http://localhost:5173
 
+# CORS Configuration (for production)
+ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,https://yourdomain.com
+
 # Environment
 NODE_ENV=development
 
@@ -96,3 +99,49 @@ After setting up your `.env` file, restart your server. The warning should be go
 3. **Consider using Redis** for session storage if you need even better performance
 4. **Monitor session collection** size and cleanup
 5. **Use environment-specific MongoDB URIs** (development vs production)
+
+## Deployment Troubleshooting
+
+### Common Issues and Solutions
+
+#### 1. CORS Errors
+If you get CORS errors in production:
+- Set `ALLOWED_ORIGINS` to include your production domain
+- Set `FRONTEND_ORIGIN` to your production frontend URL
+- Example: `ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com`
+
+#### 2. "Something Went Wrong" Errors
+If poll creation fails with generic errors:
+- Check that `JWT_SECRET` is set correctly
+- Verify `MONGO_URI` points to your production database
+- Check server logs for specific error messages
+- Ensure all required environment variables are set
+
+#### 3. Authentication Issues
+If users can't log in or create polls:
+- Verify `SESSION_SECRET` is set and unique
+- Check that cookies are being set correctly
+- Ensure `NODE_ENV=production` for HTTPS cookies
+
+#### 4. Database Connection Issues
+If polls can't be saved:
+- Verify `MONGO_URI` is correct and accessible
+- Check network/firewall settings
+- Ensure MongoDB is running and accessible
+
+### Testing Your Deployment
+
+1. **Health Check**: Visit `/api/admin/health` to verify API accessibility
+2. **CORS Test**: Check browser console for CORS errors
+3. **Database Test**: Try creating a simple poll and check server logs
+4. **Authentication Test**: Verify login/logout works correctly
+
+### Environment Variables Checklist
+
+Make sure these are set in your production environment:
+- [ ] `SESSION_SECRET` - Strong, unique session secret
+- [ ] `MONGO_URI` - Production MongoDB connection string
+- [ ] `JWT_SECRET` - Strong, unique JWT secret
+- [ ] `NODE_ENV` - Set to `production`
+- [ ] `FRONTEND_ORIGIN` - Your production frontend URL
+- [ ] `ALLOWED_ORIGINS` - Comma-separated list of allowed origins
