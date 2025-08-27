@@ -9,6 +9,8 @@ const profileRoutes = require('./routes/profileRoutes');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
+const helmet = require('helmet');
 const http = require('http');
 const { Server } = require('socket.io');
 const User = require('./models/User');
@@ -71,6 +73,12 @@ const corsOptions = {
 
 // Apply CORS middleware
 app.use(cors(corsOptions));
+
+// Security middleware
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable CSP for development
+  crossOriginEmbedderPolicy: false // Disable for Socket.IO compatibility
+}));
 
 // Middleware
 app.use(express.json());
@@ -192,7 +200,28 @@ passport.deserializeUser((obj, done) => {
   done(null, obj);
 });
 
-app.use(session({ secret: 'your_secret', resave: false, saveUninitialized: true }));
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your_secret',
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_URI || 'mongodb://localhost:27017/votely',
+    collectionName: 'sessions',
+    ttl: 24 * 60 * 60, // 1 day
+    autoRemove: 'native',
+    touchAfter: 24 * 3600 // Only update session once per day
+  }),
+  name: 'votely.sid', // Custom session name
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: 24 * 60 * 60 * 1000, // 1 day
+    path: '/'
+  },
+  rolling: true, // Extend session on each request
+  unset: 'destroy' // Remove session when unset
+}));
 app.use(passport.initialize());
 app.use(passport.session());
 
