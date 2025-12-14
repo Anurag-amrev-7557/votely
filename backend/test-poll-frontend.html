@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poll Creation Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, textarea, select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin-top: 20px; padding: 15px; border-radius: 4px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>Poll Creation Test</h1>
+    <p>This page helps test poll creation functionality step by step.</p>
+
+    <div class="form-group">
+        <label for="apiUrl">API Base URL:</label>
+        <input type="text" id="apiUrl" value="http://localhost:5001" placeholder="http://localhost:5001">
+    </div>
+
+    <div class="form-group">
+        <label for="testType">Test Type:</label>
+        <select id="testType">
+            <option value="health">Health Check</option>
+            <option value="test">Test Endpoint (No Auth)</option>
+            <option value="polls">Polls Endpoint (With Auth)</option>
+            <option value="create">Create Poll (With Auth)</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="authToken">Auth Token (for protected endpoints):</label>
+        <input type="text" id="authToken" placeholder="Enter JWT token or leave empty for public endpoints">
+    </div>
+
+    <div class="form-group">
+        <label for="pollData">Poll Data (JSON):</label>
+        <textarea id="pollData" rows="10" placeholder="Enter poll data in JSON format">{
+  "title": "Test Poll",
+  "description": "This is a test poll",
+  "category": "Test",
+  "startDate": "2024-12-25T10:00:00.000Z",
+  "endDate": "2024-12-26T18:00:00.000Z",
+  "options": [
+    {"text": "Option 1", "description": "First option"},
+    {"text": "Option 2", "description": "Second option"}
+  ],
+  "settings": {
+    "allowMultipleVotes": false,
+    "showResultsAfterVote": true,
+    "enableComments": true
+  }
+}</textarea>
+    </div>
+
+    <button onclick="runTest()">Run Test</button>
+
+    <div id="result"></div>
+
+    <script>
+        async function runTest() {
+            const apiUrl = document.getElementById('apiUrl').value;
+            const testType = document.getElementById('testType').value;
+            const authToken = document.getElementById('authToken').value;
+            const pollData = document.getElementById('pollData').value;
+            const resultDiv = document.getElementById('result');
+
+            resultDiv.innerHTML = '<div class="info">Running test...</div>';
+
+            try {
+                let response;
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+
+                if (authToken) {
+                    headers['Cookie'] = `token=${authToken}`;
+                }
+
+                switch (testType) {
+                    case 'health':
+                        response = await fetch(`${apiUrl}/api/admin/health`);
+                        break;
+                    
+                    case 'test':
+                        response = await fetch(`${apiUrl}/api/test/poll`, {
+                            method: 'POST',
+                            headers,
+                            body: pollData
+                        });
+                        break;
+                    
+                    case 'polls':
+                        response = await fetch(`${apiUrl}/api/polls`, {
+                            headers
+                        });
+                        break;
+                    
+                    case 'create':
+                        response = await fetch(`${apiUrl}/api/polls`, {
+                            method: 'POST',
+                            headers,
+                            body: pollData
+                        });
+                        break;
+                    
+                    default:
+                        throw new Error('Invalid test type');
+                }
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h3>✅ Test Passed</h3>
+                            <p><strong>Status:</strong> ${response.status}</p>
+                            <p><strong>Response:</strong></p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h3>❌ Test Failed</h3>
+                            <p><strong>Status:</strong> ${response.status}</p>
+                            <p><strong>Error:</strong></p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Test Error</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p><strong>Stack:</strong></p>
+                        <pre>${error.stack}</pre>
+                    </div>
+                `;
+            }
+        }
+
+        // Auto-populate with tomorrow's date
+        window.onload = function() {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const dayAfter = new Date();
+            dayAfter.setDate(dayAfter.getDate() + 2);
+            
+            const pollData = document.getElementById('pollData');
+            const currentData = JSON.parse(pollData.value);
+            currentData.startDate = tomorrow.toISOString();
+            currentData.endDate = dayAfter.toISOString();
+            pollData.value = JSON.stringify(currentData, null, 2);
+        };
+    </script>
+</body>
+</html>

@@ -25,8 +25,16 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['user', 'admin'],
+    enum: ['user', 'admin', 'election_committee'],
     default: 'user'
+  },
+  batch: {
+    type: String,
+    trim: true
+  },
+  department: {
+    type: String,
+    trim: true
   },
   isVerified: {
     type: Boolean,

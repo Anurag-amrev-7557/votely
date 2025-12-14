@@ -24,12 +24,12 @@ const createLazyComponent = (importFn, displayName) => {
       Failed to load {displayName}
     </div>
   );
-  
+
   // Ensure fallback component has proper naming
   SafeFallbackComponent.displayName = `${displayName}_Fallback`;
   SafeFallbackComponent.$$typeof = Symbol.for('react.element');
 
-  const LazyComponent = lazy(() => 
+  const LazyComponent = lazy(() =>
     importFn().then(module => {
       // Ensure the module has a default export
       if (!module || !module.default) {
@@ -37,17 +37,17 @@ const createLazyComponent = (importFn, displayName) => {
         // Return the safe fallback instead of throwing
         return { default: SafeFallbackComponent };
       }
-      
+
       // Set displayName after successful load
       if (module.default) {
         module.default.displayName = displayName;
-        
+
         // Ensure the component has all required React properties
         if (!module.default.$$typeof) {
           module.default.$$typeof = Symbol.for('react.element');
         }
       }
-      
+
       return module;
     }).catch(error => {
       console.error(`Error loading lazy component ${displayName}:`, error);
@@ -55,15 +55,15 @@ const createLazyComponent = (importFn, displayName) => {
       return { default: SafeFallbackComponent };
     })
   );
-  
+
   // Set displayName on the lazy component itself
   LazyComponent.displayName = displayName;
-  
+
   // Add additional safety properties
-  LazyComponent._init = LazyComponent._init || (() => {});
+  LazyComponent._init = LazyComponent._init || (() => { });
   LazyComponent._payload = LazyComponent._payload || {};
   LazyComponent.$$typeof = Symbol.for('react.lazy');
-  
+
   return LazyComponent;
 };
 
@@ -166,6 +166,14 @@ const Partners = createLazyComponent(
   () => import(/* webpackChunkName: "Partners" */'./pages/company/Partners'),
   'Partners'
 );
+const NominationPage = createLazyComponent(
+  () => import(/* webpackChunkName: "NominationPage" */'./pages/NominationPage'),
+  'NominationPage'
+);
+const AdminNominations = createLazyComponent(
+  () => import(/* webpackChunkName: "AdminNominations" */'./pages/admin/AdminNominations'),
+  'AdminNominations'
+);
 
 // Advanced Loading Component with Progressive States, Accessibility, and Performance Optimizations
 const LoadingSpinner = memo(() => {
@@ -182,7 +190,7 @@ const LoadingSpinner = memo(() => {
   useEffect(() => {
     // Staggered visibility for smooth entry
     const visibilityTimer = setTimeout(() => setIsVisible(true), 50);
-    
+
     // Progressive loading phases
     const phaseTimer = setInterval(() => {
       setLoadingPhase(prev => (prev + 1) % loadingMessages.length);
@@ -198,12 +206,12 @@ const LoadingSpinner = memo(() => {
     <motion.div
       className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/20 dark:from-[#15191e] dark:via-[#1a1f26]/50 dark:to-[#1e242c]/30 transition-all duration-500"
       initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ 
-        opacity: isVisible ? 1 : 0, 
-        scale: isVisible ? 1 : 0.95 
+      animate={{
+        opacity: isVisible ? 1 : 0,
+        scale: isVisible ? 1 : 0.95
       }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      role="status" 
+      role="status"
       aria-live="polite"
       aria-label="Application loading"
     >
@@ -219,16 +227,16 @@ const LoadingSpinner = memo(() => {
             WebkitMaskComposite: 'xor',
             maskComposite: 'exclude'
           }}
-          animate={{ 
+          animate={{
             rotate: 360,
             scale: [1, 1.05, 1]
           }}
-          transition={{ 
+          transition={{
             rotate: { duration: 2, repeat: Infinity, ease: "linear" },
             scale: { duration: 2, repeat: Infinity, ease: "easeInOut" }
           }}
         />
-        
+
         {/* Inner spinning element */}
         <motion.div
           className="absolute top-1/2 left-1/2 w-8 h-8 -translate-x-1/2 -translate-y-1/2"
@@ -237,21 +245,21 @@ const LoadingSpinner = memo(() => {
         >
           <div className="w-full h-full border-2 border-blue-500 border-t-transparent rounded-full" />
         </motion.div>
-        
+
         {/* Pulsing center dot */}
         <motion.div
           className="absolute top-1/2 left-1/2 w-2 h-2 bg-blue-500 rounded-full -translate-x-1/2 -translate-y-1/2"
-          animate={{ 
+          animate={{
             scale: [1, 1.5, 1],
             opacity: [0.7, 1, 0.7]
           }}
-          transition={{ 
-            duration: 1.5, 
-            repeat: Infinity, 
-            ease: "easeInOut" 
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            ease: "easeInOut"
           }}
         />
-        
+
         {/* Floating particles effect */}
         {[...Array(3)].map((_, i) => (
           <motion.div
@@ -295,11 +303,10 @@ const LoadingSpinner = memo(() => {
             {loadingMessages.map((_, index) => (
               <motion.div
                 key={index}
-                className={`w-1.5 h-1.5 rounded-full ${
-                  index === loadingPhase 
-                    ? 'bg-blue-500' 
-                    : 'bg-gray-300 dark:bg-gray-600'
-                }`}
+                className={`w-1.5 h-1.5 rounded-full ${index === loadingPhase
+                  ? 'bg-blue-500'
+                  : 'bg-gray-300 dark:bg-gray-600'
+                  }`}
                 animate={index === loadingPhase ? {
                   scale: [1, 1.3, 1],
                   opacity: [0.7, 1, 0.7]
@@ -315,7 +322,7 @@ const LoadingSpinner = memo(() => {
       <span className="sr-only">
         Loading application. Current phase: {loadingMessages[loadingPhase]}
       </span>
-      
+
       {/* Performance indicator */}
       <motion.div
         className="absolute bottom-8 left-1/2 -translate-x-1/2 text-xs text-gray-400 dark:text-gray-500"
@@ -360,7 +367,7 @@ const ToasterConfig = memo(() => {
     role: 'alert',
     'aria-live': 'polite',
     'aria-atomic': 'true',
-    
+
     // Success toast configuration
     success: {
       duration: 3500,
@@ -375,7 +382,7 @@ const ToasterConfig = memo(() => {
       },
       className: 'toast-success',
     },
-    
+
     // Error toast configuration
     error: {
       duration: 4000,
@@ -390,7 +397,7 @@ const ToasterConfig = memo(() => {
       },
       className: 'toast-error',
     },
-    
+
     // Warning toast configuration
     warning: {
       duration: 4000,
@@ -405,7 +412,7 @@ const ToasterConfig = memo(() => {
       },
       className: 'toast-warning',
     },
-    
+
     // Info toast configuration
     info: {
       duration: 3000,
@@ -420,7 +427,7 @@ const ToasterConfig = memo(() => {
       },
       className: 'toast-info',
     },
-    
+
     // Loading toast configuration
     loading: {
       duration: Infinity,
@@ -529,7 +536,7 @@ const App = () => {
   useEffect(() => {
     // Add no-transition class during initial load
     document.documentElement.classList.add('no-transition')
-    
+
     // Remove no-transition class after a small delay
     const timeoutId = setTimeout(() => {
       document.documentElement.classList.remove('no-transition')
@@ -592,18 +599,19 @@ const App = () => {
       { path: '/accessibility-statement', element: AccessibilityStatement, priority: 'normal' },
       { path: '/auth-success', element: AuthSuccessPage, priority: 'high' },
       { path: '/auth-error', element: AuthErrorPage, priority: 'high' },
-      
+
       // Product pages
       { path: '/enterprise', element: Enterprise, priority: 'normal' },
       { path: '/changelog', element: Changelog, priority: 'normal' },
-      
+
       // Resources pages
       { path: '/documentation', element: Documentation, priority: 'normal' },
       { path: '/guides', element: Guides, priority: 'normal' },
       { path: '/api-reference', element: ApiReference, priority: 'normal' },
       { path: '/community', element: Community, priority: 'normal' },
       { path: '/status', element: Status, priority: 'normal' },
-      
+
+      { path: '/nominate', element: NominationPage, priority: 'normal', protected: true },
       // Company pages
       { path: '/blog', element: Blog, priority: 'normal' },
       { path: '/careers', element: Careers, priority: 'normal' },
@@ -612,6 +620,7 @@ const App = () => {
 
     const adminRoutes = [
       { path: '/admin-login', element: AdminLogin, priority: 'normal' },
+      // AdminNominations is handled within AdminPage via /admin/*
       { path: '/admin/*', element: AdminPage, protected: true, priority: 'high' }
     ].filter(route => validateComponent(route.element, route.path));
 
@@ -634,13 +643,13 @@ const App = () => {
 
     const createRouteElement = (routeData) => {
       const { element: Component, protected: isProtected, priority, path } = routeData;
-      
+
       // Enhanced safety check: ensure Component is defined and log details
       if (!Component) {
         console.error('Component is undefined for route:', routeData);
         return null;
       }
-      
+
       // Additional validation: ensure Component is a valid React component
       if (typeof Component !== 'function' && typeof Component !== 'object') {
         console.error('Invalid component type for route:', routeData, 'Component:', Component);
@@ -651,7 +660,7 @@ const App = () => {
       if (Component && Component.$$typeof === Symbol.for('react.lazy')) {
         // For lazy components, we need to handle them differently
         // Don't try to modify read-only properties
-        
+
         // Validate that the lazy component is properly structured
         if (typeof Component !== 'function' && typeof Component !== 'object') {
           console.error('Invalid lazy component structure:', Component);
@@ -666,7 +675,7 @@ const App = () => {
           return <SafeComponent />;
         }
       }
-      
+
       // Final safety check - ensure Component is a valid React component
       if (!Component || (typeof Component !== 'function' && typeof Component !== 'object')) {
         console.error('Component is not a valid React component:', Component);
@@ -679,7 +688,7 @@ const App = () => {
         SafeComponent.$$typeof = Symbol.for('react.element');
         return <SafeComponent />;
       }
-      
+
       // Log component details for debugging (only when there are issues)
       if (process.env.NODE_ENV === 'development' && (!Component?.displayName && !Component?.name)) {
         console.log('Creating route element:', {
@@ -691,11 +700,11 @@ const App = () => {
           isReactComponent: Component?.$$typeof === Symbol.for('react.element') || typeof Component === 'function'
         });
       }
-      
+
       // Wrap component with error boundary and performance monitoring
       const EnhancedComponent = memo(() => {
         const location = useLocation();
-        
+
         // Track route analytics
         useEffect(() => {
           if (typeof window !== 'undefined' && window.gtag) {
@@ -716,7 +725,7 @@ const App = () => {
         }, [priority]);
 
         return (
-          <Suspense 
+          <Suspense
             fallback={
               <div className="flex items-center justify-center min-h-[200px]">
                 <motion.div
@@ -771,7 +780,7 @@ const App = () => {
                       if (!Component) {
                         throw new Error('Component is undefined');
                       }
-                      
+
                       // Validate that the component can be called
                       if (Component.$$typeof === Symbol.for('react.lazy')) {
                         // For lazy components, we need to ensure they're properly loaded
@@ -779,7 +788,7 @@ const App = () => {
                           throw new Error('Lazy component not properly initialized');
                         }
                       }
-                      
+
                       // Render the component directly without trying to modify its properties
                       return <Component />;
                     } catch (error) {
@@ -848,7 +857,7 @@ const App = () => {
             console.warn('Route with undefined path skipped:', { element: Element, priority, protected: isProtected });
             return null;
           }
-          
+
           try {
             return (
               <Route
@@ -862,7 +871,7 @@ const App = () => {
                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.1),transparent_50%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.05),transparent_50%)]" />
                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(99,102,241,0.08),transparent_40%)] dark:bg-[radial-gradient(circle_at_80%_20%,rgba(99,102,241,0.04),transparent_40%)]" />
                     </div>
-                    
+
                     {/* Floating Particles Animation */}
                     <div className="absolute inset-0 overflow-hidden pointer-events-none">
                       {[...Array(6)].map((_, i) => (
@@ -887,7 +896,7 @@ const App = () => {
                         />
                       ))}
                     </div>
-                    
+
                     {/* Error Content */}
                     <div className="relative z-10 text-center">
                       <motion.div
@@ -925,7 +934,7 @@ const App = () => {
             return null;
           }
         })}
-        
+
         {/* Admin Routes with Enhanced Security */}
         {routeConfig.admin.map(({ path, element: Element, protected: isProtected, priority }) => {
           // Skip routes with undefined paths
@@ -933,7 +942,7 @@ const App = () => {
             console.warn('Admin route with undefined path skipped:', { element: Element, priority, protected: isProtected });
             return null;
           }
-          
+
           try {
             return (
               <Route
@@ -952,7 +961,7 @@ const App = () => {
             return null;
           }
         })}
-        
+
         {/* Advanced 404 Fallback with Smart Redirect */}
         <Route
           path="*"
@@ -977,7 +986,7 @@ const App = () => {
                     We couldn't find the page you're looking for. It might have been moved or deleted.
                   </p>
                 </motion.div>
-                
+
                 <motion.div
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
@@ -1039,7 +1048,7 @@ const App = () => {
     };
 
     window.addEventListener('error', handleError);
-    
+
     return () => {
       if (typeof window !== 'undefined') {
         // Remove error listener
@@ -1098,7 +1107,7 @@ const App = () => {
           userAgent: navigator.userAgent,
           url: window.location.href
         });
-        
+
         // Send to error reporting service
         if (typeof window !== 'undefined' && window.gtag) {
           window.gtag('event', 'exception', {

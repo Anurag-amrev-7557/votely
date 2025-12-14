@@ -33,14 +33,14 @@ ChartJS.register(
   Filler
 );
 
-const EnhancedResultsDisplay = ({ 
-  poll, 
-  results, 
-  userVote, 
-  onBack, 
-  onShare, 
+const EnhancedResultsDisplay = ({
+  poll,
+  results,
+  userVote,
+  onBack,
+  onShare,
   showLiveResults = false,
-  isRealTime = false 
+  isRealTime = false
 }) => {
   const { isDarkMode } = useTheme();
   const { user } = useAuth();
@@ -74,7 +74,7 @@ const EnhancedResultsDisplay = ({
         position: 'top',
         labels: {
           color: isDarkMode ? '#f3f4f6' : '#1f2937',
-          font: { 
+          font: {
             size: 13,
             weight: '500'
           },
@@ -97,7 +97,7 @@ const EnhancedResultsDisplay = ({
           const index = legendItem.index;
           const chart = legend.chart;
           const meta = chart.getDatasetMeta(0);
-          
+
           meta.data[index].hidden = !meta.data[index].hidden;
           chart.update();
         }
@@ -178,11 +178,11 @@ const EnhancedResultsDisplay = ({
         const chart = animation.chart;
         const ctx = chart.ctx;
         const dataset = chart.data.datasets[0];
-        
+
         dataset.data.forEach((value, index) => {
           const meta = chart.getDatasetMeta(0);
           const element = meta.data[index];
-          
+
           if (element && element.y > 0) {
             // Add subtle glow effect
             ctx.save();
@@ -271,12 +271,12 @@ const EnhancedResultsDisplay = ({
     const now = new Date();
     const pollStart = poll?.createdAt ? new Date(poll.createdAt) : new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const pollEnd = poll?.endDate ? new Date(poll.endDate) : now;
-    
+
     // Generate time labels based on poll duration
     const timeLabels = [];
     const timeData = [];
     const hoursDiff = Math.floor((pollEnd - pollStart) / (1000 * 60 * 60));
-    
+
     if (hoursDiff <= 24) {
       // Hourly data for polls up to 24 hours
       for (let i = 0; i <= Math.min(hoursDiff, 12); i++) {
@@ -307,22 +307,22 @@ const EnhancedResultsDisplay = ({
         label: 'Votes',
         data: timeData,
         fill: true,
-        backgroundColor: isDarkMode 
-          ? 'rgba(59, 130, 246, 0.15)' 
+        backgroundColor: isDarkMode
+          ? 'rgba(59, 130, 246, 0.15)'
           : 'rgba(59, 130, 246, 0.2)',
-        borderColor: isDarkMode 
-          ? 'rgba(59, 130, 246, 0.8)' 
+        borderColor: isDarkMode
+          ? 'rgba(59, 130, 246, 0.8)'
           : 'rgba(59, 130, 246, 1)',
         tension: 0.4,
-        pointBackgroundColor: isDarkMode 
-          ? 'rgba(59, 130, 246, 0.9)' 
+        pointBackgroundColor: isDarkMode
+          ? 'rgba(59, 130, 246, 0.9)'
           : 'rgba(59, 130, 246, 1)',
         pointBorderColor: isDarkMode ? '#374151' : '#fff',
         pointBorderWidth: 2,
         pointRadius: 6,
         pointHoverRadius: 8,
-        pointHoverBackgroundColor: isDarkMode 
-          ? 'rgba(59, 130, 246, 1)' 
+        pointHoverBackgroundColor: isDarkMode
+          ? 'rgba(59, 130, 246, 1)'
           : 'rgba(59, 130, 246, 0.8)',
         pointHoverBorderColor: isDarkMode ? '#1f2937' : '#fff',
         pointHoverBorderWidth: 3
@@ -388,7 +388,7 @@ const EnhancedResultsDisplay = ({
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3">
               {showLiveResults && (
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-sm font-medium animate-pulse">
@@ -514,11 +514,10 @@ const EnhancedResultsDisplay = ({
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                      activeTab === tab.id
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === tab.id
                         ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 shadow-sm'
                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
-                    }`}
+                      }`}
                   >
                     <Icon className="w-4 h-4" />
                     {tab.label}
@@ -552,22 +551,28 @@ const EnhancedResultsDisplay = ({
                       const voteCount = option.count || 0;
                       const isWinning = index === 0;
                       const isUserVote = userVotedOptions.includes(option.text);
-                      
+
                       return (
                         <motion.div
                           key={option.id || index}
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.1 }}
-                          className={`relative p-4 rounded-lg border-2 transition-all duration-300 ${
-                            isWinning 
-                              ? 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-700' 
+                          className={`relative p-4 rounded-lg border-2 transition-all duration-300 ${isWinning
+                              ? 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-700'
                               : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600'
-                          } ${isUserVote ? 'ring-2 ring-blue-500 ring-opacity-50' : ''}`}
+                            } ${isUserVote ? 'ring-2 ring-blue-500 ring-opacity-50' : ''}`}
                         >
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-3">
-                              {isWinning && (
+                              {/* Candidate Image */}
+                              {option.image && (
+                                <div className="flex-shrink-0 h-8 w-8 rounded-full overflow-hidden border border-gray-200 dark:border-gray-600">
+                                  <img src={option.image} alt="" className="h-full w-full object-cover" />
+                                </div>
+                              )}
+
+                              {isWinning && !option.image && (
                                 <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
                                   <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -598,11 +603,10 @@ const EnhancedResultsDisplay = ({
                                 initial={{ width: 0 }}
                                 animate={{ width: `${percentage}%` }}
                                 transition={{ duration: 1, delay: index * 0.1 }}
-                                className={`h-full rounded-full transition-all duration-300 ${
-                                  isWinning 
-                                    ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
+                                className={`h-full rounded-full transition-all duration-300 ${isWinning
+                                    ? 'bg-gradient-to-r from-green-500 to-emerald-500'
                                     : 'bg-blue-500'
-                                }`}
+                                  }`}
                               />
                             </div>
                           </div>

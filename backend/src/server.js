@@ -45,17 +45,17 @@ const io = new Server(server, {
     origin: function (origin, callback) {
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
-      
+
       // Get allowed origins from environment variables or use defaults
-      const allowedOrigins = process.env.ALLOWED_ORIGINS 
+      const allowedOrigins = process.env.ALLOWED_ORIGINS
         ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
         : ['http://localhost:5173', 'http://127.0.0.1:5173'];
-      
+
       // Add production domains if specified
       if (process.env.FRONTEND_ORIGIN) {
         allowedOrigins.push(process.env.FRONTEND_ORIGIN);
       }
-      
+
       if (allowedOrigins.indexOf(origin) !== -1) {
         callback(null, true);
       } else {
@@ -74,20 +74,20 @@ const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
+
     // Get allowed origins from environment variables or use defaults
-    const allowedOrigins = process.env.ALLOWED_ORIGINS 
+    const allowedOrigins = process.env.ALLOWED_ORIGINS
       ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
       : ['http://localhost:5173', 'http://127.0.0.1:5173'];
-    
+
     // Add production domains if specified
     if (process.env.FRONTEND_ORIGIN) {
       allowedOrigins.push(process.env.FRONTEND_ORIGIN);
     }
-    
+
     // Log CORS check for debugging
     console.log('CORS check:', { origin, allowedOrigins, isAllowed: allowedOrigins.indexOf(origin) !== -1 });
-    
+
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -108,8 +108,21 @@ app.use(cors(corsOptions));
 
 // Security middleware
 app.use(helmet({
-  contentSecurityPolicy: false, // Disable CSP for development
-  crossOriginEmbedderPolicy: false // Disable for Socket.IO compatibility
+  contentSecurityPolicy: process.env.NODE_ENV === 'production' ? {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
+      connectSrc: ["'self'", "https:"],
+      fontSrc: ["'self'", "https:"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"]
+    }
+  } : false,
+  crossOriginEmbedderPolicy: process.env.NODE_ENV === 'production' ? 'require-corp' : false,
+  crossOriginResourcePolicy: process.env.NODE_ENV === 'production' ? 'cross-origin' : false
 }));
 
 // Middleware
@@ -136,13 +149,13 @@ app.get('/api/profile/test', (req, res) => {
 
 // Admin health check route
 app.get('/api/admin/health', (req, res) => {
-  res.json({ 
-    message: 'Admin API is accessible', 
+  res.json({
+    message: 'Admin API is accessible',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
     database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
     cors: {
-      allowedOrigins: process.env.ALLOWED_ORIGINS 
+      allowedOrigins: process.env.ALLOWED_ORIGINS
         ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
         : ['http://localhost:5173', 'http://127.0.0.1:5173'],
       frontendOrigin: process.env.FRONTEND_ORIGIN || 'not set'
@@ -150,34 +163,71 @@ app.get('/api/admin/health', (req, res) => {
   });
 });
 
+// Test poll creation endpoint (no auth required for debugging)
+app.post('/api/test/poll', async (req, res) => {
+  try {
+    console.log('Test poll creation endpoint called');
+    console.log('Request body:', req.body);
+    console.log('Request headers:', req.headers);
+
+    // Basic validation
+    const { title, description, startDate, endDate, options, category } = req.body;
+    if (!title || !startDate || !endDate || !options || !category) {
+      return res.status(400).json({
+        error: 'Missing required fields',
+        required: ['title', 'startDate', 'endDate', 'options', 'category'],
+        received: Object.keys(req.body)
+      });
+    }
+
+    // Test database connection
+    const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+
+    res.json({
+      message: 'Test endpoint working',
+      timestamp: new Date().toISOString(),
+      database: dbStatus,
+      requestData: req.body,
+      headers: req.headers
+    });
+  } catch (error) {
+    console.error('Test endpoint error:', error);
+    res.status(500).json({
+      error: 'Test endpoint failed',
+      message: error.message,
+      stack: error.stack
+    });
+  }
+});
+
 // Proxy endpoint for Google profile photos to handle CORS
 app.get('/api/proxy/google-photo', async (req, res) => {
   try {
     const { url } = req.query;
-    
+
     console.log('Google photo proxy request:', { url });
-    
+
     if (!url || !url.includes('googleusercontent.com')) {
       console.log('Invalid URL provided:', url);
       return res.status(400).json({ error: 'Invalid Google photo URL' });
     }
-    
+
     console.log('Fetching Google photo from:', url);
     const response = await fetch(url);
-    
+
     console.log('Google photo response status:', response.status);
     console.log('Google photo response headers:', Object.fromEntries(response.headers.entries()));
-    
+
     if (!response.ok) {
       console.log('Google photo not found, status:', response.status);
       return res.status(404).json({ error: 'Photo not found' });
     }
-    
+
     const buffer = await response.arrayBuffer();
     const contentType = response.headers.get('content-type') || 'image/jpeg';
-    
+
     console.log('Successfully proxied Google photo, size:', buffer.byteLength, 'bytes');
-    
+
     res.setHeader('Content-Type', contentType);
     res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
     res.send(Buffer.from(buffer));
@@ -198,6 +248,8 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/polls', pollRoutes);
 app.use('/api/votes', voteRoutes);
 app.use('/api/comments', commentRoutes);
+const nominationRoutes = require('./routes/nominationRoutes');
+app.use('/api/nominations', nominationRoutes);
 
 // Google OAuth configuration
 const googleCallbackURL = process.env.GOOGLE_CALLBACK_URL;
@@ -210,36 +262,43 @@ passport.use(new GoogleStrategy({
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
   callbackURL: googleCallbackURL || 'http://localhost:5001/api/auth/google/callback',
 },
-async (accessToken, refreshToken, profile, done) => {
-  try {
-    let user = await User.findOne({ googleId: profile.id });
-    if (!user) {
-      // Try to find by email in case user registered locally first
-      user = await User.findOne({ email: profile.emails[0].value });
-      if (user) {
-        user.googleId = profile.id;
-        // Update profile photo if not set
-        if (!user.profilePhoto && profile.photos && profile.photos.length > 0) {
-          user.profilePhoto = profile.photos[0].value;
-        }
-        await user.save();
-      } else {
-        user = await User.create({
-          name: profile.displayName,
-          email: profile.emails[0].value,
-          googleId: profile.id,
-          isVerified: true,
-          profilePhoto: profile.photos && profile.photos.length > 0 ? profile.photos[0].value : null,
-          // You may want to set a random password or leave it blank
-          password: Math.random().toString(36).slice(-8) + 'A1!'
-        });
+  async (accessToken, refreshToken, profile, done) => {
+    try {
+      const email = profile.emails[0].value;
+
+      // Enforce IIT BBS domain
+      if (!email.toLowerCase().endsWith('@iitbbs.ac.in')) {
+        return done(new Error('Login restricted to IIT Bhubaneswar emails (@iitbbs.ac.in)'), null);
       }
+
+      let user = await User.findOne({ googleId: profile.id });
+      if (!user) {
+        // Try to find by email in case user registered locally first
+        user = await User.findOne({ email: profile.emails[0].value });
+        if (user) {
+          user.googleId = profile.id;
+          // Update profile photo if not set
+          if (!user.profilePhoto && profile.photos && profile.photos.length > 0) {
+            user.profilePhoto = profile.photos[0].value;
+          }
+          await user.save();
+        } else {
+          user = await User.create({
+            name: profile.displayName,
+            email: profile.emails[0].value,
+            googleId: profile.id,
+            isVerified: true,
+            profilePhoto: profile.photos && profile.photos.length > 0 ? profile.photos[0].value : null,
+            // You may want to set a random password or leave it blank
+            password: Math.random().toString(36).slice(-8) + 'A1!'
+          });
+        }
+      }
+      return done(null, user);
+    } catch (err) {
+      return done(err, null);
     }
-    return done(null, user);
-  } catch (err) {
-    return done(err, null);
-  }
-}));
+  }));
 
 passport.serializeUser((user, done) => {
   done(null, user);
@@ -284,18 +343,18 @@ app.get('/api/auth/google/callback',
   (req, res) => {
     // Issue JWT and set cookie
     const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, { expiresIn: '30d' });
-    res.cookie('token', token, { 
-      httpOnly: true, 
-      sameSite: 'lax', 
+    res.cookie('token', token, {
+      httpOnly: true,
+      sameSite: 'lax',
       secure: process.env.NODE_ENV === 'production',
       maxAge: 30 * 24 * 60 * 60 * 1000,
       path: '/'
     });
-    
+
     // Set security headers to allow cross-origin communication
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
     res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
-    
+
     // PostMessage to frontend with better error handling
     const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
     res.send(`<!DOCTYPE html>
@@ -334,7 +393,7 @@ app.get('/api/auth/google/error', (req, res) => {
   const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
   res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
-  
+
   res.send(`<!DOCTYPE html>
 <html>
 <head>
@@ -378,11 +437,11 @@ io.on('connection', (socket) => {
 // Global error handler for unhandled errors
 app.use((error, req, res, next) => {
   console.error('Global error handler caught:', error);
-  
+
   // Don't expose internal errors to client
   const statusCode = error.statusCode || 500;
   const message = statusCode === 500 ? 'Internal server error' : error.message;
-  
+
   res.status(statusCode).json({
     error: message,
     ...(process.env.NODE_ENV === 'development' && { stack: error.stack })

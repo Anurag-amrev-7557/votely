@@ -5,7 +5,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "deploy": "./deploy.sh",
+    "deploy:check": "node deployment-check.js",
+    "deploy:prod": "NODE_ENV=production node src/server.js",
+    "deploy:setup": "node -e \"console.log('Setting up deployment...'); require('./deployment-config.js'); console.log('Deployment config loaded. Please set environment variables.');\""
   },
   "keywords": [],
   "author": "",

@@ -8,9 +8,29 @@ import ResultsPage from './ResultsPage';
 import SecurityPage from './SecurityPage';
 import SettingsPage from './SettingsPage';
 import AdminDashboard from './AdminDashboard';
+import AdminNominations from '../../pages/admin/AdminNominations';
 import axiosInstance from '../../utils/api/axiosConfig';
 
 const AdminPage = () => {
+  // ... (existing helper function calls)
+
+  // ... (existing useEffect)
+
+  // ... (menuItems definition from previous step will be here)
+
+  // ... (rest of the component)
+
+  // Inside return statement, inside Routes:
+  /*
+                <main className="flex-1" role="region" aria-labelledby="admin-main-heading" tabIndex={0}>
+              <h1 id="admin-main-heading" className="sr-only">Admin Dashboard Main Content</h1>
+              <Routes>
+                <Route path="polls" element={<PollsPage />} />
+                <Route path="nominations" element={<AdminNominations />} />
+                <Route path="users" element={<UsersPage />} />
+                <Route path="results" element={<ResultsPage />} />
+  */
+
   const navigate = useNavigate();
   const location = useLocation();
   const { isDarkMode } = useTheme();
@@ -41,6 +61,16 @@ const AdminPage = () => {
       label: 'Dashboard',
       path: 'dashboard',
       active: activeTab === 'dashboard',
+    },
+    {
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+          <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm40-88a8,8,0,0,1-8,8H136v32a8,8,0,0,1-16,0V136a8,8,0,0,1-8-8V96a8,8,0,0,1,16,0v32h24A8,8,0,0,1,168,128Z"></path>
+        </svg>
+      ),
+      label: 'Nominations',
+      path: 'nominations',
+      active: activeTab === 'nominations',
     },
     {
       icon: (
@@ -165,7 +195,7 @@ const AdminPage = () => {
                 </svg>
               </div>
               <h2 id="session-expiry-heading" className="text-xl font-bold text-gray-900 dark:text-white text-center">Session Expiring Soon</h2>
-              <p className="text-gray-600 dark:text-gray-300 text-center">Your admin session will expire in less than 2 minutes due to inactivity or session timeout.<br/>Would you like to stay logged in?</p>
+              <p className="text-gray-600 dark:text-gray-300 text-center">Your admin session will expire in less than 2 minutes due to inactivity or session timeout.<br />Would you like to stay logged in?</p>
               <div className="flex gap-4 mt-2">
                 <button
                   onClick={refreshSession}
@@ -215,11 +245,10 @@ const AdminPage = () => {
                     <h2 className={`text-base font-semibold truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Admin User</h2>
                     <p className={`text-sm truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{adminEmail || 'admin@votesafe.com'}</p>
                   </div>
-                  <button className={`p-2 rounded-lg transition-all duration-200 ${
-                    isDarkMode 
-                      ? 'hover:bg-[#2c353f] text-gray-400 hover:text-white' 
-                      : 'hover:bg-gray-100 text-gray-500 hover:text-gray-900'
-                  }`}>
+                  <button className={`p-2 rounded-lg transition-all duration-200 ${isDarkMode
+                    ? 'hover:bg-[#2c353f] text-gray-400 hover:text-white'
+                    : 'hover:bg-gray-100 text-gray-500 hover:text-gray-900'
+                    }`}>
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
                     </svg>
@@ -231,15 +260,14 @@ const AdminPage = () => {
                   {menuItems.map((item, index) => (
                     <button
                       key={index}
-                      className={`group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 relative overflow-hidden ${
-                        item.active 
-                          ? isDarkMode 
-                            ? 'bg-[#2c353f] text-white' 
-                            : 'bg-blue-50 text-blue-600'
-                          : isDarkMode
-                            ? 'text-gray-400 hover:bg-[#2c353f] hover:text-white'
-                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                      }`}
+                      className={`group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 relative overflow-hidden ${item.active
+                        ? isDarkMode
+                          ? 'bg-[#2c353f] text-white'
+                          : 'bg-blue-50 text-blue-600'
+                        : isDarkMode
+                          ? 'text-gray-400 hover:bg-[#2c353f] hover:text-white'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        }`}
                       onClick={() => {
                         setActiveTab(item.path);
                         navigate(`/admin/${item.path}`);
@@ -247,33 +275,30 @@ const AdminPage = () => {
                     >
                       {/* Hover Effect */}
                       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/10 to-blue-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-                      
-                      <div className={`transition-colors duration-200 ${
-                        item.active
-                          ? isDarkMode
-                            ? 'text-white'
-                            : 'text-blue-600'
-                          : isDarkMode
-                            ? 'text-gray-400 group-hover:text-white'
-                            : 'text-gray-500 group-hover:text-gray-900'
-                      }`}>
+
+                      <div className={`transition-colors duration-200 ${item.active
+                        ? isDarkMode
+                          ? 'text-white'
+                          : 'text-blue-600'
+                        : isDarkMode
+                          ? 'text-gray-400 group-hover:text-white'
+                          : 'text-gray-500 group-hover:text-gray-900'
+                        }`}>
                         {item.icon}
                       </div>
-                      <span className={`text-sm font-medium transition-colors duration-200 ${
-                        item.active
-                          ? isDarkMode
-                            ? 'text-white'
-                            : 'text-blue-600'
-                          : isDarkMode
-                            ? 'text-gray-400 group-hover:text-white'
-                            : 'text-gray-600 group-hover:text-gray-900'
-                      }`}>
+                      <span className={`text-sm font-medium transition-colors duration-200 ${item.active
+                        ? isDarkMode
+                          ? 'text-white'
+                          : 'text-blue-600'
+                        : isDarkMode
+                          ? 'text-gray-400 group-hover:text-white'
+                          : 'text-gray-600 group-hover:text-gray-900'
+                        }`}>
                         {item.label}
                       </span>
                       {item.active && (
-                        <div className={`ml-auto w-1 h-6 rounded-full ${
-                          isDarkMode ? 'bg-blue-500' : 'bg-blue-600'
-                        }`} />
+                        <div className={`ml-auto w-1 h-6 rounded-full ${isDarkMode ? 'bg-blue-500' : 'bg-blue-600'
+                          }`} />
                       )}
                       {/* Notification Badge */}
                       {item.label === 'Polls' && (
@@ -297,22 +322,20 @@ const AdminPage = () => {
                     </button>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    <button className={`group flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 relative overflow-hidden ${
-                      isDarkMode
-                        ? 'bg-[#2c353f] text-gray-200 hover:bg-[#3a4552]'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}>
+                    <button className={`group flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 relative overflow-hidden ${isDarkMode
+                      ? 'bg-[#2c353f] text-gray-200 hover:bg-[#3a4552]'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}>
                       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/10 to-blue-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
                       </svg>
                       New Poll
                     </button>
-                    <button className={`group flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 relative overflow-hidden ${
-                      isDarkMode
-                        ? 'bg-[#2c353f] text-gray-200 hover:bg-[#3a4552]'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}>
+                    <button className={`group flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 relative overflow-hidden ${isDarkMode
+                      ? 'bg-[#2c353f] text-gray-200 hover:bg-[#3a4552]'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}>
                       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/10 to-blue-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
@@ -346,11 +369,10 @@ const AdminPage = () => {
                 {/* Logout Button */}
                 <button
                   onClick={handleLogout}
-                  className={`group flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 relative overflow-hidden ${
-                    isDarkMode
-                      ? 'bg-red-600/10 text-red-400 hover:bg-red-600/20'
-                      : 'bg-red-50 text-red-600 hover:bg-red-100'
-                  }`}
+                  className={`group flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 relative overflow-hidden ${isDarkMode
+                    ? 'bg-red-600/10 text-red-400 hover:bg-red-600/20'
+                    : 'bg-red-50 text-red-600 hover:bg-red-100'
+                    }`}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-red-500/0 via-red-500/10 to-red-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -365,6 +387,7 @@ const AdminPage = () => {
               <h1 id="admin-main-heading" className="sr-only">Admin Dashboard Main Content</h1>
               <Routes>
                 <Route path="polls" element={<PollsPage />} />
+                <Route path="nominations" element={<AdminNominations />} />
                 <Route path="users" element={<UsersPage />} />
                 <Route path="results" element={<ResultsPage />} />
                 <Route path="security" element={<SecurityPage />} />
@@ -392,11 +415,10 @@ const AdminPage = () => {
           />
           {/* Modal Content */}
           <div
-            className={`relative rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 transition-all duration-300 transform scale-100 ${
-              isDarkMode
-                ? 'bg-gradient-to-br from-[#232b36] via-[#2c353f] to-[#1a202c] border border-gray-700'
-                : 'bg-gradient-to-br from-white via-gray-50 to-blue-50 border border-gray-200'
-            } animate-modalPop`}
+            className={`relative rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 transition-all duration-300 transform scale-100 ${isDarkMode
+              ? 'bg-gradient-to-br from-[#232b36] via-[#2c353f] to-[#1a202c] border border-gray-700'
+              : 'bg-gradient-to-br from-white via-gray-50 to-blue-50 border border-gray-200'
+              } animate-modalPop`}
             role="document"
             aria-labelledby="logout-modal-title"
             aria-describedby="logout-modal-desc"
@@ -421,11 +443,10 @@ const AdminPage = () => {
             {/* Icon */}
             <div className="flex items-center justify-center mb-4">
               <div
-                className={`rounded-full p-3 shadow-lg ${
-                  isDarkMode
-                    ? 'bg-red-900/30'
-                    : 'bg-red-100'
-                } animate-pulse`}
+                className={`rounded-full p-3 shadow-lg ${isDarkMode
+                  ? 'bg-red-900/30'
+                  : 'bg-red-100'
+                  } animate-pulse`}
               >
                 <svg
                   className="h-8 w-8 text-red-600"
@@ -446,18 +467,16 @@ const AdminPage = () => {
             {/* Title */}
             <h3
               id="logout-modal-title"
-              className={`text-xl font-bold mb-2 text-center ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}
+              className={`text-xl font-bold mb-2 text-center ${isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}
             >
               Confirm Logout
             </h3>
             {/* Description */}
             <p
               id="logout-modal-desc"
-              className={`mb-6 text-center ${
-                isDarkMode ? 'text-[#a0acbb]' : 'text-gray-600'
-              }`}
+              className={`mb-6 text-center ${isDarkMode ? 'text-[#a0acbb]' : 'text-gray-600'
+                }`}
             >
               Are you sure you want to log out? <span className="font-medium">Any unsaved changes will be lost.</span>
               <br />

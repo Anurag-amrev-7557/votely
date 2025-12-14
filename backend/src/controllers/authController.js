@@ -61,6 +61,13 @@ exports.register = async (req, res) => {
         message: 'A valid email is required'
       });
     }
+    // Enforce IIT BBS domain
+    if (!email.trim().toLowerCase().endsWith('@iitbbs.ac.in')) {
+      return res.status(400).json({
+        success: false,
+        message: 'Registration is restricted to IIT Bhubaneswar emails (@iitbbs.ac.in)'
+      });
+    }
     if (!password || typeof password !== 'string' || password.length < 6 || password.length > 100) {
       return res.status(400).json({
         success: false,
