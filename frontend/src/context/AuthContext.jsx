@@ -19,9 +19,9 @@ export const AuthProvider = ({ children }) => {
         const res = await fetch(`${API_URL}/me`, {
           credentials: 'include'
         });
-        
+
         console.log('[Auth] Response status:', res.status);
-        
+
         if (res.ok) {
           const data = await res.json();
           console.log('[Auth] User authenticated:', data.user);
@@ -80,7 +80,7 @@ export const AuthProvider = ({ children }) => {
     let attempts = [];
     try {
       attempts = JSON.parse(sessionStorage.getItem(ATTEMPT_KEY)) || [];
-    } catch {}
+    } catch { }
     attempts = attempts.filter(ts => now - ts < ATTEMPT_WINDOW);
     if (attempts.length >= MAX_ATTEMPTS) {
       return {
@@ -206,7 +206,7 @@ export const AuthProvider = ({ children }) => {
       const height = 600;
       const left = window.screenX + (window.outerWidth - width) / 2;
       const top = window.screenY + (window.outerHeight - height) / 2;
-      
+
       const popup = window.open(
         `${API_URL}/google`,
         'Google Login',
@@ -231,7 +231,12 @@ export const AuthProvider = ({ children }) => {
 
         const handleMessage = async (event) => {
           // Verify the origin of the message
-          if (event.origin !== window.location.origin) return;
+          // Allow messages from same origin OR backend origin (in dev)
+          const allowedOrigins = [window.location.origin, 'http://localhost:5001'];
+          if (!allowedOrigins.includes(event.origin)) {
+            console.warn('[Auth] Blocked message from unknown origin:', event.origin);
+            return;
+          }
 
           if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
             // Instead of popup.close(), just let the popup close itself or let the user close it.
@@ -261,7 +266,7 @@ export const AuthProvider = ({ children }) => {
         // Alternative approach: use a more reliable method to detect popup closure
         checkPopup = setInterval(() => {
           let closed = false;
-          
+
           // First check if popup reference is null
           if (popup == null) {
             closed = true;
@@ -282,7 +287,7 @@ export const AuthProvider = ({ children }) => {
               }
             }
           }
-          
+
           if (closed && !popupClosed) {
             popupClosed = true;
             clearTimeout(popupTimeout);

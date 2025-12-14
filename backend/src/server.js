@@ -453,7 +453,13 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-const PORT = process.env.PORT || 5001;
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-}); 
+// Export app for Vercel
+module.exports = app;
+
+// Only start server if running directly (not required as a module)
+if (require.main === module) {
+  const PORT = process.env.PORT || 5001;
+  server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+} 
