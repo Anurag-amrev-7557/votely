@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pollController = require('../controllers/pollController');
 const Activity = require('../models/Activity');
-const auth = require('../middleware/auth/auth');
+const auth = require('../middleware/authMiddleware');
 
 // Enhanced: Middleware for input validation and sanitization
 const { body, param, validationResult } = require('express-validator');

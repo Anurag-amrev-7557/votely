@@ -6,15 +6,11 @@ const path = require('path');
 const connectDB = require('./config/database/db');
 const authRoutes = require('./routes/authRoutes');
 const profileRoutes = require('./routes/profileRoutes');
-const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const session = require('express-session');
-const MongoStore = require('connect-mongo');
 const helmet = require('helmet');
 const http = require('http');
 const { Server } = require('socket.io');
 const User = require('./models/User');
-const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose'); // Added back for health checks
 
 // Load environment variables
 dotenv.config();
@@ -76,35 +72,21 @@ module.exports.io = io;
 // CORS configuration
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-
-    // Get allowed origins from environment variables or use defaults
     const allowedOrigins = process.env.ALLOWED_ORIGINS
       ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
       : ['http://localhost:5173', 'http://127.0.0.1:5173'];
-
-    // Add production domains if specified
-    if (process.env.FRONTEND_ORIGIN) {
-      allowedOrigins.push(process.env.FRONTEND_ORIGIN);
-    }
-
-    // Log CORS check for debugging
-    console.log('CORS check:', { origin, allowedOrigins, isAllowed: allowedOrigins.indexOf(origin) !== -1 });
+    if (process.env.FRONTEND_ORIGIN) allowedOrigins.push(process.env.FRONTEND_ORIGIN);
 
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      console.warn('CORS blocked origin:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  exposedHeaders: ['set-cookie'],
-  preflightContinue: false,
-  optionsSuccessStatus: 204
 };
 
 // Apply CORS middleware
@@ -112,21 +94,9 @@ app.use(cors(corsOptions));
 
 // Security middleware
 app.use(helmet({
-  contentSecurityPolicy: process.env.NODE_ENV === 'production' ? {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:", "blob:"],
-      connectSrc: ["'self'", "https:"],
-      fontSrc: ["'self'", "https:"],
-      objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
-      frameSrc: ["'none'"]
-    }
-  } : false,
-  crossOriginEmbedderPolicy: process.env.NODE_ENV === 'production' ? 'require-corp' : false,
-  crossOriginResourcePolicy: process.env.NODE_ENV === 'production' ? 'cross-origin' : false
+  contentSecurityPolicy: false, // Disabled for simplicity in mock mode
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: false
 }));
 
 // Middleware
@@ -138,7 +108,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Health check route
 app.get('/', (req, res) => {
-  res.send('API is running...');
+  res.send('API is running (Mock Auth Mode)...');
 });
 
 // Debug route to test if server is responding
@@ -248,198 +218,12 @@ const commentRoutes = require('./routes/commentRoutes');
 
 // Register all API routes
 app.use('/api/auth', authRoutes);
-app.use('/api/profile', profileRoutes);
+app.use('/api/profile', profileRoutes); // Profile routes might need adjustment or be mocking too
 app.use('/api/polls', pollRoutes);
 app.use('/api/votes', voteRoutes);
 app.use('/api/comments', commentRoutes);
 const nominationRoutes = require('./routes/nominationRoutes');
 app.use('/api/nominations', nominationRoutes);
-
-// Google OAuth configuration
-const googleCallbackURL = process.env.GOOGLE_CALLBACK_URL;
-if (!googleCallbackURL) {
-  console.warn('GOOGLE_CALLBACK_URL not set, using default');
-}
-
-passport.use(new GoogleStrategy({
-  clientID: process.env.GOOGLE_CLIENT_ID,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: googleCallbackURL || 'http://localhost:5001/api/auth/google/callback',
-},
-  async (accessToken, refreshToken, profile, done) => {
-    try {
-      const email = profile.emails[0].value;
-
-      // Enforce IIT BBS domain
-      if (!email.toLowerCase().endsWith('@iitbbs.ac.in')) {
-        return done(new Error('Login restricted to IIT Bhubaneswar emails (@iitbbs.ac.in)'), null);
-      }
-
-      let user = await User.findOne({ googleId: profile.id });
-      if (!user) {
-        // Try to find by email in case user registered locally first
-        user = await User.findOne({ email: profile.emails[0].value });
-        if (user) {
-          user.googleId = profile.id;
-          // Update profile photo if not set
-          if (!user.profilePhoto && profile.photos && profile.photos.length > 0) {
-            user.profilePhoto = profile.photos[0].value;
-          }
-          await user.save();
-        } else {
-          user = await User.create({
-            name: profile.displayName,
-            email: profile.emails[0].value,
-            googleId: profile.id,
-            isVerified: true,
-            profilePhoto: profile.photos && profile.photos.length > 0 ? profile.photos[0].value : null,
-            // You may want to set a random password or leave it blank
-            password: Math.random().toString(36).slice(-8) + 'A1!'
-          });
-        }
-      }
-      return done(null, user);
-    } catch (err) {
-      return done(err, null);
-    }
-  }));
-
-passport.serializeUser((user, done) => {
-  done(null, user);
-});
-passport.deserializeUser((obj, done) => {
-  done(null, obj);
-});
-
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'your_secret',
-  resave: false,
-  saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: process.env.MONGO_URI || 'mongodb://localhost:27017/votely',
-    collectionName: 'sessions',
-    ttl: 24 * 60 * 60, // 1 day
-    autoRemove: 'native',
-    touchAfter: 24 * 3600 // Only update session once per day
-  }),
-  name: 'votely.sid', // Custom session name
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    sameSite: 'lax',
-    maxAge: 24 * 60 * 60 * 1000, // 1 day
-    path: '/'
-  },
-  rolling: true, // Extend session on each request
-  unset: 'destroy' // Remove session when unset
-}));
-app.use(passport.initialize());
-app.use(passport.session());
-
-// Start Google OAuth
-app.get('/api/auth/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] })
-);
-
-// Google OAuth callback
-app.get('/api/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/api/auth/google/error', session: false }),
-  (req, res) => {
-    // Issue JWT and set cookie
-    const token = jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, { expiresIn: '30d' });
-    res.cookie('token', token, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-      path: '/'
-    });
-
-    // Set security headers to allow cross-origin communication
-    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
-    res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
-
-    // PostMessage to frontend with better error handling
-    // We use '*' as targetOrigin to ensure the message reaches the opener regardless of subdomain/port differences
-    // This is acceptable here as the sensitive token is in an HttpOnly cookie, and the user data is public profile info.
-    const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
-
-    res.send(`<!DOCTYPE html>
-<html>
-<head>
-    <title>Authentication Complete</title>
-    <meta charset="utf-8">
-    <script>
-      function closeWindow() {
-        try {
-          if (window.opener) {
-            window.opener.postMessage({ 
-              type: 'GOOGLE_AUTH_SUCCESS', 
-              user: ${JSON.stringify(req.user)} 
-            }, '*');
-          }
-          window.close();
-        } catch (e) {
-          console.error(e);
-          // Fallback: Redirect if close fails
-          window.location.href = '${FRONTEND_ORIGIN}/auth-success';
-        }
-      }
-      
-      // Attempt to close immediately
-      window.onload = function() {
-        setTimeout(closeWindow, 500);
-      };
-    </script>
-</head>
-<body style="background: #f3f4f6; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0;">
-    <div style="text-align: center; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-        <h3 style="color: #111827; margin-bottom: 10px;">Authentication Successful</h3>
-        <p style="color: #4b5563; margin-bottom: 20px;">You can now close this window.</p>
-        <button onclick="closeWindow()" style="background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
-            Back to App
-        </button>
-    </div>
-</body>
-</html>`);
-  }
-);
-
-// Google OAuth error callback
-app.get('/api/auth/google/error', (req, res) => {
-  const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
-  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
-  res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
-
-  res.send(`<!DOCTYPE html>
-<html>
-<head>
-    <title>Authentication Failed</title>
-    <meta charset="utf-8">
-</head>
-<body>
-    <script>
-      try {
-        if (window.opener) {
-          window.opener.postMessage({ 
-            type: 'GOOGLE_AUTH_ERROR', 
-            error: 'Authentication failed. Please try again.' 
-          }, '${FRONTEND_ORIGIN}');
-          window.close();
-        } else {
-          // Fallback: redirect to frontend with error parameter
-          window.location.href = '${FRONTEND_ORIGIN}/auth-error?error=authentication_failed';
-        }
-      } catch (error) {
-        console.error('PostMessage error:', error);
-        // Fallback: redirect to frontend with error parameter
-        window.location.href = '${FRONTEND_ORIGIN}/auth-error?error=authentication_failed';
-      }
-    </script>
-    <p>Authentication failed. You can close this window and try again.</p>
-</body>
-</html>`);
-});
 
 io.on('connection', (socket) => {
   // Client requests to join a poll room for real-time updates
@@ -479,4 +263,4 @@ if (require.main === module) {
   server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
-} 
+}

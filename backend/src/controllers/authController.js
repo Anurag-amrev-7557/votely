@@ -1,313 +1,155 @@
-const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const { OAuth2Client } = require('google-auth-library');
+const User = require('../models/User');
 
-// Enhanced JWT Token Generation with custom claims and refresh support
-const generateToken = (user, options = {}) => {
-  // user: can be userId or user object
-  const payload = {
-    id: typeof user === 'object' ? user._id : user,
-    email: user.email || undefined,
-    name: user.name || undefined,
-    isVerified: user.isVerified || undefined,
-    // You can add more claims as needed
-  };
-  // Remove undefined fields
-  Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-  const expiresIn = options.expiresIn || '30d';
-  console.log('[JWT] Generating token for user:', payload.id, 'with payload:', payload);
-  return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn });
+// Generate JWT
+const generateToken = (id) => {
+    return jwt.sign({ id }, process.env.JWT_SECRET, {
+        expiresIn: '30d',
+    });
 };
 
-// Enhanced Set token cookie with refresh token support and custom options
-const setTokenCookie = (res, token, opts = {}) => {
-  const isProduction = process.env.NODE_ENV === 'production';
-  const cookieOptions = {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: 'lax', // Changed from conditional to always 'lax' for better compatibility
-    maxAge: opts.maxAge || 30 * 24 * 60 * 60 * 1000, // 30 days
-    path: '/'
-  };
-  res.cookie(opts.cookieName || 'token', token, cookieOptions);
+// @desc    Register new user
+// @route   POST /api/auth/register
+// @access  Public
+const registerUser = async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
 
-  // Optionally set refresh token
-  if (opts.refreshToken) {
-    res.cookie('refreshToken', opts.refreshToken, {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: 'lax', // Changed from conditional to always 'lax' for better compatibility
-      maxAge: opts.refreshMaxAge || 60 * 24 * 60 * 60 * 1000, // 60 days
-      path: '/'
-    });
-  }
+        if (!name || !email || !password) {
+            return res.status(400).json({ error: 'Please add all fields' });
+        }
+
+        // Check if user exists
+        const userExists = await User.findOne({ email });
+
+        if (userExists) {
+            return res.status(400).json({ error: 'User already exists' });
+        }
+
+        // Create user
+        // Password hashing is handled in User model pre-save hook
+        const user = await User.create({
+            name,
+            email,
+            password,
+            role: 'user' // Default to user
+        });
+
+        if (user) {
+            res.status(201).json({
+                _id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                token: generateToken(user._id),
+            });
+        } else {
+            res.status(400).json({ error: 'Invalid user data' });
+        }
+    } catch (error) {
+        console.error('Register Error:', error);
+        res.status(500).json({ error: 'Server error during registration' });
+    }
 };
 
-// Enhanced Register new user
-exports.register = async (req, res) => {
-  try {
-    let { name, email, password } = req.body;
+// @desc    Authenticate a user
+// @route   POST /api/auth/login
+// @access  Public
+const loginUser = async (req, res) => {
+    try {
+        const { email, password } = req.body;
 
-    // --- Input Validation ---
-    if (!name || typeof name !== 'string' || name.trim().length < 2 || name.length > 50) {
-      return res.status(400).json({
-        success: false,
-        message: 'Name is required (2-50 characters)'
-      });
+        // Check for user email
+        const user = await User.findOne({ email }).select('+password');
+
+        if (user && (await user.comparePassword(password))) {
+            res.json({
+                _id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                profilePhoto: user.profilePhoto,
+                token: generateToken(user._id),
+            });
+        } else {
+            res.status(401).json({ error: 'Invalid credentials' });
+        }
+    } catch (error) {
+        console.error('Login Error:', error);
+        res.status(500).json({ error: 'Server error during login' });
     }
-    if (!email || typeof email !== 'string' || !/^[\w-.]+@([\w-]+\.)+[\w-]{2,}$/.test(email.trim())) {
-      return res.status(400).json({
-        success: false,
-        message: 'A valid email is required'
-      });
-    }
-    // Enforce IIT BBS domain
-    if (!email.trim().toLowerCase().endsWith('@iitbbs.ac.in')) {
-      return res.status(400).json({
-        success: false,
-        message: 'Registration is restricted to IIT Bhubaneswar emails (@iitbbs.ac.in)'
-      });
-    }
-    if (!password || typeof password !== 'string' || password.length < 6 || password.length > 100) {
-      return res.status(400).json({
-        success: false,
-        message: 'Password is required (6-100 characters)'
-      });
-    }
-
-    name = name.trim();
-    email = email.trim().toLowerCase();
-
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email already registered'
-      });
-    }
-
-    // Optionally: Enforce password strength (at least 1 uppercase, 1 lowercase, 1 number)
-    const strongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
-    if (!strongPassword.test(password)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
-      });
-    }
-
-    // Create new user
-    const user = await User.create({
-      name,
-      email,
-      password
-    });
-
-    // Optionally: Remove sensitive fields before sending response
-    const userObj = user.toObject();
-    delete userObj.password;
-    delete userObj.__v;
-
-    // Generate token
-    const token = generateToken(user._id);
-
-    // Set token cookie
-    setTokenCookie(res, token);
-
-    res.status(201).json({
-      success: true,
-      user: userObj
-    });
-  } catch (error) {
-    // Optionally: Log error for debugging
-    console.error('Register error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error registering user',
-      error: error.message
-    });
-  }
 };
 
-// Enhanced Login user
-exports.login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    // --- Input Validation ---
-    if (!email || typeof email !== 'string' || !email.trim()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email is required'
-      });
-    }
-    if (!password || typeof password !== 'string' || password.length < 6) {
-      return res.status(400).json({
-        success: false,
-        message: 'Password is required and must be at least 6 characters'
-      });
-    }
-
-    // Find user and include password for comparison
-    const user = await User.findOne({ email: email.trim().toLowerCase() }).select('+password +isVerified +roles +googleId');
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials'
-      });
-    }
-
-    // Check if password matches
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials'
-      });
-    }
-
-    // Optionally, check if user is verified (if your app requires email verification)
-    // if (!user.isVerified) {
-    //   return res.status(403).json({
-    //     success: false,
-    //     message: 'Please verify your email before logging in'
-    //   });
-    // }
-
-    // Generate token
-    const token = generateToken(user._id);
-
-    // Set token cookie
-    setTokenCookie(res, token);
-
-    // Remove sensitive fields from response
-    const userObj = user.toObject();
-    delete userObj.password;
-    delete userObj.__v;
-
-    // Add enhanced/computed fields
-    userObj.isVerified = userObj.isVerified || false;
-    userObj.roles = userObj.roles || ['user'];
-    userObj.hasGoogleAuth = !!userObj.googleId;
-
-    res.status(200).json({
-      success: true,
-      user: userObj
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error logging in',
-      error: error.message
-    });
-  }
+// @desc    Get user data
+// @route   GET /api/auth/me
+// @access  Private
+const getMe = async (req, res) => {
+    res.status(200).json(req.user);
 };
 
-// Enhanced logout: clears token cookie securely and destroys session if exists
-exports.logout = (req, res) => {
-  // Clear JWT cookie
-  res.cookie('token', '', {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    expires: new Date(0),
-    path: '/'
-  });
+// @desc    Google auth
+// @route   POST /api/auth/google
+// @access  Public
+const googleAuth = async (req, res) => {
+    try {
+        const { token } = req.body;
 
-  // Also clear refresh token if it exists
-  res.cookie('refreshToken', '', {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    expires: new Date(0),
-    path: '/'
-  });
+        // Verify Google Token
+        const ticket = await client.verifyIdToken({
+            idToken: token,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
 
-  // Destroy session if using express-session (for OAuth or passport)
-  if (req.session) {
-    req.session.destroy(() => {
-      res.status(200).json({
-        success: true,
-        message: 'Logged out successfully'
-      });
-    });
-  } else {
-    res.status(200).json({
-      success: true,
-      message: 'Logged out successfully'
-    });
-  }
-};
+        const { name, email, picture, sub: googleId } = ticket.getPayload();
 
-// Get current user with enhanced response (no password, includes roles, verification status, and more)
-exports.getMe = async (req, res) => {
-  try {
-    // Populate additional fields if needed (e.g., roles, profile, etc.)
-    // Also populate Google auth info if present
-    const user = await User.findById(req.user._id)
-      .select('-password -__v -resetPasswordToken -resetPasswordExpires')
-      .lean();
+        // Check if user exists
+        let user = await User.findOne({ email });
 
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
+        if (user) {
+            // If user exists but no googleId (registered via email/password), link it
+            if (!user.googleId) {
+                user.googleId = googleId;
+                user.profilePhoto = user.profilePhoto || picture; // Update photo if missing
+                await user.save();
+            }
+        } else {
+            // Create new user
+            // Generate a random password for google users (they won't use it but db requires it if not optional)
+            // Actually User model has required: true for password. We should generate a random one.
+            const randomPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+
+            user = await User.create({
+                name,
+                email,
+                password: randomPassword,
+                googleId,
+                profilePhoto: picture,
+                isVerified: true // Google emails are verified
+            });
+        }
+
+        res.status(200).json({
+            _id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            profilePhoto: user.profilePhoto,
+            token: generateToken(user._id),
+        });
+
+    } catch (error) {
+        console.error('Google Auth Error:', error);
+        res.status(400).json({ error: 'Google authentication failed' });
     }
-
-    // Compute additional fields
-    const enhancedUser = {
-      ...user,
-      isVerified: !!user.isVerified,
-      roles: Array.isArray(user.roles) && user.roles.length > 0 ? user.roles : ['user'],
-      hasGoogleAuth: !!user.googleId,
-      displayName: user.name || user.email,
-      registeredAt: user.createdAt,
-      lastLogin: user.lastLogin || null,
-      // Add more computed fields as needed
-    };
-
-    // Optionally, include info about OAuth providers
-    enhancedUser.providers = [];
-    if (user.googleId) enhancedUser.providers.push('google');
-    // Add other providers here if needed
-
-    // Optionally, include a gravatar or avatar URL
-    if (user.email) {
-      const crypto = require('crypto');
-      const hash = crypto.createHash('md5').update(user.email.trim().toLowerCase()).digest('hex');
-      enhancedUser.avatarUrl = `https://www.gravatar.com/avatar/${hash}?d=identicon`;
-    }
-
-    res.status(200).json({
-      success: true,
-      user: enhancedUser
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching user data',
-      error: error.message
-    });
-  }
 };
 
-// Placeholder: Refresh Token
-exports.refreshToken = async (req, res) => {
-  res.status(501).json({ success: false, message: 'refreshToken not implemented' });
-};
-
-// Placeholder: Verify Email
-exports.verifyEmail = async (req, res) => {
-  res.status(501).json({ success: false, message: 'verifyEmail not implemented' });
-};
-
-// Placeholder: Forgot Password
-exports.forgotPassword = async (req, res) => {
-  res.status(501).json({ success: false, message: 'forgotPassword not implemented' });
-};
-
-// Placeholder: Reset Password
-exports.resetPassword = async (req, res) => {
-  res.status(501).json({ success: false, message: 'resetPassword not implemented' });
+module.exports = {
+    registerUser,
+    loginUser,
+    getMe,
+    googleAuth
 };

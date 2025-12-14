@@ -1,18 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const { protect, authorize } = require('../middleware/auth/auth');
+const auth = require('../middleware/authMiddleware');
 const nominationController = require('../controllers/nominationController');
 
 // Apply for nomination
-router.post('/apply', protect, nominationController.createNomination);
+router.post('/apply', auth.protect, nominationController.createNomination);
 
 // Get my nominations
-router.get('/my', protect, nominationController.getMyNominations);
+router.get('/my', auth.protect, nominationController.getMyNominations);
 
 // Get nominations for a poll (Admin only)
-router.get('/poll/:pollId', protect, authorize('admin', 'election_committee'), nominationController.getPollNominations);
+router.get('/poll/:pollId', auth.protect, auth.authorize('admin', 'election_committee'), nominationController.getPollNominations);
 
 // Update status (Admin only)
-router.put('/:nominationId/status', protect, authorize('admin', 'election_committee'), nominationController.updateNominationStatus);
+router.put('/:nominationId/status', auth.protect, auth.authorize('admin', 'election_committee'), nominationController.updateNominationStatus);
 
 module.exports = router;

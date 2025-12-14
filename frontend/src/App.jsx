@@ -6,6 +6,7 @@ import { ArrowLeft } from './components/ui/icons'
 import { ErrorBoundary } from 'react-error-boundary'
 import { ThemeProvider } from './context/ThemeContext'
 import { AdminAuthProvider } from './context/AdminAuthContext'
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider } from './context/AuthContext'
 import { Toaster } from 'react-hot-toast'
 import Navbar from './components/layout/navbar/Navbar'
@@ -532,6 +533,14 @@ const router = {
 }
 
 const App = () => {
+  return (
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <AppContent />
+    </GoogleOAuthProvider>
+  );
+};
+
+const AppContent = () => {
   // Handle initial theme load and accessibility focus
   useEffect(() => {
     // Add no-transition class during initial load

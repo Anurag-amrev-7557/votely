@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { motion } from 'framer-motion';
-import { 
-  ClockIcon, 
-  ShieldCheckIcon, 
-  ArrowPathIcon, 
-  CheckCircleIcon, 
-  XCircleIcon 
+import {
+  ClockIcon,
+  ShieldCheckIcon,
+  ArrowPathIcon,
+  CheckCircleIcon,
+  XCircleIcon
 } from '@heroicons/react/24/outline';
 
 const AuthSuccessPage = () => {
@@ -24,19 +24,17 @@ const AuthSuccessPage = () => {
 
   useEffect(() => {
     const token = searchParams.get('token');
-    
-    if (!token) {
-      setError('No authentication token found. Please try logging in again.');
-      setStatus('error');
-      return;
-    }
+
+    // We don't strictly require a token in URL if we are using cookies
+    // Only error if we fail verification later
+    // if (!token) { ... } -> Removed this check
 
     // Enhanced token verification with retry logic
     const verifyToken = async (attempt = 1) => {
       try {
         setStatus(attempt === 1 ? 'verifying' : 'retrying');
         setIsRetrying(attempt > 1);
-        
+
         const response = await fetch('/api/auth/me', {
           method: 'GET',
           credentials: 'include',
@@ -52,20 +50,20 @@ const AuthSuccessPage = () => {
         }
 
         const data = await response.json();
-        
+
         if (data.success && data.user) {
           setUser(data.user);
           setStatus('success');
           setRetryCount(0);
           setIsRetrying(false);
-          
+
           // Enhanced redirect with user feedback
           setTimeout(() => {
-            navigate('/', { 
+            navigate('/', {
               replace: true,
-              state: { 
+              state: {
                 authSuccess: true,
-                user: data.user 
+                user: data.user
               }
             });
           }, 2000);
@@ -74,7 +72,7 @@ const AuthSuccessPage = () => {
         }
       } catch (err) {
         console.error(`Auth verification error (attempt ${attempt}):`, err);
-        
+
         if (attempt < MAX_RETRIES) {
           setRetryCount(attempt);
           setTimeout(() => verifyToken(attempt + 1), RETRY_DELAY);
@@ -185,9 +183,9 @@ const AuthSuccessPage = () => {
           <motion.div
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
-            transition={{ 
-              delay: 0.3, 
-              type: "spring", 
+            transition={{
+              delay: 0.3,
+              type: "spring",
               stiffness: 200,
               damping: 15
             }}
@@ -213,7 +211,7 @@ const AuthSuccessPage = () => {
                 </motion.div>
               )}
             </div>
-            
+
             {/* Progress ring for processing states */}
             {(status === 'processing' || status === 'verifying') && (
               <motion.div

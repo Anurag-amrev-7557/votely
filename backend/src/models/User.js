@@ -119,8 +119,7 @@ const userSchema = new mongoose.Schema({
   googleId: {
     type: String,
     unique: true,
-    sparse: true,
-    default: null
+    sparse: true
   },
   // Activity tracking
   activityStats: {
@@ -166,9 +165,9 @@ const userSchema = new mongoose.Schema({
 });
 
 // Hash password before saving
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
-  
+
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
@@ -179,13 +178,13 @@ userSchema.pre('save', async function(next) {
 });
 
 // Update lastActive before saving
-userSchema.pre('save', function(next) {
+userSchema.pre('save', function (next) {
   this.lastActive = new Date();
   next();
 });
 
 // Method to compare password
-userSchema.methods.comparePassword = async function(candidatePassword) {
+userSchema.methods.comparePassword = async function (candidatePassword) {
   try {
     return await bcrypt.compare(candidatePassword, this.password);
   } catch (error) {
@@ -194,7 +193,7 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
 };
 
 // Method to calculate profile completion
-userSchema.methods.getProfileCompletion = function() {
+userSchema.methods.getProfileCompletion = function () {
   let completion = 0;
   if (this.name) completion += 20;
   if (this.email) completion += 15;
@@ -207,7 +206,7 @@ userSchema.methods.getProfileCompletion = function() {
 };
 
 // Method to update activity stats
-userSchema.methods.updateActivityStats = function(type, increment = 1) {
+userSchema.methods.updateActivityStats = function (type, increment = 1) {
   switch (type) {
     case 'vote':
       this.activityStats.totalVotes += increment;
@@ -226,7 +225,7 @@ userSchema.methods.updateActivityStats = function(type, increment = 1) {
 };
 
 // Transform document to JSON
-userSchema.methods.toJSON = function() {
+userSchema.methods.toJSON = function () {
   const user = this.toObject();
   user.id = user._id;
   delete user._id;
