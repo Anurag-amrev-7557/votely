@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../../utils/api/axiosConfig';
 import toast from 'react-hot-toast';
 import Modal from 'react-modal';
 import { showNotification } from '../../utils/toastUtils.jsx';
@@ -80,7 +80,7 @@ const PollsPage = () => {
     const fetchPolls = async () => {
       setLoading(true);
       try {
-        const response = await axios.get('/api/polls');
+        const response = await axiosInstance.get('/polls');
         // The backend returns { polls: [...], page, limit, total, totalPages }
         const pollsData = response.data.polls || response.data;
         // Normalize poll IDs for consistent usage
@@ -110,7 +110,7 @@ const PollsPage = () => {
     setSelectedPoll(normalizedPoll);
     setIsEditing(true);
     setShowModal(true);
-    
+
     // Convert options to candidates format and format dates for datetime-local inputs
     const candidates = (poll.options || []).map((option, index) => ({
       id: index,
@@ -132,7 +132,7 @@ const PollsPage = () => {
       const minutes = String(date.getMinutes()).padStart(2, '0');
       return `${year}-${month}-${day}T${hours}:${minutes}`;
     };
-    
+
     // Populate poll form with existing poll data
     setPollForm({
       title: poll.title || '',
@@ -236,8 +236,8 @@ const PollsPage = () => {
 
     setPollForm(prev => ({
       ...prev,
-      candidates: prev.candidates.map(candidate => 
-        candidate.id === editingCandidateId 
+      candidates: prev.candidates.map(candidate =>
+        candidate.id === editingCandidateId
           ? { ...candidateForm, id: candidate.id }
           : candidate
       )
@@ -293,7 +293,7 @@ const PollsPage = () => {
       [setting]: typeof value !== 'undefined' ? value : !pollForm.settings[setting]
     };
     try {
-      await axios.put(`/api/polls/${selectedPoll.id}`, {
+      await axiosInstance.put(`/polls/${selectedPoll.id}`, {
         ...selectedPoll,
         settings: newSettings
       });
@@ -343,17 +343,17 @@ const PollsPage = () => {
       alert('Please enter candidate name');
       return;
     }
-    
+
     const newCandidate = {
       ...candidateForm,
       id: Date.now()
     };
-    
+
     setPollForm(prev => ({
       ...prev,
       candidates: [...prev.candidates, newCandidate]
     }));
-    
+
     // Reset candidate form
     setCandidateForm({
       name: '',
@@ -466,12 +466,12 @@ const PollsPage = () => {
           return;
         }
         // Update existing poll
-        await axios.put(`/api/polls/${selectedPoll.id}`, payload);
+        await axiosInstance.put(`/polls/${selectedPoll.id}`, payload);
         setPolls(polls.map(p => p.id === selectedPoll.id ? { ...pollForm, id: selectedPoll.id, options } : p));
         toast.success('Poll updated successfully');
       } else {
         // Create new poll
-        const response = await axios.post('/api/polls', payload);
+        const response = await axiosInstance.post('/polls', payload);
         const newPoll = { ...response.data, id: response.data._id || response.data.id };
         setPolls([...polls, newPoll]);
         toast.success('Poll created successfully');
@@ -502,10 +502,10 @@ const PollsPage = () => {
       });
     } catch (error) {
       console.error('Error saving poll:', error);
-      
+
       // Enhanced error handling with more specific error messages
       let errorMessage = 'Failed to save poll';
-      
+
       if (error.response) {
         // Server responded with error status
         if (error.response.data && error.response.data.error) {
@@ -526,9 +526,9 @@ const PollsPage = () => {
         // Something else happened
         errorMessage = error.message;
       }
-      
+
       toast.error(errorMessage);
-      
+
       // Log additional error details for debugging
       if (process.env.NODE_ENV === 'development') {
         console.log('Poll creation error details:', {
@@ -547,7 +547,7 @@ const PollsPage = () => {
 
   const handleSharePoll = async (poll) => {
     const shareUrl = `${window.location.origin}/polls/${poll.id}`;
-    
+
     try {
       if (navigator.share) {
         await navigator.share({
@@ -578,7 +578,7 @@ const PollsPage = () => {
       return;
     }
     try {
-      await axios.delete(`/api/polls/${poll.id}`);
+      await axiosInstance.delete(`/polls/${poll.id}`);
       setPolls(polls.filter(p => p.id !== poll.id));
       toast.success('Poll deleted successfully');
     } catch (error) {
@@ -598,7 +598,7 @@ const PollsPage = () => {
     setAuditError(null);
     setAuditPollTitle(poll.title);
     try {
-      const res = await axios.get(`/api/polls/${poll.id}/audit-logs`, { withCredentials: true });
+      const res = await axiosInstance.get(`/polls/${poll.id}/audit-logs`);
       setAuditLogs(res.data);
     } catch (err) {
       setAuditError('Failed to load audit logs');
@@ -651,11 +651,10 @@ const PollsPage = () => {
         </div>
         <button
           onClick={handleCreatePoll}
-          className={`h-10 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${
-            isDarkMode
-              ? 'bg-white text-gray-900 hover:bg-gray-100'
-              : 'bg-gray-900 text-white hover:bg-gray-800'
-          }`}
+          className={`h-10 px-4 rounded-lg text-sm font-medium transition-all duration-200 ${isDarkMode
+            ? 'bg-white text-gray-900 hover:bg-gray-100'
+            : 'bg-gray-900 text-white hover:bg-gray-800'
+            }`}
         >
           New Poll
         </button>
@@ -669,16 +668,14 @@ const PollsPage = () => {
             placeholder="Search polls..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className={`w-full px-4 py-2 rounded-lg border transition-colors duration-200 ${
-              isDarkMode
-                ? 'bg-[#15191e] border-[#3f4c5a] text-white placeholder-gray-400 focus:border-white'
-                : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500 focus:border-gray-900'
-            }`}
+            className={`w-full px-4 py-2 rounded-lg border transition-colors duration-200 ${isDarkMode
+              ? 'bg-[#15191e] border-[#3f4c5a] text-white placeholder-gray-400 focus:border-white'
+              : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500 focus:border-gray-900'
+              }`}
           />
           <svg
-            className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${
-              isDarkMode ? 'text-gray-400' : 'text-gray-500'
-            }`}
+            className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'
+              }`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -727,12 +724,12 @@ const PollsPage = () => {
             // Advanced: Category color
             const categoryColor = poll.category
               ? ({
-                  Politics: 'bg-red-500/20 text-red-500',
-                  Sports: 'bg-green-500/20 text-green-500',
-                  Entertainment: 'bg-yellow-500/20 text-yellow-500',
-                  Science: 'bg-blue-500/20 text-blue-500',
-                  Other: isDarkMode ? 'bg-gray-500/20 text-gray-400' : 'bg-gray-100 text-gray-600'
-                }[poll.category] || (isDarkMode ? 'bg-gray-500/20 text-gray-400' : 'bg-gray-100 text-gray-600'))
+                Politics: 'bg-red-500/20 text-red-500',
+                Sports: 'bg-green-500/20 text-green-500',
+                Entertainment: 'bg-yellow-500/20 text-yellow-500',
+                Science: 'bg-blue-500/20 text-blue-500',
+                Other: isDarkMode ? 'bg-gray-500/20 text-gray-400' : 'bg-gray-100 text-gray-600'
+              }[poll.category] || (isDarkMode ? 'bg-gray-500/20 text-gray-400' : 'bg-gray-100 text-gray-600'))
               : (isDarkMode ? 'bg-gray-500/20 text-gray-400' : 'bg-gray-100 text-gray-600');
 
             // Advanced: Accessibility - ARIA labels
@@ -741,11 +738,10 @@ const PollsPage = () => {
             return (
               <div
                 key={poll.id || poll._id}
-                className={`group relative flex flex-col gap-4 p-8 rounded-2xl transition-all duration-300 focus-within:ring-2 focus-within:ring-blue-400 outline-none cursor-pointer max-w-2xl w-full mx-auto ${
-                  isDarkMode 
-                    ? 'bg-gradient-to-br from-[#232a36] to-[#1a1f2e] hover:from-[#2c353f] hover:to-[#232a36] shadow-xl shadow-black/30'
-                    : 'bg-gradient-to-br from-white to-gray-50 hover:from-gray-50 hover:to-gray-100 shadow-lg shadow-gray-200/60'
-                }`}
+                className={`group relative flex flex-col gap-4 p-8 rounded-2xl transition-all duration-300 focus-within:ring-2 focus-within:ring-blue-400 outline-none cursor-pointer max-w-2xl w-full mx-auto ${isDarkMode
+                  ? 'bg-gradient-to-br from-[#232a36] to-[#1a1f2e] hover:from-[#2c353f] hover:to-[#232a36] shadow-xl shadow-black/30'
+                  : 'bg-gradient-to-br from-white to-gray-50 hover:from-gray-50 hover:to-gray-100 shadow-lg shadow-gray-200/60'
+                  }`}
                 tabIndex={0}
                 aria-label={pollAriaLabel}
                 role="region"
@@ -759,13 +755,13 @@ const PollsPage = () => {
                           ? 'bg-green-500/20 text-green-400 border-green-500/30'
                           : 'bg-green-50 text-green-700 border-green-200'
                         : isUpcoming
-                        ? isDarkMode
-                          ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
-                          : 'bg-blue-50 text-blue-700 border-blue-200'
-                        : isDarkMode
-                        ? 'bg-gray-500/20 text-gray-400 border-gray-500/30'
-                        : 'bg-gray-50 text-gray-700 border-gray-200'
-                    }`}
+                          ? isDarkMode
+                            ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
+                            : 'bg-blue-50 text-blue-700 border-blue-200'
+                          : isDarkMode
+                            ? 'bg-gray-500/20 text-gray-400 border-gray-500/30'
+                            : 'bg-gray-50 text-gray-700 border-gray-200'
+                      }`}
                     title={statusTooltip}
                   >
                     <span className="inline-flex items-center gap-1">
@@ -794,9 +790,8 @@ const PollsPage = () => {
                 {/* Header */}
                 <div className="flex-1 min-h-[56px]">
                   <h3
-                    className={`text-lg font-bold mb-1 truncate transition-colors duration-200 ${
-                      isDarkMode ? 'text-white group-hover:text-blue-300' : 'text-gray-900 group-hover:text-blue-700'
-                    }`}
+                    className={`text-lg font-bold mb-1 truncate transition-colors duration-200 ${isDarkMode ? 'text-white group-hover:text-blue-300' : 'text-gray-900 group-hover:text-blue-700'
+                      }`}
                     title={poll.title}
                   >
                     {poll.title}
@@ -825,19 +820,18 @@ const PollsPage = () => {
                     role="progressbar"
                   >
                     <div
-                      className={`h-full rounded-full transition-all duration-700 ease-in-out ${
-                        isOngoing
-                          ? isDarkMode
-                            ? 'bg-gradient-to-r from-green-400 via-blue-500 to-blue-400 animate-gradient-x'
-                            : 'bg-gradient-to-r from-blue-600 via-green-400 to-blue-500 animate-gradient-x'
-                          : isEnded
+                      className={`h-full rounded-full transition-all duration-700 ease-in-out ${isOngoing
+                        ? isDarkMode
+                          ? 'bg-gradient-to-r from-green-400 via-blue-500 to-blue-400 animate-gradient-x'
+                          : 'bg-gradient-to-r from-blue-600 via-green-400 to-blue-500 animate-gradient-x'
+                        : isEnded
                           ? isDarkMode
                             ? 'bg-gradient-to-r from-gray-500 to-gray-400'
                             : 'bg-gradient-to-r from-gray-300 to-gray-400'
                           : isDarkMode
-                          ? 'bg-gradient-to-r from-blue-500 to-blue-400'
-                          : 'bg-gradient-to-r from-blue-600 to-blue-500'
-                      }`}
+                            ? 'bg-gradient-to-r from-blue-500 to-blue-400'
+                            : 'bg-gradient-to-r from-blue-600 to-blue-500'
+                        }`}
                       style={{ width: `${progressPercent}%` }}
                     />
                     {/* Animated marker for live progress */}
@@ -896,28 +890,25 @@ const PollsPage = () => {
                     {poll.candidates.slice(0, 6).map((candidate, idx) => (
                       <div
                         key={candidate.id || candidate.name || idx}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 select-none ${
-                          isDarkMode 
-                            ? 'bg-[#3f4c5a]/50 hover:bg-[#3f4c5a]' 
-                            : 'bg-gray-100 hover:bg-gray-200'
-                        }`}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 select-none ${isDarkMode
+                          ? 'bg-[#3f4c5a]/50 hover:bg-[#3f4c5a]'
+                          : 'bg-gray-100 hover:bg-gray-200'
+                          }`}
                         title={candidate.name}
                         aria-label={`Candidate: ${candidate.name}, Votes: ${candidate.votes}`}
                       >
-                        <div className={`w-2 h-2 rounded-full ${
-                          candidate.votes > 0 
-                            ? isDarkMode ? 'bg-green-400' : 'bg-green-500'
-                            : isDarkMode ? 'bg-gray-500' : 'bg-gray-400'
-                        }`} />
+                        <div className={`w-2 h-2 rounded-full ${candidate.votes > 0
+                          ? isDarkMode ? 'bg-green-400' : 'bg-green-500'
+                          : isDarkMode ? 'bg-gray-500' : 'bg-gray-400'
+                          }`} />
                         <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>
                           {candidate.name}
                         </span>
                         {candidate.votes > 0 && (
-                          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${
-                            isDarkMode 
-                              ? 'bg-[#3f4c5a] text-[#a0acbb]' 
-                              : 'bg-gray-200 text-gray-600'
-                          }`}>
+                          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${isDarkMode
+                            ? 'bg-[#3f4c5a] text-[#a0acbb]'
+                            : 'bg-gray-200 text-gray-600'
+                            }`}>
                             {candidate.votes}
                           </span>
                         )}
@@ -935,11 +926,10 @@ const PollsPage = () => {
                 <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-200 dark:border-[#3f4c5a]">
                   <button
                     onClick={() => handleEditPoll(poll)}
-                    className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 ${
-                      isDarkMode
-                        ? 'bg-white/10 hover:bg-white/20 text-white'
-                        : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
-                    }`}
+                    className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 ${isDarkMode
+                      ? 'bg-white/10 hover:bg-white/20 text-white'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
+                      }`}
                     aria-label={`Edit poll ${poll.title}`}
                   >
                     <svg className="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -952,11 +942,10 @@ const PollsPage = () => {
                       setShowDeleteModal(true);
                       setSelectedPoll(poll);
                     }}
-                    className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-400 ${
-                      isDarkMode
-                        ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400'
-                        : 'bg-red-50 hover:bg-red-100 text-red-600'
-                    }`}
+                    className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-400 ${isDarkMode
+                      ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400'
+                      : 'bg-red-50 hover:bg-red-100 text-red-600'
+                      }`}
                     aria-label={`Delete poll ${poll.title}`}
                   >
                     <svg className="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -966,11 +955,10 @@ const PollsPage = () => {
                   </button>
                   <button
                     onClick={() => handleViewAuditLog(poll)}
-                    className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300 ${
-                      isDarkMode
-                        ? 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-300'
-                        : 'bg-blue-50 hover:bg-blue-100 text-blue-700'
-                    }`}
+                    className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300 ${isDarkMode
+                      ? 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-300'
+                      : 'bg-blue-50 hover:bg-blue-100 text-blue-700'
+                      }`}
                     aria-label={`View audit log for poll ${poll.title}`}
                   >
                     <svg className="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -980,11 +968,10 @@ const PollsPage = () => {
                   </button>
                   <button
                     onClick={() => handleDuplicatePoll(poll)}
-                    className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-400 ${
-                      isDarkMode
-                        ? 'bg-purple-500/10 hover:bg-purple-500/20 text-purple-300'
-                        : 'bg-purple-50 hover:bg-purple-100 text-purple-700'
-                    }`}
+                    className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-400 ${isDarkMode
+                      ? 'bg-purple-500/10 hover:bg-purple-500/20 text-purple-300'
+                      : 'bg-purple-50 hover:bg-purple-100 text-purple-700'
+                      }`}
                     aria-label={`Duplicate poll ${poll.title}`}
                   >
                     <svg className="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -999,11 +986,10 @@ const PollsPage = () => {
                 <div className="flex justify-between items-center text-xs mt-2">
                   <button
                     onClick={() => handleViewResults(poll)}
-                    className={`flex items-center gap-1.5 transition-colors duration-200 focus:outline-none focus:underline ${
-                      isDarkMode
-                        ? 'text-[#a0acbb] hover:text-white'
-                        : 'text-gray-500 hover:text-gray-900'
-                    }`}
+                    className={`flex items-center gap-1.5 transition-colors duration-200 focus:outline-none focus:underline ${isDarkMode
+                      ? 'text-[#a0acbb] hover:text-white'
+                      : 'text-gray-500 hover:text-gray-900'
+                      }`}
                     aria-label={`View results for poll ${poll.title}`}
                   >
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1013,11 +999,10 @@ const PollsPage = () => {
                   </button>
                   <button
                     onClick={() => handleSharePoll(poll)}
-                    className={`flex items-center gap-1.5 transition-colors duration-200 focus:outline-none focus:underline ${
-                      isDarkMode
-                        ? 'text-[#a0acbb] hover:text-white'
-                        : 'text-gray-500 hover:text-gray-900'
-                    }`}
+                    className={`flex items-center gap-1.5 transition-colors duration-200 focus:outline-none focus:underline ${isDarkMode
+                      ? 'text-[#a0acbb] hover:text-white'
+                      : 'text-gray-500 hover:text-gray-900'
+                      }`}
                     aria-label={`Share poll ${poll.title}`}
                   >
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1027,11 +1012,10 @@ const PollsPage = () => {
                   </button>
                   <button
                     onClick={() => handleCopyPollLink(poll)}
-                    className={`flex items-center gap-1.5 transition-colors duration-200 focus:outline-none focus:underline ${
-                      isDarkMode
-                        ? 'text-[#a0acbb] hover:text-white'
-                        : 'text-gray-500 hover:text-gray-900'
-                    }`}
+                    className={`flex items-center gap-1.5 transition-colors duration-200 focus:outline-none focus:underline ${isDarkMode
+                      ? 'text-[#a0acbb] hover:text-white'
+                      : 'text-gray-500 hover:text-gray-900'
+                      }`}
                     aria-label={`Copy link for poll ${poll.title}`}
                   >
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1045,8 +1029,8 @@ const PollsPage = () => {
                   {poll.status === 'active'
                     ? `Poll ${poll.title} is active.`
                     : poll.status === 'upcoming'
-                    ? `Poll ${poll.title} is upcoming.`
-                    : `Poll ${poll.title} has ended.`}
+                      ? `Poll ${poll.title} is upcoming.`
+                      : `Poll ${poll.title} has ended.`}
                 </div>
               </div>
             );
@@ -1062,10 +1046,9 @@ const PollsPage = () => {
               setShowModal(false);
               setSelectedPoll(null);
             }} />
-            
-            <div className={`relative w-full max-w-5xl rounded-2xl shadow-2xl transition-all transform ${
-              isDarkMode ? 'bg-[#1a1f2e]' : 'bg-white'
-            }`}>
+
+            <div className={`relative w-full max-w-5xl rounded-2xl shadow-2xl transition-all transform ${isDarkMode ? 'bg-[#1a1f2e]' : 'bg-white'
+              }`}>
               {/* Modal Header */}
               <div className={`flex items-center justify-between p-6 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
                 <h2 className={`text-xl font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
@@ -1096,11 +1079,10 @@ const PollsPage = () => {
                       candidates: []
                     });
                   }}
-                  className={`p-2 rounded-lg transition-colors duration-200 ${
-                    isDarkMode
-                      ? 'text-gray-400 hover:text-white hover:bg-white/10'
-                      : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
-                  }`}
+                  className={`p-2 rounded-lg transition-colors duration-200 ${isDarkMode
+                    ? 'text-gray-400 hover:text-white hover:bg-white/10'
+                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
+                    }`}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1113,15 +1095,14 @@ const PollsPage = () => {
                   <button
                     key={tab}
                     type="button"
-                    className={`py-3 px-6 -mb-px font-medium text-sm border-b-2 transition-colors duration-200 focus:outline-none ${
-                      activeTab === tab
-                        ? isDarkMode
-                          ? 'border-blue-500 text-blue-400'
-                          : 'border-blue-600 text-blue-600'
-                        : isDarkMode
+                    className={`py-3 px-6 -mb-px font-medium text-sm border-b-2 transition-colors duration-200 focus:outline-none ${activeTab === tab
+                      ? isDarkMode
+                        ? 'border-blue-500 text-blue-400'
+                        : 'border-blue-600 text-blue-600'
+                      : isDarkMode
                         ? 'border-transparent text-gray-400 hover:text-white'
                         : 'border-transparent text-gray-500 hover:text-gray-900'
-                    }`}
+                      }`}
                     onClick={() => setActiveTab(tab)}
                   >
                     {tab}
@@ -1134,525 +1115,508 @@ const PollsPage = () => {
                 {/* General Tab */}
                 {activeTab === 'General' && (
                   <>
-                {/* Poll Info Section */}
-                <div className={`p-6 rounded-xl border ${isDarkMode ? 'border-[#3f4c5a] bg-[#2c353f]' : 'border-gray-200 bg-white'}`}>
-                  <div className="flex items-center gap-3 mb-6">
-                    <h4 className={`text-lg font-bold tracking-tight flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                      <svg
-                        className={`w-6 h-6 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                        focusable="false"
-                      >
-                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
-                        <path d="M8 12h8M12 8v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                      </svg>
-                      Poll Information
-                    </h4>
-                    <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${
-                        isDarkMode
-                          ? 'bg-blue-900 text-blue-200 border border-blue-700'
-                          : 'bg-blue-50 text-blue-700 border border-blue-200'
-                      }`}
-                      title="This section contains the core details of your poll. Hover over any field for more info."
-                    >
-                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
-                        <path d="M12 16v-4M12 8h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                      </svg>
-                      Info
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-6">
-                    {/* Left Column */}
-                    <div className="space-y-6">
-                      <div>
-                        <h5
-                          className={`text-sm font-medium mb-3 flex items-center gap-2 ${
-                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                          }`}
-                        >
+                    {/* Poll Info Section */}
+                    <div className={`p-6 rounded-xl border ${isDarkMode ? 'border-[#3f4c5a] bg-[#2c353f]' : 'border-gray-200 bg-white'}`}>
+                      <div className="flex items-center gap-3 mb-6">
+                        <h4 className={`text-lg font-bold tracking-tight flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                           <svg
-                            className="w-4 h-4 text-blue-500"
+                            className={`w-6 h-6 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}
                             fill="none"
                             stroke="currentColor"
+                            strokeWidth={2}
                             viewBox="0 0 24 24"
+                            aria-hidden="true"
+                            focusable="false"
                           >
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                            <path d="M8 12h8M12 8v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                          </svg>
+                          Poll Information
+                        </h4>
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${isDarkMode
+                            ? 'bg-blue-900 text-blue-200 border border-blue-700'
+                            : 'bg-blue-50 text-blue-700 border border-blue-200'
+                            }`}
+                          title="This section contains the core details of your poll. Hover over any field for more info."
+                        >
+                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                             <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
                             <path d="M12 16v-4M12 8h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                           </svg>
-                          Basic Information
-                          <span
-                            className={`ml-2 text-xs font-normal italic ${
-                              isDarkMode ? 'text-blue-300' : 'text-blue-500'
-                            }`}
-                          >
-                            (Required fields marked with <span className="text-red-500">*</span>)
-                          </span>
-                        </h5>
-                        <div className="space-y-4">
-                          {/* Title Field with Advanced Features */}
+                          Info
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-6">
+                        {/* Left Column */}
+                        <div className="space-y-6">
                           <div>
-                            <div className="flex items-center justify-between">
-                              <label
-                                htmlFor="poll-title"
-                                className={`block text-sm font-medium mb-2 ${
-                                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                            <h5
+                              className={`text-sm font-medium mb-3 flex items-center gap-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'
                                 }`}
+                            >
+                              <svg
+                                className="w-4 h-4 text-blue-500"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
                               >
-                                Title <span className="text-red-500">*</span>
-                              </label>
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                                <path d="M12 16v-4M12 8h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                              </svg>
+                              Basic Information
                               <span
-                                className={`text-xs ${
-                                  pollForm.title.length > 90
-                                    ? 'text-yellow-500 font-semibold'
-                                    : isDarkMode
-                                    ? 'text-gray-400'
-                                    : 'text-gray-500'
-                                }`}
-                                aria-live="polite"
-                              >
-                                {pollForm.title.length}/100
-                              </span>
-                            </div>
-                            <div className="relative">
-                              <input
-                                id="poll-title"
-                                type="text"
-                                name="title"
-                                value={pollForm.title}
-                                onChange={handlePollFormChange}
-                                placeholder="Enter poll title"
-                                required
-                                maxLength={100}
-                                autoFocus
-                                autoComplete="off"
-                                spellCheck={true}
-                                aria-required="true"
-                                aria-describedby="poll-title-desc"
-                                className={`w-full px-4 py-2.5 rounded-lg border transition-all duration-200 pr-10 ${
-                                  isDarkMode
-                                    ? 'bg-[#1f2937] border-[#3f4c5a] text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                                    : 'bg-white border-gray-300 border border-[1px] text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                                } ${
-                                  pollForm.title.length === 0
-                                    ? 'ring-2 ring-red-400'
-                                    : pollForm.title.length > 90
-                                    ? 'ring-2 ring-yellow-400'
-                                    : ''
-                                }`}
-                              />
-                              {/* Live character count progress bar */}
-                              <div className="absolute bottom-0 left-0 right-0 h-1">
-                                <div
-                                  className={`h-full rounded-b-lg transition-all duration-300 ${
-                                    pollForm.title.length > 90
-                                      ? 'bg-yellow-400'
-                                      : 'bg-blue-400'
+                                className={`ml-2 text-xs font-normal italic ${isDarkMode ? 'text-blue-300' : 'text-blue-500'
                                   }`}
-                                  style={{
-                                    width: `${Math.min(
-                                      (pollForm.title.length / 100) * 100,
-                                      100
-                                    )}%`,
-                                  }}
-                                />
-                              </div>
-                              {/* Tooltip for best practices */}
-                              <div
-                                className="absolute top-2 right-2 group"
-                                tabIndex={0}
-                                aria-label="Title best practices"
                               >
-                                <svg
-                                  className="w-4 h-4 text-blue-400 cursor-pointer"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
-                                  <path
-                                    d="M12 16v-4M12 8h.01"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                  />
-                                </svg>
-                                <div className="absolute z-10 hidden group-hover:block group-focus:block right-0 mt-2 w-64 p-3 rounded-lg shadow-lg bg-white dark:bg-[#222c37] border border-gray-200 dark:border-[#3f4c5a] text-xs text-gray-700 dark:text-gray-200">
-                                  <strong>Tips:</strong>
-                                  <ul className="list-disc ml-4 mt-1">
-                                    <li>Be concise and descriptive</li>
-                                    <li>Use clear language</li>
-                                    <li>Avoid special characters</li>
-                                  </ul>
-                                </div>
-                              </div>
-                            </div>
-                            <p
-                              id="poll-title-desc"
-                              className={`text-xs mt-1 ${
-                                isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                              }`}
-                            >
-                              The poll title will be visible to all voters. Make it clear and engaging.
-                            </p>
-                          </div>
-
-                          {/* Description Field with Markdown Preview */}
-                          <div>
-                            <div className="flex items-center justify-between">
-                              <label
-                                htmlFor="poll-description"
-                                className={`block text-sm font-medium mb-2 ${
-                                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                                }`}
-                              >
-                                Description
-                              </label>
-                              <span
-                                className={`text-xs ${
-                                  pollForm.description.length > 450
-                                    ? 'text-yellow-500 font-semibold'
-                                    : isDarkMode
-                                    ? 'text-gray-400'
-                                    : 'text-gray-500'
-                                }`}
-                                aria-live="polite"
-                              >
-                                {pollForm.description.length}/500
+                                (Required fields marked with <span className="text-red-500">*</span>)
                               </span>
-                            </div>
-                            <div className="relative">
-                              <textarea
-                                id="poll-description"
-                                name="description"
-                                value={pollForm.description}
-                                onChange={handlePollFormChange}
-                                placeholder="Enter poll description (supports Markdown)"
-                                rows={4}
-                                maxLength={500}
-                                autoComplete="off"
-                                spellCheck={true}
-                                aria-describedby="poll-description-desc"
-                                className={`w-full px-4 py-2.5 rounded-lg border transition-all duration-200 resize-none pr-10 ${
-                                  isDarkMode
+                            </h5>
+                            <div className="space-y-4">
+                              {/* Title Field with Advanced Features */}
+                              <div>
+                                <div className="flex items-center justify-between">
+                                  <label
+                                    htmlFor="poll-title"
+                                    className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                                      }`}
+                                  >
+                                    Title <span className="text-red-500">*</span>
+                                  </label>
+                                  <span
+                                    className={`text-xs ${pollForm.title.length > 90
+                                      ? 'text-yellow-500 font-semibold'
+                                      : isDarkMode
+                                        ? 'text-gray-400'
+                                        : 'text-gray-500'
+                                      }`}
+                                    aria-live="polite"
+                                  >
+                                    {pollForm.title.length}/100
+                                  </span>
+                                </div>
+                                <div className="relative">
+                                  <input
+                                    id="poll-title"
+                                    type="text"
+                                    name="title"
+                                    value={pollForm.title}
+                                    onChange={handlePollFormChange}
+                                    placeholder="Enter poll title"
+                                    required
+                                    maxLength={100}
+                                    autoFocus
+                                    autoComplete="off"
+                                    spellCheck={true}
+                                    aria-required="true"
+                                    aria-describedby="poll-title-desc"
+                                    className={`w-full px-4 py-2.5 rounded-lg border transition-all duration-200 pr-10 ${isDarkMode
+                                      ? 'bg-[#1f2937] border-[#3f4c5a] text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                                      : 'bg-white border-gray-300 border border-[1px] text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                                      } ${pollForm.title.length === 0
+                                        ? 'ring-2 ring-red-400'
+                                        : pollForm.title.length > 90
+                                          ? 'ring-2 ring-yellow-400'
+                                          : ''
+                                      }`}
+                                  />
+                                  {/* Live character count progress bar */}
+                                  <div className="absolute bottom-0 left-0 right-0 h-1">
+                                    <div
+                                      className={`h-full rounded-b-lg transition-all duration-300 ${pollForm.title.length > 90
+                                        ? 'bg-yellow-400'
+                                        : 'bg-blue-400'
+                                        }`}
+                                      style={{
+                                        width: `${Math.min(
+                                          (pollForm.title.length / 100) * 100,
+                                          100
+                                        )}%`,
+                                      }}
+                                    />
+                                  </div>
+                                  {/* Tooltip for best practices */}
+                                  <div
+                                    className="absolute top-2 right-2 group"
+                                    tabIndex={0}
+                                    aria-label="Title best practices"
+                                  >
+                                    <svg
+                                      className="w-4 h-4 text-blue-400 cursor-pointer"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                                      <path
+                                        d="M12 16v-4M12 8h.01"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                      />
+                                    </svg>
+                                    <div className="absolute z-10 hidden group-hover:block group-focus:block right-0 mt-2 w-64 p-3 rounded-lg shadow-lg bg-white dark:bg-[#222c37] border border-gray-200 dark:border-[#3f4c5a] text-xs text-gray-700 dark:text-gray-200">
+                                      <strong>Tips:</strong>
+                                      <ul className="list-disc ml-4 mt-1">
+                                        <li>Be concise and descriptive</li>
+                                        <li>Use clear language</li>
+                                        <li>Avoid special characters</li>
+                                      </ul>
+                                    </div>
+                                  </div>
+                                </div>
+                                <p
+                                  id="poll-title-desc"
+                                  className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                                    }`}
+                                >
+                                  The poll title will be visible to all voters. Make it clear and engaging.
+                                </p>
+                              </div>
+
+                              {/* Description Field with Markdown Preview */}
+                              <div>
+                                <div className="flex items-center justify-between">
+                                  <label
+                                    htmlFor="poll-description"
+                                    className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                                      }`}
+                                  >
+                                    Description
+                                  </label>
+                                  <span
+                                    className={`text-xs ${pollForm.description.length > 450
+                                      ? 'text-yellow-500 font-semibold'
+                                      : isDarkMode
+                                        ? 'text-gray-400'
+                                        : 'text-gray-500'
+                                      }`}
+                                    aria-live="polite"
+                                  >
+                                    {pollForm.description.length}/500
+                                  </span>
+                                </div>
+                                <div className="relative">
+                                  <textarea
+                                    id="poll-description"
+                                    name="description"
+                                    value={pollForm.description}
+                                    onChange={handlePollFormChange}
+                                    placeholder="Enter poll description (supports Markdown)"
+                                    rows={4}
+                                    maxLength={500}
+                                    autoComplete="off"
+                                    spellCheck={true}
+                                    aria-describedby="poll-description-desc"
+                                    className={`w-full px-4 py-2.5 rounded-lg border transition-all duration-200 resize-none pr-10 ${isDarkMode
+                                      ? 'bg-[#1f2937] border-[#3f4c5a] text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                                      : 'bg-white border-gray-300 border border-[1px] text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                                      } ${pollForm.description.length > 450
+                                        ? 'ring-2 ring-yellow-400'
+                                        : ''
+                                      }`}
+                                  />
+                                  {/* Markdown Preview Toggle */}
+                                  <button
+                                    type="button"
+                                    tabIndex={0}
+                                    aria-label="Toggle Markdown Preview"
+                                    className={`absolute top-2 right-2 p-1 rounded transition-colors duration-200 ${isDarkMode
+                                      ? 'text-blue-300 hover:bg-blue-900/20'
+                                      : 'text-blue-500 hover:bg-blue-100'
+                                      }`}
+                                    onClick={() =>
+                                      setShowDescriptionPreview((prev) => !prev)
+                                    }
+                                  >
+                                    <svg
+                                      className="w-4 h-4"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M15 12h.01M12 12h.01M9 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                                      />
+                                    </svg>
+                                  </button>
+                                </div>
+                                <p
+                                  id="poll-description-desc"
+                                  className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                                    }`}
+                                >
+                                  Optional. You can use <span className="font-semibold">Markdown</span> for formatting.
+                                </p>
+                                {/* Live Markdown Preview */}
+                                {showDescriptionPreview && pollForm.description && (
+                                  <div
+                                    className={`mt-2 p-3 rounded-lg border text-sm shadow-inner ${isDarkMode
+                                      ? 'bg-[#232b36] border-[#3f4c5a] text-gray-200'
+                                      : 'bg-gray-50 border-gray-200 text-gray-800'
+                                      }`}
+                                  >
+                                    <span className="block font-semibold mb-1 text-blue-500">
+                                      Preview:
+                                    </span>
+                                    <div
+                                      className="prose prose-sm max-w-none dark:prose-invert"
+                                      dangerouslySetInnerHTML={{
+                                        __html: renderMarkdown(pollForm.description),
+                                      }}
+                                    />
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Category Dropdown Field */}
+                              <div>
+                                <label
+                                  htmlFor="poll-category"
+                                  className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}
+                                >
+                                  Category <span className="text-red-500">*</span>
+                                </label>
+                                <select
+                                  id="poll-category"
+                                  name="category"
+                                  value={pollForm.category}
+                                  onChange={handlePollFormChange}
+                                  required
+                                  className={`w-full px-4 py-2.5 rounded-lg border transition-all duration-200 ${isDarkMode
                                     ? 'bg-[#1f2937] border-[#3f4c5a] text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                                    : 'bg-white border-gray-300 border border-[1px] text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                                } ${
-                                  pollForm.description.length > 450
-                                    ? 'ring-2 ring-yellow-400'
-                                    : ''
-                                }`}
-                              />
-                              {/* Markdown Preview Toggle */}
-                              <button
-                                type="button"
-                                tabIndex={0}
-                                aria-label="Toggle Markdown Preview"
-                                className={`absolute top-2 right-2 p-1 rounded transition-colors duration-200 ${
-                                  isDarkMode
-                                    ? 'text-blue-300 hover:bg-blue-900/20'
-                                    : 'text-blue-500 hover:bg-blue-100'
-                                }`}
-                                onClick={() =>
-                                  setShowDescriptionPreview((prev) => !prev)
-                                }
-                              >
-                                <svg
-                                  className="w-4 h-4"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
+                                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                                    }`}
                                 >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M15 12h.01M12 12h.01M9 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                                  />
-                                </svg>
-                              </button>
+                                  <option value="">Select category</option>
+                                  <option value="General">General</option>
+                                  <option value="Election">Election</option>
+                                  <option value="Survey">Survey</option>
+                                  <option value="Feedback">Feedback</option>
+                                  <option value="Other">Other</option>
+                                </select>
+                                <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                  Choose a category for this poll.
+                                </p>
+                              </div>
                             </div>
-                            <p
-                              id="poll-description-desc"
-                              className={`text-xs mt-1 ${
-                                isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                              }`}
-                            >
-                              Optional. You can use <span className="font-semibold">Markdown</span> for formatting.
-                            </p>
-                            {/* Live Markdown Preview */}
-                            {showDescriptionPreview && pollForm.description && (
-                              <div
-                                className={`mt-2 p-3 rounded-lg border text-sm shadow-inner ${
-                                  isDarkMode
-                                    ? 'bg-[#232b36] border-[#3f4c5a] text-gray-200'
-                                    : 'bg-gray-50 border-gray-200 text-gray-800'
-                                }`}
-                              >
-                                <span className="block font-semibold mb-1 text-blue-500">
-                                  Preview:
-                                </span>
-                                <div
-                                  className="prose prose-sm max-w-none dark:prose-invert"
-                                  dangerouslySetInnerHTML={{
-                                    __html: renderMarkdown(pollForm.description),
-                                  }}
+                          </div>
+
+                          <div>
+                            <h5 className={`text-sm font-medium mb-3 flex items-center gap-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                              <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              Date & Time Range
+                              <span className="ml-2 text-xs font-normal text-blue-400 italic">
+                                (Set when voting opens and closes)
+                              </span>
+                            </h5>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className={`block text-sm font-medium mb-2 flex items-center gap-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                                  <span>Start Date</span>
+                                  <span className="text-red-500">*</span>
+                                  <span className="ml-1 text-xs text-gray-400">
+                                    (UTC)
+                                  </span>
+                                </label>
+                                <input
+                                  type="datetime-local"
+                                  name="startDate"
+                                  value={toDatetimeLocal(pollForm.startDate)}
+                                  onChange={handlePollFormChange}
+                                  min={new Date().toISOString().slice(0, 16)}
+                                  required
+                                  aria-label="Poll Start Date"
+                                  aria-describedby="start-date-desc"
+                                  className={`w-full px-4 py-2.5 rounded-lg border transition-all duration-200 focus:outline-none focus:ring-2 ${isDarkMode
+                                    ? 'bg-[#1f2937] border-[#3f4c5a] text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500'
+                                    : 'bg-white border-gray-300 border border-[1px] text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500'
+                                    }`}
                                 />
+                                <div id="start-date-desc" className={`text-xs mt-1 flex items-center gap-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                  <svg className="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10" strokeWidth="2" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6l4 2" />
+                                  </svg>
+                                  Voting opens at this date and time.
+                                </div>
+                              </div>
+                              <div>
+                                <label className={`block text-sm font-medium mb-2 flex items-center gap-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                                  <span>End Date</span>
+                                  <span className="text-red-500">*</span>
+                                  <span className="ml-1 text-xs text-gray-400">
+                                    (UTC)
+                                  </span>
+                                </label>
+                                <input
+                                  type="datetime-local"
+                                  name="endDate"
+                                  value={toDatetimeLocal(pollForm.endDate)}
+                                  onChange={handlePollFormChange}
+                                  min={pollForm.startDate ? toDatetimeLocal(pollForm.startDate) : new Date().toISOString().slice(0, 16)}
+                                  required
+                                  aria-label="Poll End Date"
+                                  aria-describedby="end-date-desc"
+                                  className={`w-full px-4 py-2.5 rounded-lg border transition-all duration-200 focus:outline-none focus:ring-2 ${isDarkMode
+                                    ? 'bg-[#1f2937] border-[#3f4c5a] text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500'
+                                    : 'bg-white border-gray-300 border border-[1px] text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500'
+                                    }`}
+                                />
+                                <div id="end-date-desc" className={`text-xs mt-1 flex items-center gap-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                  <svg className="w-3 h-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10" strokeWidth="2" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6l4 2" />
+                                  </svg>
+                                  Voting closes at this date and time.
+                                </div>
+                              </div>
+                            </div>
+                            {/* Advanced: Show live countdowns if dates are set */}
+                            {(pollForm.startDate || pollForm.endDate) && (
+                              <div className="mt-4 flex flex-col gap-2">
+                                {pollForm.startDate && (
+                                  <div className={`flex items-center gap-2 text-xs ${isDarkMode ? 'text-blue-300' : 'text-blue-700'}`}>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3" />
+                                      <circle cx="12" cy="12" r="10" strokeWidth="2" />
+                                    </svg>
+                                    <span>
+                                      {new Date(pollForm.startDate) > new Date()
+                                        ? `Opens in ${getTimeDiffString(new Date(), new Date(pollForm.startDate))}`
+                                        : 'Voting is open'}
+                                    </span>
+                                  </div>
+                                )}
+                                {pollForm.endDate && (
+                                  <div className={`flex items-center gap-2 text-xs ${isDarkMode ? 'text-red-300' : 'text-red-700'}`}>
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3" />
+                                      <circle cx="12" cy="12" r="10" strokeWidth="2" />
+                                    </svg>
+                                    <span>
+                                      {new Date(pollForm.endDate) > new Date()
+                                        ? `Closes in ${getTimeDiffString(new Date(), new Date(pollForm.endDate))}`
+                                        : 'Voting is closed'}
+                                    </span>
+                                  </div>
+                                )}
                               </div>
                             )}
-                          </div>
-
-                          {/* Category Dropdown Field */}
-                          <div>
-                            <label
-                              htmlFor="poll-category"
-                              className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}
-                            >
-                              Category <span className="text-red-500">*</span>
-                            </label>
-                            <select
-                              id="poll-category"
-                              name="category"
-                              value={pollForm.category}
-                              onChange={handlePollFormChange}
-                              required
-                              className={`w-full px-4 py-2.5 rounded-lg border transition-all duration-200 ${
-                                isDarkMode
-                                  ? 'bg-[#1f2937] border-[#3f4c5a] text-white placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                              }`}
-                            >
-                              <option value="">Select category</option>
-                              <option value="General">General</option>
-                              <option value="Election">Election</option>
-                              <option value="Survey">Survey</option>
-                              <option value="Feedback">Feedback</option>
-                              <option value="Other">Other</option>
-                            </select>
-                            <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                              Choose a category for this poll.
-                            </p>
+                            {/* Advanced: Validation feedback */}
+                            {(pollForm.startDate && pollForm.endDate && new Date(pollForm.endDate) <= new Date(pollForm.startDate)) && (
+                              <div className="mt-2 text-xs text-red-500 font-medium flex items-center gap-2">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                End date must be after start date.
+                              </div>
+                            )}
                           </div>
                         </div>
-                      </div>
 
-                      <div>
-                        <h5 className={`text-sm font-medium mb-3 flex items-center gap-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                          <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          Date & Time Range
-                          <span className="ml-2 text-xs font-normal text-blue-400 italic">
-                            (Set when voting opens and closes)
-                          </span>
-                        </h5>
-                        <div className="grid grid-cols-2 gap-4">
+                        {/* Right Column */}
+                        <div className="space-y-6">
                           <div>
-                            <label className={`block text-sm font-medium mb-2 flex items-center gap-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                              <span>Start Date</span>
-                              <span className="text-red-500">*</span>
-                              <span className="ml-1 text-xs text-gray-400">
-                                (UTC)
+                            <h5 className={`text-sm font-medium mb-3 flex items-center gap-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                              Poll Features
+                              <span className={`ml-2 px-2 py-0.5 rounded text-xs font-semibold ${isDarkMode ? 'bg-blue-900 text-blue-200 border border-blue-700' : 'bg-blue-50 text-blue-700 border border-blue-200'}`}>
+                                <svg className="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                                  <path d="M12 16v-4M12 8h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                </svg>
+                                Advanced
                               </span>
-                            </label>
-                            <input
-                              type="datetime-local"
-                              name="startDate"
-                              value={toDatetimeLocal(pollForm.startDate)}
-                              onChange={handlePollFormChange}
-                              min={new Date().toISOString().slice(0, 16)}
-                              required
-                              aria-label="Poll Start Date"
-                              aria-describedby="start-date-desc"
-                              className={`w-full px-4 py-2.5 rounded-lg border transition-all duration-200 focus:outline-none focus:ring-2 ${
-                                isDarkMode
-                                  ? 'bg-[#1f2937] border-[#3f4c5a] text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500'
-                                  : 'bg-white border-gray-300 border border-[1px] text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500'
-                              }`}
-                            />
-                            <div id="start-date-desc" className={`text-xs mt-1 flex items-center gap-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                              <svg className="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <circle cx="12" cy="12" r="10" strokeWidth="2" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6l4 2" />
-                              </svg>
-                              Voting opens at this date and time.
-                            </div>
-                          </div>
-                          <div>
-                            <label className={`block text-sm font-medium mb-2 flex items-center gap-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                              <span>End Date</span>
-                              <span className="text-red-500">*</span>
-                              <span className="ml-1 text-xs text-gray-400">
-                                (UTC)
-                              </span>
-                            </label>
-                            <input
-                              type="datetime-local"
-                              name="endDate"
-                              value={toDatetimeLocal(pollForm.endDate)}
-                              onChange={handlePollFormChange}
-                              min={pollForm.startDate ? toDatetimeLocal(pollForm.startDate) : new Date().toISOString().slice(0, 16)}
-                              required
-                              aria-label="Poll End Date"
-                              aria-describedby="end-date-desc"
-                              className={`w-full px-4 py-2.5 rounded-lg border transition-all duration-200 focus:outline-none focus:ring-2 ${
-                                isDarkMode
-                                  ? 'bg-[#1f2937] border-[#3f4c5a] text-white placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500'
-                                  : 'bg-white border-gray-300 border border-[1px] text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500'
-                              }`}
-                            />
-                            <div id="end-date-desc" className={`text-xs mt-1 flex items-center gap-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                              <svg className="w-3 h-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <circle cx="12" cy="12" r="10" strokeWidth="2" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6l4 2" />
-                              </svg>
-                              Voting closes at this date and time.
-                            </div>
-                          </div>
-                        </div>
-                        {/* Advanced: Show live countdowns if dates are set */}
-                        {(pollForm.startDate || pollForm.endDate) && (
-                          <div className="mt-4 flex flex-col gap-2">
-                            {pollForm.startDate && (
-                              <div className={`flex items-center gap-2 text-xs ${isDarkMode ? 'text-blue-300' : 'text-blue-700'}`}>
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3" />
-                                  <circle cx="12" cy="12" r="10" strokeWidth="2" />
-                                </svg>
-                                <span>
-                                  {new Date(pollForm.startDate) > new Date()
-                                    ? `Opens in ${getTimeDiffString(new Date(), new Date(pollForm.startDate))}`
-                                    : 'Voting is open'}
-                                </span>
-                              </div>
-                            )}
-                            {pollForm.endDate && (
-                              <div className={`flex items-center gap-2 text-xs ${isDarkMode ? 'text-red-300' : 'text-red-700'}`}>
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3" />
-                                  <circle cx="12" cy="12" r="10" strokeWidth="2" />
-                                </svg>
-                                <span>
-                                  {new Date(pollForm.endDate) > new Date()
-                                    ? `Closes in ${getTimeDiffString(new Date(), new Date(pollForm.endDate))}`
-                                    : 'Voting is closed'}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        {/* Advanced: Validation feedback */}
-                        {(pollForm.startDate && pollForm.endDate && new Date(pollForm.endDate) <= new Date(pollForm.startDate)) && (
-                          <div className="mt-2 text-xs text-red-500 font-medium flex items-center gap-2">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            End date must be after start date.
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Right Column */}
-                    <div className="space-y-6">
-                      <div>
-                        <h5 className={`text-sm font-medium mb-3 flex items-center gap-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                          Poll Features
-                          <span className={`ml-2 px-2 py-0.5 rounded text-xs font-semibold ${isDarkMode ? 'bg-blue-900 text-blue-200 border border-blue-700' : 'bg-blue-50 text-blue-700 border border-blue-200'}`}>
-                            <svg className="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
-                              <path d="M12 16v-4M12 8h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                            </svg>
-                            Advanced
-                          </span>
-                        </h5>
-                        <div className="space-y-4">
-                          {/* Real-time Results */}
-                          <div className={`relative group p-4 rounded-lg border shadow-sm transition-all duration-200 ${isDarkMode ? 'border-[#3f4c5a] bg-gradient-to-br from-[#1f2937] to-[#232b36]' : 'border-gray-200 bg-gradient-to-br from-gray-50 to-white'}`}>
-                            <div className="flex items-center gap-3">
-                              <div className={`p-2 rounded-lg shadow ${isDarkMode ? 'bg-blue-500/10' : 'bg-blue-50'}`}>
-                                <svg className={`w-5 h-5 animate-pulse ${isDarkMode ? 'text-blue-400' : 'text-blue-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                              </div>
-                              <div>
-                                <h6 className={`text-sm font-semibold flex items-center gap-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                                  Real-time Results
-                                  <span className="ml-1 inline-block px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 text-[10px] font-bold tracking-wide">LIVE</span>
-                                </h6>
-                                <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                                  Instantly see voting results update as votes are cast.
-                                </p>
-                                <div className="hidden group-hover:block absolute top-2 right-2 z-10">
-                                  <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded shadow-lg">WebSocket-powered</span>
+                            </h5>
+                            <div className="space-y-4">
+                              {/* Real-time Results */}
+                              <div className={`relative group p-4 rounded-lg border shadow-sm transition-all duration-200 ${isDarkMode ? 'border-[#3f4c5a] bg-gradient-to-br from-[#1f2937] to-[#232b36]' : 'border-gray-200 bg-gradient-to-br from-gray-50 to-white'}`}>
+                                <div className="flex items-center gap-3">
+                                  <div className={`p-2 rounded-lg shadow ${isDarkMode ? 'bg-blue-500/10' : 'bg-blue-50'}`}>
+                                    <svg className={`w-5 h-5 animate-pulse ${isDarkMode ? 'text-blue-400' : 'text-blue-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                  </div>
+                                  <div>
+                                    <h6 className={`text-sm font-semibold flex items-center gap-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                      Real-time Results
+                                      <span className="ml-1 inline-block px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 text-[10px] font-bold tracking-wide">LIVE</span>
+                                    </h6>
+                                    <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                      Instantly see voting results update as votes are cast.
+                                    </p>
+                                    <div className="hidden group-hover:block absolute top-2 right-2 z-10">
+                                      <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded shadow-lg">WebSocket-powered</span>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </div>
-                          {/* Time Limit */}
-                          <div className={`relative group p-4 rounded-lg border shadow-sm transition-all duration-200 ${isDarkMode ? 'border-[#3f4c5a] bg-gradient-to-br from-[#1f2937] to-[#233a2c]' : 'border-gray-200 bg-gradient-to-br from-gray-50 to-green-50'}`}>
-                            <div className="flex items-center gap-3">
-                              <div className={`p-2 rounded-lg shadow ${isDarkMode ? 'bg-green-500/10' : 'bg-green-50'}`}>
-                                <svg className={`w-5 h-5 ${isDarkMode ? 'text-green-400' : 'text-green-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                              </div>
-                              <div>
-                                <h6 className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                                  Time Limit & Countdown
-                                </h6>
-                                <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                                  Poll automatically ends at the specified time. Live countdown shown to users.
-                                </p>
-                                <div className="hidden group-hover:block absolute top-2 right-2 z-10">
-                                  <span className="text-xs bg-green-600 text-white px-2 py-1 rounded shadow-lg">Auto-close & Timer</span>
+                              {/* Time Limit */}
+                              <div className={`relative group p-4 rounded-lg border shadow-sm transition-all duration-200 ${isDarkMode ? 'border-[#3f4c5a] bg-gradient-to-br from-[#1f2937] to-[#233a2c]' : 'border-gray-200 bg-gradient-to-br from-gray-50 to-green-50'}`}>
+                                <div className="flex items-center gap-3">
+                                  <div className={`p-2 rounded-lg shadow ${isDarkMode ? 'bg-green-500/10' : 'bg-green-50'}`}>
+                                    <svg className={`w-5 h-5 ${isDarkMode ? 'text-green-400' : 'text-green-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                  </div>
+                                  <div>
+                                    <h6 className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                      Time Limit & Countdown
+                                    </h6>
+                                    <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                      Poll automatically ends at the specified time. Live countdown shown to users.
+                                    </p>
+                                    <div className="hidden group-hover:block absolute top-2 right-2 z-10">
+                                      <span className="text-xs bg-green-600 text-white px-2 py-1 rounded shadow-lg">Auto-close & Timer</span>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </div>
-                          {/* Voter Management */}
-                          <div className={`relative group p-4 rounded-lg border shadow-sm transition-all duration-200 ${isDarkMode ? 'border-[#3f4c5a] bg-gradient-to-br from-[#1f2937] to-[#2a2340]' : 'border-gray-200 bg-gradient-to-br from-gray-50 to-purple-50'}`}>
-                            <div className="flex items-center gap-3">
-                              <div className={`p-2 rounded-lg shadow ${isDarkMode ? 'bg-purple-500/10' : 'bg-purple-50'}`}>
-                                <svg className={`w-5 h-5 ${isDarkMode ? 'text-purple-400' : 'text-purple-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                </svg>
-                              </div>
-                              <div>
-                                <h6 className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                                  Voter Management & Analytics
-                                </h6>
-                                <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                                  Track voter participation, prevent duplicate votes, and view detailed analytics.
-                                </p>
-                                <div className="hidden group-hover:block absolute top-2 right-2 z-10">
-                                  <span className="text-xs bg-purple-700 text-white px-2 py-1 rounded shadow-lg">Anti-fraud & Stats</span>
+                              {/* Voter Management */}
+                              <div className={`relative group p-4 rounded-lg border shadow-sm transition-all duration-200 ${isDarkMode ? 'border-[#3f4c5a] bg-gradient-to-br from-[#1f2937] to-[#2a2340]' : 'border-gray-200 bg-gradient-to-br from-gray-50 to-purple-50'}`}>
+                                <div className="flex items-center gap-3">
+                                  <div className={`p-2 rounded-lg shadow ${isDarkMode ? 'bg-purple-500/10' : 'bg-purple-50'}`}>
+                                    <svg className={`w-5 h-5 ${isDarkMode ? 'text-purple-400' : 'text-purple-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                    </svg>
+                                  </div>
+                                  <div>
+                                    <h6 className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                      Voter Management & Analytics
+                                    </h6>
+                                    <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                      Track voter participation, prevent duplicate votes, and view detailed analytics.
+                                    </p>
+                                    <div className="hidden group-hover:block absolute top-2 right-2 z-10">
+                                      <span className="text-xs bg-purple-700 text-white px-2 py-1 rounded shadow-lg">Anti-fraud & Stats</span>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </div>
-                          {/* Comments & Feedback */}
-                          <div className={`relative group p-4 rounded-lg border shadow-sm transition-all duration-200 ${isDarkMode ? 'border-[#3f4c5a] bg-gradient-to-br from-[#1f2937] to-[#3a2a1f]' : 'border-gray-200 bg-gradient-to-br from-gray-50 to-yellow-50'}`}>
-                            <div className="flex items-center gap-3">
-                              <div className={`p-2 rounded-lg shadow ${isDarkMode ? 'bg-yellow-500/10' : 'bg-yellow-50'}`}>
-                                <svg className={`w-5 h-5 ${isDarkMode ? 'text-yellow-400' : 'text-yellow-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                </svg>
-                              </div>
-                              <div>
-                                <h6 className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                                  Comments & Feedback
-                                </h6>
-                                <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                                  Allow voters to share their thoughts, suggestions, and reactions in real time.
-                                </p>
-                                <div className="hidden group-hover:block absolute top-2 right-2 z-10">
-                                  <span className="text-xs bg-yellow-600 text-white px-2 py-1 rounded shadow-lg">Live Discussion</span>
+                              {/* Comments & Feedback */}
+                              <div className={`relative group p-4 rounded-lg border shadow-sm transition-all duration-200 ${isDarkMode ? 'border-[#3f4c5a] bg-gradient-to-br from-[#1f2937] to-[#3a2a1f]' : 'border-gray-200 bg-gradient-to-br from-gray-50 to-yellow-50'}`}>
+                                <div className="flex items-center gap-3">
+                                  <div className={`p-2 rounded-lg shadow ${isDarkMode ? 'bg-yellow-500/10' : 'bg-yellow-50'}`}>
+                                    <svg className={`w-5 h-5 ${isDarkMode ? 'text-yellow-400' : 'text-yellow-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                    </svg>
+                                  </div>
+                                  <div>
+                                    <h6 className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                      Comments & Feedback
+                                    </h6>
+                                    <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                      Allow voters to share their thoughts, suggestions, and reactions in real time.
+                                    </p>
+                                    <div className="hidden group-hover:block absolute top-2 right-2 z-10">
+                                      <span className="text-xs bg-yellow-600 text-white px-2 py-1 rounded shadow-lg">Live Discussion</span>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -1660,8 +1624,6 @@ const PollsPage = () => {
                         </div>
                       </div>
                     </div>
-                  </div>
-                </div>
                   </>
                 )}
                 {/* Candidates Tab */}
@@ -1719,11 +1681,10 @@ const PollsPage = () => {
                               <button
                                 type="button"
                                 onClick={addCandidate}
-                                className={`px-4 py-2 rounded-lg text-sm font-semibold shadow transition-all duration-200 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-400 ${
-                                  isDarkMode
-                                    ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                                    : 'bg-blue-600 hover:bg-blue-700 text-white'
-                                }`}
+                                className={`px-4 py-2 rounded-lg text-sm font-semibold shadow transition-all duration-200 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-400 ${isDarkMode
+                                  ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+                                  }`}
                                 aria-label="Add Candidate"
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1759,11 +1720,10 @@ const PollsPage = () => {
                                     showNotification('No candidates to export.', 'warning');
                                   }
                                 }}
-                                className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-200 flex items-center gap-1 border border-blue-400/30 hover:bg-blue-100 dark:hover:bg-blue-900 ${
-                                  isDarkMode
-                                    ? 'bg-transparent text-blue-200'
-                                    : 'bg-white text-blue-700'
-                                }`}
+                                className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-200 flex items-center gap-1 border border-blue-400/30 hover:bg-blue-100 dark:hover:bg-blue-900 ${isDarkMode
+                                  ? 'bg-transparent text-blue-200'
+                                  : 'bg-white text-blue-700'
+                                  }`}
                                 aria-label="Export Candidates"
                                 title="Export candidates as CSV"
                               >
@@ -1778,11 +1738,10 @@ const PollsPage = () => {
                                   setAnalyticsCandidate(candidate);
                                   setAnalyticsModalOpen(true);
                                 }}
-                                className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-200 flex items-center gap-1 border border-purple-400/30 hover:bg-purple-100 dark:hover:bg-purple-900 ${
-                                  isDarkMode
-                                    ? 'bg-transparent text-purple-200'
-                                    : 'bg-white text-purple-700'
-                                }`}
+                                className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-200 flex items-center gap-1 border border-purple-400/30 hover:bg-purple-100 dark:hover:bg-purple-900 ${isDarkMode
+                                  ? 'bg-transparent text-purple-200'
+                                  : 'bg-white text-purple-700'
+                                  }`}
                                 aria-label="Candidate Analytics"
                                 title="Show candidate analytics"
                               >
@@ -1807,11 +1766,10 @@ const PollsPage = () => {
                                   image: null
                                 });
                               }}
-                              className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-200 flex items-center gap-1 border border-gray-400/30 hover:bg-gray-100 dark:hover:bg-gray-800 ${
-                                isDarkMode
-                                  ? 'bg-transparent text-gray-200'
-                                  : 'bg-white text-gray-700'
-                              }`}
+                              className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-200 flex items-center gap-1 border border-gray-400/30 hover:bg-gray-100 dark:hover:bg-gray-800 ${isDarkMode
+                                ? 'bg-transparent text-gray-200'
+                                : 'bg-white text-gray-700'
+                                }`}
                               aria-label="Cancel Edit"
                               title="Cancel editing candidate"
                             >
@@ -1826,18 +1784,16 @@ const PollsPage = () => {
 
                       {/* Ultra-Advanced Candidate Form */}
                       <section
-                        className={`p-8 rounded-2xl border mb-8 relative overflow-visible ${
-                          isDarkMode
-                            ? 'border-[#3f4c5a] bg-gradient-to-br from-[#232b34] via-[#2c353f] to-[#1a2027]'
-                            : 'border-gray-200 bg-gradient-to-br from-white via-gray-50 to-gray-100'
-                        }`}
+                        className={`p-8 rounded-2xl border mb-8 relative overflow-visible ${isDarkMode
+                          ? 'border-[#3f4c5a] bg-gradient-to-br from-[#232b34] via-[#2c353f] to-[#1a2027]'
+                          : 'border-gray-200 bg-gradient-to-br from-white via-gray-50 to-gray-100'
+                          }`}
                         aria-labelledby="candidate-form-title"
                       >
                         <h5
                           id="candidate-form-title"
-                          className={`text-lg font-bold mb-6 flex items-center gap-2 ${
-                            isDarkMode ? 'text-white' : 'text-gray-900'
-                          }`}
+                          className={`text-lg font-bold mb-6 flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-gray-900'
+                            }`}
                         >
                           <svg
                             className="w-6 h-6 text-blue-500"
@@ -1860,9 +1816,8 @@ const PollsPage = () => {
                             <div>
                               <label
                                 htmlFor="candidate-name"
-                                className={`block text-sm font-semibold mb-2 tracking-wide ${
-                                  isDarkMode ? 'text-gray-200' : 'text-gray-700'
-                                }`}
+                                className={`block text-sm font-semibold mb-2 tracking-wide ${isDarkMode ? 'text-gray-200' : 'text-gray-700'
+                                  }`}
                               >
                                 Name <span className="text-red-500">*</span>
                               </label>
@@ -1877,11 +1832,10 @@ const PollsPage = () => {
                                 maxLength={100}
                                 autoFocus
                                 autoCapitalize="words"
-                                className={`w-full px-4 py-3 rounded-lg border text-base transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 ${
-                                  isDarkMode
-                                    ? 'bg-[#1f2937] border-[#3f4c5a] text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400'
-                                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-200'
-                                }`}
+                                className={`w-full px-4 py-3 rounded-lg border text-base transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 ${isDarkMode
+                                  ? 'bg-[#1f2937] border-[#3f4c5a] text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400'
+                                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-200'
+                                  }`}
                                 aria-required="true"
                                 aria-label="Candidate Name"
                               />
@@ -1890,9 +1844,8 @@ const PollsPage = () => {
                             <div>
                               <label
                                 htmlFor="candidate-party"
-                                className={`block text-sm font-semibold mb-2 tracking-wide ${
-                                  isDarkMode ? 'text-gray-200' : 'text-gray-700'
-                                }`}
+                                className={`block text-sm font-semibold mb-2 tracking-wide ${isDarkMode ? 'text-gray-200' : 'text-gray-700'
+                                  }`}
                               >
                                 Party/Affiliation
                               </label>
@@ -1904,11 +1857,10 @@ const PollsPage = () => {
                                 onChange={handleCandidateFormChange}
                                 placeholder="Enter party or affiliation"
                                 maxLength={100}
-                                className={`w-full px-4 py-3 rounded-lg border text-base transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 ${
-                                  isDarkMode
-                                    ? 'bg-[#1f2937] border-[#3f4c5a] text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400'
-                                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-200'
-                                }`}
+                                className={`w-full px-4 py-3 rounded-lg border text-base transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 ${isDarkMode
+                                  ? 'bg-[#1f2937] border-[#3f4c5a] text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400'
+                                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-200'
+                                  }`}
                                 aria-label="Party or Affiliation"
                               />
                             </div>
@@ -1917,9 +1869,8 @@ const PollsPage = () => {
                           <div>
                             <label
                               htmlFor="candidate-description"
-                              className={`block text-sm font-semibold mb-2 tracking-wide ${
-                                isDarkMode ? 'text-gray-200' : 'text-gray-700'
-                              }`}
+                              className={`block text-sm font-semibold mb-2 tracking-wide ${isDarkMode ? 'text-gray-200' : 'text-gray-700'
+                                }`}
                             >
                               Description
                             </label>
@@ -1931,11 +1882,10 @@ const PollsPage = () => {
                               placeholder="Enter candidate description (max 500 chars)"
                               rows={3}
                               maxLength={500}
-                              className={`w-full px-4 py-3 rounded-lg border text-base transition-all duration-200 resize-vertical shadow-sm focus:outline-none focus:ring-2 ${
-                                isDarkMode
-                                  ? 'bg-[#1f2937] border-[#3f4c5a] text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400'
-                                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-200'
-                              }`}
+                              className={`w-full px-4 py-3 rounded-lg border text-base transition-all duration-200 resize-vertical shadow-sm focus:outline-none focus:ring-2 ${isDarkMode
+                                ? 'bg-[#1f2937] border-[#3f4c5a] text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400'
+                                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-200'
+                                }`}
                               aria-label="Candidate Description"
                             />
                             <div className="text-xs text-right mt-1 opacity-60">
@@ -1947,9 +1897,8 @@ const PollsPage = () => {
                             <div>
                               <label
                                 htmlFor="candidate-website"
-                                className={`block text-sm font-semibold mb-2 tracking-wide ${
-                                  isDarkMode ? 'text-gray-200' : 'text-gray-700'
-                                }`}
+                                className={`block text-sm font-semibold mb-2 tracking-wide ${isDarkMode ? 'text-gray-200' : 'text-gray-700'
+                                  }`}
                               >
                                 Website
                               </label>
@@ -1962,20 +1911,18 @@ const PollsPage = () => {
                                 placeholder="https://example.com"
                                 pattern="https?://.*"
                                 maxLength={200}
-                                className={`w-full px-4 py-3 rounded-lg border text-base transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 ${
-                                  isDarkMode
-                                    ? 'bg-[#1f2937] border-[#3f4c5a] text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400'
-                                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-200'
-                                }`}
+                                className={`w-full px-4 py-3 rounded-lg border text-base transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 ${isDarkMode
+                                  ? 'bg-[#1f2937] border-[#3f4c5a] text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400'
+                                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-200'
+                                  }`}
                                 aria-label="Candidate Website"
                               />
                             </div>
                             {/* Social Media */}
                             <div>
                               <label
-                                className={`block text-sm font-semibold mb-2 tracking-wide ${
-                                  isDarkMode ? 'text-gray-200' : 'text-gray-700'
-                                }`}
+                                className={`block text-sm font-semibold mb-2 tracking-wide ${isDarkMode ? 'text-gray-200' : 'text-gray-700'
+                                  }`}
                               >
                                 Social Media
                               </label>
@@ -1993,11 +1940,10 @@ const PollsPage = () => {
                                     onChange={handleCandidateFormChange}
                                     placeholder="Twitter handle"
                                     maxLength={50}
-                                    className={`pl-9 pr-4 py-3 rounded-lg border text-base transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 w-full ${
-                                      isDarkMode
-                                        ? 'bg-[#1f2937] border-[#3f4c5a] text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400'
-                                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-200'
-                                    }`}
+                                    className={`pl-9 pr-4 py-3 rounded-lg border text-base transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 w-full ${isDarkMode
+                                      ? 'bg-[#1f2937] border-[#3f4c5a] text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400'
+                                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-200'
+                                      }`}
                                     aria-label="Twitter Handle"
                                   />
                                 </div>
@@ -2014,11 +1960,10 @@ const PollsPage = () => {
                                     onChange={handleCandidateFormChange}
                                     placeholder="Instagram handle"
                                     maxLength={50}
-                                    className={`pl-9 pr-4 py-3 rounded-lg border text-base transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 w-full ${
-                                      isDarkMode
-                                        ? 'bg-[#1f2937] border-[#3f4c5a] text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400'
-                                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-200'
-                                    }`}
+                                    className={`pl-9 pr-4 py-3 rounded-lg border text-base transition-all duration-200 shadow-sm focus:outline-none focus:ring-2 w-full ${isDarkMode
+                                      ? 'bg-[#1f2937] border-[#3f4c5a] text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400'
+                                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-200'
+                                      }`}
                                     aria-label="Instagram Handle"
                                   />
                                 </div>
@@ -2029,25 +1974,22 @@ const PollsPage = () => {
                           <div>
                             <label
                               htmlFor="candidate-image"
-                              className={`block text-sm font-semibold mb-2 tracking-wide ${
-                                isDarkMode ? 'text-gray-200' : 'text-gray-700'
-                              }`}
+                              className={`block text-sm font-semibold mb-2 tracking-wide ${isDarkMode ? 'text-gray-200' : 'text-gray-700'
+                                }`}
                             >
                               Profile Image
                             </label>
                             <div
-                              className={`flex items-center gap-6 p-4 rounded-xl border-2 border-dashed transition-all duration-200 ${
-                                isDarkMode
-                                  ? 'border-[#3f4c5a] bg-[#1f2937] hover:border-blue-400'
-                                  : 'border-gray-200 bg-white hover:border-blue-400'
-                              }`}
+                              className={`flex items-center gap-6 p-4 rounded-xl border-2 border-dashed transition-all duration-200 ${isDarkMode
+                                ? 'border-[#3f4c5a] bg-[#1f2937] hover:border-blue-400'
+                                : 'border-gray-200 bg-white hover:border-blue-400'
+                                }`}
                             >
                               <div
-                                className={`w-20 h-20 rounded-full flex items-center justify-center overflow-hidden border-2 ${
-                                  isDarkMode
-                                    ? 'bg-[#2c353f] border-[#3f4c5a]'
-                                    : 'bg-gray-100 border-gray-200'
-                                }`}
+                                className={`w-20 h-20 rounded-full flex items-center justify-center overflow-hidden border-2 ${isDarkMode
+                                  ? 'bg-[#2c353f] border-[#3f4c5a]'
+                                  : 'bg-gray-100 border-gray-200'
+                                  }`}
                               >
                                 {candidateForm.image ? (
                                   <img
@@ -2074,16 +2016,14 @@ const PollsPage = () => {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p
-                                  className={`text-sm font-medium truncate ${
-                                    isDarkMode ? 'text-gray-200' : 'text-gray-700'
-                                  }`}
+                                  className={`text-sm font-medium truncate ${isDarkMode ? 'text-gray-200' : 'text-gray-700'
+                                    }`}
                                 >
                                   Upload candidate photo
                                 </p>
                                 <p
-                                  className={`text-xs mt-1 truncate ${
-                                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                                  }`}
+                                  className={`text-xs mt-1 truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                                    }`}
                                 >
                                   PNG, JPG or GIF (max. 2MB)
                                 </p>
@@ -2105,11 +2045,10 @@ const PollsPage = () => {
                               </div>
                               <label
                                 htmlFor="candidate-image"
-                                className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors duration-200 cursor-pointer shadow-sm ${
-                                  isDarkMode
-                                    ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                                    : 'bg-blue-600 hover:bg-blue-700 text-white'
-                                }`}
+                                className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors duration-200 cursor-pointer shadow-sm ${isDarkMode
+                                  ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+                                  }`}
                                 tabIndex={0}
                               >
                                 Browse
@@ -2133,9 +2072,8 @@ const PollsPage = () => {
                         </div>
                         {/* Advanced: Keyboard shortcut hints */}
                         <div
-                          className={`absolute top-2 right-4 flex gap-2 items-center text-xs font-mono ${
-                            isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                          }`}
+                          className={`absolute top-2 right-4 flex gap-2 items-center text-xs font-mono ${isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                            }`}
                           aria-hidden="true"
                         >
                           <span className="bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded">Tab</span>
@@ -2149,9 +2087,8 @@ const PollsPage = () => {
                       <div className="space-y-4 relative">
                         {/* Drag-and-drop handle instructions */}
                         <div
-                          className={`absolute -top-8 right-0 flex gap-2 items-center text-xs font-mono z-10 ${
-                            isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                          }`}
+                          className={`absolute -top-8 right-0 flex gap-2 items-center text-xs font-mono z-10 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                            }`}
                           aria-hidden="true"
                         >
                           <span className="bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded">⇅</span>
@@ -2166,9 +2103,8 @@ const PollsPage = () => {
                         {pollForm.candidates.map((candidate, idx) => (
                           <div
                             key={candidate.id || candidate.name || candidate._id}
-                            className={`group p-4 rounded-xl border shadow-sm transition-all duration-200 relative overflow-visible w-full ${
-                              isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-200'
-                            }`}
+                            className={`group p-4 rounded-xl border shadow-sm transition-all duration-200 relative overflow-visible w-full ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-200'
+                              }`}
                             style={{ width: '100%' }}
                             tabIndex={0}
                             aria-label={`Candidate: ${candidate.name}`}
@@ -2194,10 +2130,10 @@ const PollsPage = () => {
                                   <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-300 dark:border-[#3f4c5a] flex-shrink-0">
                                     <img
                                       src={
-                                        typeof candidate.image === 'string' 
-                                          ? (candidate.image.startsWith('/uploads') 
-                                              ? `http://localhost:5001${candidate.image}` 
-                                              : candidate.image)
+                                        typeof candidate.image === 'string'
+                                          ? (candidate.image.startsWith('/uploads')
+                                            ? `http://localhost:5001${candidate.image}`
+                                            : candidate.image)
                                           : URL.createObjectURL(candidate.image)
                                       }
                                       alt={candidate.name}
@@ -2235,7 +2171,7 @@ const PollsPage = () => {
                                         className={`px-2 py-0.5 text-xs rounded-full ${candidate.status === 'incumbent'
                                           ? (isDarkMode ? 'bg-green-700/30 text-green-300' : 'bg-green-100 text-green-700')
                                           : (isDarkMode ? 'bg-yellow-700/30 text-yellow-300' : 'bg-yellow-100 text-yellow-700')
-                                        }`}
+                                          }`}
                                         title="Status"
                                       >
                                         {candidate.status}
@@ -2303,7 +2239,7 @@ const PollsPage = () => {
                                         title={`Facebook: ${candidate.socialMedia.facebook}`}
                                       >
                                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                          <path d="M22.675 0h-21.35C.595 0 0 .592 0 1.326v21.348C0 23.408.595 24 1.325 24h11.495v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.797.143v3.24l-1.918.001c-1.504 0-1.797.715-1.797 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116C23.406 24 24 23.408 24 22.674V1.326C24 .592 23.406 0 22.675 0"/>
+                                          <path d="M22.675 0h-21.35C.595 0 0 .592 0 1.326v21.348C0 23.408.595 24 1.325 24h11.495v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.797.143v3.24l-1.918.001c-1.504 0-1.797.715-1.797 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116C23.406 24 24 23.408 24 22.674V1.326C24 .592 23.406 0 22.675 0" />
                                         </svg>
                                         {candidate.socialMedia.facebook}
                                       </a>
@@ -2444,283 +2380,275 @@ const PollsPage = () => {
                 {activeTab === 'Voting' && (
                   <>
                     {/* Poll Settings Section (Voting Settings only) */}
-                <div className={`p-6 rounded-xl border mt-6 ${isDarkMode ? 'border-[#3f4c5a] bg-[#2c353f]' : 'border-gray-200 bg-white'}`}>
-                  <h4 className={`text-lg font-medium mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    Poll Settings
-                  </h4>
-                  <div className="space-y-6">
-                    {/* Voting Settings */}
-                    <div>
-                      <h5 className={`text-sm font-medium mb-3 flex items-center gap-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Voting Settings
-                        <span className="ml-2 text-xs font-normal text-blue-400 italic">
-                          (Advanced configuration)
-                        </span>
-                        <button
-                          type="button"
-                          className="ml-2 p-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900 transition"
-                          aria-label="Voting settings help"
-                          tabIndex={0}
-                          onClick={() => setShowVotingSettingsHelp(v => !v)}
-                        >
-                          <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
-                            <path d="M12 16v-4M12 8h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                          </svg>
-                        </button>
-                      </h5>
-                      {showVotingSettingsHelp && (
-                        <div className={`mb-4 p-3 rounded-lg shadow-lg border text-xs ${isDarkMode ? 'bg-[#1a2230] border-[#3f4c5a] text-blue-100' : 'bg-blue-50 border-blue-200 text-blue-900'}`}>
-                          <strong>Voting Settings:</strong>
-                          <ul className="list-disc ml-4 mt-1 space-y-1">
-                            <li><b>Allow Multiple Votes:</b> Let voters select more than one candidate per ballot.</li>
-                            <li><b>Show Results Before End:</b> Display live results as votes are cast.</li>
-                            <li><b>Show Results After Voting:</b> Show results to a voter immediately after they vote.</li>
-                            <li><b>Require Authentication:</b> Only logged-in users can vote, preventing anonymous voting.</li>
-                            <li><b>Advanced:</b> Configure vote limits, randomize candidate order, and more below.</li>
-                          </ul>
+                    <div className={`p-6 rounded-xl border mt-6 ${isDarkMode ? 'border-[#3f4c5a] bg-[#2c353f]' : 'border-gray-200 bg-white'}`}>
+                      <h4 className={`text-lg font-medium mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        Poll Settings
+                      </h4>
+                      <div className="space-y-6">
+                        {/* Voting Settings */}
+                        <div>
+                          <h5 className={`text-sm font-medium mb-3 flex items-center gap-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                            Voting Settings
+                            <span className="ml-2 text-xs font-normal text-blue-400 italic">
+                              (Advanced configuration)
+                            </span>
+                            <button
+                              type="button"
+                              className="ml-2 p-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900 transition"
+                              aria-label="Voting settings help"
+                              tabIndex={0}
+                              onClick={() => setShowVotingSettingsHelp(v => !v)}
+                            >
+                              <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                                <path d="M12 16v-4M12 8h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                              </svg>
+                            </button>
+                          </h5>
+                          {showVotingSettingsHelp && (
+                            <div className={`mb-4 p-3 rounded-lg shadow-lg border text-xs ${isDarkMode ? 'bg-[#1a2230] border-[#3f4c5a] text-blue-100' : 'bg-blue-50 border-blue-200 text-blue-900'}`}>
+                              <strong>Voting Settings:</strong>
+                              <ul className="list-disc ml-4 mt-1 space-y-1">
+                                <li><b>Allow Multiple Votes:</b> Let voters select more than one candidate per ballot.</li>
+                                <li><b>Show Results Before End:</b> Display live results as votes are cast.</li>
+                                <li><b>Show Results After Voting:</b> Show results to a voter immediately after they vote.</li>
+                                <li><b>Require Authentication:</b> Only logged-in users can vote, preventing anonymous voting.</li>
+                                <li><b>Advanced:</b> Configure vote limits, randomize candidate order, and more below.</li>
+                              </ul>
+                            </div>
+                          )}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Allow Multiple Votes */}
+                            <label className={`flex items-start gap-3 p-4 rounded-lg border relative transition-colors duration-200 cursor-pointer group ${isDarkMode
+                              ? 'border-[#3f4c5a] hover:border-blue-500/50 hover:bg-blue-500/5'
+                              : 'border-gray-200 hover:border-blue-500/50 hover:bg-blue-50'
+                              }`}>
+                              <div className="flex items-center h-5">
+                                <input
+                                  type="checkbox"
+                                  name="allowMultipleVotes"
+                                  checked={pollForm.settings.allowMultipleVotes}
+                                  onChange={() => handleSettingsChange('allowMultipleVotes')}
+                                  className={`w-4 h-4 rounded border transition-colors duration-200 ${isDarkMode
+                                    ? 'bg-[#1f2937] border-[#3f4c5a] text-blue-500 focus:ring-blue-500'
+                                    : 'bg-white border-gray-300 text-blue-600 focus:ring-blue-500'
+                                    }`}
+                                  aria-describedby="allow-multi-votes-desc"
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <span className={`block text-sm font-medium flex items-center gap-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                  Allow Multiple Votes
+                                  <span className="ml-1 text-xs px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300">Multi-select</span>
+                                </span>
+                                <span id="allow-multi-votes-desc" className={`block text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                  Voters can cast multiple votes for different candidates.
+                                </span>
+                                {pollForm.settings.allowMultipleVotes && (
+                                  <div className="mt-2 flex flex-col gap-1">
+                                    <label className="flex items-center gap-2 text-xs">
+                                      <span>Max votes per voter:</span>
+                                      <input
+                                        type="number"
+                                        min={1}
+                                        max={pollForm.candidates.length}
+                                        value={pollForm.settings.maxVotesPerVoter || ''}
+                                        onChange={e => handleSettingsChange('maxVotesPerVoter', Math.max(1, Math.min(Number(e.target.value), pollForm.candidates.length)))}
+                                        className={`w-16 px-2 py-1 rounded border text-xs focus:outline-none ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a] text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                                        placeholder="No limit"
+                                        aria-label="Maximum votes per voter"
+                                      />
+                                      <span className="text-gray-400">(Leave blank for no limit)</span>
+                                    </label>
+                                    <label className="flex items-center gap-2 text-xs">
+                                      <input
+                                        type="checkbox"
+                                        checked={!!pollForm.settings.randomizeCandidateOrder}
+                                        onChange={() => handleSettingsChange('randomizeCandidateOrder')}
+                                        className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
+                                      />
+                                      <span>Randomize candidate order for each voter</span>
+                                    </label>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="absolute top-2 right-2 hidden group-hover:block group-focus:block">
+                                <span className="text-xs bg-blue-700 text-white px-2 py-1 rounded shadow-lg">Advanced</span>
+                              </div>
+                            </label>
+
+                            {/* Show Results Before End */}
+                            <label className={`flex items-start gap-3 p-4 rounded-lg border relative transition-colors duration-200 cursor-pointer group ${isDarkMode
+                              ? 'border-[#3f4c5a] hover:border-blue-500/50 hover:bg-blue-500/5'
+                              : 'border-gray-200 hover:border-blue-500/50 hover:bg-blue-50'
+                              }`}>
+                              <div className="flex items-center h-5">
+                                <input
+                                  type="checkbox"
+                                  name="showResultsBeforeEnd"
+                                  checked={pollForm.settings.showResultsBeforeEnd}
+                                  onChange={() => handleSettingsChange('showResultsBeforeEnd')}
+                                  className={`w-4 h-4 rounded border transition-colors duration-200 ${isDarkMode
+                                    ? 'bg-[#1f2937] border-[#3f4c5a] text-blue-500 focus:ring-blue-500'
+                                    : 'bg-white border-gray-300 text-blue-600 focus:ring-blue-500'
+                                    }`}
+                                  aria-describedby="show-results-before-end-desc"
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <span className={`block text-sm font-medium flex items-center gap-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                  Show Results Before End
+                                  <span className="ml-1 text-xs px-2 py-0.5 rounded bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-300">Live</span>
+                                </span>
+                                <span id="show-results-before-end-desc" className={`block text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                  Display real-time results while the poll is active.
+                                </span>
+                                {pollForm.settings.showResultsBeforeEnd && (
+                                  <div className="mt-2 flex flex-col gap-1">
+                                    <label className="flex items-center gap-2 text-xs">
+                                      <input
+                                        type="checkbox"
+                                        checked={!!pollForm.settings.hideVoteCounts}
+                                        onChange={() => handleSettingsChange('hideVoteCounts')}
+                                        className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
+                                      />
+                                      <span>Hide exact vote counts (show only percentages or bars)</span>
+                                    </label>
+                                    <label className="flex items-center gap-2 text-xs">
+                                      <input
+                                        type="checkbox"
+                                        checked={!!pollForm.settings.blurResultsForNonVoters}
+                                        onChange={() => handleSettingsChange('blurResultsForNonVoters')}
+                                        className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
+                                      />
+                                      <span>Blur results for users who haven't voted yet</span>
+                                    </label>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="absolute top-2 right-2 hidden group-hover:block group-focus:block">
+                                <span className="text-xs bg-green-700 text-white px-2 py-1 rounded shadow-lg">Live Results</span>
+                              </div>
+                            </label>
+
+                            {/* Show Results After Voting */}
+                            <label className={`flex items-start gap-3 p-4 rounded-lg border relative transition-colors duration-200 cursor-pointer group ${isDarkMode
+                              ? 'border-[#3f4c5a] hover:border-blue-500/50 hover:bg-blue-500/5'
+                              : 'border-gray-200 hover:border-blue-500/50 hover:bg-blue-50'
+                              }`}>
+                              <div className="flex items-center h-5">
+                                <input
+                                  type="checkbox"
+                                  name="showResultsAfterVote"
+                                  checked={pollForm.settings.showResultsAfterVote}
+                                  onChange={() => handleSettingsChange('showResultsAfterVote')}
+                                  className={`w-4 h-4 rounded border transition-colors duration-200 ${isDarkMode
+                                    ? 'bg-[#1f2937] border-[#3f4c5a] text-blue-500 focus:ring-blue-500'
+                                    : 'bg-white border-gray-300 text-blue-600 focus:ring-blue-500'
+                                    }`}
+                                  aria-describedby="show-results-after-vote-desc"
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <span className={`block text-sm font-medium flex items-center gap-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                  Show Results Immediately After Voting
+                                  <span className="ml-1 text-xs px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300">Instant</span>
+                                </span>
+                                <span id="show-results-after-vote-desc" className={`block text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                  If enabled, voters will see poll results right after casting their vote (unless a result date is set in the future).
+                                </span>
+                                {pollForm.settings.showResultsAfterVote && (
+                                  <div className="mt-2 flex flex-col gap-1">
+                                    <label className="flex items-center gap-2 text-xs">
+                                      <input
+                                        type="checkbox"
+                                        checked={!!pollForm.settings.showPersonalVoteSummary}
+                                        onChange={() => handleSettingsChange('showPersonalVoteSummary')}
+                                        className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
+                                      />
+                                      <span>Show voter a summary of their selections</span>
+                                    </label>
+                                    <label className="flex items-center gap-2 text-xs">
+                                      <input
+                                        type="checkbox"
+                                        checked={!!pollForm.settings.showLeaderboard}
+                                        onChange={() => handleSettingsChange('showLeaderboard')}
+                                        className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
+                                      />
+                                      <span>Show top candidates leaderboard</span>
+                                    </label>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="absolute top-2 right-2 hidden group-hover:block group-focus:block">
+                                <span className="text-xs bg-indigo-700 text-white px-2 py-1 rounded shadow-lg">After Vote</span>
+                              </div>
+                            </label>
+
+                            {/* Require Authentication */}
+                            <label className={`flex items-start gap-3 p-4 rounded-lg border relative transition-colors duration-200 cursor-pointer group ${isDarkMode
+                              ? 'border-[#3f4c5a] hover:border-blue-500/50 hover:bg-blue-500/5'
+                              : 'border-gray-200 hover:border-blue-500/50 hover:bg-blue-50'
+                              }`}>
+                              <div className="flex items-center h-5">
+                                <input
+                                  type="checkbox"
+                                  name="requireAuthentication"
+                                  checked={pollForm.settings.requireAuthentication}
+                                  onChange={() => handleSettingsChange('requireAuthentication')}
+                                  className={`w-4 h-4 rounded border transition-colors duration-200 ${isDarkMode
+                                    ? 'bg-[#1f2937] border-[#3f4c5a] text-blue-500 focus:ring-blue-500'
+                                    : 'bg-white border-gray-300 text-blue-600 focus:ring-blue-500'
+                                    }`}
+                                  aria-describedby="require-auth-desc"
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <span className={`block text-sm font-medium flex items-center gap-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                  Require Authentication
+                                  <span className="ml-1 text-xs px-2 py-0.5 rounded bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300">Secure</span>
+                                </span>
+                                <span id="require-auth-desc" className={`block text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                  Voters must be logged in to participate.
+                                </span>
+                                {pollForm.settings.requireAuthentication && (
+                                  <div className="mt-2 flex flex-col gap-1">
+                                    <label className="flex items-center gap-2 text-xs">
+                                      <input
+                                        type="checkbox"
+                                        checked={!!pollForm.settings.preventDuplicateAccounts}
+                                        onChange={() => handleSettingsChange('preventDuplicateAccounts')}
+                                        className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
+                                      />
+                                      <span>Prevent duplicate accounts (email/SSO verification)</span>
+                                    </label>
+                                    <label className="flex items-center gap-2 text-xs">
+                                      <input
+                                        type="checkbox"
+                                        checked={!!pollForm.settings.enable2FA}
+                                        onChange={() => handleSettingsChange('enable2FA')}
+                                        className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
+                                      />
+                                      <span>Require 2FA for voting</span>
+                                    </label>
+                                    <label className="flex items-center gap-2 text-xs">
+                                      <input
+                                        type="checkbox"
+                                        checked={!!pollForm.settings.allowGuestViewOnly}
+                                        onChange={() => handleSettingsChange('allowGuestViewOnly')}
+                                        className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
+                                      />
+                                      <span>Allow guests to view results but not vote</span>
+                                    </label>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="absolute top-2 right-2 hidden group-hover:block group-focus:block">
+                                <span className="text-xs bg-red-700 text-white px-2 py-1 rounded shadow-lg">Auth</span>
+                              </div>
+                            </label>
+                          </div>
                         </div>
-                      )}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Allow Multiple Votes */}
-                        <label className={`flex items-start gap-3 p-4 rounded-lg border relative transition-colors duration-200 cursor-pointer group ${
-                          isDarkMode
-                            ? 'border-[#3f4c5a] hover:border-blue-500/50 hover:bg-blue-500/5'
-                            : 'border-gray-200 hover:border-blue-500/50 hover:bg-blue-50'
-                        }`}>
-                          <div className="flex items-center h-5">
-                            <input
-                              type="checkbox"
-                              name="allowMultipleVotes"
-                              checked={pollForm.settings.allowMultipleVotes}
-                              onChange={() => handleSettingsChange('allowMultipleVotes')}
-                              className={`w-4 h-4 rounded border transition-colors duration-200 ${
-                                isDarkMode
-                                  ? 'bg-[#1f2937] border-[#3f4c5a] text-blue-500 focus:ring-blue-500'
-                                  : 'bg-white border-gray-300 text-blue-600 focus:ring-blue-500'
-                              }`}
-                              aria-describedby="allow-multi-votes-desc"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <span className={`block text-sm font-medium flex items-center gap-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                              Allow Multiple Votes
-                              <span className="ml-1 text-xs px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300">Multi-select</span>
-                            </span>
-                            <span id="allow-multi-votes-desc" className={`block text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                              Voters can cast multiple votes for different candidates.
-                            </span>
-                            {pollForm.settings.allowMultipleVotes && (
-                              <div className="mt-2 flex flex-col gap-1">
-                                <label className="flex items-center gap-2 text-xs">
-                                  <span>Max votes per voter:</span>
-                                  <input
-                                    type="number"
-                                    min={1}
-                                    max={pollForm.candidates.length}
-                                    value={pollForm.settings.maxVotesPerVoter || ''}
-                                    onChange={e => handleSettingsChange('maxVotesPerVoter', Math.max(1, Math.min(Number(e.target.value), pollForm.candidates.length)))}
-                                    className={`w-16 px-2 py-1 rounded border text-xs focus:outline-none ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a] text-white' : 'bg-white border-gray-300 text-gray-900'}`}
-                                    placeholder="No limit"
-                                    aria-label="Maximum votes per voter"
-                                  />
-                                  <span className="text-gray-400">(Leave blank for no limit)</span>
-                                </label>
-                                <label className="flex items-center gap-2 text-xs">
-                                  <input
-                                    type="checkbox"
-                                    checked={!!pollForm.settings.randomizeCandidateOrder}
-                                    onChange={() => handleSettingsChange('randomizeCandidateOrder')}
-                                    className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
-                                  />
-                                  <span>Randomize candidate order for each voter</span>
-                                </label>
-                              </div>
-                            )}
-                          </div>
-                          <div className="absolute top-2 right-2 hidden group-hover:block group-focus:block">
-                            <span className="text-xs bg-blue-700 text-white px-2 py-1 rounded shadow-lg">Advanced</span>
-                          </div>
-                        </label>
-
-                        {/* Show Results Before End */}
-                        <label className={`flex items-start gap-3 p-4 rounded-lg border relative transition-colors duration-200 cursor-pointer group ${
-                          isDarkMode
-                            ? 'border-[#3f4c5a] hover:border-blue-500/50 hover:bg-blue-500/5'
-                            : 'border-gray-200 hover:border-blue-500/50 hover:bg-blue-50'
-                        }`}>
-                          <div className="flex items-center h-5">
-                            <input
-                              type="checkbox"
-                              name="showResultsBeforeEnd"
-                              checked={pollForm.settings.showResultsBeforeEnd}
-                              onChange={() => handleSettingsChange('showResultsBeforeEnd')}
-                              className={`w-4 h-4 rounded border transition-colors duration-200 ${
-                                isDarkMode
-                                  ? 'bg-[#1f2937] border-[#3f4c5a] text-blue-500 focus:ring-blue-500'
-                                  : 'bg-white border-gray-300 text-blue-600 focus:ring-blue-500'
-                              }`}
-                              aria-describedby="show-results-before-end-desc"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <span className={`block text-sm font-medium flex items-center gap-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                              Show Results Before End
-                              <span className="ml-1 text-xs px-2 py-0.5 rounded bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-300">Live</span>
-                            </span>
-                            <span id="show-results-before-end-desc" className={`block text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                              Display real-time results while the poll is active.
-                            </span>
-                            {pollForm.settings.showResultsBeforeEnd && (
-                              <div className="mt-2 flex flex-col gap-1">
-                                <label className="flex items-center gap-2 text-xs">
-                                  <input
-                                    type="checkbox"
-                                    checked={!!pollForm.settings.hideVoteCounts}
-                                    onChange={() => handleSettingsChange('hideVoteCounts')}
-                                    className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
-                                  />
-                                  <span>Hide exact vote counts (show only percentages or bars)</span>
-                                </label>
-                                <label className="flex items-center gap-2 text-xs">
-                                  <input
-                                    type="checkbox"
-                                    checked={!!pollForm.settings.blurResultsForNonVoters}
-                                    onChange={() => handleSettingsChange('blurResultsForNonVoters')}
-                                    className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
-                                  />
-                                  <span>Blur results for users who haven't voted yet</span>
-                                </label>
-                              </div>
-                            )}
-                          </div>
-                          <div className="absolute top-2 right-2 hidden group-hover:block group-focus:block">
-                            <span className="text-xs bg-green-700 text-white px-2 py-1 rounded shadow-lg">Live Results</span>
-                          </div>
-                        </label>
-
-                        {/* Show Results After Voting */}
-                        <label className={`flex items-start gap-3 p-4 rounded-lg border relative transition-colors duration-200 cursor-pointer group ${
-                          isDarkMode
-                            ? 'border-[#3f4c5a] hover:border-blue-500/50 hover:bg-blue-500/5'
-                            : 'border-gray-200 hover:border-blue-500/50 hover:bg-blue-50'
-                        }`}>
-                          <div className="flex items-center h-5">
-                            <input
-                              type="checkbox"
-                              name="showResultsAfterVote"
-                              checked={pollForm.settings.showResultsAfterVote}
-                              onChange={() => handleSettingsChange('showResultsAfterVote')}
-                              className={`w-4 h-4 rounded border transition-colors duration-200 ${
-                                isDarkMode
-                                  ? 'bg-[#1f2937] border-[#3f4c5a] text-blue-500 focus:ring-blue-500'
-                                  : 'bg-white border-gray-300 text-blue-600 focus:ring-blue-500'
-                              }`}
-                              aria-describedby="show-results-after-vote-desc"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <span className={`block text-sm font-medium flex items-center gap-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                              Show Results Immediately After Voting
-                              <span className="ml-1 text-xs px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300">Instant</span>
-                            </span>
-                            <span id="show-results-after-vote-desc" className={`block text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                              If enabled, voters will see poll results right after casting their vote (unless a result date is set in the future).
-                            </span>
-                            {pollForm.settings.showResultsAfterVote && (
-                              <div className="mt-2 flex flex-col gap-1">
-                                <label className="flex items-center gap-2 text-xs">
-                                  <input
-                                    type="checkbox"
-                                    checked={!!pollForm.settings.showPersonalVoteSummary}
-                                    onChange={() => handleSettingsChange('showPersonalVoteSummary')}
-                                    className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
-                                  />
-                                  <span>Show voter a summary of their selections</span>
-                                </label>
-                                <label className="flex items-center gap-2 text-xs">
-                                  <input
-                                    type="checkbox"
-                                    checked={!!pollForm.settings.showLeaderboard}
-                                    onChange={() => handleSettingsChange('showLeaderboard')}
-                                    className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
-                                  />
-                                  <span>Show top candidates leaderboard</span>
-                                </label>
-                              </div>
-                            )}
-                          </div>
-                          <div className="absolute top-2 right-2 hidden group-hover:block group-focus:block">
-                            <span className="text-xs bg-indigo-700 text-white px-2 py-1 rounded shadow-lg">After Vote</span>
-                          </div>
-                        </label>
-
-                        {/* Require Authentication */}
-                        <label className={`flex items-start gap-3 p-4 rounded-lg border relative transition-colors duration-200 cursor-pointer group ${
-                          isDarkMode
-                            ? 'border-[#3f4c5a] hover:border-blue-500/50 hover:bg-blue-500/5'
-                            : 'border-gray-200 hover:border-blue-500/50 hover:bg-blue-50'
-                        }`}>
-                          <div className="flex items-center h-5">
-                            <input
-                              type="checkbox"
-                              name="requireAuthentication"
-                              checked={pollForm.settings.requireAuthentication}
-                              onChange={() => handleSettingsChange('requireAuthentication')}
-                              className={`w-4 h-4 rounded border transition-colors duration-200 ${
-                                isDarkMode
-                                  ? 'bg-[#1f2937] border-[#3f4c5a] text-blue-500 focus:ring-blue-500'
-                                  : 'bg-white border-gray-300 text-blue-600 focus:ring-blue-500'
-                              }`}
-                              aria-describedby="require-auth-desc"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <span className={`block text-sm font-medium flex items-center gap-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                              Require Authentication
-                              <span className="ml-1 text-xs px-2 py-0.5 rounded bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300">Secure</span>
-                            </span>
-                            <span id="require-auth-desc" className={`block text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                              Voters must be logged in to participate.
-                            </span>
-                            {pollForm.settings.requireAuthentication && (
-                              <div className="mt-2 flex flex-col gap-1">
-                                <label className="flex items-center gap-2 text-xs">
-                                  <input
-                                    type="checkbox"
-                                    checked={!!pollForm.settings.preventDuplicateAccounts}
-                                    onChange={() => handleSettingsChange('preventDuplicateAccounts')}
-                                    className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
-                                  />
-                                  <span>Prevent duplicate accounts (email/SSO verification)</span>
-                                </label>
-                                <label className="flex items-center gap-2 text-xs">
-                                  <input
-                                    type="checkbox"
-                                    checked={!!pollForm.settings.enable2FA}
-                                    onChange={() => handleSettingsChange('enable2FA')}
-                                    className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
-                                  />
-                                  <span>Require 2FA for voting</span>
-                                </label>
-                                <label className="flex items-center gap-2 text-xs">
-                                  <input
-                                    type="checkbox"
-                                    checked={!!pollForm.settings.allowGuestViewOnly}
-                                    onChange={() => handleSettingsChange('allowGuestViewOnly')}
-                                    className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
-                                  />
-                                  <span>Allow guests to view results but not vote</span>
-                                </label>
-                              </div>
-                            )}
-                          </div>
-                          <div className="absolute top-2 right-2 hidden group-hover:block group-focus:block">
-                            <span className="text-xs bg-red-700 text-white px-2 py-1 rounded shadow-lg">Auth</span>
-                          </div>
-                        </label>
-                      </div>
-                    </div>
                       </div>
                     </div>
                   </>
@@ -2734,245 +2662,237 @@ const PollsPage = () => {
                         Poll Settings
                       </h4>
                       <div className="space-y-6">
-                    {/* Privacy & Data Control Settings */}
-                    <div>
-                      <h5 className={`text-sm font-medium mb-3 flex items-center gap-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c1.657 0 3-1.343 3-3S13.657 5 12 5s-3 1.343-3 3 1.343 3 3 3zm0 0v6m0 0c-3.866 0-7-3.134-7-7a7 7 0 1114 0c0 3.866-3.134 7-7 7z" />
-                        </svg>
-                        Privacy & Data Control
-                        <span className="ml-2 text-xs font-normal text-blue-400 italic">
-                          (Advanced privacy, anonymity, and audit options)
-                        </span>
-                      </h5>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Enable Comments */}
-                        <label className={`flex items-start gap-3 p-4 rounded-lg border relative transition-colors duration-200 cursor-pointer group ${
-                          isDarkMode
-                            ? 'border-[#3f4c5a] hover:border-blue-500/50 hover:bg-blue-500/5'
-                            : 'border-gray-200 hover:border-blue-500/50 hover:bg-blue-50'
-                        }`}>
-                          <div className="flex items-center h-5">
-                            <input
-                              type="checkbox"
-                              name="enableComments"
-                              checked={pollForm.settings.enableComments}
-                              onChange={() => handleSettingsChange('enableComments')}
-                              className={`w-4 h-4 rounded border transition-colors duration-200 ${
-                                isDarkMode
-                                  ? 'bg-[#1f2937] border-[#3f4c5a] text-blue-500 focus:ring-blue-500'
-                                  : 'bg-white border-gray-300 text-blue-600 focus:ring-blue-500'
-                              }`}
-                              aria-describedby="enable-comments-desc"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <span className={`block text-sm font-medium flex items-center gap-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                              Enable Comments
-                              <span className="ml-1 text-xs px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300">Discussion</span>
+                        {/* Privacy & Data Control Settings */}
+                        <div>
+                          <h5 className={`text-sm font-medium mb-3 flex items-center gap-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                            <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c1.657 0 3-1.343 3-3S13.657 5 12 5s-3 1.343-3 3 1.343 3 3 3zm0 0v6m0 0c-3.866 0-7-3.134-7-7a7 7 0 1114 0c0 3.866-3.134 7-7 7z" />
+                            </svg>
+                            Privacy & Data Control
+                            <span className="ml-2 text-xs font-normal text-blue-400 italic">
+                              (Advanced privacy, anonymity, and audit options)
                             </span>
-                            <span id="enable-comments-desc" className={`block text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                              Allow voters to leave comments on the poll. <b>Advanced:</b> Moderation, profanity filter, and anonymous comments available below.
-                            </span>
-                            {pollForm.settings.enableComments && (
-                              <div className="mt-2 flex flex-col gap-1">
-                                <label className="flex items-center gap-2 text-xs">
-                                  <input
-                                    type="checkbox"
-                                    checked={!!pollForm.settings.commentsRequireModeration}
-                                    onChange={() => handleSettingsChange('commentsRequireModeration')}
-                                    className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
-                                  />
-                                  <span>Require moderation for comments</span>
-                                </label>
-                                <label className="flex items-center gap-2 text-xs">
-                                  <input
-                                    type="checkbox"
-                                    checked={!!pollForm.settings.commentsAllowAnonymous}
-                                    onChange={() => handleSettingsChange('commentsAllowAnonymous')}
-                                    className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
-                                  />
-                                  <span>Allow anonymous comments</span>
-                                </label>
-                                <label className="flex items-center gap-2 text-xs">
-                                  <input
-                                    type="checkbox"
-                                    checked={!!pollForm.settings.commentsProfanityFilter}
-                                    onChange={() => handleSettingsChange('commentsProfanityFilter')}
-                                    className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
-                                  />
-                                  <span>Enable profanity filter</span>
-                                </label>
+                          </h5>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Enable Comments */}
+                            <label className={`flex items-start gap-3 p-4 rounded-lg border relative transition-colors duration-200 cursor-pointer group ${isDarkMode
+                              ? 'border-[#3f4c5a] hover:border-blue-500/50 hover:bg-blue-500/5'
+                              : 'border-gray-200 hover:border-blue-500/50 hover:bg-blue-50'
+                              }`}>
+                              <div className="flex items-center h-5">
+                                <input
+                                  type="checkbox"
+                                  name="enableComments"
+                                  checked={pollForm.settings.enableComments}
+                                  onChange={() => handleSettingsChange('enableComments')}
+                                  className={`w-4 h-4 rounded border transition-colors duration-200 ${isDarkMode
+                                    ? 'bg-[#1f2937] border-[#3f4c5a] text-blue-500 focus:ring-blue-500'
+                                    : 'bg-white border-gray-300 text-blue-600 focus:ring-blue-500'
+                                    }`}
+                                  aria-describedby="enable-comments-desc"
+                                />
                               </div>
-                            )}
-                          </div>
-                          <div className="absolute top-2 right-2 hidden group-hover:block group-focus:block">
-                            <span className="text-xs bg-blue-700 text-white px-2 py-1 rounded shadow-lg">Advanced</span>
-                          </div>
-                        </label>
-
-                        {/* Show Voter Names */}
-                        <label className={`flex items-start gap-3 p-4 rounded-lg border relative transition-colors duration-200 cursor-pointer group ${
-                          isDarkMode
-                            ? 'border-[#3f4c5a] hover:border-blue-500/50 hover:bg-blue-500/5'
-                            : 'border-gray-200 hover:border-blue-500/50 hover:bg-blue-50'
-                        }`}>
-                          <div className="flex items-center h-5">
-                            <input
-                              type="checkbox"
-                              name="showVoterNames"
-                              checked={pollForm.settings.showVoterNames}
-                              onChange={handleSettingsChange}
-                              className={`w-4 h-4 rounded border transition-colors duration-200 ${
-                                isDarkMode
-                                  ? 'bg-[#1f2937] border-[#3f4c5a] text-blue-500 focus:ring-blue-500'
-                                  : 'bg-white border-gray-300 text-blue-600 focus:ring-blue-500'
-                              }`}
-                              aria-describedby="show-voter-names-desc"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <span className={`block text-sm font-medium flex items-center gap-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                              Show Voter Names
-                              <span className="ml-1 text-xs px-2 py-0.5 rounded bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-300">Transparency</span>
-                            </span>
-                            <span id="show-voter-names-desc" className={`block text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                              Display names of voters in the results. <b>Advanced:</b> Choose between full names, initials, or anonymized IDs.
-                            </span>
-                            {pollForm.settings.showVoterNames && (
-                              <div className="mt-2 flex flex-col gap-1">
-                                <label className="flex items-center gap-2 text-xs">
-                                  <input
-                                    type="radio"
-                                    name="voterNameDisplay"
-                                    value="full"
-                                    checked={pollForm.settings.voterNameDisplay === 'full'}
-                                    onChange={() => handleSettingsChange('voterNameDisplay', 'full')}
-                                    className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
-                                  />
-                                  <span>Full name</span>
-                                </label>
-                                <label className="flex items-center gap-2 text-xs">
-                                  <input
-                                    type="radio"
-                                    name="voterNameDisplay"
-                                    value="initials"
-                                    checked={pollForm.settings.voterNameDisplay === 'initials'}
-                                    onChange={() => handleSettingsChange('voterNameDisplay', 'initials')}
-                                    className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
-                                  />
-                                  <span>Initials only</span>
-                                </label>
-                                <label className="flex items-center gap-2 text-xs">
-                                  <input
-                                    type="radio"
-                                    name="voterNameDisplay"
-                                    value="anonymized"
-                                    checked={pollForm.settings.voterNameDisplay === 'anonymized'}
-                                    onChange={() => handleSettingsChange('voterNameDisplay', 'anonymized')}
-                                    className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
-                                  />
-                                  <span>Anonymized ID</span>
-                                </label>
+                              <div className="flex-1">
+                                <span className={`block text-sm font-medium flex items-center gap-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                  Enable Comments
+                                  <span className="ml-1 text-xs px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300">Discussion</span>
+                                </span>
+                                <span id="enable-comments-desc" className={`block text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                  Allow voters to leave comments on the poll. <b>Advanced:</b> Moderation, profanity filter, and anonymous comments available below.
+                                </span>
+                                {pollForm.settings.enableComments && (
+                                  <div className="mt-2 flex flex-col gap-1">
+                                    <label className="flex items-center gap-2 text-xs">
+                                      <input
+                                        type="checkbox"
+                                        checked={!!pollForm.settings.commentsRequireModeration}
+                                        onChange={() => handleSettingsChange('commentsRequireModeration')}
+                                        className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
+                                      />
+                                      <span>Require moderation for comments</span>
+                                    </label>
+                                    <label className="flex items-center gap-2 text-xs">
+                                      <input
+                                        type="checkbox"
+                                        checked={!!pollForm.settings.commentsAllowAnonymous}
+                                        onChange={() => handleSettingsChange('commentsAllowAnonymous')}
+                                        className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
+                                      />
+                                      <span>Allow anonymous comments</span>
+                                    </label>
+                                    <label className="flex items-center gap-2 text-xs">
+                                      <input
+                                        type="checkbox"
+                                        checked={!!pollForm.settings.commentsProfanityFilter}
+                                        onChange={() => handleSettingsChange('commentsProfanityFilter')}
+                                        className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
+                                      />
+                                      <span>Enable profanity filter</span>
+                                    </label>
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
-                          <div className="absolute top-2 right-2 hidden group-hover:block group-focus:block">
-                            <span className="text-xs bg-green-700 text-white px-2 py-1 rounded shadow-lg">Identity</span>
-                          </div>
-                        </label>
-
-                        {/* Voter Anonymity */}
-                        <label className={`flex items-start gap-3 p-4 rounded-lg border relative transition-colors duration-200 cursor-pointer group ${
-                          isDarkMode
-                            ? 'border-[#3f4c5a] hover:border-blue-500/50 hover:bg-blue-500/5'
-                            : 'border-gray-200 hover:border-blue-500/50 hover:bg-blue-50'
-                        }`}>
-                          <div className="flex items-center h-5">
-                            <input
-                              type="checkbox"
-                              name="anonymousVoting"
-                              checked={!!pollForm.settings.anonymousVoting}
-                              onChange={() => handleSettingsChange('anonymousVoting')}
-                              className={`w-4 h-4 rounded border transition-colors duration-200 ${
-                                isDarkMode
-                                  ? 'bg-[#1f2937] border-[#3f4c5a] text-blue-500 focus:ring-blue-500'
-                                  : 'bg-white border-gray-300 text-blue-600 focus:ring-blue-500'
-                              }`}
-                              aria-describedby="anonymous-voting-desc"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <span className={`block text-sm font-medium flex items-center gap-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                              Anonymous Voting
-                              <span className="ml-1 text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200">Privacy</span>
-                            </span>
-                            <span id="anonymous-voting-desc" className={`block text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                              Hide voter identities from everyone, including admins. Votes are cryptographically anonymized.
-                            </span>
-                          </div>
-                          <div className="absolute top-2 right-2 hidden group-hover:block group-focus:block">
-                            <span className="text-xs bg-gray-700 text-white px-2 py-1 rounded shadow-lg">Anonymity</span>
-                          </div>
-                        </label>
-
-                        {/* Public Audit Trail */}
-                        <label className={`flex items-start gap-3 p-4 rounded-lg border relative transition-colors duration-200 cursor-pointer group ${
-                          isDarkMode
-                            ? 'border-[#3f4c5a] hover:border-blue-500/50 hover:bg-blue-500/5'
-                            : 'border-gray-200 hover:border-blue-500/50 hover:bg-blue-50'
-                        }`}>
-                          <div className="flex items-center h-5">
-                            <input
-                              type="checkbox"
-                              name="publicAuditTrail"
-                              checked={!!pollForm.settings.publicAuditTrail}
-                              onChange={() => handleSettingsChange('publicAuditTrail')}
-                              className={`w-4 h-4 rounded border transition-colors duration-200 ${
-                                isDarkMode
-                                  ? 'bg-[#1f2937] border-[#3f4c5a] text-blue-500 focus:ring-blue-500'
-                                  : 'bg-white border-gray-300 text-blue-600 focus:ring-blue-500'
-                              }`}
-                              aria-describedby="public-audit-desc"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <span className={`block text-sm font-medium flex items-center gap-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                              Public Audit Trail
-                              <span className="ml-1 text-xs px-2 py-0.5 rounded bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-200">Audit</span>
-                            </span>
-                            <span id="public-audit-desc" className={`block text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                              Allow anyone to verify the integrity of the poll results. <b>Advanced:</b> Downloadable logs, blockchain anchoring, and tamper-evident records.
-                            </span>
-                            {pollForm.settings.publicAuditTrail && (
-                              <div className="mt-2 flex flex-col gap-1">
-                                <label className="flex items-center gap-2 text-xs">
-                                  <input
-                                    type="checkbox"
-                                    checked={!!pollForm.settings.blockchainAnchoring}
-                                    onChange={() => handleSettingsChange('blockchainAnchoring')}
-                                    className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
-                                  />
-                                  <span>Anchor audit log to blockchain</span>
-                                </label>
-                                <label className="flex items-center gap-2 text-xs">
-                                  <input
-                                    type="checkbox"
-                                    checked={!!pollForm.settings.allowAuditLogDownload}
-                                    onChange={() => handleSettingsChange('allowAuditLogDownload')}
-                                    className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
-                                  />
-                                  <span>Allow audit log download</span>
-                                </label>
+                              <div className="absolute top-2 right-2 hidden group-hover:block group-focus:block">
+                                <span className="text-xs bg-blue-700 text-white px-2 py-1 rounded shadow-lg">Advanced</span>
                               </div>
-                            )}
+                            </label>
+
+                            {/* Show Voter Names */}
+                            <label className={`flex items-start gap-3 p-4 rounded-lg border relative transition-colors duration-200 cursor-pointer group ${isDarkMode
+                              ? 'border-[#3f4c5a] hover:border-blue-500/50 hover:bg-blue-500/5'
+                              : 'border-gray-200 hover:border-blue-500/50 hover:bg-blue-50'
+                              }`}>
+                              <div className="flex items-center h-5">
+                                <input
+                                  type="checkbox"
+                                  name="showVoterNames"
+                                  checked={pollForm.settings.showVoterNames}
+                                  onChange={handleSettingsChange}
+                                  className={`w-4 h-4 rounded border transition-colors duration-200 ${isDarkMode
+                                    ? 'bg-[#1f2937] border-[#3f4c5a] text-blue-500 focus:ring-blue-500'
+                                    : 'bg-white border-gray-300 text-blue-600 focus:ring-blue-500'
+                                    }`}
+                                  aria-describedby="show-voter-names-desc"
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <span className={`block text-sm font-medium flex items-center gap-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                  Show Voter Names
+                                  <span className="ml-1 text-xs px-2 py-0.5 rounded bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-300">Transparency</span>
+                                </span>
+                                <span id="show-voter-names-desc" className={`block text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                  Display names of voters in the results. <b>Advanced:</b> Choose between full names, initials, or anonymized IDs.
+                                </span>
+                                {pollForm.settings.showVoterNames && (
+                                  <div className="mt-2 flex flex-col gap-1">
+                                    <label className="flex items-center gap-2 text-xs">
+                                      <input
+                                        type="radio"
+                                        name="voterNameDisplay"
+                                        value="full"
+                                        checked={pollForm.settings.voterNameDisplay === 'full'}
+                                        onChange={() => handleSettingsChange('voterNameDisplay', 'full')}
+                                        className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
+                                      />
+                                      <span>Full name</span>
+                                    </label>
+                                    <label className="flex items-center gap-2 text-xs">
+                                      <input
+                                        type="radio"
+                                        name="voterNameDisplay"
+                                        value="initials"
+                                        checked={pollForm.settings.voterNameDisplay === 'initials'}
+                                        onChange={() => handleSettingsChange('voterNameDisplay', 'initials')}
+                                        className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
+                                      />
+                                      <span>Initials only</span>
+                                    </label>
+                                    <label className="flex items-center gap-2 text-xs">
+                                      <input
+                                        type="radio"
+                                        name="voterNameDisplay"
+                                        value="anonymized"
+                                        checked={pollForm.settings.voterNameDisplay === 'anonymized'}
+                                        onChange={() => handleSettingsChange('voterNameDisplay', 'anonymized')}
+                                        className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
+                                      />
+                                      <span>Anonymized ID</span>
+                                    </label>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="absolute top-2 right-2 hidden group-hover:block group-focus:block">
+                                <span className="text-xs bg-green-700 text-white px-2 py-1 rounded shadow-lg">Identity</span>
+                              </div>
+                            </label>
+
+                            {/* Voter Anonymity */}
+                            <label className={`flex items-start gap-3 p-4 rounded-lg border relative transition-colors duration-200 cursor-pointer group ${isDarkMode
+                              ? 'border-[#3f4c5a] hover:border-blue-500/50 hover:bg-blue-500/5'
+                              : 'border-gray-200 hover:border-blue-500/50 hover:bg-blue-50'
+                              }`}>
+                              <div className="flex items-center h-5">
+                                <input
+                                  type="checkbox"
+                                  name="anonymousVoting"
+                                  checked={!!pollForm.settings.anonymousVoting}
+                                  onChange={() => handleSettingsChange('anonymousVoting')}
+                                  className={`w-4 h-4 rounded border transition-colors duration-200 ${isDarkMode
+                                    ? 'bg-[#1f2937] border-[#3f4c5a] text-blue-500 focus:ring-blue-500'
+                                    : 'bg-white border-gray-300 text-blue-600 focus:ring-blue-500'
+                                    }`}
+                                  aria-describedby="anonymous-voting-desc"
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <span className={`block text-sm font-medium flex items-center gap-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                  Anonymous Voting
+                                  <span className="ml-1 text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200">Privacy</span>
+                                </span>
+                                <span id="anonymous-voting-desc" className={`block text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                  Hide voter identities from everyone, including admins. Votes are cryptographically anonymized.
+                                </span>
+                              </div>
+                              <div className="absolute top-2 right-2 hidden group-hover:block group-focus:block">
+                                <span className="text-xs bg-gray-700 text-white px-2 py-1 rounded shadow-lg">Anonymity</span>
+                              </div>
+                            </label>
+
+                            {/* Public Audit Trail */}
+                            <label className={`flex items-start gap-3 p-4 rounded-lg border relative transition-colors duration-200 cursor-pointer group ${isDarkMode
+                              ? 'border-[#3f4c5a] hover:border-blue-500/50 hover:bg-blue-500/5'
+                              : 'border-gray-200 hover:border-blue-500/50 hover:bg-blue-50'
+                              }`}>
+                              <div className="flex items-center h-5">
+                                <input
+                                  type="checkbox"
+                                  name="publicAuditTrail"
+                                  checked={!!pollForm.settings.publicAuditTrail}
+                                  onChange={() => handleSettingsChange('publicAuditTrail')}
+                                  className={`w-4 h-4 rounded border transition-colors duration-200 ${isDarkMode
+                                    ? 'bg-[#1f2937] border-[#3f4c5a] text-blue-500 focus:ring-blue-500'
+                                    : 'bg-white border-gray-300 text-blue-600 focus:ring-blue-500'
+                                    }`}
+                                  aria-describedby="public-audit-desc"
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <span className={`block text-sm font-medium flex items-center gap-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                  Public Audit Trail
+                                  <span className="ml-1 text-xs px-2 py-0.5 rounded bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-200">Audit</span>
+                                </span>
+                                <span id="public-audit-desc" className={`block text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                  Allow anyone to verify the integrity of the poll results. <b>Advanced:</b> Downloadable logs, blockchain anchoring, and tamper-evident records.
+                                </span>
+                                {pollForm.settings.publicAuditTrail && (
+                                  <div className="mt-2 flex flex-col gap-1">
+                                    <label className="flex items-center gap-2 text-xs">
+                                      <input
+                                        type="checkbox"
+                                        checked={!!pollForm.settings.blockchainAnchoring}
+                                        onChange={() => handleSettingsChange('blockchainAnchoring')}
+                                        className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
+                                      />
+                                      <span>Anchor audit log to blockchain</span>
+                                    </label>
+                                    <label className="flex items-center gap-2 text-xs">
+                                      <input
+                                        type="checkbox"
+                                        checked={!!pollForm.settings.allowAuditLogDownload}
+                                        onChange={() => handleSettingsChange('allowAuditLogDownload')}
+                                        className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
+                                      />
+                                      <span>Allow audit log download</span>
+                                    </label>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="absolute top-2 right-2 hidden group-hover:block group-focus:block">
+                                <span className="text-xs bg-yellow-700 text-white px-2 py-1 rounded shadow-lg">Audit</span>
+                              </div>
+                            </label>
                           </div>
-                          <div className="absolute top-2 right-2 hidden group-hover:block group-focus:block">
-                            <span className="text-xs bg-yellow-700 text-white px-2 py-1 rounded shadow-lg">Audit</span>
-                          </div>
-                        </label>
-                      </div>
-                    </div>
+                        </div>
                       </div>
                     </div>
                   </>
@@ -2986,314 +2906,305 @@ const PollsPage = () => {
                         Poll Settings
                       </h4>
                       <div className="space-y-6">
-                    {/* Notification & Alert Settings (Advanced) */}
-                    <div>
-                      <h5 className={`text-sm font-medium mb-3 flex items-center gap-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                        Notification & Alert Settings
-                        <span className="ml-2 text-xs font-normal text-blue-400 italic">
-                          (Multi-channel, granular, and automated notifications)
-                        </span>
-                        <button
-                          type="button"
-                          className="ml-2 p-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900 transition"
-                          aria-label="Notification settings help"
-                          tabIndex={0}
-                          onClick={() => setShowNotificationSettingsHelp?.(v => !v)}
-                        >
-                          <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
-                            <path d="M12 16v-4M12 8h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                          </svg>
-                        </button>
-                      </h5>
-                      {showNotificationSettingsHelp && (
-                        <div className={`mb-4 p-3 rounded-lg shadow-lg border text-xs ${isDarkMode ? 'bg-[#1a2230] border-[#3f4c5a] text-blue-100' : 'bg-blue-50 border-blue-200 text-blue-900'}`}>
-                          <strong>Notification & Alert Settings:</strong>
-                          <ul className="list-disc ml-4 mt-1 space-y-1">
-                            <li><b>Notify on New Votes:</b> Get notified instantly when a new vote is cast.</li>
-                            <li><b>Notify on Poll End:</b> Receive alerts when the poll concludes.</li>
-                            <li><b>Notify on Comments:</b> Be alerted when new comments are posted.</li>
-                            <li><b>Notify on Suspicious Activity:</b> Get real-time alerts for potential fraud or abuse.</li>
-                            <li><b>Delivery Channels:</b> Choose Email, SMS, Push, or Webhook notifications.</li>
-                            <li><b>Advanced:</b> Set custom recipients, notification frequency, and automation rules.</li>
-                          </ul>
+                        {/* Notification & Alert Settings (Advanced) */}
+                        <div>
+                          <h5 className={`text-sm font-medium mb-3 flex items-center gap-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                            Notification & Alert Settings
+                            <span className="ml-2 text-xs font-normal text-blue-400 italic">
+                              (Multi-channel, granular, and automated notifications)
+                            </span>
+                            <button
+                              type="button"
+                              className="ml-2 p-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900 transition"
+                              aria-label="Notification settings help"
+                              tabIndex={0}
+                              onClick={() => setShowNotificationSettingsHelp?.(v => !v)}
+                            >
+                              <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                                <path d="M12 16v-4M12 8h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                              </svg>
+                            </button>
+                          </h5>
+                          {showNotificationSettingsHelp && (
+                            <div className={`mb-4 p-3 rounded-lg shadow-lg border text-xs ${isDarkMode ? 'bg-[#1a2230] border-[#3f4c5a] text-blue-100' : 'bg-blue-50 border-blue-200 text-blue-900'}`}>
+                              <strong>Notification & Alert Settings:</strong>
+                              <ul className="list-disc ml-4 mt-1 space-y-1">
+                                <li><b>Notify on New Votes:</b> Get notified instantly when a new vote is cast.</li>
+                                <li><b>Notify on Poll End:</b> Receive alerts when the poll concludes.</li>
+                                <li><b>Notify on Comments:</b> Be alerted when new comments are posted.</li>
+                                <li><b>Notify on Suspicious Activity:</b> Get real-time alerts for potential fraud or abuse.</li>
+                                <li><b>Delivery Channels:</b> Choose Email, SMS, Push, or Webhook notifications.</li>
+                                <li><b>Advanced:</b> Set custom recipients, notification frequency, and automation rules.</li>
+                              </ul>
+                            </div>
+                          )}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Notify on New Votes */}
+                            <label className={`flex items-start gap-3 p-4 rounded-lg border relative transition-colors duration-200 cursor-pointer group ${isDarkMode
+                              ? 'border-[#3f4c5a] hover:border-blue-500/50 hover:bg-blue-500/5'
+                              : 'border-gray-200 hover:border-blue-500/50 hover:bg-blue-50'
+                              }`}>
+                              <div className="flex items-center h-5">
+                                <input
+                                  type="checkbox"
+                                  name="notifyOnVote"
+                                  checked={!!pollForm.settings.notifyOnVote}
+                                  onChange={() => handleSettingsChange('notifyOnVote')}
+                                  className={`w-4 h-4 rounded border transition-colors duration-200 ${isDarkMode
+                                    ? 'bg-[#1f2937] border-[#3f4c5a] text-blue-500 focus:ring-blue-500'
+                                    : 'bg-white border-gray-300 text-blue-600 focus:ring-blue-500'
+                                    }`}
+                                  aria-describedby="notify-on-vote-desc"
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <span className={`block text-sm font-medium flex items-center gap-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                  Notify on New Votes
+                                  <span className="ml-1 text-xs px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300">Live</span>
+                                </span>
+                                <span id="notify-on-vote-desc" className={`block text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                  Receive instant notifications when new votes are cast. <b>Advanced:</b> Choose delivery channel, frequency, and recipients below.
+                                </span>
+                                {pollForm.settings.notifyOnVote && (
+                                  <div className="mt-2 flex flex-col gap-1">
+                                    <label className="flex items-center gap-2 text-xs">
+                                      <span>Delivery Channel:</span>
+                                      <select
+                                        value={pollForm.settings.notifyOnVoteChannel || 'email'}
+                                        onChange={e => handleSettingsChange('notifyOnVoteChannel', e.target.value)}
+                                        className={`px-2 py-1 rounded border text-xs focus:outline-none ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a] text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                                      >
+                                        <option value="email">Email</option>
+                                        <option value="sms">SMS</option>
+                                        <option value="push">Push</option>
+                                        <option value="webhook">Webhook</option>
+                                      </select>
+                                    </label>
+                                    <label className="flex items-center gap-2 text-xs">
+                                      <span>Recipients:</span>
+                                      <input
+                                        type="text"
+                                        value={pollForm.settings.notifyOnVoteRecipients || ''}
+                                        onChange={e => handleSettingsChange('notifyOnVoteRecipients', e.target.value)}
+                                        className={`w-full px-2 py-1 rounded border text-xs focus:outline-none ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a] text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                                        placeholder="Comma-separated emails, phone numbers, or webhook URLs"
+                                      />
+                                    </label>
+                                    <label className="flex items-center gap-2 text-xs">
+                                      <span>Frequency:</span>
+                                      <select
+                                        value={pollForm.settings.notifyOnVoteFrequency || 'immediate'}
+                                        onChange={e => handleSettingsChange('notifyOnVoteFrequency', e.target.value)}
+                                        className={`px-2 py-1 rounded border text-xs focus:outline-none ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a] text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                                      >
+                                        <option value="immediate">Immediate</option>
+                                        <option value="hourly">Hourly Digest</option>
+                                        <option value="daily">Daily Digest</option>
+                                      </select>
+                                    </label>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="absolute top-2 right-2 hidden group-hover:block group-focus:block">
+                                <span className="text-xs bg-blue-700 text-white px-2 py-1 rounded shadow-lg">Live</span>
+                              </div>
+                            </label>
+
+                            {/* Notify on Poll End */}
+                            <label className={`flex items-start gap-3 p-4 rounded-lg border relative transition-colors duration-200 cursor-pointer group ${isDarkMode
+                              ? 'border-[#3f4c5a] hover:border-blue-500/50 hover:bg-blue-500/5'
+                              : 'border-gray-200 hover:border-blue-500/50 hover:bg-blue-50'
+                              }`}>
+                              <div className="flex items-center h-5">
+                                <input
+                                  type="checkbox"
+                                  name="notifyOnEnd"
+                                  checked={!!pollForm.settings.notifyOnEnd}
+                                  onChange={() => handleSettingsChange('notifyOnEnd')}
+                                  className={`w-4 h-4 rounded border transition-colors duration-200 ${isDarkMode
+                                    ? 'bg-[#1f2937] border-[#3f4c5a] text-blue-500 focus:ring-blue-500'
+                                    : 'bg-white border-gray-300 text-blue-600 focus:ring-blue-500'
+                                    }`}
+                                  aria-describedby="notify-on-end-desc"
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <span className={`block text-sm font-medium flex items-center gap-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                  Notify on Poll End
+                                  <span className="ml-1 text-xs px-2 py-0.5 rounded bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-300">Summary</span>
+                                </span>
+                                <span id="notify-on-end-desc" className={`block text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                  Receive a notification when the poll ends. <b>Advanced:</b> Choose delivery channel, recipients, and include results summary.
+                                </span>
+                                {pollForm.settings.notifyOnEnd && (
+                                  <div className="mt-2 flex flex-col gap-1">
+                                    <label className="flex items-center gap-2 text-xs">
+                                      <span>Delivery Channel:</span>
+                                      <select
+                                        value={pollForm.settings.notifyOnEndChannel || 'email'}
+                                        onChange={e => handleSettingsChange('notifyOnEndChannel', e.target.value)}
+                                        className={`px-2 py-1 rounded border text-xs focus:outline-none ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a] text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                                      >
+                                        <option value="email">Email</option>
+                                        <option value="sms">SMS</option>
+                                        <option value="push">Push</option>
+                                        <option value="webhook">Webhook</option>
+                                      </select>
+                                    </label>
+                                    <label className="flex items-center gap-2 text-xs">
+                                      <span>Recipients:</span>
+                                      <input
+                                        type="text"
+                                        value={pollForm.settings.notifyOnEndRecipients || ''}
+                                        onChange={e => handleSettingsChange('notifyOnEndRecipients', e.target.value)}
+                                        className={`w-full px-2 py-1 rounded border text-xs focus:outline-none ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a] text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                                        placeholder="Comma-separated emails, phone numbers, or webhook URLs"
+                                      />
+                                    </label>
+                                    <label className="flex items-center gap-2 text-xs">
+                                      <input
+                                        type="checkbox"
+                                        checked={!!pollForm.settings.notifyOnEndIncludeResults}
+                                        onChange={() => handleSettingsChange('notifyOnEndIncludeResults')}
+                                        className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
+                                      />
+                                      <span>Include poll results summary in notification</span>
+                                    </label>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="absolute top-2 right-2 hidden group-hover:block group-focus:block">
+                                <span className="text-xs bg-green-700 text-white px-2 py-1 rounded shadow-lg">Summary</span>
+                              </div>
+                            </label>
+
+                            {/* Notify on New Comments */}
+                            <label className={`flex items-start gap-3 p-4 rounded-lg border relative transition-colors duration-200 cursor-pointer group ${isDarkMode
+                              ? 'border-[#3f4c5a] hover:border-blue-500/50 hover:bg-blue-500/5'
+                              : 'border-gray-200 hover:border-blue-500/50 hover:bg-blue-50'
+                              }`}>
+                              <div className="flex items-center h-5">
+                                <input
+                                  type="checkbox"
+                                  name="notifyOnComment"
+                                  checked={!!pollForm.settings.notifyOnComment}
+                                  onChange={() => handleSettingsChange('notifyOnComment')}
+                                  className={`w-4 h-4 rounded border transition-colors duration-200 ${isDarkMode
+                                    ? 'bg-[#1f2937] border-[#3f4c5a] text-blue-500 focus:ring-blue-500'
+                                    : 'bg-white border-gray-300 text-blue-600 focus:ring-blue-500'
+                                    }`}
+                                  aria-describedby="notify-on-comment-desc"
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <span className={`block text-sm font-medium flex items-center gap-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                  Notify on New Comments
+                                  <span className="ml-1 text-xs px-2 py-0.5 rounded bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-200">Comments</span>
+                                </span>
+                                <span id="notify-on-comment-desc" className={`block text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                  Receive notifications when new comments are posted. <b>Advanced:</b> Choose delivery channel and recipients.
+                                </span>
+                                {pollForm.settings.notifyOnComment && (
+                                  <div className="mt-2 flex flex-col gap-1">
+                                    <label className="flex items-center gap-2 text-xs">
+                                      <span>Delivery Channel:</span>
+                                      <select
+                                        value={pollForm.settings.notifyOnCommentChannel || 'email'}
+                                        onChange={e => handleSettingsChange('notifyOnCommentChannel', e.target.value)}
+                                        className={`px-2 py-1 rounded border text-xs focus:outline-none ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a] text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                                      >
+                                        <option value="email">Email</option>
+                                        <option value="sms">SMS</option>
+                                        <option value="push">Push</option>
+                                        <option value="webhook">Webhook</option>
+                                      </select>
+                                    </label>
+                                    <label className="flex items-center gap-2 text-xs">
+                                      <span>Recipients:</span>
+                                      <input
+                                        type="text"
+                                        value={pollForm.settings.notifyOnCommentRecipients || ''}
+                                        onChange={e => handleSettingsChange('notifyOnCommentRecipients', e.target.value)}
+                                        className={`w-full px-2 py-1 rounded border text-xs focus:outline-none ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a] text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                                        placeholder="Comma-separated emails, phone numbers, or webhook URLs"
+                                      />
+                                    </label>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="absolute top-2 right-2 hidden group-hover:block group-focus:block">
+                                <span className="text-xs bg-yellow-700 text-white px-2 py-1 rounded shadow-lg">Comments</span>
+                              </div>
+                            </label>
+
+                            {/* Notify on Suspicious Activity */}
+                            <label className={`flex items-start gap-3 p-4 rounded-lg border relative transition-colors duration-200 cursor-pointer group ${isDarkMode
+                              ? 'border-[#3f4c5a] hover:border-red-500/50 hover:bg-red-500/5'
+                              : 'border-gray-200 hover:border-red-500/50 hover:bg-red-50'
+                              }`}>
+                              <div className="flex items-center h-5">
+                                <input
+                                  type="checkbox"
+                                  name="notifyOnSuspicious"
+                                  checked={!!pollForm.settings.notifyOnSuspicious}
+                                  onChange={() => handleSettingsChange('notifyOnSuspicious')}
+                                  className={`w-4 h-4 rounded border transition-colors duration-200 ${isDarkMode
+                                    ? 'bg-[#1f2937] border-[#3f4c5a] text-red-500 focus:ring-red-500'
+                                    : 'bg-white border-gray-300 text-red-600 focus:ring-red-500'
+                                    }`}
+                                  aria-describedby="notify-on-suspicious-desc"
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <span className={`block text-sm font-medium flex items-center gap-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                  Notify on Suspicious Activity
+                                  <span className="ml-1 text-xs px-2 py-0.5 rounded bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300">Security</span>
+                                </span>
+                                <span id="notify-on-suspicious-desc" className={`block text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                  Get real-time alerts for potential fraud, abuse, or suspicious voting patterns. <b>Advanced:</b> Choose delivery channel and recipients.
+                                </span>
+                                {pollForm.settings.notifyOnSuspicious && (
+                                  <div className="mt-2 flex flex-col gap-1">
+                                    <label className="flex items-center gap-2 text-xs">
+                                      <span>Delivery Channel:</span>
+                                      <select
+                                        value={pollForm.settings.notifyOnSuspiciousChannel || 'email'}
+                                        onChange={e => handleSettingsChange('notifyOnSuspiciousChannel', e.target.value)}
+                                        className={`px-2 py-1 rounded border text-xs focus:outline-none ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a] text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                                      >
+                                        <option value="email">Email</option>
+                                        <option value="sms">SMS</option>
+                                        <option value="push">Push</option>
+                                        <option value="webhook">Webhook</option>
+                                      </select>
+                                    </label>
+                                    <label className="flex items-center gap-2 text-xs">
+                                      <span>Recipients:</span>
+                                      <input
+                                        type="text"
+                                        value={pollForm.settings.notifyOnSuspiciousRecipients || ''}
+                                        onChange={e => handleSettingsChange('notifyOnSuspiciousRecipients', e.target.value)}
+                                        className={`w-full px-2 py-1 rounded border text-xs focus:outline-none ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a] text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+                                        placeholder="Comma-separated emails, phone numbers, or webhook URLs"
+                                      />
+                                    </label>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="absolute top-2 right-2 hidden group-hover:block group-focus:block">
+                                <span className="text-xs bg-red-700 text-white px-2 py-1 rounded shadow-lg">Security</span>
+                              </div>
+                            </label>
+                          </div>
                         </div>
-                      )}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Notify on New Votes */}
-                        <label className={`flex items-start gap-3 p-4 rounded-lg border relative transition-colors duration-200 cursor-pointer group ${
-                          isDarkMode
-                            ? 'border-[#3f4c5a] hover:border-blue-500/50 hover:bg-blue-500/5'
-                            : 'border-gray-200 hover:border-blue-500/50 hover:bg-blue-50'
-                        }`}>
-                          <div className="flex items-center h-5">
-                            <input
-                              type="checkbox"
-                              name="notifyOnVote"
-                              checked={!!pollForm.settings.notifyOnVote}
-                              onChange={() => handleSettingsChange('notifyOnVote')}
-                              className={`w-4 h-4 rounded border transition-colors duration-200 ${
-                                isDarkMode
-                                  ? 'bg-[#1f2937] border-[#3f4c5a] text-blue-500 focus:ring-blue-500'
-                                  : 'bg-white border-gray-300 text-blue-600 focus:ring-blue-500'
-                              }`}
-                              aria-describedby="notify-on-vote-desc"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <span className={`block text-sm font-medium flex items-center gap-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                              Notify on New Votes
-                              <span className="ml-1 text-xs px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300">Live</span>
-                            </span>
-                            <span id="notify-on-vote-desc" className={`block text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                              Receive instant notifications when new votes are cast. <b>Advanced:</b> Choose delivery channel, frequency, and recipients below.
-                            </span>
-                            {pollForm.settings.notifyOnVote && (
-                              <div className="mt-2 flex flex-col gap-1">
-                                <label className="flex items-center gap-2 text-xs">
-                                  <span>Delivery Channel:</span>
-                                  <select
-                                    value={pollForm.settings.notifyOnVoteChannel || 'email'}
-                                    onChange={e => handleSettingsChange('notifyOnVoteChannel', e.target.value)}
-                                    className={`px-2 py-1 rounded border text-xs focus:outline-none ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a] text-white' : 'bg-white border-gray-300 text-gray-900'}`}
-                                  >
-                                    <option value="email">Email</option>
-                                    <option value="sms">SMS</option>
-                                    <option value="push">Push</option>
-                                    <option value="webhook">Webhook</option>
-                                  </select>
-                                </label>
-                                <label className="flex items-center gap-2 text-xs">
-                                  <span>Recipients:</span>
-                                  <input
-                                    type="text"
-                                    value={pollForm.settings.notifyOnVoteRecipients || ''}
-                                    onChange={e => handleSettingsChange('notifyOnVoteRecipients', e.target.value)}
-                                    className={`w-full px-2 py-1 rounded border text-xs focus:outline-none ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a] text-white' : 'bg-white border-gray-300 text-gray-900'}`}
-                                    placeholder="Comma-separated emails, phone numbers, or webhook URLs"
-                                  />
-                                </label>
-                                <label className="flex items-center gap-2 text-xs">
-                                  <span>Frequency:</span>
-                                  <select
-                                    value={pollForm.settings.notifyOnVoteFrequency || 'immediate'}
-                                    onChange={e => handleSettingsChange('notifyOnVoteFrequency', e.target.value)}
-                                    className={`px-2 py-1 rounded border text-xs focus:outline-none ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a] text-white' : 'bg-white border-gray-300 text-gray-900'}`}
-                                  >
-                                    <option value="immediate">Immediate</option>
-                                    <option value="hourly">Hourly Digest</option>
-                                    <option value="daily">Daily Digest</option>
-                                  </select>
-                                </label>
-                              </div>
-                            )}
-                          </div>
-                          <div className="absolute top-2 right-2 hidden group-hover:block group-focus:block">
-                            <span className="text-xs bg-blue-700 text-white px-2 py-1 rounded shadow-lg">Live</span>
-                          </div>
-                        </label>
-
-                        {/* Notify on Poll End */}
-                        <label className={`flex items-start gap-3 p-4 rounded-lg border relative transition-colors duration-200 cursor-pointer group ${
-                          isDarkMode
-                            ? 'border-[#3f4c5a] hover:border-blue-500/50 hover:bg-blue-500/5'
-                            : 'border-gray-200 hover:border-blue-500/50 hover:bg-blue-50'
-                        }`}>
-                          <div className="flex items-center h-5">
-                            <input
-                              type="checkbox"
-                              name="notifyOnEnd"
-                              checked={!!pollForm.settings.notifyOnEnd}
-                              onChange={() => handleSettingsChange('notifyOnEnd')}
-                              className={`w-4 h-4 rounded border transition-colors duration-200 ${
-                                isDarkMode
-                                  ? 'bg-[#1f2937] border-[#3f4c5a] text-blue-500 focus:ring-blue-500'
-                                  : 'bg-white border-gray-300 text-blue-600 focus:ring-blue-500'
-                              }`}
-                              aria-describedby="notify-on-end-desc"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <span className={`block text-sm font-medium flex items-center gap-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                              Notify on Poll End
-                              <span className="ml-1 text-xs px-2 py-0.5 rounded bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-300">Summary</span>
-                            </span>
-                            <span id="notify-on-end-desc" className={`block text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                              Receive a notification when the poll ends. <b>Advanced:</b> Choose delivery channel, recipients, and include results summary.
-                            </span>
-                            {pollForm.settings.notifyOnEnd && (
-                              <div className="mt-2 flex flex-col gap-1">
-                                <label className="flex items-center gap-2 text-xs">
-                                  <span>Delivery Channel:</span>
-                                  <select
-                                    value={pollForm.settings.notifyOnEndChannel || 'email'}
-                                    onChange={e => handleSettingsChange('notifyOnEndChannel', e.target.value)}
-                                    className={`px-2 py-1 rounded border text-xs focus:outline-none ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a] text-white' : 'bg-white border-gray-300 text-gray-900'}`}
-                                  >
-                                    <option value="email">Email</option>
-                                    <option value="sms">SMS</option>
-                                    <option value="push">Push</option>
-                                    <option value="webhook">Webhook</option>
-                                  </select>
-                                </label>
-                                <label className="flex items-center gap-2 text-xs">
-                                  <span>Recipients:</span>
-                                  <input
-                                    type="text"
-                                    value={pollForm.settings.notifyOnEndRecipients || ''}
-                                    onChange={e => handleSettingsChange('notifyOnEndRecipients', e.target.value)}
-                                    className={`w-full px-2 py-1 rounded border text-xs focus:outline-none ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a] text-white' : 'bg-white border-gray-300 text-gray-900'}`}
-                                    placeholder="Comma-separated emails, phone numbers, or webhook URLs"
-                                  />
-                                </label>
-                                <label className="flex items-center gap-2 text-xs">
-                                  <input
-                                    type="checkbox"
-                                    checked={!!pollForm.settings.notifyOnEndIncludeResults}
-                                    onChange={() => handleSettingsChange('notifyOnEndIncludeResults')}
-                                    className={`w-3 h-3 rounded border ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a]' : 'bg-white border-gray-300'}`}
-                                  />
-                                  <span>Include poll results summary in notification</span>
-                                </label>
-                              </div>
-                            )}
-                          </div>
-                          <div className="absolute top-2 right-2 hidden group-hover:block group-focus:block">
-                            <span className="text-xs bg-green-700 text-white px-2 py-1 rounded shadow-lg">Summary</span>
-                          </div>
-                        </label>
-
-                        {/* Notify on New Comments */}
-                        <label className={`flex items-start gap-3 p-4 rounded-lg border relative transition-colors duration-200 cursor-pointer group ${
-                          isDarkMode
-                            ? 'border-[#3f4c5a] hover:border-blue-500/50 hover:bg-blue-500/5'
-                            : 'border-gray-200 hover:border-blue-500/50 hover:bg-blue-50'
-                        }`}>
-                          <div className="flex items-center h-5">
-                            <input
-                              type="checkbox"
-                              name="notifyOnComment"
-                              checked={!!pollForm.settings.notifyOnComment}
-                              onChange={() => handleSettingsChange('notifyOnComment')}
-                              className={`w-4 h-4 rounded border transition-colors duration-200 ${
-                                isDarkMode
-                                  ? 'bg-[#1f2937] border-[#3f4c5a] text-blue-500 focus:ring-blue-500'
-                                  : 'bg-white border-gray-300 text-blue-600 focus:ring-blue-500'
-                              }`}
-                              aria-describedby="notify-on-comment-desc"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <span className={`block text-sm font-medium flex items-center gap-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                              Notify on New Comments
-                              <span className="ml-1 text-xs px-2 py-0.5 rounded bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-200">Comments</span>
-                            </span>
-                            <span id="notify-on-comment-desc" className={`block text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                              Receive notifications when new comments are posted. <b>Advanced:</b> Choose delivery channel and recipients.
-                            </span>
-                            {pollForm.settings.notifyOnComment && (
-                              <div className="mt-2 flex flex-col gap-1">
-                                <label className="flex items-center gap-2 text-xs">
-                                  <span>Delivery Channel:</span>
-                                  <select
-                                    value={pollForm.settings.notifyOnCommentChannel || 'email'}
-                                    onChange={e => handleSettingsChange('notifyOnCommentChannel', e.target.value)}
-                                    className={`px-2 py-1 rounded border text-xs focus:outline-none ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a] text-white' : 'bg-white border-gray-300 text-gray-900'}`}
-                                  >
-                                    <option value="email">Email</option>
-                                    <option value="sms">SMS</option>
-                                    <option value="push">Push</option>
-                                    <option value="webhook">Webhook</option>
-                                  </select>
-                                </label>
-                                <label className="flex items-center gap-2 text-xs">
-                                  <span>Recipients:</span>
-                                  <input
-                                    type="text"
-                                    value={pollForm.settings.notifyOnCommentRecipients || ''}
-                                    onChange={e => handleSettingsChange('notifyOnCommentRecipients', e.target.value)}
-                                    className={`w-full px-2 py-1 rounded border text-xs focus:outline-none ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a] text-white' : 'bg-white border-gray-300 text-gray-900'}`}
-                                    placeholder="Comma-separated emails, phone numbers, or webhook URLs"
-                                  />
-                                </label>
-                              </div>
-                            )}
-                          </div>
-                          <div className="absolute top-2 right-2 hidden group-hover:block group-focus:block">
-                            <span className="text-xs bg-yellow-700 text-white px-2 py-1 rounded shadow-lg">Comments</span>
-                          </div>
-                        </label>
-
-                        {/* Notify on Suspicious Activity */}
-                        <label className={`flex items-start gap-3 p-4 rounded-lg border relative transition-colors duration-200 cursor-pointer group ${
-                          isDarkMode
-                            ? 'border-[#3f4c5a] hover:border-red-500/50 hover:bg-red-500/5'
-                            : 'border-gray-200 hover:border-red-500/50 hover:bg-red-50'
-                        }`}>
-                          <div className="flex items-center h-5">
-                            <input
-                              type="checkbox"
-                              name="notifyOnSuspicious"
-                              checked={!!pollForm.settings.notifyOnSuspicious}
-                              onChange={() => handleSettingsChange('notifyOnSuspicious')}
-                              className={`w-4 h-4 rounded border transition-colors duration-200 ${
-                                isDarkMode
-                                  ? 'bg-[#1f2937] border-[#3f4c5a] text-red-500 focus:ring-red-500'
-                                  : 'bg-white border-gray-300 text-red-600 focus:ring-red-500'
-                              }`}
-                              aria-describedby="notify-on-suspicious-desc"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <span className={`block text-sm font-medium flex items-center gap-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                              Notify on Suspicious Activity
-                              <span className="ml-1 text-xs px-2 py-0.5 rounded bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300">Security</span>
-                            </span>
-                            <span id="notify-on-suspicious-desc" className={`block text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                              Get real-time alerts for potential fraud, abuse, or suspicious voting patterns. <b>Advanced:</b> Choose delivery channel and recipients.
-                            </span>
-                            {pollForm.settings.notifyOnSuspicious && (
-                              <div className="mt-2 flex flex-col gap-1">
-                                <label className="flex items-center gap-2 text-xs">
-                                  <span>Delivery Channel:</span>
-                                  <select
-                                    value={pollForm.settings.notifyOnSuspiciousChannel || 'email'}
-                                    onChange={e => handleSettingsChange('notifyOnSuspiciousChannel', e.target.value)}
-                                    className={`px-2 py-1 rounded border text-xs focus:outline-none ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a] text-white' : 'bg-white border-gray-300 text-gray-900'}`}
-                                  >
-                                    <option value="email">Email</option>
-                                    <option value="sms">SMS</option>
-                                    <option value="push">Push</option>
-                                    <option value="webhook">Webhook</option>
-                                  </select>
-                                </label>
-                                <label className="flex items-center gap-2 text-xs">
-                                  <span>Recipients:</span>
-                                  <input
-                                    type="text"
-                                    value={pollForm.settings.notifyOnSuspiciousRecipients || ''}
-                                    onChange={e => handleSettingsChange('notifyOnSuspiciousRecipients', e.target.value)}
-                                    className={`w-full px-2 py-1 rounded border text-xs focus:outline-none ${isDarkMode ? 'bg-[#1f2937] border-[#3f4c5a] text-white' : 'bg-white border-gray-300 text-gray-900'}`}
-                                    placeholder="Comma-separated emails, phone numbers, or webhook URLs"
-                                  />
-                                </label>
-                              </div>
-                            )}
-                          </div>
-                          <div className="absolute top-2 right-2 hidden group-hover:block group-focus:block">
-                            <span className="text-xs bg-red-700 text-white px-2 py-1 rounded shadow-lg">Security</span>
-                          </div>
-                        </label>
                       </div>
                     </div>
-                  </div>
-                </div>
                   </>
                 )}
                 {/* Action Buttons (always visible) */}
-                <div className={`sticky bottom-0 left-0 right-0 flex items-center justify-end gap-4 p-6 border-t ${
-                  isDarkMode ? 'bg-[#1f2937] border-gray-700' : 'bg-white border-gray-200'
-                }`}>
+                <div className={`sticky bottom-0 left-0 right-0 flex items-center justify-end gap-4 p-6 border-t ${isDarkMode ? 'bg-[#1f2937] border-gray-700' : 'bg-white border-gray-200'
+                  }`}>
                   <button
                     onClick={() => {
                       setShowModal(false);
@@ -3319,21 +3230,19 @@ const PollsPage = () => {
                         candidates: []
                       });
                     }}
-                    className={`px-6 py-2.5 rounded-lg font-medium transition-colors duration-200 ${
-                      isDarkMode
-                        ? 'text-gray-300 hover:text-white hover:bg-white/10'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                    }`}
+                    className={`px-6 py-2.5 rounded-lg font-medium transition-colors duration-200 ${isDarkMode
+                      ? 'text-gray-300 hover:text-white hover:bg-white/10'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                      }`}
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSubmit}
-                    className={`px-6 py-2.5 rounded-lg font-medium transition-colors duration-200 ${
-                      isDarkMode
-                        ? 'bg-blue-600 text-white hover:bg-blue-700'
-                        : 'bg-blue-600 text-white hover:bg-blue-700'
-                    }`}
+                    className={`px-6 py-2.5 rounded-lg font-medium transition-colors duration-200 ${isDarkMode
+                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                      }`}
                   >
                     {isEditing ? 'Save Changes' : 'Create Poll'}
                   </button>
@@ -3360,11 +3269,10 @@ const PollsPage = () => {
                   setShowDeleteModal(false);
                   setSelectedPoll(null);
                 }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
-                  isDarkMode
-                    ? 'bg-white/10 hover:bg-white/20 text-white'
-                    : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
-                }`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${isDarkMode
+                  ? 'bg-white/10 hover:bg-white/20 text-white'
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
+                  }`}
               >
                 Cancel
               </button>
@@ -3374,11 +3282,10 @@ const PollsPage = () => {
                   setShowDeleteModal(false);
                   setSelectedPoll(null);
                 }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
-                  isDarkMode
-                    ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400'
-                    : 'bg-red-50 hover:bg-red-100 text-red-600'
-                }`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${isDarkMode
+                  ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400'
+                  : 'bg-red-50 hover:bg-red-100 text-red-600'
+                  }`}
               >
                 Delete
               </button>

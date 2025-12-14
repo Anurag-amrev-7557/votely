@@ -15,7 +15,14 @@ const axiosInstance = axios.create({
 // Request interceptor to add auth headers if needed
 axiosInstance.interceptors.request.use(
   (config) => {
-    // You can add any request modifications here
+    // Get token from localStorage
+    const token = localStorage.getItem('token');
+
+    // If token exists, add to headers
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
     return config;
   },
   (error) => {

@@ -14,7 +14,7 @@ const AdminLogin = () => {
     twoFactorCode: '',
     rememberMe: false
   });
-  
+
   const [securityState, setSecurityState] = useState({
     error: '',
     isLoading: false,
@@ -48,7 +48,7 @@ const AdminLogin = () => {
   const twoFactorRef = useRef(null);
   const formRef = useRef(null);
   const biometricRef = useRef(null);
-  
+
   // Hooks
   const navigate = useNavigate();
   const location = useLocation();
@@ -72,17 +72,17 @@ const AdminLogin = () => {
   // Security scoring system
   const calculateSecurityScore = useCallback((data) => {
     let score = 0;
-    
+
     // Email validation
     if (VALIDATION_PATTERNS.email.test(data.email)) score += 20;
-    
+
     // Password strength
     if (data.password.length >= PASSWORD_MIN_LENGTH) score += 20;
     if (VALIDATION_PATTERNS.password.test(data.password)) score += 30;
-    
+
     // Two-factor authentication
     if (data.twoFactorCode && VALIDATION_PATTERNS.twoFactor.test(data.twoFactorCode)) score += 30;
-    
+
     return Math.min(score, 100);
   }, []);
 
@@ -90,7 +90,7 @@ const AdminLogin = () => {
   const validateForm = useCallback((data = formData) => {
     const errors = [];
     const warnings = [];
-    
+
     // Email validation
     if (!data.email.trim()) {
       errors.push('Email is required');
@@ -99,7 +99,7 @@ const AdminLogin = () => {
     } else if (data.email.includes('+')) {
       warnings.push('Email aliases may not work with admin accounts');
     }
-    
+
     // Password validation
     if (!data.password) {
       errors.push('Password is required');
@@ -111,14 +111,14 @@ const AdminLogin = () => {
         errors.push('Password must contain uppercase, lowercase, number, and special character');
       }
     }
-    
+
     // Two-factor validation
     if (securityState.showTwoFactor && data.twoFactorCode) {
       if (!VALIDATION_PATTERNS.twoFactor.test(data.twoFactorCode)) {
         errors.push('Two-factor code must be 6 digits');
       }
     }
-    
+
     return { errors, warnings };
   }, [formData, securityState.showTwoFactor]);
 
@@ -129,7 +129,7 @@ const AdminLogin = () => {
     ctx.textBaseline = 'top';
     ctx.font = '14px Arial';
     ctx.fillText('Device fingerprint', 2, 2);
-    
+
     const fingerprint = {
       canvas: canvas.toDataURL(),
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -139,7 +139,7 @@ const AdminLogin = () => {
       screen: `${screen.width}x${screen.height}x${screen.colorDepth}`,
       date: new Date().toISOString()
     };
-    
+
     return btoa(JSON.stringify(fingerprint));
   }, []);
 
@@ -160,7 +160,7 @@ const AdminLogin = () => {
         resolve(null);
         return;
       }
-      
+
       navigator.geolocation.getCurrentPosition(
         (position) => {
           resolve({
@@ -220,13 +220,13 @@ const AdminLogin = () => {
     if (!window.PublicKeyCredential) {
       return false;
     }
-    
+
     try {
       const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-      setSecurityState(prev => ({ 
-        ...prev, 
+      setSecurityState(prev => ({
+        ...prev,
         isBiometricAvailable: available,
-        biometricSupported: true 
+        biometricSupported: true
       }));
       return available;
     } catch (error) {
@@ -237,40 +237,40 @@ const AdminLogin = () => {
   // Advanced password strength calculation
   const calculatePasswordStrength = useCallback((password) => {
     if (!password) return 0;
-    
+
     let strength = 0;
-    
+
     // Length contribution
     strength += Math.min(password.length * 4, 40);
-    
+
     // Character variety contribution
     if (/[a-z]/.test(password)) strength += 10;
     if (/[A-Z]/.test(password)) strength += 10;
     if (/\d/.test(password)) strength += 10;
     if (/[@$!%*?&]/.test(password)) strength += 10;
-    
+
     // Complexity bonus
     if (password.length >= 16) strength += 20;
     if (/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(password)) strength += 20;
-    
+
     return Math.min(strength, 100);
   }, []);
 
   // Enhanced input handling with real-time validation
   const handleInputChange = useCallback((field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
+
     if (validationState.realTimeValidation) {
       const newData = { ...formData, [field]: value };
       const { errors } = validateForm(newData);
-      
+
       setValidationState(prev => ({
         ...prev,
         [`${field}Valid`]: !errors.some(e => e.toLowerCase().includes(field)),
         formValid: errors.length === 0
       }));
     }
-    
+
     setSecurityState(prev => ({ ...prev, error: '' }));
   }, [formData, validationState.realTimeValidation, validateForm]);
 
@@ -302,9 +302,9 @@ const AdminLogin = () => {
         console.warn('Session validation failed:', error);
       }
     };
-    
+
     initializeSecurity();
-    
+
     // Defer heavy checks to after render
     setTimeout(() => {
       checkBiometricSupport();
@@ -328,7 +328,7 @@ const AdminLogin = () => {
   // Enhanced submit handler with comprehensive security
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (securityState.isLoading || securityState.lockoutTime) {
       return;
     }
@@ -339,10 +339,10 @@ const AdminLogin = () => {
       return;
     }
 
-    setSecurityState(prev => ({ 
-      ...prev, 
-      error: '', 
-      isLoading: true, 
+    setSecurityState(prev => ({
+      ...prev,
+      error: '',
+      isLoading: true,
       isValidating: true,
       lastLoginAttempt: Date.now()
     }));
@@ -350,25 +350,25 @@ const AdminLogin = () => {
     try {
       // Perform additional security checks
       const securityChecks = await performSecurityChecks();
-      
+
       // Simulate network delay for better UX
       const loginPromise = login(
-        formData.email.trim(), 
+        formData.email.trim(),
         formData.password,
         formData.twoFactorCode || undefined,
         securityChecks
       );
-      
-      const timeoutPromise = new Promise((_, reject) => 
+
+      const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Request timeout')), 15000)
       );
 
       const result = await Promise.race([loginPromise, timeoutPromise]);
-      
+
       if (result.success) {
         // Clear lockout on successful login
         localStorage.removeItem('adminLoginLockout');
-        
+
         // Store login history
         const loginRecord = {
           timestamp: Date.now(),
@@ -376,41 +376,59 @@ const AdminLogin = () => {
           userAgent: navigator.userAgent,
           success: true
         };
-        
+
         setSecurityState(prev => ({
           ...prev,
           attempts: 0,
           lockoutTime: null,
           loginHistory: [...prev.loginHistory, loginRecord].slice(-10)
         }));
-        
-        // Also log in as a user to set the user session cookie
+
+        // Also log in as a user to set the user session cookie and get token
         try {
-          await axios.post('/api/auth/login', {
+          const userResponse = await axios.post('/api/auth/login', {
             email: formData.email.trim(),
             password: formData.password
           }, { withCredentials: true });
+
+          if (userResponse.data && userResponse.data.token) {
+            localStorage.setItem('token', userResponse.data.token);
+          }
         } catch (userLoginErr) {
-          // Optionally handle user login error, but continue admin login
-          console.warn('User login for admin session failed:', userLoginErr);
+          console.warn('User login for admin session failed, attempting registration...', userLoginErr);
+          try {
+            // Fallback: Try to register the admin user if they don't exist
+            const regResponse = await axios.post('/api/auth/register', {
+              name: 'Admin User',
+              email: formData.email.trim(),
+              password: formData.password
+            });
+
+            if (regResponse.data && regResponse.data.token) {
+              localStorage.setItem('token', regResponse.data.token);
+              toast.success('Admin user account created automatically.');
+            }
+          } catch (regErr) {
+            console.warn('User registration for admin session failed:', regErr);
+          }
         }
-        
+
         // Add success feedback before navigation
         setTimeout(() => {
           navigate(from, { replace: true });
         }, 1000);
       } else {
         const newAttempts = securityState.attempts + 1;
-        
+
         if (newAttempts >= MAX_ATTEMPTS) {
           const lockoutUntil = Date.now() + LOCKOUT_DURATION;
           setSecurityState(prev => ({ ...prev, lockoutTime: lockoutUntil }));
-          
+
           localStorage.setItem('adminLoginLockout', JSON.stringify({
             attempts: newAttempts,
             until: lockoutUntil
           }));
-          
+
           setSecurityState(prev => ({
             ...prev,
             error: `Too many failed attempts. Account locked for 15 minutes.`,
@@ -426,7 +444,7 @@ const AdminLogin = () => {
       }
     } catch (err) {
       const newAttempts = securityState.attempts + 1;
-      
+
       if (err.message === 'Request timeout') {
         setSecurityState(prev => ({
           ...prev,
@@ -440,13 +458,13 @@ const AdminLogin = () => {
           attempts: newAttempts
         }));
       }
-      
+
       console.error('Login error:', err);
     } finally {
-      setSecurityState(prev => ({ 
-        ...prev, 
-        isLoading: false, 
-        isValidating: false 
+      setSecurityState(prev => ({
+        ...prev,
+        isLoading: false,
+        isValidating: false
       }));
     }
   };
@@ -454,9 +472,9 @@ const AdminLogin = () => {
   // Biometric authentication handler
   const handleBiometricLogin = useCallback(async () => {
     if (!securityState.isBiometricAvailable) {
-      setSecurityState(prev => ({ 
-        ...prev, 
-        error: 'Biometric authentication not available on this device.' 
+      setSecurityState(prev => ({
+        ...prev,
+        error: 'Biometric authentication not available on this device.'
       }));
       return;
     }
@@ -466,19 +484,19 @@ const AdminLogin = () => {
     try {
       // This would integrate with your backend's WebAuthn implementation
       const result = await login('biometric', null, null, await performSecurityChecks());
-      
+
       if (result.success) {
         navigate(from, { replace: true });
       } else {
-        setSecurityState(prev => ({ 
-          ...prev, 
-          error: 'Biometric authentication failed. Please use password login.' 
+        setSecurityState(prev => ({
+          ...prev,
+          error: 'Biometric authentication failed. Please use password login.'
         }));
       }
     } catch (error) {
-      setSecurityState(prev => ({ 
-        ...prev, 
-        error: 'Biometric authentication error. Please try again.' 
+      setSecurityState(prev => ({
+        ...prev,
+        error: 'Biometric authentication error. Please try again.'
       }));
     } finally {
       setSecurityState(prev => ({ ...prev, isLoading: false }));
@@ -490,17 +508,17 @@ const AdminLogin = () => {
     if (e.key === 'Enter' && !securityState.isLoading && !securityState.lockoutTime) {
       handleSubmit(e);
     }
-    
+
     // Tab navigation enhancement
     if (e.key === 'Tab') {
       const focusableElements = formRef.current?.querySelectorAll(
         'input, button, [tabindex]:not([tabindex="-1"])'
       );
-      
+
       if (focusableElements) {
         const firstElement = focusableElements[0];
         const lastElement = focusableElements[focusableElements.length - 1];
-        
+
         if (e.shiftKey && document.activeElement === firstElement) {
           e.preventDefault();
           lastElement.focus();
@@ -530,9 +548,9 @@ const AdminLogin = () => {
   // Computed values
   const isLockedOut = securityState.lockoutTime && Date.now() < securityState.lockoutTime;
   const remainingAttempts = MAX_ATTEMPTS - securityState.attempts;
-  const lockoutRemaining = securityState.lockoutTime ? 
+  const lockoutRemaining = securityState.lockoutTime ?
     Math.ceil((securityState.lockoutTime - Date.now()) / 1000 / 60) : 0;
-  
+
   const securityScore = useMemo(() => calculateSecurityScore(formData), [formData, calculateSecurityScore]);
   const passwordStrengthColor = useMemo(() => {
     if (securityState.passwordStrength < 40) return 'text-red-500';
@@ -582,13 +600,12 @@ const AdminLogin = () => {
               </div>
               <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-3 relative overflow-hidden shadow-inner">
                 <div
-                  className={`h-3 rounded-full transition-all duration-500 ease-out ${
-                    securityScore < 40
-                      ? 'bg-red-500 animate-pulse'
-                      : securityScore < 70
+                  className={`h-3 rounded-full transition-all duration-500 ease-out ${securityScore < 40
+                    ? 'bg-red-500 animate-pulse'
+                    : securityScore < 70
                       ? 'bg-yellow-500 animate-pulse-slow'
                       : 'bg-green-500'
-                  }`}
+                    }`}
                   style={{ width: `${securityScore}%` }}
                   aria-valuenow={securityScore}
                   aria-valuemin={0}
@@ -606,13 +623,12 @@ const AdminLogin = () => {
                 </span>
               </div>
               <span
-                className={`text-xs font-bold ${
-                  securityScore < 40
-                    ? 'text-red-500'
-                    : securityScore < 70
+                className={`text-xs font-bold ${securityScore < 40
+                  ? 'text-red-500'
+                  : securityScore < 70
                     ? 'text-yellow-500'
                     : 'text-green-500'
-                } animate-fade-in`}
+                  } animate-fade-in`}
                 aria-live="polite"
               >
                 {securityScore}%
@@ -624,8 +640,8 @@ const AdminLogin = () => {
                 {securityScore < 40
                   ? "Weak: Improve your password and enable 2FA"
                   : securityScore < 70
-                  ? "Moderate: Consider enabling all security features"
-                  : "Strong: Your account is well protected"}
+                    ? "Moderate: Consider enabling all security features"
+                    : "Strong: Your account is well protected"}
               </span>
               {securityScore === 100 && (
                 <span className="ml-1 px-2 py-0.5 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-[10px] font-semibold animate-bounce">
@@ -663,11 +679,10 @@ const AdminLogin = () => {
                   type="email"
                   autoComplete="email"
                   required
-                  className={`appearance-none relative block w-full px-4 py-3 border rounded-lg placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 sm:text-sm bg-white dark:bg-[#2c353f] ${
-                    validationState.emailValid ? 'border-green-500 focus:ring-green-500' :
+                  className={`appearance-none relative block w-full px-4 py-3 border rounded-lg placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 sm:text-sm bg-white dark:bg-[#2c353f] ${validationState.emailValid ? 'border-green-500 focus:ring-green-500' :
                     formData.email ? 'border-red-500 focus:ring-red-500' :
-                    'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
-                  }`}
+                      'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
+                    }`}
                   placeholder="admin@company.com"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
@@ -692,11 +707,10 @@ const AdminLogin = () => {
                   type={securityState.showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
                   required
-                  className={`appearance-none relative block w-full px-4 py-3 pr-12 border rounded-lg placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 sm:text-sm bg-white dark:bg-[#2c353f] ${
-                    validationState.passwordValid ? 'border-green-500 focus:ring-green-500' :
+                  className={`appearance-none relative block w-full px-4 py-3 pr-12 border rounded-lg placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 sm:text-sm bg-white dark:bg-[#2c353f] ${validationState.passwordValid ? 'border-green-500 focus:ring-green-500' :
                     formData.password ? 'border-red-500 focus:ring-red-500' :
-                    'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
-                  }`}
+                      'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
+                    }`}
                   placeholder="Enter your password"
                   value={formData.password}
                   onChange={(e) => handleInputChange('password', e.target.value)}
@@ -715,7 +729,7 @@ const AdminLogin = () => {
                   )}
                 </button>
               </div>
-              
+
               {/* Advanced Password Strength & Feedback */}
               {formData.password && (
                 <div className="mt-2 space-y-1">
@@ -744,7 +758,7 @@ const AdminLogin = () => {
                       <div className="absolute left-1/2 -translate-x-1/2 top-7 z-10 hidden group-hover:block bg-white dark:bg-[#23272f] border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 shadow-lg text-xs text-gray-700 dark:text-gray-200 whitespace-pre-line min-w-[180px]">
                         {securityState.passwordStrength < 40 && (
                           <>
-                            <span className="font-semibold text-red-500">Weak:</span> 
+                            <span className="font-semibold text-red-500">Weak:</span>
                             {"\n"}Use a longer password with uppercase, lowercase, numbers, and symbols.
                           </>
                         )}
@@ -874,11 +888,10 @@ const AdminLogin = () => {
                   name="twoFactorCode"
                   type="text"
                   maxLength={TWO_FACTOR_LENGTH}
-                  className={`appearance-none relative block w-full px-4 py-3 border rounded-lg placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 sm:text-sm bg-white dark:bg-[#2c353f] ${
-                    validationState.twoFactorValid ? 'border-green-500 focus:ring-green-500' :
+                  className={`appearance-none relative block w-full px-4 py-3 border rounded-lg placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 sm:text-sm bg-white dark:bg-[#2c353f] ${validationState.twoFactorValid ? 'border-green-500 focus:ring-green-500' :
                     formData.twoFactorCode ? 'border-red-500 focus:ring-red-500' :
-                    'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
-                  }`}
+                      'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
+                    }`}
                   placeholder="000000"
                   value={formData.twoFactorCode}
                   onChange={(e) => handleInputChange('twoFactorCode', e.target.value.replace(/\D/g, ''))}
@@ -1001,11 +1014,10 @@ const AdminLogin = () => {
                   {/* Animated biometric icon */}
                   <span className="relative flex items-center">
                     <svg
-                      className={`w-6 h-6 transition-transform duration-300 ${
-                        securityState.isBiometricAvailable
-                          ? "text-blue-600 dark:text-blue-400 group-hover:scale-110"
-                          : "text-gray-400 dark:text-gray-600"
-                      }`}
+                      className={`w-6 h-6 transition-transform duration-300 ${securityState.isBiometricAvailable
+                        ? "text-blue-600 dark:text-blue-400 group-hover:scale-110"
+                        : "text-gray-400 dark:text-gray-600"
+                        }`}
                       fill="none"
                       stroke="currentColor"
                       strokeWidth={1.5}
@@ -1081,7 +1093,7 @@ const AdminLogin = () => {
           >
             {securityState.showSecurityTips ? 'Hide Security Tips' : 'Show Security Tips'}
           </button>
-          
+
           {securityState.showSecurityTips && (
             <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
               <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">

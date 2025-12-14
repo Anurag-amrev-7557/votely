@@ -1,10 +1,227 @@
 import React, { useMemo, useState } from 'react';
 import { useTheme } from '../../../context/ThemeContext';
 
-const FeatureCard = ({ icon, title, description, imageUrl, index, onLearnMore }) => (
+const FEATURES_DATA = [
+  {
+    index: 0,
+    icon: (
+      <span className="relative flex items-center justify-center w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-full shadow-inner">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="text-blue-600 dark:text-blue-400 drop-shadow"
+        >
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
+          <path d="M9 12l2 2 4-4" />
+          <path d="M12 2v4">
+            <animate attributeName="opacity" values="1;0.5;1" dur="1.2s" repeatCount="indefinite" />
+          </path>
+          <path d="M12 18v4">
+            <animate attributeName="opacity" values="1;0.5;1" dur="1.2s" begin="0.6s" repeatCount="indefinite" />
+          </path>
+        </svg>
+        <span className="absolute -right-1 -top-1 w-2 h-2 bg-green-400 dark:bg-green-500 rounded-full animate-pulse shadow" aria-hidden="true" />
+      </span>
+    ),
+    title: "End-to-End Security",
+    description: (
+      <>
+        <span className="font-semibold text-blue-700 dark:text-blue-300">Advanced encryption</span> and security measures to protect the integrity of every vote.
+        <span className="block mt-1 text-xs text-gray-500 dark:text-gray-400">AES-256, TLS 1.3, regular audits</span>
+      </>
+    ),
+    imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuCImRpMJbw6NJe3sKp-VwJSkIZEx3qS859OjXDQay1ID6trYEDjwE4uUZLB-N6AInzS_FdPNM71YGUk0jndqKi7OFlqxyKb24dAFd3gIoIQmDIf-oAKE2btPc53ZGDYueyvtgq07EoWkEYHc_CoU8JhFZFLN5_7ROYRoHcsZ4FDnSMlimGbeT1B30Rm7er0En3phHH9RyLyXWeTDzHySfwDZDgY_Jw0bdipVfYTepktEt3CTLQ-KlA159St8iBhkiV0TKW8fV8isfg",
+    details: (
+      <>
+        <strong>Industry-standard encryption</strong> (AES-256, TLS 1.3) ensures all votes are private and tamper-proof.<br />
+        <span className="text-green-600 dark:text-green-400">Regular security audits</span> and <span className="text-blue-600 dark:text-blue-400">real-time monitoring</span> keep your data safe.
+      </>
+    ),
+    badges: [
+      { label: "AES-256", color: "bg-blue-100 text-blue-700" },
+      { label: "TLS 1.3", color: "bg-green-100 text-green-700" },
+      { label: "Audit Ready", color: "bg-yellow-100 text-yellow-700" }
+    ]
+  },
+  {
+    index: 1,
+    icon: (
+      <span className="relative flex items-center justify-center w-10 h-10 bg-indigo-50 dark:bg-indigo-900/30 rounded-full shadow-inner">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="text-blue-600 dark:text-blue-400"
+        >
+          <circle cx="12" cy="12" r="10" className="opacity-30" />
+          <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5" />
+          <path d="M8.5 8.5v.01" />
+          <path d="M16 15.5v.01" />
+          <path d="M12 12v.01" />
+          <path d="M11 17v.01" />
+          <path d="M7 14v.01" />
+        </svg>
+        <span className="absolute -left-1 -bottom-1 w-2 h-2 bg-yellow-400 dark:bg-yellow-500 rounded-full animate-pulse shadow" aria-hidden="true" />
+      </span>
+    ),
+    title: "Universal Accessibility",
+    description: (
+      <>
+        <span className="font-semibold text-blue-700 dark:text-blue-300">Accessible for all</span> with support for screen readers, keyboard navigation, and high contrast modes.
+        <span className="block mt-1 text-xs text-gray-500 dark:text-gray-400">WCAG 2.2, ARIA, keyboard shortcuts</span>
+      </>
+    ),
+    imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuCEmbNMcibtHC0idiNIshqEceQlpt00c5onlLbHmKYJuOJIL4D71lJ7ker7-FtRssWO03uNQ7vFbPeO4NKsL-dmqED8axLmzhdTbVfabs83-fFmSZdL7qGZEP0UJSlQLPP01UFEQzZKABYSARRwODsyePkFncsWvkLqK_hIwEVhaPehPXkMqw5NgTJ8Wfnh_fEYw3OOYQlq4c7ZklSvclmbY4vLFNolTgfVpWnvA1vDqM74tOiXgthO05GM34mYxOC6OQVFe_5HuxA",
+    details: (
+      <>
+        <strong>Screen reader support</strong> and <strong>keyboard navigation</strong> for seamless use.<br />
+        <span className="text-indigo-600 dark:text-indigo-400">High contrast</span> and <span className="text-yellow-600 dark:text-yellow-400">color-blind friendly</span> themes included.
+      </>
+    ),
+    badges: [
+      { label: "WCAG 2.2", color: "bg-indigo-100 text-indigo-700" },
+      { label: "ARIA", color: "bg-yellow-100 text-yellow-700" },
+      { label: "Keyboard Nav", color: "bg-blue-100 text-blue-700" }
+    ]
+  },
+  {
+    index: 2,
+    icon: (
+      <span className="relative flex items-center justify-center w-10 h-10 bg-purple-50 dark:bg-purple-900/30 rounded-full shadow-inner">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="text-blue-600 dark:text-blue-400"
+        >
+          <path d="M12 2v4">
+            <animate attributeName="opacity" values="1;0.5;1" dur="1.2s" repeatCount="indefinite" />
+          </path>
+          <path d="M12 18v4">
+            <animate attributeName="opacity" values="1;0.5;1" dur="1.2s" begin="0.6s" repeatCount="indefinite" />
+          </path>
+          <path d="M4.93 4.93l2.83 2.83" />
+          <path d="M16.24 16.24l2.83 2.83" />
+          <path d="M2 12h4" />
+          <path d="M18 12h4" />
+          <path d="M4.93 19.07l2.83-2.83" />
+          <path d="M16.24 7.76l2.83-2.83" />
+        </svg>
+        <span className="absolute -right-1 -bottom-1 w-2 h-2 bg-purple-400 dark:bg-purple-500 rounded-full animate-pulse shadow" aria-hidden="true" />
+      </span>
+    ),
+    title: "Intuitive Experience",
+    description: (
+      <>
+        <span className="font-semibold text-blue-700 dark:text-blue-300">Simple &amp; straightforward</span> interface that makes voting easy for everyone, from first-time users to administrators.
+        <span className="block mt-1 text-xs text-gray-500 dark:text-gray-400">Guided flows, tooltips, and instant feedback</span>
+      </>
+    ),
+    imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuBksrhtFAIdg2kwABWsJP1BiX8s23v42Jp5alMqjEJFDr1pMwV2ZOjNlFZh_1ogdqeaz0xyXNXpM9Wa3SbnbGVwcq0_ObkfmaF6xr98PA1I_sfJFL4YmmU9geX707-hvegI8mVjjCl4oi2lg8t9_753ymVMFjHMWpMMjJZzIyx-lJqspSpr-sHHKeM07TptJu_Stk2RuNlcL0WpcB7Pp-TbAq2xe1fegKn3v7rxmJ7_6tpHDJmrYwOK7rxqOFwwDCdb_LQIYCwtA4Y",
+    details: (
+      <>
+        <strong>Guided voting flows</strong> and <strong>contextual tooltips</strong> help users at every step.<br />
+        <span className="text-purple-600 dark:text-purple-400">Instant feedback</span> and <span className="text-blue-600 dark:text-blue-400">responsive design</span> for all devices.
+      </>
+    ),
+    badges: [
+      { label: "Guided", color: "bg-purple-100 text-purple-700" },
+      { label: "Tooltips", color: "bg-blue-100 text-blue-700" },
+      { label: "Responsive", color: "bg-green-100 text-green-700" }
+    ]
+  }
+];
+
+const ADDITIONAL_FEATURES = [
+  {
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+      </svg>
+    ),
+    text: "End-to-End Encryption"
+  },
+  {
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>
+    ),
+    text: "Real-time Analytics"
+  },
+  {
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+      </svg>
+    ),
+    text: "Multi-language Support"
+  },
+  {
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+      </svg>
+    ),
+    text: "Mobile Responsive"
+  },
+  {
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+      </svg>
+    ),
+    text: "Instant Results"
+  },
+  {
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      </svg>
+    ),
+    text: "Fraud Prevention"
+  },
+  {
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+    ),
+    text: "Custom Ballots"
+  },
+  {
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+      </svg>
+    ),
+    text: "Automated Notifications"
+  }
+];
+
+const FeatureCard = React.memo(({ icon, title, description, imageUrl, index, onLearnMore }) => (
   <div className="group relative flex flex-col gap-3 pb-3 transition-all duration-300 hover:scale-[1.02] sm:min-h-[400px]">
-    
-    
+
+
     {/* Advanced Image Container with Animation, Accessibility, and Effects */}
     <div
       className="relative aspect-video group/image focus-within:ring-2 focus-within:ring-blue-400 rounded-xl overflow-hidden"
@@ -13,10 +230,15 @@ const FeatureCard = ({ icon, title, description, imageUrl, index, onLearnMore })
       role="img"
     >
       {/* Background Image with Parallax and Animated Gradient Overlay */}
-      <div
-        className="w-full h-full bg-center bg-no-repeat bg-cover rounded-xl transition-all duration-500 group-hover:scale-[1.03] group-hover:shadow-2xl group-focus:scale-[1.03] group-focus:shadow-2xl will-change-[transform,box-shadow] overflow-hidden"
-        style={{ backgroundImage: `url("${imageUrl}")` }}
-      >
+      <div className="absolute inset-0 w-full h-full rounded-xl overflow-hidden">
+        <img
+          src={imageUrl}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03] group-focus:scale-[1.03]"
+        />
+
         {/* Animated Gradient Overlay */}
         <div
           className="absolute inset-0 pointer-events-none"
@@ -48,12 +270,12 @@ const FeatureCard = ({ icon, title, description, imageUrl, index, onLearnMore })
 
       {/* Feature Number Badge with Animation */}
       <div
-        className="absolute top-4 left-4 px-3 py-1 bg-white/90 dark:bg-gray-800/90 backdrop-blur-[2px] rounded-full text-sm font-medium text-gray-900 dark:text-white flex items-center gap-1.5 transition-all duration-300 will-change-[background-color,transform] shadow-lg group-hover:scale-105 group-hover:bg-blue-50/90 dark:group-hover:bg-blue-900/60"
+        className="absolute top-4 left-4 px-3 py-1 bg-white/90 dark:bg-gray-800/90 backdrop-blur-[2px] rounded-full text-sm font-medium text-gray-900 dark:text-white flex items-center gap-1.5 transition-all duration-300 shadow-lg group-hover:scale-105 group-hover:bg-blue-50/90 dark:group-hover:bg-blue-900/60"
         tabIndex={0}
         aria-label={`Feature number ${index + 1}`}
         role="status"
       >
-        <span className="w-5 h-5 flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-semibold transition-colors duration-300 will-change-[background-color] shadow">
+        <span className="w-5 h-5 flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-semibold transition-colors duration-300 shadow">
           {index + 1}
         </span>
         <span className="font-semibold">Feature</span>
@@ -80,16 +302,16 @@ const FeatureCard = ({ icon, title, description, imageUrl, index, onLearnMore })
     {/* Content Container */}
     <div className="relative flex items-start gap-3 p-4 flex-1">
       {/* Icon Container */}
-      <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors duration-300 will-change-[background-color] flex-shrink-0">
+      <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors duration-300 flex-shrink-0">
         {icon}
       </div>
 
       {/* Text Content */}
       <div className="flex-1 min-h-[80px]">
-        <p className="text-gray-900 dark:text-white text-base font-semibold leading-normal mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 will-change-[color]">
+        <p className="text-gray-900 dark:text-white text-base font-semibold leading-normal mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
           {title}
         </p>
-        <p className="text-gray-600 dark:text-gray-300 text-sm font-normal leading-normal transition-colors duration-300 will-change-[color]">
+        <p className="text-gray-600 dark:text-gray-300 text-sm font-normal leading-normal transition-colors duration-300">
           {description}
         </p>
       </div>
@@ -126,7 +348,7 @@ const FeatureCard = ({ icon, title, description, imageUrl, index, onLearnMore })
     <div className="absolute -right-2 -top-2 w-24 h-24 bg-blue-200 dark:bg-blue-900/20 rounded-full blur-2xl opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
     <div className="absolute -left-2 -bottom-2 w-24 h-24 bg-indigo-200 dark:bg-indigo-900/20 rounded-full blur-2xl opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
   </div>
-);
+));
 
 const FeaturesSection = ({ isVisible }) => {
   const { isDarkMode } = useTheme();
@@ -139,162 +361,14 @@ const FeaturesSection = ({ isVisible }) => {
     setModalOpen(true);
   };
 
-  const features = [
-      {
-        index: 0,
-        icon: (
-          <span className="relative flex items-center justify-center w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-full shadow-inner">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-blue-600 dark:text-blue-400 drop-shadow"
-            >
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-              <path d="M9 12l2 2 4-4" />
-              <path d="M12 2v4">
-                <animate attributeName="opacity" values="1;0.5;1" dur="1.2s" repeatCount="indefinite" />
-              </path>
-              <path d="M12 18v4">
-                <animate attributeName="opacity" values="1;0.5;1" dur="1.2s" begin="0.6s" repeatCount="indefinite" />
-              </path>
-            </svg>
-            <span className="absolute -right-1 -top-1 w-2 h-2 bg-green-400 dark:bg-green-500 rounded-full animate-pulse shadow" aria-hidden="true" />
-          </span>
-        ),
-        title: "End-to-End Security",
-        description: (
-          <>
-            <span className="font-semibold text-blue-700 dark:text-blue-300">Advanced encryption</span> and security measures to protect the integrity of every vote.
-            <span className="block mt-1 text-xs text-gray-500 dark:text-gray-400">AES-256, TLS 1.3, regular audits</span>
-          </>
-        ),
-        imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuCImRpMJbw6NJe3sKp-VwJSkIZEx3qS859OjXDQay1ID6trYEDjwE4uUZLB-N6AInzS_FdPNM71YGUk0jndqKi7OFlqxyKb24dAFd3gIoIQmDIf-oAKE2btPc53ZGDYueyvtgq07EoWkEYHc_CoU8JhFZFLN5_7ROYRoHcsZ4FDnSMlimGbeT1B30Rm7er0En3phHH9RyLyXWeTDzHySfwDZDgY_Jw0bdipVfYTepktEt3CTLQ-KlA159St8iBhkiV0TKW8fV8isfg",
-        details: (
-          <>
-            <strong>Industry-standard encryption</strong> (AES-256, TLS 1.3) ensures all votes are private and tamper-proof.<br />
-            <span className="text-green-600 dark:text-green-400">Regular security audits</span> and <span className="text-blue-600 dark:text-blue-400">real-time monitoring</span> keep your data safe.
-          </>
-        ),
-        badges: [
-          { label: "AES-256", color: "bg-blue-100 text-blue-700" },
-          { label: "TLS 1.3", color: "bg-green-100 text-green-700" },
-          { label: "Audit Ready", color: "bg-yellow-100 text-yellow-700" }
-        ]
-      },
-      {
-        index: 1,
-        icon: (
-          <span className="relative flex items-center justify-center w-10 h-10 bg-indigo-50 dark:bg-indigo-900/30 rounded-full shadow-inner">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-blue-600 dark:text-blue-400"
-            >
-              <circle cx="12" cy="12" r="10" className="opacity-30" />
-              <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5" />
-              <path d="M8.5 8.5v.01" />
-              <path d="M16 15.5v.01" />
-              <path d="M12 12v.01" />
-              <path d="M11 17v.01" />
-              <path d="M7 14v.01" />
-            </svg>
-            <span className="absolute -left-1 -bottom-1 w-2 h-2 bg-yellow-400 dark:bg-yellow-500 rounded-full animate-pulse shadow" aria-hidden="true" />
-          </span>
-        ),
-        title: "Universal Accessibility",
-        description: (
-          <>
-            <span className="font-semibold text-blue-700 dark:text-blue-300">Accessible for all</span> with support for screen readers, keyboard navigation, and high contrast modes.
-            <span className="block mt-1 text-xs text-gray-500 dark:text-gray-400">WCAG 2.2, ARIA, keyboard shortcuts</span>
-          </>
-        ),
-        imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuCEmbNMcibtHC0idiNIshqEceQlpt00c5onlLbHmKYJuOJIL4D71lJ7ker7-FtRssWO03uNQ7vFbPeO4NKsL-dmqED8axLmzhdTbVfabs83-fFmSZdL7qGZEP0UJSlQLPP01UFEQzZKABYSARRwODsyePkFncsWvkLqK_hIwEVhaPehPXkMqw5NgTJ8Wfnh_fEYw3OOYQlq4c7ZklSvclmbY4vLFNolTgfVpWnvA1vDqM74tOiXgthO05GM34mYxOC6OQVFe_5HuxA",
-        details: (
-          <>
-            <strong>Screen reader support</strong> and <strong>keyboard navigation</strong> for seamless use.<br />
-            <span className="text-indigo-600 dark:text-indigo-400">High contrast</span> and <span className="text-yellow-600 dark:text-yellow-400">color-blind friendly</span> themes included.
-          </>
-        ),
-        badges: [
-          { label: "WCAG 2.2", color: "bg-indigo-100 text-indigo-700" },
-          { label: "ARIA", color: "bg-yellow-100 text-yellow-700" },
-          { label: "Keyboard Nav", color: "bg-blue-100 text-blue-700" }
-        ]
-      },
-      {
-        index: 2,
-        icon: (
-          <span className="relative flex items-center justify-center w-10 h-10 bg-purple-50 dark:bg-purple-900/30 rounded-full shadow-inner">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-blue-600 dark:text-blue-400"
-            >
-              <path d="M12 2v4">
-                <animate attributeName="opacity" values="1;0.5;1" dur="1.2s" repeatCount="indefinite" />
-              </path>
-              <path d="M12 18v4">
-                <animate attributeName="opacity" values="1;0.5;1" dur="1.2s" begin="0.6s" repeatCount="indefinite" />
-              </path>
-              <path d="M4.93 4.93l2.83 2.83" />
-              <path d="M16.24 16.24l2.83 2.83" />
-              <path d="M2 12h4" />
-              <path d="M18 12h4" />
-              <path d="M4.93 19.07l2.83-2.83" />
-              <path d="M16.24 7.76l2.83-2.83" />
-            </svg>
-            <span className="absolute -right-1 -bottom-1 w-2 h-2 bg-purple-400 dark:bg-purple-500 rounded-full animate-pulse shadow" aria-hidden="true" />
-          </span>
-        ),
-        title: "Intuitive Experience",
-        description: (
-          <>
-            <span className="font-semibold text-blue-700 dark:text-blue-300">Simple &amp; straightforward</span> interface that makes voting easy for everyone, from first-time users to administrators.
-            <span className="block mt-1 text-xs text-gray-500 dark:text-gray-400">Guided flows, tooltips, and instant feedback</span>
-          </>
-        ),
-        imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuBksrhtFAIdg2kwABWsJP1BiX8s23v42Jp5alMqjEJFDr1pMwV2ZOjNlFZh_1ogdqeaz0xyXNXpM9Wa3SbnbGVwcq0_ObkfmaF6xr98PA1I_sfJFL4YmmU9geX707-hvegI8mVjjCl4oi2lg8t9_753ymVMFjHMWpMMjJZzIyx-lJqspSpr-sHHKeM07TptJu_Stk2RuNlcL0WpcB7Pp-TbAq2xe1fegKn3v7rxmJ7_6tpHDJmrYwOK7rxqOFwwDCdb_LQIYCwtA4Y",
-        details: (
-          <>
-            <strong>Guided voting flows</strong> and <strong>contextual tooltips</strong> help users at every step.<br />
-            <span className="text-purple-600 dark:text-purple-400">Instant feedback</span> and <span className="text-blue-600 dark:text-blue-400">responsive design</span> for all devices.
-          </>
-        ),
-        badges: [
-          { label: "Guided", color: "bg-purple-100 text-purple-700" },
-          { label: "Tooltips", color: "bg-blue-100 text-blue-700" },
-          { label: "Responsive", color: "bg-green-100 text-green-700" }
-        ]
-      }
-    ]
+
 
   return (
-    <section className={`w-full flex flex-col gap-8 sm:gap-12 px-4 @container rounded-xl relative overflow-hidden ${sectionBg} transition-all duration-500 will-change-[background-color,color,box-shadow,filter]`} aria-labelledby="features-main-heading" role="region" tabIndex={0}>
+    <section className={`w-full flex flex-col gap-8 sm:gap-12 px-4 @container rounded-xl relative overflow-hidden ${sectionBg} transition-all duration-500`} aria-labelledby="features-main-heading" role="region" tabIndex={0}>
       {/* Visually hidden heading for accessibility */}
       <h2 id="features-main-heading" className="sr-only">Votely Features</h2>
 
-      <div className="flex flex-col gap-4 text-center max-w-2xl mx-auto relative min-h-[120px] w-full">
+      <div className="flex flex-col gap-4 text-center max-w-2xl mx-auto relative min-h-[120px] w-full mt-2">
         <div className="relative flex items-center justify-center mx-auto mb-2">
           {/* Animated Gradient Glow */}
           <span
@@ -309,7 +383,7 @@ const FeaturesSection = ({ isVisible }) => {
           />
           {/* Advanced Animated Newsletter Badge (adapted for "Powerful Features") */}
           <div
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-100 via-blue-200 to-blue-100 dark:from-blue-900/40 dark:via-blue-800/30 dark:to-blue-900/40 text-blue-700 dark:text-blue-300 text-sm font-semibold shadow-lg ring-1 ring-blue-200 dark:ring-blue-900/40 mb-2 relative group transition-all duration-500 will-change-[background-color,color,box-shadow]"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-100 via-blue-200 to-blue-100 dark:from-blue-900/40 dark:via-blue-800/30 dark:to-blue-900/40 text-blue-700 dark:text-blue-300 text-sm font-semibold shadow-lg ring-1 ring-blue-200 dark:ring-blue-900/40 mb-2 relative group transition-all duration-500"
             tabIndex={0}
             role="status"
             aria-label="Powerful Features"
@@ -373,79 +447,14 @@ const FeaturesSection = ({ isVisible }) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative w-full">
-        {features.map((feature, idx) => (
+        {FEATURES_DATA.map((feature, idx) => (
           <FeatureCard key={feature.index} {...feature} onLearnMore={() => handleLearnMore(feature)} />
         ))}
       </div>
 
       {/* Additional Features List */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-8 w-full">
-        {[
-          { 
-            icon: (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-            ),
-            text: "End-to-End Encryption"
-          },
-          { 
-            icon: (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            ),
-            text: "Real-time Analytics"
-          },
-          { 
-            icon: (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-              </svg>
-            ),
-            text: "Multi-language Support"
-          },
-          { 
-            icon: (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-            ),
-            text: "Mobile Responsive"
-          },
-          { 
-            icon: (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            ),
-            text: "Instant Results"
-          },
-          { 
-            icon: (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-            ),
-            text: "Fraud Prevention"
-          },
-          { 
-            icon: (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            ),
-            text: "Custom Ballots"
-          },
-          { 
-            icon: (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-            ),
-            text: "Automated Notifications"
-          }
-        ].map((feature, index) => (
+        {ADDITIONAL_FEATURES.map((feature, index) => (
           <div key={index} className="flex items-center gap-2 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 min-h-[48px]">
             <div className="text-blue-600 dark:text-blue-400 flex-shrink-0">
               {feature.icon}

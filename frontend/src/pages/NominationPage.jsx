@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import useNominations from '../hooks/useNominations';
-import axios from 'axios';
+import axios from '../utils/api/axiosConfig';
 import { useNavigate } from 'react-router-dom';
 
 const NominationPage = () => {
@@ -91,8 +91,8 @@ const NominationPage = () => {
                         type="submit"
                         disabled={loading || !selectedPoll || !sop}
                         className={`w-full py-3 px-4 rounded-lg text-white font-medium transition-colors ${loading || !selectedPoll || !sop
-                                ? 'bg-gray-400 cursor-not-allowed'
-                                : 'bg-blue-600 hover:bg-blue-700 shadow-lg'
+                            ? 'bg-gray-400 cursor-not-allowed'
+                            : 'bg-blue-600 hover:bg-blue-700 shadow-lg'
                             }`}
                     >
                         {loading ? 'Submitting...' : 'Submit Nomination'}

@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
-import { 
-  CheckCircle, 
-  XCircle, 
-  AlertTriangle, 
-  Clock, 
-  Shield, 
-  Users, 
-  BarChart3, 
+import {
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Clock,
+  Shield,
+  Users,
+  BarChart3,
   Eye,
   Lock,
   Calendar,
@@ -18,13 +18,13 @@ import {
   ArrowLeft
 } from '../ui/icons';
 
-const EnhancedVoteConfirmation = ({ 
-  poll, 
-  selectedOptions, 
-  isSubmitting, 
-  onConfirm, 
+const EnhancedVoteConfirmation = ({
+  poll,
+  selectedOptions,
+  isSubmitting,
+  onConfirm,
   onCancel,
-  onBack 
+  onBack
 }) => {
   const { isDarkMode } = useTheme();
   const { user } = useAuth();
@@ -37,12 +37,12 @@ const EnhancedVoteConfirmation = ({
       const endTime = new Date(poll.endDate).getTime();
       const now = new Date().getTime();
       const remaining = endTime - now;
-      
+
       if (remaining > 0) {
         const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
         const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-        
+
         setTimeRemaining({ days, hours, minutes });
       }
     }
@@ -95,7 +95,7 @@ const EnhancedVoteConfirmation = ({
   };
 
   return (
-    <motion.div 
+    <motion.div
       className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-4"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -107,38 +107,38 @@ const EnhancedVoteConfirmation = ({
         }
       }}
     >
-      <motion.div 
+      <motion.div
         className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 w-full max-w-6xl mx-auto relative overflow-hidden max-h-[90vh]"
         initial={{ opacity: 0, scale: 0.8, y: 30 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.8, y: 30 }}
-        transition={{ 
-          type: "spring", 
-          stiffness: 350, 
+        transition={{
+          type: "spring",
+          stiffness: 350,
           damping: 30,
           duration: 0.5
         }}
       >
         {/* Background Pattern */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-purple-50/30 to-indigo-50/50 dark:from-blue-900/20 dark:via-purple-900/10 dark:to-indigo-900/20 rounded-3xl"></div>
-        
+
         {/* Main Content - Horizontal Layout */}
         <div className="relative flex flex-col lg:flex-row min-h-0">
           {/* Left Side - Header and Poll Info */}
           <div className="flex-1 p-6 lg:p-8 lg:border-r border-gray-200/50 dark:border-gray-700/50">
             {/* Header Section */}
             <div className="text-center lg:text-left mb-6">
-              <motion.div 
+              <motion.div
                 className="relative w-16 h-16 lg:w-20 lg:h-20 mx-auto lg:mx-0 mb-4 bg-gradient-to-br from-emerald-500 via-green-600 to-teal-600 dark:from-emerald-600 dark:via-green-700 dark:to-teal-700 rounded-full flex items-center justify-center shadow-2xl"
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
-                transition={{ 
-                  type: "spring", 
-                  stiffness: 500, 
+                transition={{
+                  type: "spring",
+                  stiffness: 500,
                   damping: 20,
                   delay: 0.1
                 }}
-                whileHover={{ 
+                whileHover={{
                   scale: 1.05,
                   rotate: 5,
                   transition: { duration: 0.2 }
@@ -147,11 +147,11 @@ const EnhancedVoteConfirmation = ({
                 {/* Animated background rings */}
                 <motion.div
                   className="absolute inset-0 rounded-full border-2 border-white/30 dark:border-gray-300/30"
-                  animate={{ 
+                  animate={{
                     scale: [1, 1.2, 1],
                     opacity: [0.5, 0.8, 0.5]
                   }}
-                  transition={{ 
+                  transition={{
                     duration: 2,
                     repeat: Infinity,
                     ease: "easeInOut"
@@ -159,37 +159,37 @@ const EnhancedVoteConfirmation = ({
                 />
                 <motion.div
                   className="absolute inset-0 rounded-full border border-white/50 dark:border-gray-200/50"
-                  animate={{ 
+                  animate={{
                     scale: [1, 1.1, 1],
                     opacity: [0.3, 0.6, 0.3]
                   }}
-                  transition={{ 
+                  transition={{
                     duration: 1.5,
                     repeat: Infinity,
                     ease: "easeInOut",
                     delay: 0.5
                   }}
                 />
-                
+
                 {/* Main icon container */}
                 <motion.div
                   className="relative z-10"
                   initial={{ scale: 0.5, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  transition={{ 
+                  transition={{
                     delay: 0.3,
                     type: "spring",
                     stiffness: 400,
                     damping: 15
                   }}
-                  whileHover={{ 
+                  whileHover={{
                     scale: 1.1,
                     transition: { duration: 0.15 }
                   }}
                 >
                   <CheckCircle className="w-8 h-8 lg:w-10 lg:h-10 text-white drop-shadow-lg" />
                 </motion.div>
-                
+
                 {/* Success sparkle effect */}
                 <motion.div
                   className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full"
@@ -199,11 +199,11 @@ const EnhancedVoteConfirmation = ({
                 >
                   <motion.div
                     className="w-full h-full bg-yellow-300 rounded-full"
-                    animate={{ 
+                    animate={{
                       scale: [1, 1.5, 1],
                       opacity: [1, 0.5, 1]
                     }}
-                    transition={{ 
+                    transition={{
                       duration: 1.5,
                       repeat: Infinity,
                       ease: "easeInOut"
@@ -211,8 +211,8 @@ const EnhancedVoteConfirmation = ({
                   />
                 </motion.div>
               </motion.div>
-              
-              <motion.h2 
+
+              <motion.h2
                 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 dark:from-white dark:via-blue-200 dark:to-purple-200 bg-clip-text text-transparent mb-2"
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -220,8 +220,8 @@ const EnhancedVoteConfirmation = ({
               >
                 Confirm Your Vote
               </motion.h2>
-              
-              <motion.p 
+
+              <motion.p
                 className="text-base lg:text-lg text-gray-600 dark:text-gray-300 leading-relaxed"
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -232,7 +232,7 @@ const EnhancedVoteConfirmation = ({
             </div>
 
             {/* Poll Information - Compact */}
-            <motion.div 
+            <motion.div
               className="mb-6"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -242,7 +242,7 @@ const EnhancedVoteConfirmation = ({
                 <h3 className="text-lg lg:text-xl font-bold text-gray-900 dark:text-white mb-3 text-center lg:text-left">
                   {poll?.title}
                 </h3>
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                   <div className="flex items-center gap-2 p-2 bg-white/80 dark:bg-gray-700/80 rounded-lg">
                     <div className={`w-8 h-8 rounded-lg bg-${voteTypeInfo.color}-100 dark:bg-${voteTypeInfo.color}-900/30 flex items-center justify-center`}>
@@ -253,7 +253,7 @@ const EnhancedVoteConfirmation = ({
                       <p className="text-xs text-gray-600 dark:text-gray-400">{voteTypeInfo.description}</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2 p-2 bg-white/80 dark:bg-gray-700/80 rounded-lg">
                     <div className={`w-8 h-8 rounded-lg bg-${privacyInfo.color}-100 dark:bg-${privacyInfo.color}-900/30 flex items-center justify-center`}>
                       <PrivacyIcon className={`w-4 h-4 text-${privacyInfo.color}-600 dark:text-${privacyInfo.color}-400`} />
@@ -294,7 +294,7 @@ const EnhancedVoteConfirmation = ({
             </motion.div>
 
             {/* Warning Notice - Compact */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.9 }}
@@ -314,7 +314,7 @@ const EnhancedVoteConfirmation = ({
           {/* Right Side - Selections and Actions */}
           <div className="flex-1 p-6 lg:p-8 flex flex-col">
             {/* Selected Options */}
-            <motion.div 
+            <motion.div
               className="flex-1 mb-6"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -329,11 +329,11 @@ const EnhancedVoteConfirmation = ({
                   Review the options you've selected for this poll
                 </p>
               </div>
-              
+
               <div className="space-y-2 max-h-48 overflow-y-auto">
                 {selectedOptions.map((option, index) => (
-                  <motion.div 
-                    key={option} 
+                  <motion.div
+                    key={option}
                     className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-200/50 dark:border-blue-700/50 shadow-sm"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -344,7 +344,7 @@ const EnhancedVoteConfirmation = ({
                       {index + 1}
                     </div>
                     <span className="flex-1 text-sm font-medium text-gray-800 dark:text-gray-200">{option}</span>
-                    <motion.div 
+                    <motion.div
                       className="w-5 h-5 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
@@ -358,7 +358,7 @@ const EnhancedVoteConfirmation = ({
             </motion.div>
 
             {/* Additional Details Toggle - Compact */}
-            <motion.div 
+            <motion.div
               className="mb-6"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -452,14 +452,14 @@ const EnhancedVoteConfirmation = ({
             </motion.div>
 
             {/* Action Buttons */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8 }}
               className="space-y-4"
             >
               {/* Primary Action Row */}
-              <motion.div 
+              <motion.div
                 className="flex flex-col sm:flex-row gap-3"
                 initial={{ scale: 0.95 }}
                 animate={{ scale: 1 }}
@@ -472,10 +472,10 @@ const EnhancedVoteConfirmation = ({
                 >
                   {/* Animated background effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                  
+
                   {isSubmitting ? (
                     <span className="flex items-center justify-center gap-3 relative z-10">
-                      <motion.div 
+                      <motion.div
                         className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
                         animate={{ rotate: 360 }}
                         transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -498,7 +498,7 @@ const EnhancedVoteConfirmation = ({
               </motion.div>
 
               {/* Secondary Actions Row */}
-              <motion.div 
+              <motion.div
                 className="flex flex-col sm:flex-row gap-3"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -519,7 +519,7 @@ const EnhancedVoteConfirmation = ({
                     <span>Go Back</span>
                   </span>
                 </button>
-                
+
                 <button
                   onClick={onCancel}
                   disabled={isSubmitting}
@@ -545,7 +545,7 @@ const EnhancedVoteConfirmation = ({
                   className="flex items-center justify-center gap-2 text-sm text-emerald-600 dark:text-emerald-400"
                 >
                   <motion.div
-                    animate={{ pulse: true }}
+                    animate={{ opacity: [1, 0.5, 1] }}
                     transition={{ duration: 2, repeat: Infinity }}
                   >
                     <div className="w-2 h-2 bg-emerald-500 rounded-full" />

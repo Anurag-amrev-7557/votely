@@ -129,6 +129,62 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const requestMagicLink = async (email) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/auth/magic-link`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send magic link');
+      }
+
+      setIsLoading(false);
+      return { success: true, message: data.message };
+    } catch (err) {
+      setError(err.message);
+      setIsLoading(false);
+      return { success: false, error: err.message };
+    }
+  };
+
+  const verifyMagicLink = async (email, token) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/auth/magic-link/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, token })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Verification failed');
+      }
+
+      localStorage.setItem('token', data.token);
+      setUser(data);
+      setIsLoading(false);
+      return { success: true, user: data };
+    } catch (err) {
+      setError(err.message);
+      setIsLoading(false);
+      return { success: false, error: err.message };
+    }
+  };
+
   const logout = async () => {
     setUser(null);
     localStorage.removeItem('token');
@@ -136,7 +192,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, error, login, loginWithGoogle, register, logout, setUser }}>
+    <AuthContext.Provider value={{ user, isLoading, error, login, loginWithGoogle, register, logout, requestMagicLink, verifyMagicLink, setUser }}>
       {children}
     </AuthContext.Provider>
   );

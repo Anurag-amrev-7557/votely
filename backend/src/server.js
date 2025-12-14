@@ -224,6 +224,8 @@ app.use('/api/votes', voteRoutes);
 app.use('/api/comments', commentRoutes);
 const nominationRoutes = require('./routes/nominationRoutes');
 app.use('/api/nominations', nominationRoutes);
+const userRoutes = require('./routes/userRoutes');
+app.use('/api/users', userRoutes);
 
 io.on('connection', (socket) => {
   // Client requests to join a poll room for real-time updates

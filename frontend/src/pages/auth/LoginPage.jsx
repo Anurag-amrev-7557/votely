@@ -14,7 +14,7 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { login, loginWithGoogle } = useAuth();
+  const { requestMagicLink, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
@@ -30,13 +30,14 @@ const LoginPage = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const result = await login(formData.email, formData.password);
+    const result = await requestMagicLink(formData.email);
 
     if (result.success) {
-      toast.success('Welcome back!');
-      navigate(from, { replace: true });
+      toast.success(result.message || 'Check your email for the login link!');
+      // Optionally stay here or show a instructions screen
+      // For now, staying here is fine.
     } else {
-      toast.error(result.error || 'Login failed');
+      toast.error(result.error || 'Failed to send link');
     }
 
     setIsSubmitting(false);
@@ -68,19 +69,13 @@ const LoginPage = () => {
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
             Sign in to Votely
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            Or{' '}
-            <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400">
-              create a new account
-            </Link>
-          </p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Email address
+                Email address (@iitbbs.ac.in)
               </label>
               <input
                 id="email"
@@ -91,40 +86,11 @@ const LoginPage = () => {
                 value={formData.email}
                 onChange={handleChange}
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 sm:text-sm transition-colors"
-                placeholder="you@example.com"
+                placeholder="you@iitbbs.ac.in"
               />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Password
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 sm:text-sm transition-colors pr-10"
-                  placeholder="••••••••"
-                />
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="text-gray-400 hover:text-gray-500 focus:outline-none"
-                  >
-                    {showPassword ? (
-                      <EyeSlashIcon className="h-5 w-5" aria-hidden="true" />
-                    ) : (
-                      <EyeIcon className="h-5 w-5" aria-hidden="true" />
-                    )}
-                  </button>
-                </div>
-              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                We'll send a secure login link to your inbox.
+              </p>
             </div>
           </div>
 
@@ -134,7 +100,7 @@ const LoginPage = () => {
               disabled={isSubmitting}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {isSubmitting ? 'Signing in...' : 'Sign in'}
+              {isSubmitting ? 'Sending Link...' : 'Send Login Link'}
             </button>
           </div>
         </form>

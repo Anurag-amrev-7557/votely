@@ -14,9 +14,13 @@ function handleValidationErrors(req, res, next) {
   next();
 }
 
+const { checkPolicy } = require('../middleware/policyMiddleware');
+
 // Enhanced: Cast a vote with bot detection, rate limiting, and validation
 router.post(
   '/vote',
+  auth.protect, // Enforce authentication for voting
+  checkPolicy('vote', 'cast'), // Enforce Policy (Guests cannot cast)
   botDetection,
   voteLimiter,
   [
@@ -32,6 +36,7 @@ router.post(
 router.post(
   '/batch',
   auth.protect,
+  checkPolicy('vote', 'read_own'),
   [
     body('pollIds').isArray({ min: 1 }).withMessage('pollIds must be a non-empty array'),
     body('pollIds.*').isMongoId().withMessage('Each pollId must be a valid Mongo ID'),
@@ -44,6 +49,7 @@ router.post(
 router.get(
   '/:pollId',
   auth.protect,
+  checkPolicy('vote', 'read_own'),
   [
     param('pollId').isMongoId().withMessage('Invalid poll ID'),
   ],

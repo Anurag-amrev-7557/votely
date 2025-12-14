@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '../../../context/ThemeContext';
 
-const AccessibilityFeature = ({ icon, title, description }) => (
+const AccessibilityFeature = React.memo(({ icon, title, description }) => (
     <div className="flex flex-col gap-3 p-4 bg-white dark:bg-gray-900 rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
         <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg w-fit">
             {icon}
@@ -10,7 +10,175 @@ const AccessibilityFeature = ({ icon, title, description }) => (
         <h3 className="text-gray-900 dark:text-white font-semibold">{title}</h3>
         <p className="text-gray-600 dark:text-gray-300 text-sm">{description}</p>
     </div>
-);
+));
+
+AccessibilityFeature.displayName = 'AccessibilityFeature';
+
+const FEATURES = [
+    {
+        title: "Screen Reader Support",
+        description: "Full compatibility with screen readers and assistive technologies for seamless navigation.",
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-purple-600 dark:text-purple-400"
+            >
+                <path d="M12 2v4" />
+                <path d="M12 18v4" />
+                <path d="M4.93 4.93l14.14 14.14" />
+                <path d="M19.07 4.93L4.93 19.07" />
+                <path d="M12 8v4" />
+                <path d="M12 16h.01" />
+                <path d="M8 12h8" />
+            </svg>
+        )
+    },
+    {
+        title: "Keyboard Navigation",
+        description: "Intuitive keyboard controls and shortcuts for efficient navigation without a mouse.",
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-purple-600 dark:text-purple-400"
+            >
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                <path d="M12 15v2" />
+                <path d="M8 15v2" />
+                <path d="M16 15v2" />
+            </svg>
+        )
+    },
+    {
+        title: "High Contrast Mode",
+        description: "Enhanced visibility options with customizable contrast settings for better readability.",
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-purple-600 dark:text-purple-400"
+            >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 2v4" />
+                <path d="M12 18v4" />
+                <path d="M4.93 4.93l2.83 2.83" />
+                <path d="M16.24 16.24l2.83 2.83" />
+                <path d="M2 12h4" />
+                <path d="M18 12h4" />
+                <path d="m4.93 19.07 2.83-2.83" />
+                <path d="m16.24 7.76 2.83-2.83" />
+            </svg>
+        )
+    },
+    {
+        title: "Text Scaling",
+        description: "Adjustable text sizes and spacing to accommodate different visual needs.",
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-purple-600 dark:text-purple-400"
+            >
+                <path d="M12 2v4" />
+                <path d="M12 18v4" />
+                <path d="M4.93 4.93l14.14 14.14" />
+                <path d="M19.07 4.93L4.93 19.07" />
+                <path d="M12 8v4" />
+                <path d="M12 16h.01" />
+                <path d="M8 12h8" />
+                <path d="M12 8v8" />
+            </svg>
+        )
+    },
+    {
+        title: "Voice Commands",
+        description: "Voice control support for hands-free navigation and interaction.",
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-purple-600 dark:text-purple-400"
+            >
+                <path d="M12 2v4" />
+                <path d="M12 18v4" />
+                <path d="M4.93 4.93l14.14 14.14" />
+                <path d="M19.07 4.93L4.93 19.07" />
+                <path d="M12 8v4" />
+                <path d="M12 16h.01" />
+                <path d="M8 12h8" />
+                <path d="M12 8v8" />
+                <path d="M8 8h8" />
+                <path d="M12 2v20" />
+            </svg>
+        )
+    },
+    {
+        title: "Alternative Text",
+        description: "Comprehensive alt text and ARIA labels for all visual elements.",
+        icon: (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-purple-600 dark:text-purple-400"
+            >
+                <path d="M12 2v4" />
+                <path d="M12 18v4" />
+                <path d="M4.93 4.93l14.14 14.14" />
+                <path d="M19.07 4.93L4.93 19.07" />
+                <path d="M12 8v4" />
+                <path d="M12 16h.01" />
+                <path d="M8 12h8" />
+                <path d="M12 8v8" />
+                <path d="M8 8h8" />
+                <path d="M12 2v20" />
+            </svg>
+        )
+    }
+];
 
 const AccessibilitySection = ({ isVisible }) => {
     const { isDarkMode } = useTheme();
@@ -20,7 +188,7 @@ const AccessibilitySection = ({ isVisible }) => {
         <section className={`max-w-7xl mx-auto ${sectionBg} transition-all duration-500 will-change-[background-color,color,box-shadow,filter]`} aria-labelledby="accessibility-main-heading" role="region" tabIndex={0}>
             <h2 id="accessibility-main-heading" className="sr-only">Accessibility Commitment</h2>
             <div className="flex flex-col gap-8 px-4 py-12">
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="flex flex-col gap-6 text-center max-w-3xl mx-auto"
@@ -119,169 +287,14 @@ const AccessibilitySection = ({ isVisible }) => {
                 </motion.div>
 
                 <div className="grid grid-cols-1 @[640px]:grid-cols-2 @[1024px]:grid-cols-3 gap-6">
-                    <AccessibilityFeature
-                        icon={
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="text-purple-600 dark:text-purple-400"
-                            >
-                                <path d="M12 2v4" />
-                                <path d="M12 18v4" />
-                                <path d="M4.93 4.93l14.14 14.14" />
-                                <path d="M19.07 4.93L4.93 19.07" />
-                                <path d="M12 8v4" />
-                                <path d="M12 16h.01" />
-                                <path d="M8 12h8" />
-                            </svg>
-                        }
-                        title="Screen Reader Support"
-                        description="Full compatibility with screen readers and assistive technologies for seamless navigation."
-                    />
-                    <AccessibilityFeature
-                        icon={
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="text-purple-600 dark:text-purple-400"
-                            >
-                                <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                                <path d="M12 15v2" />
-                                <path d="M8 15v2" />
-                                <path d="M16 15v2" />
-                            </svg>
-                        }
-                        title="Keyboard Navigation"
-                        description="Intuitive keyboard controls and shortcuts for efficient navigation without a mouse."
-                    />
-                    <AccessibilityFeature
-                        icon={
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="text-purple-600 dark:text-purple-400"
-                            >
-                                <circle cx="12" cy="12" r="10" />
-                                <path d="M12 2v4" />
-                                <path d="M12 18v4" />
-                                <path d="M4.93 4.93l2.83 2.83" />
-                                <path d="M16.24 16.24l2.83 2.83" />
-                                <path d="M2 12h4" />
-                                <path d="M18 12h4" />
-                                <path d="m4.93 19.07 2.83-2.83" />
-                                <path d="m16.24 7.76 2.83-2.83" />
-                            </svg>
-                        }
-                        title="High Contrast Mode"
-                        description="Enhanced visibility options with customizable contrast settings for better readability."
-                    />
-                    <AccessibilityFeature
-                        icon={
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="text-purple-600 dark:text-purple-400"
-                            >
-                                <path d="M12 2v4" />
-                                <path d="M12 18v4" />
-                                <path d="M4.93 4.93l14.14 14.14" />
-                                <path d="M19.07 4.93L4.93 19.07" />
-                                <path d="M12 8v4" />
-                                <path d="M12 16h.01" />
-                                <path d="M8 12h8" />
-                                <path d="M12 8v8" />
-                            </svg>
-                        }
-                        title="Text Scaling"
-                        description="Adjustable text sizes and spacing to accommodate different visual needs."
-                    />
-                    <AccessibilityFeature
-                        icon={
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="text-purple-600 dark:text-purple-400"
-                            >
-                                <path d="M12 2v4" />
-                                <path d="M12 18v4" />
-                                <path d="M4.93 4.93l14.14 14.14" />
-                                <path d="M19.07 4.93L4.93 19.07" />
-                                <path d="M12 8v4" />
-                                <path d="M12 16h.01" />
-                                <path d="M8 12h8" />
-                                <path d="M12 8v8" />
-                                <path d="M8 8h8" />
-                                <path d="M12 2v20" />
-                            </svg>
-                        }
-                        title="Voice Commands"
-                        description="Voice control support for hands-free navigation and interaction."
-                    />
-                    <AccessibilityFeature
-                        icon={
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="text-purple-600 dark:text-purple-400"
-                            >
-                                <path d="M12 2v4" />
-                                <path d="M12 18v4" />
-                                <path d="M4.93 4.93l14.14 14.14" />
-                                <path d="M19.07 4.93L4.93 19.07" />
-                                <path d="M12 8v4" />
-                                <path d="M12 16h.01" />
-                                <path d="M8 12h8" />
-                                <path d="M12 8v8" />
-                                <path d="M8 8h8" />
-                                <path d="M12 2v20" />
-                            </svg>
-                        }
-                        title="Alternative Text"
-                        description="Comprehensive alt text and ARIA labels for all visual elements."
-                    />
+                    {FEATURES.map((feature, index) => (
+                        <AccessibilityFeature
+                            key={index}
+                            icon={feature.icon}
+                            title={feature.title}
+                            description={feature.description}
+                        />
+                    ))}
                 </div>
 
                 <div className="flex flex-col items-center gap-4 mt-4">

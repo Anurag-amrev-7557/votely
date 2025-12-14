@@ -38,7 +38,8 @@
   }
 
   /* Enhanced Smooth Scrolling */
-  html, body {
+  html,
+  body {
     scroll-behavior: smooth;
     /* Ultra smooth scroll: use a more pronounced cubic-bezier for scroll transitions */
     scroll-behavior: smooth;
@@ -96,7 +97,7 @@
     will-change: transform;
   }
 
-  .elastic-scroll > * {
+  .elastic-scroll>* {
     scroll-snap-align: start;
     scroll-snap-stop: always;
     will-change: transform;
@@ -107,9 +108,11 @@
     0% {
       transform: translateY(0);
     }
+
     50% {
       transform: translateY(-10px);
     }
+
     100% {
       transform: translateY(0);
     }
@@ -169,6 +172,7 @@
     from {
       opacity: 0;
     }
+
     to {
       opacity: 1;
     }
@@ -184,6 +188,7 @@
       transform: translateY(20px);
       opacity: 0;
     }
+
     to {
       transform: translateY(0);
       opacity: 1;
@@ -262,6 +267,7 @@
 
 /* Custom Scrollbar Styles */
 @layer utilities {
+
   /* Light Mode Scrollbar */
   .light-scrollbar {
     scrollbar-width: thin;
@@ -350,12 +356,15 @@ html {
 
 /* Hide scrollbar for IE, Edge and Firefox */
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
 
 /* Custom CSS for enhanced toast notifications */
 @layer components {
+
   /* Enhanced toast animations and styling */
   .toast-notification {
     @apply transform-gpu;
@@ -393,6 +402,7 @@ html {
       opacity: 0;
       transform: translateX(100%) scale(0.8);
     }
+
     100% {
       opacity: 1;
       transform: translateX(0) scale(1);
@@ -404,6 +414,7 @@ html {
       opacity: 1;
       transform: translateX(0) scale(1);
     }
+
     100% {
       opacity: 0;
       transform: translateX(100%) scale(0.8);
@@ -422,9 +433,12 @@ html {
   }
 
   @keyframes toastIconPulse {
-    0%, 100% {
+
+    0%,
+    100% {
       transform: scale(1);
     }
+
     50% {
       transform: scale(1.1);
     }
@@ -446,6 +460,7 @@ html {
     0% {
       width: 100%;
     }
+
     100% {
       width: 0%;
     }
@@ -468,7 +483,13 @@ html {
 }
 
 /* Apply ultra smooth scroll to all scrollable containers */
-.scroll-container, .elastic-scroll, .momentum-scroll, .scroll-snap-container, .scrollable, [data-scrollable], [data-ultra-smooth-scroll] {
+.scroll-container,
+.elastic-scroll,
+.momentum-scroll,
+.scroll-snap-container,
+.scrollable,
+[data-scrollable],
+[data-ultra-smooth-scroll] {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
@@ -477,3 +498,40 @@ html {
   perspective: 1000px;
 }
 
+@layer utilities {
+  @keyframes pulse-orb {
+
+    0%,
+    100% {
+      opacity: 0.40;
+      transform: scale(1);
+    }
+
+    50% {
+      opacity: 0.60;
+      transform: scale(1.08);
+    }
+  }
+
+  .animate-pulse-orb {
+    animation: pulse-orb 4s ease-in-out infinite;
+  }
+
+  @keyframes float-sparkle {
+    0% {
+      transform: translateY(0) scale(1);
+    }
+
+    50% {
+      transform: translateY(-12px) scale(1.2);
+    }
+
+    100% {
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .animate-float-sparkle {
+    animation: float-sparkle 3.5s ease-in-out infinite;
+  }
+}

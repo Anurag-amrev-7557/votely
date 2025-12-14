@@ -44,8 +44,8 @@ const VotingPage = () => {
 
   // Helper: Check if poll is active
   const isPollActive = poll => poll && poll.status === 'active';
-const isPollPast = poll => poll && poll.status === 'completed';
-const isPollUpcoming = poll => poll && poll.status === 'upcoming';
+  const isPollPast = poll => poll && poll.status === 'completed';
+  const isPollUpcoming = poll => poll && poll.status === 'upcoming';
 
   useEffect(() => {
     // Enhanced scroll management with smooth animation and position restoration
@@ -69,7 +69,7 @@ const isPollUpcoming = poll => poll && poll.status === 'upcoming';
       if (authLoading) {
         return;
       }
-      
+
       // Quick check: If user is authenticated, check if they've already voted before fetching poll
       if (user && !authLoading && !location.search.includes('showResults=1')) {
         try {
@@ -86,12 +86,12 @@ const isPollUpcoming = poll => poll && poll.status === 'upcoming';
           }
         }
       }
-      
+
       setLoading(true);
       try {
         const response = await axiosInstance.get(`/polls/${pollId}`);
         const pollData = response.data;
-        
+
         // Check if user has already voted in this poll (only if authenticated and auth is loaded)
         if (user && !authLoading) {
           try {
@@ -108,10 +108,10 @@ const isPollUpcoming = poll => poll && poll.status === 'upcoming';
           // User is not authenticated or auth is still loading, so they haven't voted
           pollData.userVote = null;
         }
-        
+
         setPoll(pollData);
         setError(null);
-        
+
         // Strict check: If user has already voted, redirect to results immediately
         if (pollData.userVote && !location.search.includes('showResults=1')) {
           toast('You have already voted in this poll. Redirecting to results...', { icon: 'ℹ️' });
@@ -119,7 +119,7 @@ const isPollUpcoming = poll => poll && poll.status === 'upcoming';
           setRedirecting(true);
           return;
         }
-        
+
         // Route guard: If poll is not active, redirect to results or /polls
         if (pollData.status === 'completed') {
           toast('This poll has ended. Redirecting to results...', { icon: 'ℹ️' });
@@ -174,12 +174,12 @@ const isPollUpcoming = poll => poll && poll.status === 'upcoming';
       toast.error('Please select at least one option to vote.');
       return;
     }
-    
+
     if (!user || authLoading) {
       toast.error('You must be logged in to vote.');
       return;
     }
-    
+
     setShowVoteConfirmation(true);
   };
 
@@ -202,15 +202,15 @@ const isPollUpcoming = poll => poll && poll.status === 'upcoming';
       });
 
       toast.success('Vote submitted successfully!');
-      
+
       // Show results after successful vote
       setShowVoteConfirmation(false);
       setShowResults(true);
-      
+
       // Fetch updated results
       const resultsResponse = await axiosInstance.get(`/polls/${pollId}/results`);
       setResults(resultsResponse.data);
-      
+
     } catch (error) {
       console.error('Error submitting vote:', error);
       const errorMessage = error.response?.data?.error || 'Failed to submit vote. Please try again.';
@@ -245,9 +245,9 @@ const isPollUpcoming = poll => poll && poll.status === 'upcoming';
     // Enhanced keyboard navigation with comprehensive shortcuts
     const handleKeyDown = (e) => {
       // Prevent default behavior for application shortcuts
-      const isApplicationShortcut = (e.metaKey || e.ctrlKey) && 
+      const isApplicationShortcut = (e.metaKey || e.ctrlKey) &&
         ['?', 'k', 'n', 'p', 'b', 'Enter', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key);
-      
+
       if (isApplicationShortcut) {
         e.preventDefault();
       }
@@ -316,12 +316,12 @@ const isPollUpcoming = poll => poll && poll.status === 'upcoming';
 
           const newSelectedOptions = [options[newIndex]];
           setSelectedOptions(newSelectedOptions);
-          
+
           // Scroll the selected option into view with smooth animation
           const optionElement = document.querySelector(`[data-option-text="${options[newIndex].text}"]`);
           if (optionElement) {
-            optionElement.scrollIntoView({ 
-              behavior: 'smooth', 
+            optionElement.scrollIntoView({
+              behavior: 'smooth',
               block: 'nearest',
               inline: 'nearest'
             });
@@ -360,7 +360,7 @@ const isPollUpcoming = poll => poll && poll.status === 'upcoming';
         announcementElement.className = 'sr-only';
         announcementElement.textContent = announcement;
         document.body.appendChild(announcementElement);
-        
+
         // Clean up after announcement
         setTimeout(() => {
           if (announcementElement.parentNode) {
@@ -378,17 +378,17 @@ const isPollUpcoming = poll => poll && poll.status === 'upcoming';
     return () => {
       window.removeEventListener('keydown', handleKeyDown, options);
       clearTimeout(keyDownTimeout);
-      
+
       // Clean up any remaining data attributes
       const lastActiveElements = document.querySelectorAll('[data-last-active]');
       lastActiveElements.forEach(el => el.removeAttribute('data-last-active'));
     };
   }, [
-    showExitModal, 
-    showKeyboardShortcuts, 
-    selectedOptions, 
-    currentQuestionIndex, 
-    poll?.totalQuestions, 
+    showExitModal,
+    showKeyboardShortcuts,
+    selectedOptions,
+    currentQuestionIndex,
+    poll?.totalQuestions,
     poll?.options,
     handleNext,
     handleBack
@@ -430,7 +430,7 @@ const isPollUpcoming = poll => poll && poll.status === 'upcoming';
     if (!pollId) return;
     if (socketRef.current) return; // Prevent multiple connections
 
-          const socket = socketIOClient('/', {
+    const socket = socketIOClient('/', {
       withCredentials: true,
     });
     socketRef.current = socket;
@@ -546,7 +546,7 @@ const isPollUpcoming = poll => poll && poll.status === 'upcoming';
                     <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4">
                       Thank you for participating! Your vote has been recorded successfully.
                     </p>
-                    
+
                     {/* Show previous vote if not anonymized */}
                     {poll?.settings?.voterNameDisplay !== 'anonymized' && poll.userVote.options && poll.userVote.options.length > 0 && (
                       <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 mb-6">
@@ -558,11 +558,40 @@ const isPollUpcoming = poll => poll && poll.status === 'upcoming';
                         </p>
                       </div>
                     )}
-                    
+
+                    {/* VOTE INTEGRITY RECEIPT */}
+                    {poll.userVote?.hash && (
+                      <div className="mt-6 p-4 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-left overflow-hidden">
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-3">
+                          <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                          </svg>
+                          Vote Integrity Receipt
+                        </h3>
+                        <div className="space-y-3">
+                          <div>
+                            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Vote Hash (SHA-256)</p>
+                            <code className="block text-xs bg-gray-100 dark:bg-gray-900 p-2 rounded border border-gray-200 dark:border-gray-700 break-all font-mono text-gray-700 dark:text-gray-300">
+                              {poll.userVote.hash}
+                            </code>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Previous Block Hash</p>
+                            <code className="block text-xs bg-gray-100 dark:bg-gray-900 p-2 rounded border border-gray-200 dark:border-gray-700 break-all font-mono text-gray-700 dark:text-gray-300">
+                              {poll.userVote.previousBlockHash || 'GENESIS'}
+                            </code>
+                          </div>
+                          <p className="text-xs text-gray-500 italic mt-2">
+                            This unique hash proves your vote was included in the immutable ledger.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
                     {poll?.settings?.voterNameDisplay === 'anonymized' && (
                       <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 mb-6">
                         <p className="text-sm text-gray-600 dark:text-gray-300 italic">
-                          This poll is anonymized. Your vote is private and cannot be shown.
+                          This poll is anonymized. Your vote is private and cannot be shown, but you can verify it using the hash above.
                         </p>
                       </div>
                     )}
@@ -609,7 +638,7 @@ const isPollUpcoming = poll => poll && poll.status === 'upcoming';
   // Enhanced Vote Confirmation Modal
   const VoteConfirmationModal = () => {
     if (!showVoteConfirmation || results) return null;
-    
+
     return (
       <div role="dialog" aria-modal="true" aria-labelledby="vote-confirmation-title">
         <EnhancedVoteConfirmation
@@ -737,27 +766,27 @@ const isPollUpcoming = poll => poll && poll.status === 'upcoming';
   // Safety check: Don't render main interface if poll is null
   if (!poll) {
     return (
-      <motion.div 
+      <motion.div
         className="flex flex-col items-center justify-center min-h-[60vh] bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900"
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
-        <motion.div 
+        <motion.div
           className="relative"
           initial={{ rotate: 0 }}
           animate={{ rotate: 360 }}
           transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
         >
           <div className="w-20 h-20 rounded-full border-4 border-gray-200 dark:border-[#3f4c5a] border-t-blue-600 dark:border-t-[#c7d7e9] shadow-lg"></div>
-          <motion.div 
+          <motion.div
             className="absolute inset-0 w-20 h-20 rounded-full border-4 border-transparent border-t-blue-400 dark:border-t-[#a8c7e8] opacity-60"
             animate={{ rotate: -360 }}
             transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
           />
         </motion.div>
-        
-        <motion.div 
+
+        <motion.div
           className="mt-6 text-center space-y-2"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -770,8 +799,8 @@ const isPollUpcoming = poll => poll && poll.status === 'upcoming';
             Fetching poll details and preparing your voting experience...
           </p>
         </motion.div>
-        
-        <motion.div 
+
+        <motion.div
           className="mt-8 flex space-x-2"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -781,13 +810,13 @@ const isPollUpcoming = poll => poll && poll.status === 'upcoming';
             <motion.div
               key={i}
               className="w-2 h-2 bg-blue-500 dark:bg-blue-400 rounded-full"
-              animate={{ 
+              animate={{
                 scale: [1, 1.5, 1],
                 opacity: [0.5, 1, 0.5]
               }}
-              transition={{ 
-                duration: 1.5, 
-                repeat: Infinity, 
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
                 delay: i * 0.2,
                 ease: "easeInOut"
               }}
@@ -808,7 +837,7 @@ const isPollUpcoming = poll => poll && poll.status === 'upcoming';
       {/* Enhanced Exit Confirmation Modal */}
       <AnimatePresence>
         {showExitModal && (
-          <motion.div 
+          <motion.div
             className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in"
             role="dialog"
             aria-modal="true"
@@ -832,7 +861,7 @@ const isPollUpcoming = poll => poll && poll.status === 'upcoming';
               }
             }}
           >
-            <motion.div 
+            <motion.div
               className="exit-modal bg-white dark:bg-[#1e242c] rounded-xl p-6 sm:p-8 max-w-md w-full mx-4 animate-scale-in shadow-2xl border border-gray-200/50 dark:border-[#3f4c5a]/50"
               onClick={(e) => e.stopPropagation()}
               tabIndex={0}
@@ -845,21 +874,21 @@ const isPollUpcoming = poll => poll && poll.status === 'upcoming';
 
               <div className="relative z-10">
                 <div className="flex items-center gap-3 mb-4 sm:mb-6">
-                  <motion.div 
+                  <motion.div
                     className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30"
-                    animate={{ 
+                    animate={{
                       scale: [1, 1.05, 1],
                       rotate: [0, -5, 5, 0]
                     }}
-                    transition={{ 
-                      duration: 2, 
+                    transition={{
+                      duration: 2,
                       repeat: Infinity,
                       ease: "easeInOut"
                     }}
                   >
                     <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 dark:text-red-400" />
                   </motion.div>
-                  <motion.h3 
+                  <motion.h3
                     id="exit-modal-title"
                     className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white"
                     initial={{ opacity: 0, x: -10 }}
@@ -869,41 +898,41 @@ const isPollUpcoming = poll => poll && poll.status === 'upcoming';
                     Exit Voting Session?
                   </motion.h3>
                 </div>
-                
-                <motion.div 
+
+                <motion.div
                   className="space-y-3 sm:space-y-4"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
                 >
-                  <p 
+                  <p
                     id="exit-modal-description"
                     className="text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed"
                   >
-                    {currentQuestionIndex > 0 
+                    {currentQuestionIndex > 0
                       ? "You have made progress in this poll. Are you sure you want to exit? Your progress will be lost."
                       : "Are you sure you want to exit? You can return to this poll later."}
                   </p>
-                  
+
                   {currentQuestionIndex > 0 && (
-                    <motion.div 
+                    <motion.div
                       className="p-3 sm:p-4 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800"
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 0.3 }}
                     >
                       <div className="flex items-start gap-2">
-                        <motion.svg 
-                          className="w-4 h-4 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" 
-                          fill="none" 
-                          viewBox="0 0 24 24" 
+                        <motion.svg
+                          className="w-4 h-4 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0"
+                          fill="none"
+                          viewBox="0 0 24 24"
                           stroke="currentColor"
-                          animate={{ 
+                          animate={{
                             scale: [1, 1.1, 1],
                             rotate: [0, -5, 5, 0]
                           }}
-                          transition={{ 
-                            duration: 2, 
+                          transition={{
+                            duration: 2,
                             repeat: Infinity,
                             ease: "easeInOut"
                           }}
@@ -923,7 +952,7 @@ const isPollUpcoming = poll => poll && poll.status === 'upcoming';
                   )}
                 </motion.div>
 
-                <motion.div 
+                <motion.div
                   className="mt-6 sm:mt-8 flex flex-col sm:flex-row sm:justify-end gap-3 sm:gap-4"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -942,7 +971,7 @@ const isPollUpcoming = poll => poll && poll.status === 'upcoming';
                     onClick={handleExit}
                     className="w-full sm:w-auto px-4 py-2.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-[#1e242c]"
                     aria-label="Exit voting session and return to polls"
-                    whileHover={{ 
+                    whileHover={{
                       scale: 1.02,
                       boxShadow: "0 10px 25px -5px rgba(239, 68, 68, 0.4)"
                     }}
@@ -1016,7 +1045,7 @@ const isPollUpcoming = poll => poll && poll.status === 'upcoming';
                       </div>
                     </div>
                   )}
-                  
+
                   {!user && !authLoading && (
                     <div className="mb-4 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
                       <div className="flex items-start gap-3">

@@ -7,7 +7,7 @@ exports.createPoll = async (req, res) => {
   try {
     console.log('Incoming poll payload:', req.body); // Log the incoming payload
     console.log('User creating poll:', req.user?._id); // Log the user creating the poll
-    
+
     // --- Robust Validation ---
     const { title, description, startDate, endDate, options, resultDate, settings, category } = req.body;
     if (!title || typeof title !== 'string' || title.trim().length < 3 || title.length > 100) {
@@ -58,15 +58,15 @@ exports.createPoll = async (req, res) => {
       }
     }
     // --- End Validation ---
-    
+
     console.log('Validation passed, creating poll...'); // Log validation success
-    
+
     const poll = new Poll({ ...req.body, createdBy: req.user._id });
     console.log('Poll model created, saving to database...'); // Log before save
-    
+
     await poll.save();
     console.log('Poll saved successfully:', poll._id); // Log successful save
-    
+
     res.status(201).json(poll);
   } catch (err) {
     console.error('Error in createPoll:', err);
@@ -78,7 +78,7 @@ exports.createPoll = async (req, res) => {
       keyPattern: err.keyPattern,
       keyValue: err.keyValue
     });
-    
+
     // Log additional context for debugging
     console.error('Request context:', {
       user: req.user?._id,
@@ -86,7 +86,7 @@ exports.createPoll = async (req, res) => {
       headers: req.headers,
       timestamp: new Date().toISOString()
     });
-    
+
     // Send appropriate error response
     if (err.name === 'ValidationError') {
       return res.status(400).json({ error: 'Validation failed', details: err.message });
@@ -173,7 +173,7 @@ exports.getPolls = async (req, res) => {
 
     // Count total for pagination
     const total = await Poll.countDocuments(query);
-    
+
     // Debug: Check if there are any votes in the database
     const Vote = require('../models/Vote');
     const voteCount = await Vote.countDocuments();
@@ -185,7 +185,7 @@ exports.getPolls = async (req, res) => {
 
     // Fetch polls with vote statistics using aggregation
     console.log('Executing aggregation with query:', JSON.stringify(query, null, 2));
-    
+
     let polls;
     try {
       polls = await Poll.aggregate([
@@ -240,14 +240,14 @@ exports.getPolls = async (req, res) => {
       ]);
     } catch (aggregationError) {
       console.error('Aggregation failed, falling back to simple approach:', aggregationError);
-      
+
       // Fallback: Get polls and manually calculate stats
       const rawPolls = await Poll.find(query).sort(sortObj).skip(skip).limit(pageSize).lean();
-      
+
       // Get vote stats for these polls
       const pollIds = rawPolls.map(p => p._id);
       const votes = await Vote.find({ poll: { $in: pollIds } }).lean();
-      
+
       // Group votes by poll
       const votesByPoll = {};
       votes.forEach(vote => {
@@ -260,12 +260,12 @@ exports.getPolls = async (req, res) => {
           votesByPoll[pollId].users.add(String(vote.user));
         }
       });
-      
+
       // Add stats to polls
       polls = rawPolls.map(poll => {
         const pollId = String(poll._id);
         const stats = votesByPoll[pollId] || { totalVotes: 0, users: new Set() };
-        
+
         // Calculate status
         const now = new Date();
         const start = new Date(poll.startDate);
@@ -273,7 +273,7 @@ exports.getPolls = async (req, res) => {
         let status = 'completed';
         if (now < start) status = 'upcoming';
         else if (now >= start && now <= end) status = 'active';
-        
+
         return {
           ...poll,
           totalVotes: stats.totalVotes,
@@ -282,12 +282,12 @@ exports.getPolls = async (req, res) => {
         };
       });
     }
-    
-    console.log('Aggregation results:', JSON.stringify(polls.map(p => ({ 
-      id: p._id, 
-      title: p.title, 
-      totalVotes: p.totalVotes, 
-      participantCount: p.participantCount 
+
+    console.log('Aggregation results:', JSON.stringify(polls.map(p => ({
+      id: p._id,
+      title: p.title,
+      totalVotes: p.totalVotes,
+      participantCount: p.participantCount
     })), null, 2));
 
     res.json({
@@ -379,7 +379,7 @@ exports.updatePoll = async (req, res) => {
     const poll = await Poll.findById(req.params.id);
     if (!poll) return res.status(404).json({ error: 'Poll not found' });
 
-    if (!req.user || (String(poll.createdBy) !== String(req.user._id) && !req.user.isAdmin)) {
+    if (!req.user || (String(poll.createdBy) !== String(req.user._id) && req.user.role !== 'admin')) {
       return res.status(403).json({ error: 'Not authorized to update this poll' });
     }
 
@@ -528,7 +528,7 @@ exports.deletePoll = async (req, res) => {
     if (!poll) return res.status(404).json({ error: 'Poll not found' });
 
     // If using authentication middleware, req.user should be set
-    if (!req.user || (String(poll.createdBy) !== String(req.user._id) && !req.user.isAdmin)) {
+    if (!req.user || (String(poll.createdBy) !== String(req.user._id) && req.user.role !== 'admin')) {
       return res.status(403).json({ error: 'Not authorized to delete this poll' });
     }
 
@@ -542,10 +542,10 @@ exports.deletePoll = async (req, res) => {
     // You could use a real logger or DB collection for audit logs
     console.log(`[AUDIT] Poll deleted: ${poll._id} by user ${req.user ? req.user._id : 'unknown'}. Votes deleted: ${votesDeleted.deletedCount}`);
 
-    res.json({ 
-      message: 'Poll and associated votes deleted', 
-      pollId: poll._id, 
-      votesDeleted: votesDeleted.deletedCount 
+    res.json({
+      message: 'Poll and associated votes deleted',
+      pollId: poll._id,
+      votesDeleted: votesDeleted.deletedCount
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -611,6 +611,23 @@ exports.getPollResults = async (req, res) => {
     if (now < new Date(poll.startDate)) status = "upcoming";
     else if (now > new Date(poll.endDate)) status = "completed";
     else status = "active";
+
+    // Verify privacy settings: If poll is active and showResultsBeforeEnd is false, hide actual counts
+    const isOwner = req.user && String(poll.createdBy) === String(req.user._id);
+    const isAdmin = req.user && (req.user.role === 'admin' || req.user.role === 'election_committee');
+    const canViewResults = status === 'completed' ||
+      (poll.settings && poll.settings.showResultsBeforeEnd) ||
+      isOwner ||
+      isAdmin;
+
+    if (!canViewResults) {
+      options.forEach(opt => {
+        delete opt.count;
+        delete opt.percent;
+      });
+      // Mask total votes if strictly private, or leave it for generic participation stats
+      // totalVotes = null; 
+    }
 
     res.json({
       pollId: poll._id,

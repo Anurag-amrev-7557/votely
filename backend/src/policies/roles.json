@@ -1,0 +1,51 @@
+{
+    "admin": {
+        "poll": [
+            "*"
+        ],
+        "vote": [
+            "*"
+        ],
+        "nomination": [
+            "*"
+        ]
+    },
+    "election_committee": {
+        "poll": [
+            "create",
+            "read",
+            "update",
+            "freeze"
+        ],
+        "vote": [
+            "read",
+            "audit"
+        ],
+        "nomination": [
+            "read",
+            "approve",
+            "reject"
+        ]
+    },
+    "user": {
+        "poll": [
+            "read"
+        ],
+        "vote": [
+            "cast",
+            "read_own"
+        ],
+        "nomination": [
+            "create",
+            "read_own"
+        ]
+    },
+    "guest": {
+        "poll": [
+            "read"
+        ],
+        "nomination": [
+            "read"
+        ]
+    }
+}

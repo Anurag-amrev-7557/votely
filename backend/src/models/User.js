@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, 'Password is required'],
+    required: false, // Changed to false for Magic Link / OAuth support
     minlength: [8, 'Password must be at least 8 characters long'],
     select: false // Don't return password in queries by default
   },
@@ -120,6 +120,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     unique: true,
     sparse: true
+  },
+  // Magic Link Auth
+  magicLinkToken: {
+    type: String,
+    select: false
+  },
+  magicLinkExpires: {
+    type: Date,
+    select: false
   },
   // Activity tracking
   activityStats: {
@@ -232,6 +241,16 @@ userSchema.methods.toJSON = function () {
   delete user.__v;
   return user;
 };
+
+// Virtual for checking if user is admin
+userSchema.virtual('isAdmin').get(function () {
+  return this.role === 'admin';
+});
+
+// Virtual for checking if user is election committee
+userSchema.virtual('isCommittee').get(function () {
+  return this.role === 'election_committee' || this.role === 'admin';
+});
 
 const User = mongoose.model('User', userSchema);
 

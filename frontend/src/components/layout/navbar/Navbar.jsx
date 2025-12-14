@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useCallback, memo } from 'react';
+import React, { useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { useTheme } from '../../../context/ThemeContext';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAdminAuth } from '../../../context/AdminAuthContext';
 import { useAuth } from '../../../context/AuthContext';
 import PropTypes from 'prop-types';
-import { useLocation } from 'react-router-dom';
 import { getBestProfilePhoto } from '../../../utils/ui/photoUtils';
-import LandingPage from '../../../pages/landing/LandingPage';
+import throttle from 'lodash/throttle';
+import NavbarMobileMenu from './NavbarMobileMenu';
 
 const isExternal = url => /^https?:\/\//.test(url);
 
@@ -221,9 +221,20 @@ const ThemeToggle = memo(({ isDarkMode, isSwitching, handleThemeToggle }) => (
     </motion.button>
 ));
 
+ThemeToggle.displayName = 'ThemeToggle';
+
+// Static navLinks configuration to avoid recreation
+const NAV_LINKS_CONFIG = [
+    { href: '/nominate', label: 'Nominate', sectionId: 'nominate' },
+    { href: '#how-it-works', label: 'How it works', sectionId: 'how-it-works' },
+    { href: '#security', label: 'Security', sectionId: 'security' },
+    { href: '#accessibility', label: 'Accessibility', sectionId: 'accessibility' },
+    { href: '#pricing', label: 'Pricing', sectionId: 'pricing' }
+];
+
 const Navbar = () => {
     const { isDarkMode, toggleTheme } = useTheme();
-    const { isAdmin, logout: adminLogout } = useAdminAuth();
+    const { isAdmin } = useAdminAuth();
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const [isSwitching, setIsSwitching] = useState(false);
@@ -232,30 +243,31 @@ const Navbar = () => {
     const [showNavbar, setShowNavbar] = useState(true);
     const lastScrollY = React.useRef(window.scrollY);
     const menuButtonRef = React.useRef(null);
-    const [lastFocusedElement, setLastFocusedElement] = useState(null);
 
-    // Memoize scroll handler
-    const handleScroll = useCallback(() => {
-        setIsScrolled(window.scrollY > 20);
-        if (window.scrollY < 20) {
-            setShowNavbar(true);
-            lastScrollY.current = window.scrollY;
-            return;
-        }
-        if (window.scrollY > lastScrollY.current) {
-            // Scrolling down
-            setShowNavbar(false);
-        } else {
-            // Scrolling up
-            setShowNavbar(true);
-        }
-        lastScrollY.current = window.scrollY;
-    }, []);
-
+    // Optimized scroll handler with throttle
     useEffect(() => {
+        const handleScroll = throttle(() => {
+            const currentScrollY = window.scrollY;
+            setIsScrolled(currentScrollY > 20);
+
+            if (currentScrollY < 20) {
+                setShowNavbar(true);
+            } else if (currentScrollY > lastScrollY.current) {
+                // Scrolling down
+                setShowNavbar(false);
+            } else {
+                // Scrolling up
+                setShowNavbar(true);
+            }
+            lastScrollY.current = currentScrollY;
+        }, 150); // Throttle to run at most every 150ms
+
         window.addEventListener('scroll', handleScroll, { passive: true });
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, [handleScroll]);
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            handleScroll.cancel();
+        };
+    }, []);
 
     // Memoize theme toggle handler
     const handleThemeToggle = useCallback((e) => {
@@ -272,28 +284,10 @@ const Navbar = () => {
         setIsSwitching(false);
     }, [toggleTheme]);
 
-    // Memoize admin click handler
-    const handleAdminClick = useCallback(() => {
-        if (isAdmin) {
-            navigate('/admin');
-        } else {
-            navigate('/admin-login');
-        }
-    }, [isAdmin, navigate]);
-
-    const handleLogout = async () => {
+    const handleLogout = useCallback(async () => {
         await logout();
         navigate('/');
-    };
-
-    // Memoize navLinks array
-    const navLinks = React.useMemo(() => [
-        { href: '/nominate', label: 'Nominate', sectionId: 'nominate' },
-        { href: '#how-it-works', label: 'How it works', sectionId: 'how-it-works' },
-        { href: '#security', label: 'Security', sectionId: 'security' },
-        { href: '#accessibility', label: 'Accessibility', sectionId: 'accessibility' },
-        { href: '#pricing', label: 'Pricing', sectionId: 'pricing' }
-    ], []);
+    }, [logout, navigate]);
 
     // Helper: Smooth scroll to section by id
     const scrollToSection = useCallback((id) => {
@@ -312,6 +306,7 @@ const Navbar = () => {
             navigate('/', { replace: false });
             setTimeout(() => scrollToSection(sectionId), 100); // Delay for navigation
         }
+        setIsMobileMenuOpen(false); // Close mobile menu if open
     }, [navigate, scrollToSection]);
 
     // Helper: Preload landing page chunk on hover if not already on '/'
@@ -321,49 +316,16 @@ const Navbar = () => {
         }
     }, []);
 
+    // Focus management for mobile menu
     useEffect(() => {
-        if (!isMobileMenuOpen) return;
-        // Save last focused element
-        setLastFocusedElement(document.activeElement);
-        // Focus first focusable element in menu
-        const focusable = document.querySelectorAll(
-            '.mobile-menu [tabindex="0"], .mobile-menu button, .mobile-menu a'
-        );
-        if (focusable.length) focusable[0].focus();
-        // Trap focus
-        const handleKeyDown = (e) => {
-            if (e.key === 'Escape') {
-                setIsMobileMenuOpen(false);
-                if (menuButtonRef.current) menuButtonRef.current.focus();
-            }
-            if (e.key === 'Tab') {
-                const focusableEls = Array.from(document.querySelectorAll('.mobile-menu [tabindex="0"], .mobile-menu button, .mobile-menu a'));
-                const first = focusableEls[0];
-                const last = focusableEls[focusableEls.length - 1];
-                if (e.shiftKey) {
-                    if (document.activeElement === first) {
-                        e.preventDefault();
-                        last.focus();
-                    }
-                } else {
-                    if (document.activeElement === last) {
-                        e.preventDefault();
-                        first.focus();
-                    }
-                }
-            }
-        };
-        document.addEventListener('keydown', handleKeyDown);
-        return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [isMobileMenuOpen]);
-
-    useEffect(() => {
-        if (!isMobileMenuOpen && lastFocusedElement) {
+        if (!isMobileMenuOpen && menuButtonRef.current) {
+            // Return focus to button when menu closes
+            // Using a small timeout to ensure the element is focusable
             setTimeout(() => {
-                if (menuButtonRef.current) menuButtonRef.current.focus();
+                menuButtonRef.current?.focus();
             }, 0);
         }
-    }, [isMobileMenuOpen, lastFocusedElement]);
+    }, [isMobileMenuOpen]);
 
     return (
         <motion.header
@@ -371,8 +333,8 @@ const Navbar = () => {
             animate={{ y: showNavbar ? 0 : -100 }}
             transition={{ duration: 0.4, ease: 'easeInOut' }}
             className={`fixed top-0 left-0 right-0 z-[60] transition-all duration-300 ease-in-out will-change-[background-color,box-shadow] ${isScrolled
-                    ? 'bg-white dark:bg-gray-900 shadow-sm'
-                    : 'bg-white dark:bg-gray-900'
+                ? 'bg-white dark:bg-gray-900 shadow-sm'
+                : 'bg-white dark:bg-gray-900'
                 }`}
         >
             <div className="max-w-7xl mx-auto">
@@ -408,7 +370,7 @@ const Navbar = () => {
                     >
                         {/* Animated Nav Links with Enhanced Icons */}
                         <div className="flex items-center gap-9">
-                            {navLinks.map((link, index) => {
+                            {NAV_LINKS_CONFIG.map((link, index) => {
                                 // Assign relevant icons for each nav link
                                 let IconComponent = null;
                                 switch (link.href) {
@@ -620,38 +582,7 @@ const Navbar = () => {
                                             Sign in to your account
                                         </span>
                                     </div>
-                                    {/* Sign Up Button with Icon and Tooltip */}
-                                    <div className="relative group">
-                                        <Link to="/register" tabIndex={-1}>
-                                            <motion.button
-                                                whileHover={{ scale: 1.08, boxShadow: "0 2px 12px 0 rgba(59,130,246,0.10)" }}
-                                                whileTap={{ scale: 0.96 }}
-                                                className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold leading-normal tracking-[0.015em] transition-all duration-200 hover:shadow-lg gap-2"
-                                                aria-label="Sign Up"
-                                            >
-                                                <svg
-                                                    className="w-5 h-5 mr-2 text-white/90"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    strokeWidth="2"
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    viewBox="0 0 24 24"
-                                                    aria-hidden="true"
-                                                >
-                                                    <path d="M12 4v16m8-8H4"></path>
-                                                </svg>
-                                                <span className="truncate">Sign Up</span>
-                                            </motion.button>
-                                        </Link>
-                                        <span
-                                            className="pointer-events-none absolute left-1/2 -translate-x-1/2 top-full mt-2 z-30 px-3 py-1.5 rounded-lg bg-gray-900 text-xs text-white opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 shadow-lg"
-                                            role="tooltip"
-                                        >
-                                            <svg className="inline w-4 h-4 mr-1 text-white/80" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"></path></svg>
-                                            Create a new account
-                                        </span>
-                                    </div>
+                                    {/* Sign Up Button Removed - Unified Login Flow */}
                                 </>
                             )}
                         </div>
@@ -693,376 +624,18 @@ const Navbar = () => {
                     </motion.button>
                 </div>
 
-                {/* Mobile Menu */}
-                <AnimatePresence mode="wait">
-                    {isMobileMenuOpen && (
-                        <>
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 0.15 }}
-                                style={{ top: '68px' }}
-                                className="fixed inset-x-0 bottom-0 bg-black/20 backdrop-blur-[2px] z-[45] will-change-[opacity]"
-                                onClick={() => setIsMobileMenuOpen(false)}
-                                aria-hidden="true"
-                            />
-                            <motion.div
-                                id="mobile-menu"
-                                role="dialog"
-                                aria-modal="true"
-                                aria-label="Mobile navigation menu"
-                                className="mobile-menu md:hidden fixed inset-x-0 top-[68px] z-[50] overflow-hidden will-change-transform focus:outline-none"
-                                tabIndex={-1}
-                            >
-                                <div className="max-w-[calc(100%-24px)] mx-auto mt-3">
-                                    <motion.div
-                                        className="px-6 py-8 space-y-8 flex flex-col bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-800 transition-colors duration-150 will-change-[background-color]"
-                                        initial="hidden"
-                                        animate="visible"
-                                        exit="hidden"
-                                        variants={{
-                                            visible: {
-                                                transition: {
-                                                    staggerChildren: 0.03,
-                                                    type: "spring",
-                                                    stiffness: 400,
-                                                    damping: 30,
-                                                    mass: 0.8
-                                                }
-                                            },
-                                            hidden: {
-                                                transition: {
-                                                    staggerChildren: 0.03,
-                                                    staggerDirection: -1,
-                                                    type: "spring",
-                                                    stiffness: 400,
-                                                    damping: 30,
-                                                    mass: 0.8,
-                                                    when: "afterChildren"
-                                                }
-                                            }
-                                        }}
-                                    >
-                                        <motion.div
-                                            className="flex flex-col space-y-3"
-                                            variants={{
-                                                hidden: {
-                                                    opacity: 0,
-                                                    y: -20,
-                                                    scale: 0.95,
-                                                    filter: "blur(4px)",
-                                                    transition: {
-                                                        type: "spring",
-                                                        stiffness: 500,
-                                                        damping: 35,
-                                                        mass: 0.9,
-                                                        duration: 0.4,
-                                                        ease: [0.16, 1, 0.3, 1]
-                                                    }
-                                                },
-                                                visible: {
-                                                    opacity: 1,
-                                                    y: 0,
-                                                    scale: 1,
-                                                    filter: "blur(0px)",
-                                                    transition: {
-                                                        type: "spring",
-                                                        stiffness: 500,
-                                                        damping: 35,
-                                                        mass: 0.9,
-                                                        duration: 0.4,
-                                                        ease: [0.16, 1, 0.3, 1],
-                                                        staggerChildren: 0.08,
-                                                        delayChildren: 0.1
-                                                    }
-                                                }
-                                            }}
-                                        >
-                                            {navLinks.map((link, index) => (
-                                                <Link
-                                                    key={link.href}
-                                                    to={link.href}
-                                                    onClick={handleNavLinkClick(link.sectionId)}
-                                                    style={{ textDecoration: 'none' }}
-                                                    tabIndex={0}
-                                                    aria-label={link.label}
-                                                    className="focus-visible:ring-2 focus-visible:ring-blue-400/70"
-                                                >
-                                                    <motion.div
-                                                        className="group relative block px-4 py-3 text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 dark:hover:from-gray-800/50 dark:hover:to-gray-700/50 rounded-xl transition-all duration-300 text-base font-medium will-change-transform border border-transparent hover:border-blue-200 dark:hover:border-blue-800/30 flex items-center gap-3 overflow-hidden"
-                                                        whileHover={{
-                                                            x: 5,
-                                                            scale: 1.02,
-                                                            transition: {
-                                                                type: "spring",
-                                                                stiffness: 400,
-                                                                damping: 25,
-                                                                mass: 0.8
-                                                            }
-                                                        }}
-                                                        whileTap={{
-                                                            scale: 0.98,
-                                                            transition: {
-                                                                type: "spring",
-                                                                stiffness: 600,
-                                                                damping: 30
-                                                            }
-                                                        }}
-                                                        initial={{ opacity: 0, x: -20 }}
-                                                        animate={{ opacity: 1, x: 0 }}
-                                                        transition={{
-                                                            duration: 0.3,
-                                                            delay: index * 0.1,
-                                                            ease: [0.16, 1, 0.3, 1]
-                                                        }}
-                                                        style={{
-                                                            transformOrigin: "left center"
-                                                        }}
-                                                    >
-                                                        {/* Animated Background Gradient */}
-                                                        <motion.div
-                                                            className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                                                            initial={false}
-                                                            whileHover={{
-                                                                scale: 1.1,
-                                                                transition: { duration: 0.3 }
-                                                            }}
-                                                        />
-
-                                                        {/* Enhanced Icon Container */}
-                                                        <motion.div
-                                                            className="relative z-10 flex items-center justify-center"
-                                                            whileHover={{
-                                                                rotate: [0, -10, 10, 0],
-                                                                scale: 1.1,
-                                                                transition: {
-                                                                    duration: 0.6,
-                                                                    ease: "easeInOut"
-                                                                }
-                                                            }}
-                                                        >
-                                                            {link.label === "How it works" && (
-                                                                <motion.svg
-                                                                    className="w-5 h-5 text-blue-500 dark:text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-300 transition-colors duration-300"
-                                                                    fill="none"
-                                                                    viewBox="0 0 24 24"
-                                                                    stroke="currentColor"
-                                                                    initial={{ pathLength: 0 }}
-                                                                    whileHover={{ pathLength: 1 }}
-                                                                    transition={{ duration: 0.8, ease: "easeInOut" }}
-                                                                >
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                                </motion.svg>
-                                                            )}
-                                                            {link.label === "Security" && (
-                                                                <motion.svg
-                                                                    className="w-5 h-5 text-green-500 dark:text-green-400 group-hover:text-green-600 dark:group-hover:text-green-300 transition-colors duration-300"
-                                                                    fill="none"
-                                                                    viewBox="0 0 24 24"
-                                                                    stroke="currentColor"
-                                                                    initial={{ pathLength: 0 }}
-                                                                    whileHover={{ pathLength: 1 }}
-                                                                    transition={{ duration: 0.8, ease: "easeInOut" }}
-                                                                >
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                                                </motion.svg>
-                                                            )}
-                                                            {link.label === "Accessibility" && (
-                                                                <motion.svg
-                                                                    className="w-5 h-5 text-purple-500 dark:text-purple-400 group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors duration-300"
-                                                                    fill="none"
-                                                                    viewBox="0 0 24 24"
-                                                                    stroke="currentColor"
-                                                                    initial={{ pathLength: 0 }}
-                                                                    whileHover={{ pathLength: 1 }}
-                                                                    transition={{ duration: 0.8, ease: "easeInOut" }}
-                                                                >
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                                </motion.svg>
-                                                            )}
-                                                            {link.label === "Pricing" && (
-                                                                <motion.svg
-                                                                    className="w-5 h-5 text-yellow-500 dark:text-yellow-400 group-hover:text-yellow-600 dark:group-hover:text-yellow-300 transition-colors duration-300"
-                                                                    fill="none"
-                                                                    viewBox="0 0 24 24"
-                                                                    stroke="currentColor"
-                                                                    initial={{ pathLength: 0 }}
-                                                                    whileHover={{ pathLength: 1 }}
-                                                                    transition={{ duration: 0.8, ease: "easeInOut" }}
-                                                                >
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                                </motion.svg>
-                                                            )}
-                                                        </motion.div>
-
-                                                        {/* Enhanced Text with Gradient */}
-                                                        <motion.span
-                                                            className="relative z-10 font-semibold bg-gradient-to-r from-gray-700 to-gray-900 dark:from-gray-200 dark:to-gray-100 group-hover:from-blue-600 group-hover:to-purple-600 dark:group-hover:from-blue-400 dark:group-hover:to-purple-400 bg-clip-text text-transparent transition-all duration-300"
-                                                            whileHover={{
-                                                                x: 2,
-                                                                transition: { duration: 0.2 }
-                                                            }}
-                                                        >
-                                                            {link.label}
-                                                        </motion.span>
-
-                                                        {/* Animated Arrow Indicator */}
-                                                        <motion.div
-                                                            className="absolute right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                                                            initial={{ x: -10, opacity: 0 }}
-                                                            whileHover={{
-                                                                x: 0,
-                                                                opacity: 1,
-                                                                transition: { duration: 0.3 }
-                                                            }}
-                                                        >
-                                                            <svg className="w-4 h-4 text-blue-500 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                                            </svg>
-                                                        </motion.div>
-
-                                                        {/* Ripple Effect */}
-                                                        <motion.div
-                                                            className="absolute inset-0 bg-blue-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                                                            initial={false}
-                                                            whileHover={{
-                                                                scale: [1, 1.2, 1],
-                                                                opacity: [0, 0.3, 0],
-                                                                transition: { duration: 0.6 }
-                                                            }}
-                                                        />
-                                                    </motion.div>
-                                                </Link>
-                                            ))}
-                                        </motion.div>
-                                        <motion.div
-                                            className="flex flex-col gap-3"
-                                            variants={{
-                                                hidden: {
-                                                    opacity: 0,
-                                                    transition: {
-                                                        type: "spring",
-                                                        stiffness: 400,
-                                                        damping: 30,
-                                                        mass: 0.8
-                                                    }
-                                                },
-                                                visible: {
-                                                    opacity: 1,
-                                                    transition: {
-                                                        type: "spring",
-                                                        stiffness: 400,
-                                                        damping: 30,
-                                                        mass: 0.8
-                                                    }
-                                                }
-                                            }}
-                                        >
-                                            <div className="flex gap-3">
-                                                <motion.button
-                                                    onClick={() => {
-                                                        toggleTheme();
-                                                        setIsMobileMenuOpen(false);
-                                                    }}
-                                                    whileHover={{ scale: 1.02 }}
-                                                    whileTap={{ scale: 0.98 }}
-                                                    className="flex-1 px-4 py-3 bg-transparent hover:bg-gray-50 dark:hover:bg-gray-800/50 text-gray-700 dark:text-gray-200 rounded-xl font-semibold transition-all duration-150 text-sm border border-gray-100 dark:border-gray-800 flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-blue-400/70"
-                                                    aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-                                                    tabIndex={0}
-                                                >
-                                                    {isDarkMode ? (
-                                                        <>
-                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                                                            </svg>
-                                                            <span>Light Mode</span>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                                                            </svg>
-                                                            <span>Dark Mode</span>
-                                                        </>
-                                                    )}
-                                                </motion.button>
-                                            </div>
-                                            {user ? (
-                                                <>
-                                                    <motion.button
-                                                        onClick={() => {
-                                                            handleLogout();
-                                                            setIsMobileMenuOpen(false);
-                                                        }}
-                                                        whileHover={{ scale: 1.02 }}
-                                                        whileTap={{ scale: 0.98 }}
-                                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white rounded-xl font-semibold transition-all duration-150 text-sm shadow-sm hover:shadow-md border border-gray-100 dark:border-gray-800 flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-blue-400/70"
-                                                        aria-label="Logout"
-                                                        tabIndex={0}
-                                                    >
-                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                                        </svg>
-                                                        Logout
-                                                    </motion.button>
-                                                    <Link to="/profile" tabIndex={0} aria-label="Profile" className="focus-visible:ring-2 focus-visible:ring-blue-400/70">
-                                                        <motion.button
-                                                            whileHover={{ scale: 1.02 }}
-                                                            whileTap={{ scale: 0.98 }}
-                                                            className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all duration-150 text-sm shadow-sm hover:shadow-md flex items-center justify-center gap-2"
-                                                            onClick={() => setIsMobileMenuOpen(false)}
-                                                        >
-                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                            </svg>
-                                                            Profile
-                                                        </motion.button>
-                                                    </Link>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Link to="/login" tabIndex={0} aria-label="Login" className="focus-visible:ring-2 focus-visible:ring-blue-400/70">
-                                                        <motion.button
-                                                            whileHover={{ scale: 1.02 }}
-                                                            whileTap={{ scale: 0.98 }}
-                                                            className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-white rounded-xl font-semibold transition-all duration-150 text-sm shadow-sm hover:shadow-md border border-gray-100 dark:border-gray-800 flex items-center justify-center gap-2"
-                                                            onClick={() => setIsMobileMenuOpen(false)}
-                                                        >
-                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                                                            </svg>
-                                                            Login
-                                                        </motion.button>
-                                                    </Link>
-                                                    <Link to="/register" tabIndex={0} aria-label="Sign Up" className="focus-visible:ring-2 focus-visible:ring-blue-400/70">
-                                                        <motion.button
-                                                            whileHover={{ scale: 1.02 }}
-                                                            whileTap={{ scale: 0.98 }}
-                                                            className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all duration-150 text-sm shadow-sm hover:shadow-md flex items-center justify-center gap-2"
-                                                            onClick={() => setIsMobileMenuOpen(false)}
-                                                        >
-                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                                                            </svg>
-                                                            Sign Up
-                                                        </motion.button>
-                                                    </Link>
-                                                </>
-                                            )}
-                                        </motion.div>
-                                    </motion.div>
-                                </div>
-                            </motion.div>
-                        </>
-                    )}
-                </AnimatePresence>
+                {/* Mobile Menu Component */}
+                <NavbarMobileMenu
+                    isOpen={isMobileMenuOpen}
+                    setIsOpen={setIsMobileMenuOpen}
+                    navLinks={NAV_LINKS_CONFIG}
+                    onLinkClick={handleNavLinkClick}
+                    user={user}
+                    handleLogout={handleLogout}
+                />
             </div>
         </motion.header>
     );
 };
-
-AdvancedNavLink.displayName = 'AdvancedNavLink';
-ThemeToggle.displayName = 'ThemeToggle';
 
 export default Navbar;

@@ -109,6 +109,10 @@ const LoginPage = createLazyComponent(
   () => import(/* webpackChunkName: "LoginPage" */'./pages/auth/LoginPage'),
   'LoginPage'
 );
+const MagicLinkVerifyPage = createLazyComponent(
+  () => import(/* webpackChunkName: "MagicLinkVerifyPage" */'./pages/auth/MagicLinkVerifyPage'),
+  'MagicLinkVerifyPage'
+);
 const RegisterPage = createLazyComponent(
   () => import(/* webpackChunkName: "RegisterPage" */'./pages/auth/RegisterPage'),
   'RegisterPage'
@@ -600,7 +604,8 @@ const AppContent = () => {
       { path: '/polls', element: AvailablePolls, priority: 'high' },
       { path: '/vote/:pollId', element: VotingPage, priority: 'high', protected: 'voting' },
       { path: '/login', element: LoginPage, priority: 'high' },
-      { path: '/register', element: RegisterPage, priority: 'high' },
+      { path: '/login/verify', element: MagicLinkVerifyPage, priority: 'high' },
+      { path: '/register', element: () => <Navigate to="/login" replace />, priority: 'low' },
       { path: '/profile', element: ProfilePage, priority: 'normal' },
       { path: '/privacy-policy', element: PrivacyPolicy, priority: 'normal' },
       { path: '/terms-of-service', element: TermsOfService, priority: 'normal' },

@@ -1,0 +1,1 @@
+http://localhost:5173/login/verify?token=e527383f3a5dc6dc9a7bcdf7eb123b78107b65f65c04769b21e0a8bc6bf3aa11&email=23ce01006@iitbbs.ac.in

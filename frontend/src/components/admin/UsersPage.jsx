@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useTheme } from '../../context/ThemeContext';
 import { toast } from 'react-hot-toast';
 import debounce from 'lodash/debounce';
@@ -55,71 +54,41 @@ const UsersPage = () => {
     }
   });
 
-  // Sample data - Replace with API call
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      name: 'John Doe',
-      email: 'john@example.com',
-      role: 'admin',
-      status: 'active',
-      phone: '+1 234-567-8900',
-      address: '123 Main St, City',
-      organization: 'VoteSafe Inc',
-      department: 'IT',
-      lastLogin: '2024-03-15 10:30 AM',
-      permissions: {
-        canCreatePolls: true,
-        canManageUsers: true,
-        canViewResults: true,
-        canExportData: true
-      }
-    },
-    {
-      id: 2,
-      name: 'Jane Smith',
-      email: 'jane@example.com',
-      role: 'user',
-      status: 'active',
-      phone: '+1 234-567-8901',
-      address: '456 Oak St, Town',
-      organization: 'VoteSafe Inc',
-      department: 'HR',
-      lastLogin: '2024-03-14 02:15 PM',
-      permissions: {
-        canCreatePolls: false,
-        canManageUsers: false,
-        canViewResults: true,
-        canExportData: false
-      }
-    },
-    {
-      id: 3,
-      name: 'Bob Johnson',
-      email: 'bob@example.com',
-      role: 'moderator',
-      status: 'inactive',
-      phone: '+1 234-567-8902',
-      address: '789 Pine St, Village',
-      organization: 'VoteSafe Inc',
-      department: 'Operations',
-      lastLogin: '2024-03-13 09:45 AM',
-      permissions: {
-        canCreatePolls: true,
-        canManageUsers: false,
-        canViewResults: true,
-        canExportData: true
-      }
+  // State for fetched users
+  const [users, setUsers] = useState([]);
+
+  // Fetch users from API
+  const fetchUsers = async () => {
+    try {
+      setIsLoading(true);
+      const params = {
+        page,
+        limit: 10,
+        search: searchQuery,
+        role: filterRole !== 'all' ? filterRole : undefined,
+        status: filterStatus !== 'all' ? filterStatus : undefined,
+        sort: sortConfig.key,
+        order: sortConfig.direction
+      };
+
+      const { data } = await axiosInstance.get('/users', { params });
+      setUsers(data.users || []);
+      setTotalPages(data.totalPages || 1);
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+      showErrorToast(error.response?.data?.message || 'Failed to load users');
+    } finally {
+      setIsLoading(false);
     }
-  ]);
+  };
 
   useEffect(() => {
-    // Simulate API call
+    // Debounce search to avoid too many API calls
     const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
+      fetchUsers();
+    }, 500);
     return () => clearTimeout(timer);
-  }, []);
+  }, [page, searchQuery, filterRole, filterStatus, sortConfig]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -191,61 +160,67 @@ const UsersPage = () => {
     setUserToDelete(null);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (isEditing) {
-      // Update existing user
-      setUsers(users.map(user => 
-        user.id === selectedUser?.id 
-          ? { ...user, ...userForm }
-          : user
-      ));
-      toast.success('User updated successfully', {
-        icon: '✅',
-        style: {
-          borderRadius: '10px',
-          background: '#10B981',
-          color: '#fff',
-        },
-      });
-    } else {
-      // Create new user
-      const newUser = {
-        id: Date.now().toString(), // Generate a unique ID
-        ...userForm,
-        createdAt: new Date().toISOString(),
-      };
-      setUsers([...users, newUser]);
-      toast.success('User created successfully', {
-        icon: '✅',
-        style: {
-          borderRadius: '10px',
-          background: '#10B981',
-          color: '#fff',
-        },
-      });
-    }
-    
-    setShowModal(false);
-    setUserForm({
-      name: '',
-      email: '',
-      role: 'user',
-      status: 'active',
-      phone: '',
-      address: '',
-      organization: '',
-      department: '',
-      lastLogin: '',
-      permissions: {
-        canCreatePolls: false,
-        canManageUsers: false,
-        canViewResults: true,
-        canExportData: false
+
+    try {
+      if (isEditing) {
+        // Update existing user
+        const { data } = await axiosInstance.put(`/users/${selectedUser.id}`, userForm);
+        setUsers(users.map(user =>
+          user.id === selectedUser?.id
+            ? { ...user, ...data } // Merge updated data
+            : user
+        ));
+        toast.success('User updated successfully', {
+          icon: '✅',
+          style: {
+            borderRadius: '10px',
+            background: '#10B981',
+            color: '#fff',
+          },
+        });
+      } else {
+        // Create new user
+        const { data } = await axiosInstance.post('/users', {
+          ...userForm,
+          password: 'Password123!', // Temporary default password for created users, or add to form
+        });
+
+        setUsers([data, ...users]); // Add to top
+        toast.success('User created successfully', {
+          icon: '✅',
+          style: {
+            borderRadius: '10px',
+            background: '#10B981',
+            color: '#fff',
+          },
+        });
       }
-    });
-    setIsEditing(false);
+
+      setShowModal(false);
+      setUserForm({
+        name: '',
+        email: '',
+        role: 'user',
+        status: 'active',
+        phone: '',
+        address: '',
+        organization: '',
+        department: '',
+        lastLogin: '',
+        permissions: {
+          canCreatePolls: false,
+          canManageUsers: false,
+          canViewResults: true,
+          canExportData: false
+        }
+      });
+      setIsEditing(false);
+    } catch (error) {
+      console.error("User save error:", error);
+      showErrorToast(error.response?.data?.error || 'Failed to save user');
+    }
   };
 
   const handleSort = (key) => {
@@ -255,61 +230,7 @@ const UsersPage = () => {
     }));
   };
 
-  const getFilteredAndSortedUsers = () => {
-    let filteredUsers = users.filter(user => {
-      const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          user.email.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesStatus = filterStatus === 'all' || user.status === filterStatus;
-      const matchesRole = filterRole === 'all' || user.role === filterRole;
-      const matchesDateRange = !advancedFilters.dateRange.start || !advancedFilters.dateRange.end ||
-        (new Date(user.lastLogin) >= new Date(advancedFilters.dateRange.start) &&
-         new Date(user.lastLogin) <= new Date(advancedFilters.dateRange.end));
-      const matchesDepartment = !advancedFilters.department || user.department === advancedFilters.department;
-      const matchesOrganization = !advancedFilters.organization || user.organization === advancedFilters.organization;
-      
-      return matchesSearch && matchesStatus && matchesRole && matchesDateRange && 
-             matchesDepartment && matchesOrganization;
-    });
-
-    return filteredUsers.sort((a, b) => {
-      if (sortConfig.key === 'name' || sortConfig.key === 'email') {
-        return sortConfig.direction === 'asc' 
-          ? a[sortConfig.key].localeCompare(b[sortConfig.key])
-          : b[sortConfig.key].localeCompare(a[sortConfig.key]);
-      }
-      return sortConfig.direction === 'asc'
-        ? a[sortConfig.key] - b[sortConfig.key]
-        : b[sortConfig.key] - a[sortConfig.key];
-    });
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      case 'inactive':
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
-      case 'suspended':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
-    }
-  };
-
-  const getRoleColor = (role) => {
-    switch (role) {
-      case 'admin':
-        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
-      case 'moderator':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-      case 'user':
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
-    }
-  };
-
-  const filteredUsers = getFilteredAndSortedUsers();
+  const filteredUsers = users; // Use fetched users directly
 
   // Add these new button styles at the top of the component
   const buttonStyles = {
@@ -536,11 +457,10 @@ const UsersPage = () => {
                   placeholder="Search users..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`block w-full pl-10 pr-3 py-2 border ${
-                    isDarkMode
-                      ? 'bg-[#1f2937] border-gray-600 text-white placeholder-gray-400'
-                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                  } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200`}
+                  className={`block w-full pl-10 pr-3 py-2 border ${isDarkMode
+                    ? 'bg-[#1f2937] border-gray-600 text-white placeholder-gray-400'
+                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200`}
                 />
               </div>
             </div>
@@ -548,11 +468,10 @@ const UsersPage = () => {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className={`px-3 py-2 border ${
-                  isDarkMode
-                    ? 'bg-[#1f2937] border-gray-600 text-white'
-                    : 'bg-white border-gray-300 text-gray-900'
-                } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200`}
+                className={`px-3 py-2 border ${isDarkMode
+                  ? 'bg-[#1f2937] border-gray-600 text-white'
+                  : 'bg-white border-gray-300 text-gray-900'
+                  } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200`}
               >
                 <option value="all">All Status</option>
                 <option value="active">Active</option>
@@ -562,11 +481,10 @@ const UsersPage = () => {
               <select
                 value={filterRole}
                 onChange={(e) => setFilterRole(e.target.value)}
-                className={`px-3 py-2 border ${
-                  isDarkMode
-                    ? 'bg-[#1f2937] border-gray-600 text-white'
-                    : 'bg-white border-gray-300 text-gray-900'
-                } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200`}
+                className={`px-3 py-2 border ${isDarkMode
+                  ? 'bg-[#1f2937] border-gray-600 text-white'
+                  : 'bg-white border-gray-300 text-gray-900'
+                  } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200`}
               >
                 <option value="all">All Roles</option>
                 <option value="admin">Admin</option>
@@ -605,11 +523,10 @@ const UsersPage = () => {
                         ...prev,
                         dateRange: { ...prev.dateRange, start: e.target.value }
                       }))}
-                      className={`block w-full px-3 py-2 border ${
-                        isDarkMode
-                          ? 'bg-[#1f2937] border-gray-600 text-white'
-                          : 'bg-white border-gray-300 text-gray-900'
-                      } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200`}
+                      className={`block w-full px-3 py-2 border ${isDarkMode
+                        ? 'bg-[#1f2937] border-gray-600 text-white'
+                        : 'bg-white border-gray-300 text-gray-900'
+                        } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200`}
                     />
                     <input
                       type="date"
@@ -618,11 +535,10 @@ const UsersPage = () => {
                         ...prev,
                         dateRange: { ...prev.dateRange, end: e.target.value }
                       }))}
-                      className={`block w-full px-3 py-2 border ${
-                        isDarkMode
-                          ? 'bg-[#1f2937] border-gray-600 text-white'
-                          : 'bg-white border-gray-300 text-gray-900'
-                      } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200`}
+                      className={`block w-full px-3 py-2 border ${isDarkMode
+                        ? 'bg-[#1f2937] border-gray-600 text-white'
+                        : 'bg-white border-gray-300 text-gray-900'
+                        } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200`}
                     />
                   </div>
                 </div>
@@ -634,11 +550,10 @@ const UsersPage = () => {
                       ...prev,
                       department: e.target.value
                     }))}
-                    className={`block w-full px-3 py-2 border ${
-                      isDarkMode
-                        ? 'bg-[#1f2937] border-gray-600 text-white'
-                        : 'bg-white border-gray-300 text-gray-900'
-                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200`}
+                    className={`block w-full px-3 py-2 border ${isDarkMode
+                      ? 'bg-[#1f2937] border-gray-600 text-white'
+                      : 'bg-white border-gray-300 text-gray-900'
+                      } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200`}
                   >
                     <option value="">All Departments</option>
                     <option value="IT">IT</option>
@@ -654,11 +569,10 @@ const UsersPage = () => {
                       ...prev,
                       organization: e.target.value
                     }))}
-                    className={`block w-full px-3 py-2 border ${
-                      isDarkMode
-                        ? 'bg-[#1f2937] border-gray-600 text-white'
-                        : 'bg-white border-gray-300 text-gray-900'
-                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200`}
+                    className={`block w-full px-3 py-2 border ${isDarkMode
+                      ? 'bg-[#1f2937] border-gray-600 text-white'
+                      : 'bg-white border-gray-300 text-gray-900'
+                      } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200`}
                   >
                     <option value="">All Organizations</option>
                     <option value="VoteSafe Inc">VoteSafe Inc</option>
@@ -687,14 +601,12 @@ const UsersPage = () => {
                     onClick={async () => {
                       for (const userId of selectedUsers) {
                         try {
-                          const res = await fetch('/api/profile/set-active-status', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            credentials: 'include',
-                            body: JSON.stringify({ userId, isActive: true })
+                          await axiosInstance.post('/users/bulk-update', {
+                            userIds: [userId],
+                            action: 'setActive',
+                            value: true
                           });
-                          if (!res.ok) throw new Error('Failed to activate user');
-                          const data = await res.json();
+                          // Update local state
                           setUsers(prev => prev.map(u => u.id === userId ? { ...u, isActive: true, status: 'active' } : u));
                         } catch (err) {
                           toast.error(`Failed to activate user ${userId}`);
@@ -721,14 +633,12 @@ const UsersPage = () => {
                     onClick={async () => {
                       for (const userId of selectedUsers) {
                         try {
-                          const res = await fetch('/api/profile/set-active-status', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            credentials: 'include',
-                            body: JSON.stringify({ userId, isActive: false })
+                          await axiosInstance.post('/users/bulk-update', {
+                            userIds: [userId],
+                            action: 'setActive',
+                            value: false
                           });
-                          if (!res.ok) throw new Error('Failed to deactivate user');
-                          const data = await res.json();
+                          // Update local state
                           setUsers(prev => prev.map(u => u.id === userId ? { ...u, isActive: false, status: 'inactive' } : u));
                         } catch (err) {
                           toast.error(`Failed to deactivate user ${userId}`);
@@ -752,18 +662,26 @@ const UsersPage = () => {
                     Deactivate
                   </button>
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       if (window.confirm('Are you sure you want to delete the selected users? This action cannot be undone.')) {
-                        setUsers(users.filter(user => !selectedUsers.includes(user.id)));
-                        setSelectedUsers([]);
-                        toast.success('Selected users deleted successfully', {
-                          icon: '🗑️',
-                          style: {
-                            borderRadius: '10px',
-                            background: '#EF4444',
-                            color: '#fff',
-                          },
-                        });
+                        try {
+                          await axiosInstance.post('/users/bulk-update', {
+                            userIds: selectedUsers,
+                            action: 'delete'
+                          });
+                          setUsers(users.filter(user => !selectedUsers.includes(user.id)));
+                          setSelectedUsers([]);
+                          toast.success('Selected users deleted successfully', {
+                            icon: '🗑️',
+                            style: {
+                              borderRadius: '10px',
+                              background: '#EF4444',
+                              color: '#fff',
+                            },
+                          });
+                        } catch (err) {
+                          showErrorToast('Failed to delete selected users');
+                        }
                       }
                     }}
                     className={`${bulkActionsStyles.button.base} ${bulkActionsStyles.button.danger}`}
@@ -900,10 +818,10 @@ const UsersPage = () => {
                             aria-label="Edit user"
                           >
                             <svg className={iconStyles.md} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" 
-                                stroke="currentColor" 
-                                strokeWidth="1.5" 
-                                strokeLinecap="round" 
+                              <path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
                                 strokeLinejoin="round"
                               />
                             </svg>
@@ -914,27 +832,33 @@ const UsersPage = () => {
                         </div>
                         <div className="relative group">
                           <button
-                            onClick={() => {
+                            onClick={async () => {
                               if (window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-                                setUsers(users.filter(u => u.id !== user.id));
-                                toast.success('User deleted successfully', {
-                                  icon: '🗑️',
-                                  style: {
-                                    borderRadius: '10px',
-                                    background: '#EF4444',
-                                    color: '#fff',
-                                  },
-                                });
+                                try {
+                                  await axiosInstance.delete(`/users/${user.id}`);
+                                  // Optimistic update or refetch
+                                  setUsers(users.filter(u => u.id !== user.id));
+                                  toast.success('User deleted successfully', {
+                                    icon: '🗑️',
+                                    style: {
+                                      borderRadius: '10px',
+                                      background: '#EF4444',
+                                      color: '#fff',
+                                    },
+                                  });
+                                } catch (error) {
+                                  showErrorToast('Failed to delete user');
+                                }
                               }
                             }}
                             className={`${actionButtonStyles.base} ${actionButtonStyles.delete}`}
                             aria-label="Delete user"
                           >
                             <svg className={iconStyles.md} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" 
-                                stroke="currentColor" 
-                                strokeWidth="1.5" 
-                                strokeLinecap="round" 
+                              <path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
                                 strokeLinejoin="round"
                               />
                             </svg>
@@ -958,26 +882,22 @@ const UsersPage = () => {
             <button
               onClick={() => setPage(page - 1)}
               disabled={page === 1}
-              className={`relative inline-flex items-center px-4 py-2 border ${
-                isDarkMode ? 'border-gray-600' : 'border-gray-300'
-              } text-sm font-medium rounded-md ${
-                isDarkMode
+              className={`relative inline-flex items-center px-4 py-2 border ${isDarkMode ? 'border-gray-600' : 'border-gray-300'
+                } text-sm font-medium rounded-md ${isDarkMode
                   ? 'text-gray-300 bg-[#2c353f] hover:bg-gray-700'
                   : 'text-gray-700 bg-white hover:bg-gray-50'
-              }`}
+                }`}
             >
               Previous
             </button>
             <button
               onClick={() => setPage(page + 1)}
               disabled={page === totalPages}
-              className={`ml-3 relative inline-flex items-center px-4 py-2 border ${
-                isDarkMode ? 'border-gray-600' : 'border-gray-300'
-              } text-sm font-medium rounded-md ${
-                isDarkMode
+              className={`ml-3 relative inline-flex items-center px-4 py-2 border ${isDarkMode ? 'border-gray-600' : 'border-gray-300'
+                } text-sm font-medium rounded-md ${isDarkMode
                   ? 'text-gray-300 bg-[#2c353f] hover:bg-gray-700'
                   : 'text-gray-700 bg-white hover:bg-gray-50'
-              }`}
+                }`}
             >
               Next
             </button>
@@ -995,13 +915,11 @@ const UsersPage = () => {
                 <button
                   onClick={() => setPage(page - 1)}
                   disabled={page === 1}
-                  className={`relative inline-flex items-center px-2 py-2 rounded-l-md border ${
-                    isDarkMode ? 'border-gray-600' : 'border-gray-300'
-                  } text-sm font-medium ${
-                    isDarkMode
+                  className={`relative inline-flex items-center px-2 py-2 rounded-l-md border ${isDarkMode ? 'border-gray-600' : 'border-gray-300'
+                    } text-sm font-medium ${isDarkMode
                       ? 'text-gray-300 bg-[#2c353f] hover:bg-gray-700'
                       : 'text-gray-500 bg-white hover:bg-gray-50'
-                  } transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
+                    } transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   <span className="sr-only">Previous</span>
                   <svg className={`${iconStyles.md} text-gray-500`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -1012,15 +930,13 @@ const UsersPage = () => {
                   <button
                     key={i + 1}
                     onClick={() => setPage(i + 1)}
-                    className={`relative inline-flex items-center px-4 py-2 border ${
-                      isDarkMode ? 'border-gray-600' : 'border-gray-300'
-                    } text-sm font-medium ${
-                      page === i + 1
+                    className={`relative inline-flex items-center px-4 py-2 border ${isDarkMode ? 'border-gray-600' : 'border-gray-300'
+                      } text-sm font-medium ${page === i + 1
                         ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
                         : isDarkMode
-                        ? 'text-gray-300 bg-[#2c353f] hover:bg-gray-700'
-                        : 'text-gray-500 bg-white hover:bg-gray-50'
-                    }`}
+                          ? 'text-gray-300 bg-[#2c353f] hover:bg-gray-700'
+                          : 'text-gray-500 bg-white hover:bg-gray-50'
+                      }`}
                   >
                     {i + 1}
                   </button>
@@ -1028,13 +944,11 @@ const UsersPage = () => {
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={page === totalPages}
-                  className={`relative inline-flex items-center px-2 py-2 rounded-r-md border ${
-                    isDarkMode ? 'border-gray-600' : 'border-gray-300'
-                  } text-sm font-medium ${
-                    isDarkMode
+                  className={`relative inline-flex items-center px-2 py-2 rounded-r-md border ${isDarkMode ? 'border-gray-600' : 'border-gray-300'
+                    } text-sm font-medium ${isDarkMode
                       ? 'text-gray-300 bg-[#2c353f] hover:bg-gray-700'
                       : 'text-gray-500 bg-white hover:bg-gray-50'
-                  }`}
+                    }`}
                 >
                   <span className="sr-only">Next</span>
                   <svg className={`${iconStyles.md} text-gray-500`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">

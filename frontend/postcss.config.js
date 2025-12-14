@@ -7,22 +7,7 @@ import postcssCustomMedia from 'postcss-custom-media';
 import postcssColorFunction from 'postcss-color-function';
 import postcssReporter from 'postcss-reporter';
 
-// Custom plugin to suppress :is() pseudo-class warnings
-const suppressIsWarnings = () => {
-  return (root, result) => {
-    if (result.messages) {
-      result.messages = result.messages.filter(message => {
-        // Filter out :is() pseudo-class warnings
-        if (message.type === 'warning' && 
-            message.text && 
-            message.text.includes(':is()')) {
-          return false;
-        }
-        return true;
-      });
-    }
-  };
-};
+
 
 // Custom plugin to handle cssRules null error
 const safeColorFunction = () => {
@@ -68,13 +53,13 @@ export default {
         'nesting-rules': false, // handled by tailwindcss/nesting
         'custom-media-queries': true,
         'color-function': { unresolved: 'warn' },
-        'is-pseudo-class': true, // Enable :is() pseudo-class support
+        'is-pseudo-class': false, // Disable :is() polyfill to use native browser support and avoid warnings
       },
       autoprefixer: { grid: true },
     }),
     postcssCustomMedia(),
     safeColorFunction(),
-    suppressIsWarnings(),
+
     postcssReporter({ clearReportedMessages: true }),
   ],
   map: process.env.NODE_ENV !== 'production',

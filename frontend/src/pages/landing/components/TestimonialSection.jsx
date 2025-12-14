@@ -2,11 +2,11 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../../context/ThemeContext';
 
-const StarRating = ({ rating }) => (
+const StarRating = React.memo(({ rating }) => (
     <div className="flex gap-0.5">
         {[...Array(5)].map((_, index) => (
-            <motion.div 
-                key={index} 
+            <motion.div
+                key={index}
                 className={`${index < rating ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}`}
                 whileHover={{ scale: 1.1 }}
                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
@@ -17,24 +17,32 @@ const StarRating = ({ rating }) => (
             </motion.div>
         ))}
     </div>
-);
+));
 
-const TestimonialCard = ({ testimonial, isActive }) => (
-    <motion.div 
+const TestimonialCard = React.memo(({ testimonial, isActive }) => (
+    <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.3 }}
-        className={`flex flex-col gap-3 sm:gap-4 p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ${
-            isActive ? 'ring-2 ring-blue-500' : ''
-        }`}
+        className={`flex flex-col gap-3 sm:gap-4 p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ${isActive ? 'ring-2 ring-blue-500' : ''
+            }`}
     >
         <div className="flex items-center gap-3">
             <motion.div
                 whileHover={{ scale: 1.1 }}
-                className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 sm:size-12"
-                style={{ backgroundImage: `url("${testimonial.avatar}")` }}
-            ></motion.div>
+                className="relative shrink-0 overflow-hidden rounded-full size-10 sm:size-12"
+            >
+                <img
+                    src={testimonial.avatar}
+                    alt={testimonial.name}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                    width={48}
+                    height={48}
+                />
+            </motion.div>
             <div className="flex-1">
                 <p className="text-gray-900 dark:text-white text-sm sm:text-base font-medium leading-normal">{testimonial.name}</p>
                 <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm font-normal leading-normal">{testimonial.date}</p>
@@ -43,7 +51,7 @@ const TestimonialCard = ({ testimonial, isActive }) => (
         <StarRating rating={testimonial.rating} />
         <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base font-normal leading-normal">{testimonial.content}</p>
         <div className="flex gap-4 sm:gap-6 text-gray-500 dark:text-gray-400">
-            <motion.button 
+            <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="flex items-center gap-1.5 sm:gap-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-xs sm:text-sm"
@@ -54,7 +62,7 @@ const TestimonialCard = ({ testimonial, isActive }) => (
                 </svg>
                 <span>{testimonial.likes}</span>
             </motion.button>
-            <motion.button 
+            <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="flex items-center gap-1.5 sm:gap-2 hover:text-red-600 dark:hover:text-red-400 transition-colors text-xs sm:text-sm"
@@ -67,7 +75,7 @@ const TestimonialCard = ({ testimonial, isActive }) => (
             </motion.button>
         </div>
     </motion.div>
-);
+));
 
 const TestimonialForm = ({ onSubmit }) => {
     const [formData, setFormData] = useState({
@@ -83,7 +91,7 @@ const TestimonialForm = ({ onSubmit }) => {
     };
 
     return (
-        <motion.form 
+        <motion.form
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm"
@@ -124,50 +132,58 @@ const TestimonialForm = ({ onSubmit }) => {
     );
 };
 
+const initialTestimonials = [
+    {
+        name: "Clara Bennett",
+        date: "2023-09-15",
+        rating: 5,
+        content: "Votely made voting so easy and secure. I felt confident that my vote was counted correctly.",
+        avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuDf3zqVSAUI20IcSizwq8xxXpU4nQtoaK5lbCPcuAahLYtW3EZX7KKE36Vur3NGpet2HH-olWn2OUwPfZUqQj4ot91dOPH2eFWnzWeVz3Nyz7XQ-O767eJ17h4734-E89-bXaxNfXDcdzeuJ5QphBVlT2b1ndLVO4quzPDhknKYCP40E_j5xF6kkQLbz3cbaK16Qt7raRjcmutayWty6zaDLutoeSjEC7gAIjCEsi2ZW9OEJua6yREDT6y1SUTGv1Q7yNscRCTvKp8",
+        likes: 10,
+        dislikes: 2
+    },
+    {
+        name: "James Wilson",
+        date: "2023-09-10",
+        rating: 5,
+        content: "The accessibility features are outstanding. As someone with visual impairments, I found the platform incredibly easy to use.",
+        avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuDf3zqVSAUI20IcSizwq8xxXpU4nQtoaK5lbCPcuAahLYtW3EZX7KKE36Vur3NGpet2HH-olWn2OUwPfZUqQj4ot91dOPH2eFWnzWeVz3Nyz7XQ-O767eJ17h4734-E89-bXaxNfXDcdzeuJ5QphBVlT2b1ndLVO4quzPDhknKYCP40E_j5xF6kkQLbz3cbaK16Qt7raRjcmutayWty6zaDLutoeSjEC7gAIjCEsi2ZW9OEJua6yREDT6y1SUTGv1Q7yNscRCTvKp8",
+        likes: 15,
+        dislikes: 1
+    },
+    {
+        name: "Sarah Martinez",
+        date: "2023-09-05",
+        rating: 4,
+        content: "The real-time results feature is fantastic. It's great to see the voting progress as it happens.",
+        avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuDf3zqVSAUI20IcSizwq8xxXpU4nQtoaK5lbCPcuAahLYtW3EZX7KKE36Vur3NGpet2HH-olWn2OUwPfZUqQj4ot91dOPH2eFWnzWeVz3Nyz7XQ-O767eJ17h4734-E89-bXaxNfXDcdzeuJ5QphBVlT2b1ndLVO4quzPDhknKYCP40E_j5xF6kkQLbz3cbaK16Qt7raRjcmutayWty6zaDLutoeSjEC7gAIjCEsi2ZW9OEJua6yREDT6y1SUTGv1Q7yNscRCTvKp8",
+        likes: 8,
+        dislikes: 3
+    }
+];
+
 const TestimonialSection = ({ isVisible }) => {
     const { isDarkMode } = useTheme();
     const sectionBg = useMemo(() => isDarkMode ? 'dark:bg-gray-900' : 'bg-white', [isDarkMode]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [showForm, setShowForm] = useState(false);
-    const [testimonials, setTestimonials] = useState([
-        {
-            name: "Clara Bennett",
-            date: "2023-09-15",
-            rating: 5,
-            content: "Votely made voting so easy and secure. I felt confident that my vote was counted correctly.",
-            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuDf3zqVSAUI20IcSizwq8xxXpU4nQtoaK5lbCPcuAahLYtW3EZX7KKE36Vur3NGpet2HH-olWn2OUwPfZUqQj4ot91dOPH2eFWnzWeVz3Nyz7XQ-O767eJ17h4734-E89-bXaxNfXDcdzeuJ5QphBVlT2b1ndLVO4quzPDhknKYCP40E_j5xF6kkQLbz3cbaK16Qt7raRjcmutayWty6zaDLutoeSjEC7gAIjCEsi2ZW9OEJua6yREDT6y1SUTGv1Q7yNscRCTvKp8",
-            likes: 10,
-            dislikes: 2
-        },
-        {
-            name: "James Wilson",
-            date: "2023-09-10",
-            rating: 5,
-            content: "The accessibility features are outstanding. As someone with visual impairments, I found the platform incredibly easy to use.",
-            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuDf3zqVSAUI20IcSizwq8xxXpU4nQtoaK5lbCPcuAahLYtW3EZX7KKE36Vur3NGpet2HH-olWn2OUwPfZUqQj4ot91dOPH2eFWnzWeVz3Nyz7XQ-O767eJ17h4734-E89-bXaxNfXDcdzeuJ5QphBVlT2b1ndLVO4quzPDhknKYCP40E_j5xF6kkQLbz3cbaK16Qt7raRjcmutayWty6zaDLutoeSjEC7gAIjCEsi2ZW9OEJua6yREDT6y1SUTGv1Q7yNscRCTvKp8",
-            likes: 15,
-            dislikes: 1
-        },
-        {
-            name: "Sarah Martinez",
-            date: "2023-09-05",
-            rating: 4,
-            content: "The real-time results feature is fantastic. It's great to see the voting progress as it happens.",
-            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuDf3zqVSAUI20IcSizwq8xxXpU4nQtoaK5lbCPcuAahLYtW3EZX7KKE36Vur3NGpet2HH-olWn2OUwPfZUqQj4ot91dOPH2eFWnzWeVz3Nyz7XQ-O767eJ17h4734-E89-bXaxNfXDcdzeuJ5QphBVlT2b1ndLVO4quzPDhknKYCP40E_j5xF6kkQLbz3cbaK16Qt7raRjcmutayWty6zaDLutoeSjEC7gAIjCEsi2ZW9OEJua6yREDT6y1SUTGv1Q7yNscRCTvKp8",
-            likes: 8,
-            dislikes: 3
-        }
-    ]);
+    const [testimonials, setTestimonials] = useState(initialTestimonials);
 
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentIndex((prev) => (prev + 1) % testimonials.length);
-        }, 5000);
-        return () => clearInterval(timer);
+    const nextTestimonial = React.useCallback(() => {
+        setCurrentIndex((prev) => (prev + 1) % testimonials.length);
     }, [testimonials.length]);
 
-    const handleSubmitTestimonial = (newTestimonial) => {
-        setTestimonials([
+    const prevTestimonial = React.useCallback(() => {
+        setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+    }, [testimonials.length]);
+
+    useEffect(() => {
+        const timer = setInterval(nextTestimonial, 5000);
+        return () => clearInterval(timer);
+    }, [nextTestimonial]);
+
+    const handleSubmitTestimonial = React.useCallback((newTestimonial) => {
+        setTestimonials(prev => [
             {
                 ...newTestimonial,
                 date: new Date().toISOString().split('T')[0],
@@ -175,16 +191,16 @@ const TestimonialSection = ({ isVisible }) => {
                 likes: 0,
                 dislikes: 0
             },
-            ...testimonials
+            ...prev
         ]);
         setShowForm(false);
-    };
+    }, []);
 
     return (
         <section className={`max-w-7xl mx-auto ${sectionBg} transition-all duration-500 will-change-[background-color,color,box-shadow,filter]`} aria-labelledby="testimonial-main-heading" role="region" tabIndex={0}>
             <h2 id="testimonial-main-heading" className="sr-only">User Testimonials</h2>
             <div className="flex flex-col gap-6 sm:gap-8 px-4 py-10 sm:py-12">
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="flex flex-col gap-4 sm:gap-6 text-center max-w-3xl mx-auto"
@@ -239,7 +255,7 @@ const TestimonialSection = ({ isVisible }) => {
                         </div>
                     </div>
 
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="flex flex-col gap-3 sm:gap-4 text-center max-w-2xl mx-auto"
@@ -264,8 +280,8 @@ const TestimonialSection = ({ isVisible }) => {
                                 transition={{ duration: 0.3 }}
                                 className="absolute w-full z-10 px-4 sm:px-0"
                             >
-                                <TestimonialCard 
-                                    testimonial={testimonials[currentIndex]} 
+                                <TestimonialCard
+                                    testimonial={testimonials[currentIndex]}
                                     isActive={true}
                                 />
                             </motion.div>
@@ -276,7 +292,7 @@ const TestimonialSection = ({ isVisible }) => {
                         <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
-                            onClick={() => setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length)}
+                            onClick={prevTestimonial}
                             className="p-1.5 sm:p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600"
                             aria-label="Previous testimonial"
                         >
@@ -291,9 +307,8 @@ const TestimonialSection = ({ isVisible }) => {
                                     key={index}
                                     whileHover={{ scale: 1.2 }}
                                     whileTap={{ scale: 0.9 }}
-                                    className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${
-                                        index === currentIndex ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
-                                    }`}
+                                    className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${index === currentIndex ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                                        }`}
                                     onClick={() => setCurrentIndex(index)}
                                     aria-label={`Read full testimonial ${testimonials[index].name}`}
                                 />
@@ -303,7 +318,7 @@ const TestimonialSection = ({ isVisible }) => {
                         <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
-                            onClick={() => setCurrentIndex((prev) => (prev + 1) % testimonials.length)}
+                            onClick={nextTestimonial}
                             className="p-1.5 sm:p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600"
                             aria-label="Next testimonial"
                         >

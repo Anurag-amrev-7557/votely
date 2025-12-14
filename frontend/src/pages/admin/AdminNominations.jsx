@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import useNominations from '../../hooks/useNominations';
-import axios from 'axios';
+import axios from '../../utils/api/axiosConfig';
 
 const AdminNominations = () => {
     const [polls, setPolls] = useState([]);
@@ -91,7 +91,7 @@ const AdminNominations = () => {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${nom.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                            nom.status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
+                                        nom.status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
                                         }`}>
                                         {nom.status}
                                     </span>
