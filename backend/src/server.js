@@ -20,21 +20,25 @@ const jwt = require('jsonwebtoken');
 dotenv.config();
 
 // Connect to MongoDB
+// Connect to MongoDB
+// In Vercel/Serverless, we rely on Mongoose's connection buffering for the first request
 connectDB().then((dbConnection) => {
   if (dbConnection) {
     console.log('Database connected successfully');
   } else {
     console.log('Database connection failed, but server will continue running');
-    console.log('Some features may not work without database connection');
   }
 }).catch((error) => {
   console.log('Database connection error:', error.message);
-  console.log('Server will continue running without database connection');
 });
 
 // Start poll status cron job after DB connection attempt
-const startStatusCron = require('./statusCron');
-startStatusCron();
+// Only start cron job if NOT running on Vercel/Serverless
+// Vercel sets VERCEL=1 or NOW_REGION env vars
+if (!process.env.VERCEL) {
+  const startStatusCron = require('./statusCron');
+  startStatusCron();
+}
 
 const app = express();
 
@@ -356,33 +360,46 @@ app.get('/api/auth/google/callback',
     res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
 
     // PostMessage to frontend with better error handling
+    // We use '*' as targetOrigin to ensure the message reaches the opener regardless of subdomain/port differences
+    // This is acceptable here as the sensitive token is in an HttpOnly cookie, and the user data is public profile info.
     const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
+
     res.send(`<!DOCTYPE html>
 <html>
 <head>
     <title>Authentication Complete</title>
     <meta charset="utf-8">
-</head>
-<body>
     <script>
-      try {
-        if (window.opener) {
-          window.opener.postMessage({ 
-            type: 'GOOGLE_AUTH_SUCCESS', 
-            user: ${JSON.stringify(req.user)} 
-          }, '${FRONTEND_ORIGIN}');
+      function closeWindow() {
+        try {
+          if (window.opener) {
+            window.opener.postMessage({ 
+              type: 'GOOGLE_AUTH_SUCCESS', 
+              user: ${JSON.stringify(req.user)} 
+            }, '*');
+          }
           window.close();
-        } else {
-          // Fallback: redirect to frontend with success parameter
-          window.location.href = '${FRONTEND_ORIGIN}/auth-success?token=${token}';
+        } catch (e) {
+          console.error(e);
+          // Fallback: Redirect if close fails
+          window.location.href = '${FRONTEND_ORIGIN}/auth-success';
         }
-      } catch (error) {
-        console.error('PostMessage error:', error);
-        // Fallback: redirect to frontend with success parameter
-        window.location.href = '${FRONTEND_ORIGIN}/auth-success?token=${token}';
       }
+      
+      // Attempt to close immediately
+      window.onload = function() {
+        setTimeout(closeWindow, 500);
+      };
     </script>
-    <p>Authentication complete. You can close this window.</p>
+</head>
+<body style="background: #f3f4f6; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0;">
+    <div style="text-align: center; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+        <h3 style="color: #111827; margin-bottom: 10px;">Authentication Successful</h3>
+        <p style="color: #4b5563; margin-bottom: 20px;">You can now close this window.</p>
+        <button onclick="closeWindow()" style="background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;">
+            Back to App
+        </button>
+    </div>
 </body>
 </html>`);
   }

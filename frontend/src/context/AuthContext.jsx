@@ -231,8 +231,17 @@ export const AuthProvider = ({ children }) => {
 
         const handleMessage = async (event) => {
           // Verify the origin of the message
-          // Allow messages from same origin OR backend origin (in dev)
+          // Allow messages from same origin, backend origin (in dev), or configured VITE_BACKEND_URL
           const allowedOrigins = [window.location.origin, 'http://localhost:5001'];
+          if (import.meta.env.VITE_BACKEND_URL) {
+            try {
+              const backendOrigin = new URL(import.meta.env.VITE_BACKEND_URL).origin;
+              allowedOrigins.push(backendOrigin);
+            } catch (e) {
+              console.warn('[Auth] Invalid VITE_BACKEND_URL:', import.meta.env.VITE_BACKEND_URL);
+            }
+          }
+
           if (!allowedOrigins.includes(event.origin)) {
             console.warn('[Auth] Blocked message from unknown origin:', event.origin);
             return;
