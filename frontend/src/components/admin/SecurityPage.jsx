@@ -15,6 +15,9 @@ import {
 import { CSVLink } from 'react-csv';
 import { useTheme } from '../../context/ThemeContext';
 import axiosInstance from '../../utils/api/axiosConfig';
+import { startRegistration } from '@simplewebauthn/browser';
+import toast from 'react-hot-toast';
+import { useAuth } from '../../context/AuthContext';
 
 const dummyActivity = [
   { type: 'login', desc: 'Logged in', time: '2024-06-01 10:23', device: 'Chrome on Mac', ip: '192.168.1.2', location: 'New York, USA', icon: <KeyIcon className="w-5 h-5 text-blue-500" aria-hidden="true" /> },
@@ -68,6 +71,7 @@ const initialTips = [
 ];
 
 const SecurityPage = () => {
+  const { user, setUser } = useAuth(); // Get user from context
   const [showPwdModal, setShowPwdModal] = useState(false);
   const [show2FAModal, setShow2FAModal] = useState(false);
   const [showRevokeModal, setShowRevokeModal] = useState(false);
@@ -114,11 +118,89 @@ const SecurityPage = () => {
       a.device.toLowerCase().includes(search.toLowerCase()))
   );
 
-  const pagedActivity = filteredActivity.slice((activityPage-1)*ACTIVITY_PAGE_SIZE, activityPage*ACTIVITY_PAGE_SIZE);
+  const pagedActivity = filteredActivity.slice((activityPage - 1) * ACTIVITY_PAGE_SIZE, activityPage * ACTIVITY_PAGE_SIZE);
   const totalPages = Math.ceil(filteredActivity.length / ACTIVITY_PAGE_SIZE);
+
+  // WebAuthn Registration
+  const handleRegisterBiometric = async () => {
+    try {
+      const resp = await axiosInstance.get('/auth/webauthn/register/options');
+      const options = resp.data;
+
+      console.log('Starting registration with options:', options);
+      let attResp;
+      try {
+        attResp = await startRegistration({ optionsJSON: options });
+        console.log('Registration success, response:', attResp);
+      } catch (error) {
+        console.error('startRegistration failed:', error);
+        if (error.name === 'InvalidStateError') {
+          toast.error('Device already registered.');
+        } else {
+          toast.error('Registration cancelled or failed.');
+        }
+        return;
+      }
+
+      console.log('Sending verification request...');
+      const verificationResp = await axiosInstance.post('/auth/webauthn/register/verify', attResp);
+      console.log('Verification response:', verificationResp.data);
+
+      if (verificationResp.data.verified) {
+        toast.success('Biometric device registered successfully!');
+
+        // Refresh user data to update UI
+        try {
+          const userResp = await axiosInstance.get('/auth/me');
+          setUser(userResp.data);
+        } catch (err) {
+          console.error('Failed to refresh user data', err);
+        }
+      } else {
+        toast.error('Verification failed. Try again.');
+      }
+
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to initiate biometric registration.');
+    }
+  };
 
   return (
     <div role="main" aria-label="Admin security management" tabIndex={0}>
+      {/* Biometric Auth Section */}
+      <section className="mb-8" aria-labelledby="biometric-auth-heading">
+        <motion.div layout className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <div className="flex items-center mb-4">
+            <DevicePhoneMobileIcon className="w-6 h-6 text-purple-600 mr-2" />
+            <h2 id="biometric-auth-heading" className="text-lg font-semibold text-gray-900 dark:text-white">Biometric Authentication</h2>
+          </div>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            Register this device to allow logging in with fingerprint or FaceID.
+          </p>
+          {user?.passkeys?.length > 0 ? (
+            <div className="flex items-center gap-2 text-green-600 dark:text-green-400 font-medium">
+              <CheckCircleIcon className="w-5 h-5" />
+              <span>Device Registered</span>
+              <span className="text-xs text-gray-500 dark:text-gray-500 ml-2">({user.passkeys.length} key{user.passkeys.length !== 1 ? 's' : ''})</span>
+              <button
+                onClick={handleRegisterBiometric}
+                className="ml-4 px-3 py-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+              >
+                Add Another
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handleRegisterBiometric}
+              className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-indigo-700 transition shadow-lg shadow-purple-500/30"
+            >
+              Register Biometric Device
+            </button>
+          )}
+        </motion.div>
+      </section>
+
       {/* Security Score Bar */}
       <section role="region" aria-labelledby="admin-security-score-heading" tabIndex={0}>
         <h2 id="admin-security-score-heading" className="sr-only">Security Score</h2>
@@ -303,7 +385,7 @@ const SecurityPage = () => {
                   { label: 'IP', key: 'ip' },
                   { label: 'Location', key: 'location' },
                 ]}
-                filename={`admin-activity-${new Date().toISOString().slice(0,10)}.csv`}
+                filename={`admin-activity-${new Date().toISOString().slice(0, 10)}.csv`}
                 className="px-3 py-1 text-xs font-semibold text-blue-600 hover:text-blue-800 rounded border border-blue-100 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-300 ml-2"
                 aria-label="Export admin activity as CSV"
               >
@@ -359,9 +441,9 @@ const SecurityPage = () => {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex justify-end items-center gap-2 mt-4">
-              <button disabled={activityPage === 1} onClick={() => setActivityPage(p => Math.max(1, p-1))} className="px-2 py-1 text-xs rounded bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 disabled:opacity-50" aria-label="Previous page">Prev</button>
+              <button disabled={activityPage === 1} onClick={() => setActivityPage(p => Math.max(1, p - 1))} className="px-2 py-1 text-xs rounded bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 disabled:opacity-50" aria-label="Previous page">Prev</button>
               <span className="text-xs text-gray-500 dark:text-gray-400">Page {activityPage} of {totalPages}</span>
-              <button disabled={activityPage === totalPages} onClick={() => setActivityPage(p => Math.min(totalPages, p+1))} className="px-2 py-1 text-xs rounded bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 disabled:opacity-50" aria-label="Next page">Next</button>
+              <button disabled={activityPage === totalPages} onClick={() => setActivityPage(p => Math.min(totalPages, p + 1))} className="px-2 py-1 text-xs rounded bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 disabled:opacity-50" aria-label="Next page">Next</button>
             </div>
           )}
         </motion.div>

@@ -16,10 +16,13 @@ function handleValidationErrors(req, res, next) {
   next();
 }
 
+const { checkPolicy } = require('../middleware/policyMiddleware');
+
 // Enhanced: Create poll (with validation)
 router.post(
   '/',
   auth.protect,
+  checkPolicy('poll', 'create'),
   [
     body('title').isString().trim().notEmpty().withMessage('Title is required'),
     body('options').isArray({ min: 2 }).withMessage('At least two options are required'),
@@ -59,6 +62,7 @@ router.get(
 router.put(
   '/:id',
   auth.protect,
+  checkPolicy('poll', 'update'),
   [
     param('id').isMongoId().withMessage('Invalid poll ID'),
     // Optionally validate body fields
@@ -71,6 +75,7 @@ router.put(
 router.delete(
   '/:id',
   auth.protect,
+  checkPolicy('poll', 'freeze'), // Using 'freeze' as proxy for delete/archive or strictly 'delete' if added to policy
   [
     param('id').isMongoId().withMessage('Invalid poll ID'),
   ],

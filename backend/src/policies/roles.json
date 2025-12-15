@@ -29,7 +29,10 @@
     },
     "user": {
         "poll": [
-            "read"
+            "create",
+            "read",
+            "update",
+            "freeze"
         ],
         "vote": [
             "cast",

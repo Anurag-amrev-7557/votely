@@ -345,30 +345,9 @@ const LoadingSpinner = memo(() => {
 
 // Advanced Toaster Configuration with Enhanced UX, Accessibility, and Performance
 const ToasterConfig = memo(() => {
-  // Dynamic theme-aware styling with CSS custom properties
-  const toastStyles = useMemo(() => ({
-    background: 'var(--toast-bg, #23272f)',
-    color: 'var(--toast-text, #fff)',
-    fontWeight: 500,
-    letterSpacing: '0.01em',
-    borderRadius: '12px',
-    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08)',
-    border: '1px solid var(--toast-border, rgba(255, 255, 255, 0.1))',
-    backdropFilter: 'blur(12px)',
-    WebkitBackdropFilter: 'blur(12px)',
-    maxWidth: '400px',
-    minWidth: '300px',
-    padding: '16px 20px',
-    fontSize: '14px',
-    lineHeight: '1.5',
-    transform: 'translateZ(0)', // Force hardware acceleration
-  }), []);
-
   // Enhanced toast options with progressive enhancement
   const toastOptions = useMemo(() => ({
     duration: 3500,
-    style: toastStyles,
-    className: 'toast-notification',
     role: 'alert',
     'aria-live': 'polite',
     'aria-atomic': 'true',
@@ -376,78 +355,28 @@ const ToasterConfig = memo(() => {
     // Success toast configuration
     success: {
       duration: 3500,
-      iconTheme: {
-        primary: '#10b981',
-        secondary: '#23272f',
-      },
-      style: {
-        ...toastStyles,
-        borderLeft: '4px solid #10b981',
-        background: 'linear-gradient(135deg, #23272f 0%, #1f2937 100%)',
-      },
-      className: 'toast-success',
     },
 
     // Error toast configuration
     error: {
       duration: 4000,
-      iconTheme: {
-        primary: '#ef4444',
-        secondary: '#23272f',
-      },
-      style: {
-        ...toastStyles,
-        borderLeft: '4px solid #ef4444',
-        background: 'linear-gradient(135deg, #23272f 0%, #1f1f1f 100%)',
-      },
-      className: 'toast-error',
     },
 
     // Warning toast configuration
     warning: {
       duration: 4000,
-      iconTheme: {
-        primary: '#f59e0b',
-        secondary: '#23272f',
-      },
-      style: {
-        ...toastStyles,
-        borderLeft: '4px solid #f59e0b',
-        background: 'linear-gradient(135deg, #23272f 0%, #1f2937 100%)',
-      },
-      className: 'toast-warning',
     },
 
     // Info toast configuration
     info: {
       duration: 3000,
-      iconTheme: {
-        primary: '#3b82f6',
-        secondary: '#23272f',
-      },
-      style: {
-        ...toastStyles,
-        borderLeft: '4px solid #3b82f6',
-        background: 'linear-gradient(135deg, #23272f 0%, #1e3a8a 100%)',
-      },
-      className: 'toast-info',
     },
 
     // Loading toast configuration
     loading: {
       duration: Infinity,
-      iconTheme: {
-        primary: '#6366f1',
-        secondary: '#23272f',
-      },
-      style: {
-        ...toastStyles,
-        borderLeft: '4px solid #6366f1',
-        background: 'linear-gradient(135deg, #23272f 0%, #312e81 100%)',
-      },
-      className: 'toast-loading',
     },
-  }), [toastStyles]);
+  }), []);
 
   // Responsive container positioning
   const containerStyle = useMemo(() => ({

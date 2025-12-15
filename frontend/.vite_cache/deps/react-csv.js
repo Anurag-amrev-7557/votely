@@ -1,9 +1,9 @@
 import {
-  require_jsx_runtime
-} from "./chunk-SKKUB47Z.js";
-import {
   require_prop_types
 } from "./chunk-QGVADFPC.js";
+import {
+  require_jsx_runtime
+} from "./chunk-SKKUB47Z.js";
 import {
   require_react
 } from "./chunk-2PIBWAMS.js";

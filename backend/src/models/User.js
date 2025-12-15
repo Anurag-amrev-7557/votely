@@ -171,7 +171,17 @@ const userSchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
     default: Date.now
-  }
+  },
+  // Passkey (WebAuthn) Support
+  passkeys: [{
+    credentialID: String,
+    credentialPublicKey: String,
+    counter: Number,
+    transports: [String],
+    backedUp: Boolean,
+    deviceType: String
+  }],
+  currentChallenge: { type: String }
 }, {
   timestamps: true
 });

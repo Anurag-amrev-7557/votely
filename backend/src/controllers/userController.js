@@ -140,7 +140,7 @@ const getUserById = async (req, res) => {
 // @access  Private/Admin
 const updateUser = async (req, res) => {
     try {
-        const { name, email, role, status, permissions } = req.body;
+        const { name, email, password, role, status, permissions } = req.body;
 
         const user = await User.findById(req.params.id);
         if (!user) {
@@ -151,6 +151,9 @@ const updateUser = async (req, res) => {
         user.name = name || user.name;
         user.email = email || user.email;
         user.role = role || user.role;
+        if (password && password.trim() !== '') {
+            user.password = password;
+        }
 
         // Handle status mapping back to boolean
         if (status) {

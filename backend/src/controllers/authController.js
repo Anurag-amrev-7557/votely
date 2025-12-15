@@ -1,17 +1,14 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+
 const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 const { hash } = require('../utils/cryptoUtils');
+const generateToken = require('../utils/generateToken');
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// Generate JWT
-const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: '30d',
-    });
-};
+
 
 // @desc    Register new user
 // @route   POST /api/auth/register
@@ -24,9 +21,8 @@ const registerUser = async (req, res) => {
             return res.status(400).json({ error: 'Please add all fields' });
         }
 
-        // Restrict to IIT BBS domain (allow admin email exception)
-        const ADMIN_EMAIL = 'anuragverma08002@gmail.com';
-        if (!email.toLowerCase().endsWith('@iitbbs.ac.in') && email !== ADMIN_EMAIL) {
+        // Restrict to IIT BBS domain
+        if (!email.toLowerCase().endsWith('@iitbbs.ac.in')) {
             return res.status(400).json({ error: 'Only @iitbbs.ac.in emails are allowed.' });
         }
 
@@ -39,12 +35,11 @@ const registerUser = async (req, res) => {
 
         // Create user
         // Password hashing is handled in User model pre-save hook
-        const Role = email === ADMIN_EMAIL ? 'admin' : 'user';
         const user = await User.create({
             name,
             email,
             password,
-            role: Role
+            role: 'user' // Default to user
         });
 
         if (user) {
@@ -64,24 +59,19 @@ const registerUser = async (req, res) => {
     }
 };
 
+
 // @desc    Authenticate a user
 // @route   POST /api/auth/login
+// @access  Public
 // @access  Public
 const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
-        const ADMIN_EMAIL = 'anuragverma08002@gmail.com';
 
         // Check for user email
         const user = await User.findOne({ emailHash: hash(email.toLowerCase()) }).select('+password');
 
         if (user && (await bcrypt.compare(password, user.password))) {
-            // Auto-fix: Ensure admin email always has admin role
-            if (email === ADMIN_EMAIL && user.role !== 'admin') {
-                user.role = 'admin';
-                await user.save();
-            }
-
             res.json({
                 _id: user.id,
                 name: user.name,
@@ -114,17 +104,11 @@ const requestMagicLink = async (req, res) => {
         }
 
         // 1. Strict Domain Enforcement
-        const ADMIN_EMAIL = 'anuragverma08002@gmail.com';
-        if (!email.toLowerCase().endsWith('@iitbbs.ac.in') && email !== ADMIN_EMAIL) {
-            // Security via obscurity: Don't explicitly say "Domain not allowed" to prevent enumeration?
-            // "The Professional Approach": Strict feedback is better for internal corporate apps, less for public.
-            // Given this is internal IIT, explicit error is helpful.
+        if (!email.toLowerCase().endsWith('@iitbbs.ac.in')) {
             return res.status(400).json({ error: 'Access restricted to @iitbbs.ac.in email addresses.' });
         }
 
         // 2. Find or Create User (Shadow Account until verified?)
-        // For simplicity: We verify existence. If new, we'll create roughly on verify or now?
-        // Better: Find user. If not found, create a "pending" user or just wait?
         // Let's Find or Create Staging User.
         let user = await User.findOne({ emailHash: hash(email.toLowerCase()) });
 
@@ -246,8 +230,7 @@ const googleAuth = async (req, res) => {
         const { name, email, picture, sub: googleId } = ticket.getPayload();
 
         // Restrict to IIT BBS domain
-        const ADMIN_EMAIL = 'anuragverma08002@gmail.com';
-        if (!email.toLowerCase().endsWith('@iitbbs.ac.in') && email !== ADMIN_EMAIL) {
+        if (!email.toLowerCase().endsWith('@iitbbs.ac.in')) {
             return res.status(400).json({ error: 'Only @iitbbs.ac.in emails are allowed.' });
         }
 
@@ -263,11 +246,6 @@ const googleAuth = async (req, res) => {
                 user.profilePhoto = picture;
                 await user.save();
             }
-            // Ensure admin role
-            if (email === ADMIN_EMAIL && user.role !== 'admin') {
-                user.role = 'admin';
-                await user.save();
-            }
         } else {
             // If not found by Google ID, check by Email (Account Linking)
             user = await User.findOne({ emailHash: hash(email.toLowerCase()) });
@@ -277,16 +255,13 @@ const googleAuth = async (req, res) => {
                 if (!user.googleId) {
                     user.googleId = googleId;
                     user.profilePhoto = user.profilePhoto || picture; // Update photo if missing
-                    // Ensure admin role
-                    if (email === ADMIN_EMAIL && user.role !== 'admin') {
-                        user.role = 'admin';
-                    }
                     await user.save();
                 }
             } else {
                 // Create new user
                 const randomPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
-                const role = email === ADMIN_EMAIL ? 'admin' : 'user';
+                // Default role is user
+                const role = 'user';
 
                 user = await User.create({
                     name,

@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { useAuth } from './AuthContext';
 // Import the theme context to detect dark/light mode
 import { useTheme } from './ThemeContext';
 
@@ -7,8 +8,10 @@ const AdminAuthContext = createContext(null);
 AdminAuthContext.displayName = 'AdminAuthContext';
 
 // Master credentials for testing
-const MASTER_EMAIL = 'anuragverma08002@gmail.com';
-const MASTER_PASSWORD = 'Anshverma$1234';
+
+// Access control constants
+const ADMIN_ROLES = ['admin', 'election_committee'];
+
 
 // Session timeout in ms (30 minutes)
 const SESSION_TIMEOUT = 30 * 60 * 1000;
@@ -21,6 +24,7 @@ const REQUIRE_2FA = import.meta.env.VITE_REQUIRE_2FA === 'true'; // for Vite
 const TWO_FA_CODE = import.meta.env.VITE_2FA_CODE; // for Vite
 
 export const AdminAuthProvider = ({ children }) => {
+  const { user } = useAuth();
   // Use theme context to detect dark or light mode
   const { isDarkMode } = useTheme ? useTheme() : { isDarkMode: false };
   const [isAdmin, setIsAdmin] = useState(false);
@@ -48,8 +52,8 @@ export const AdminAuthProvider = ({ children }) => {
     if (tokenTimestamp) {
       sessionExpired = now - tokenTimestamp > SESSION_TIMEOUT;
       sessionValid = !sessionExpired;
-      // Only master email has elevated privileges
-      elevatedPrivileges = email === MASTER_EMAIL;
+      // Derived from user role in AuthContext
+      elevatedPrivileges = email && user && user.role === 'admin';
     }
 
     setAdminData({
@@ -76,6 +80,16 @@ export const AdminAuthProvider = ({ children }) => {
     setIsLoading(false);
     setAdminEmail(adminEmail);
   }, []); // Only run on mount
+
+  // Sync with main AuthContext
+  useEffect(() => {
+    if (user && ADMIN_ROLES.includes(user.role)) {
+      // Allow access if user has correct role
+    } else if (user && !ADMIN_ROLES.includes(user.role)) {
+      // Revoke if user logged in but not admin
+      if (isAdmin) logout();
+    }
+  }, [user]);
 
   // Effect: Auto-logout on inactivity
   useEffect(() => {
@@ -124,56 +138,42 @@ export const AdminAuthProvider = ({ children }) => {
     return () => clearTimeout(timeout);
   }, [isAdmin, adminData, lastActivity]);
 
-  const login = async (email, password, twoFactorCode = null, securityChecks = null) => {
+  const login = async (email, password, twoFactorCode = null, securityChecks = null, explicitUser = null) => {
     try {
-      // Enhanced: Add support for 2FA, security checks, and logging
+      // Enhanced: Rely on main AuthContext or explicitUser for login
+
       const logAttempt = (success, reason = '') => {
-        // You could send this to a logging endpoint or just log locally
         console.info(`[Admin Login] Email: ${email}, Success: ${success}, Reason: ${reason}, Time: ${new Date().toISOString()}`);
       };
 
-      // Biometric login shortcut (for demo/dev)
-      if (email === 'biometric') {
-        const token = 'admin-token-' + Date.now();
-        localStorage.setItem('adminToken', token);
-        localStorage.setItem('adminEmail', email);
-        updateAdminData(Date.now(), email);
-        setIsAdmin(true);
-        logAttempt(true, 'Biometric');
-        return { success: true, ip: '127.0.0.1', method: 'biometric' };
+      const currentUser = explicitUser || user;
+
+      // If already logged in as user, check role
+      // Note: Comparing trim() just in case
+      if (currentUser && currentUser.email.trim() === email.trim()) {
+        if (ADMIN_ROLES.includes(currentUser.role)) {
+          const token = 'admin-token-' + Date.now();
+          localStorage.setItem('adminToken', token);
+          localStorage.setItem('adminEmail', email);
+          updateAdminData(Date.now(), email);
+          setIsAdmin(true);
+          logAttempt(true, 'Role Verification Success');
+          return { success: true };
+        } else {
+          logAttempt(false, 'Insufficient Permissions');
+          return { success: false, error: 'Access denied. Administrator privileges required.' };
+        }
       }
 
-      // Check against master credentials
-      if (email === MASTER_EMAIL && password === MASTER_PASSWORD) {
-        // Optional: Enforce 2FA if enabled
-        if (REQUIRE_2FA) {
-          if (!twoFactorCode || twoFactorCode !== TWO_FA_CODE) {
-            logAttempt(false, '2FA required or invalid');
-            return { success: false, error: 'Two-factor authentication required or invalid code.' };
-          }
-        }
+      // If not logged in, we can't authenticate purely here without the backend API
+      // So ensuring this function calls the API is best.
+      // But since we removed the hardcoded credentials, we MUST use the API.
 
-        // Optional: Security checks (e.g., IP, device, etc.)
-        if (securityChecks && typeof securityChecks === 'function') {
-          const securityResult = await securityChecks(email);
-          if (!securityResult.success) {
-            logAttempt(false, 'Security check failed');
-            return { success: false, error: 'Security check failed.' };
-          }
-        }
+      // NOTE: The AdminLogin component should probably call `authContext.login` first.
+      // If we want to keep this `login` signature, we can bridge it.
 
-        const token = 'admin-token-' + Date.now();
-        localStorage.setItem('adminToken', token);
-        localStorage.setItem('adminEmail', email);
-        updateAdminData(Date.now(), email);
-        setIsAdmin(true);
-        logAttempt(true, 'Master credentials');
-        // Optionally, get real IP from a service or backend
-        return { success: true, ip: '127.0.0.1', method: 'password' };
-      }
+      return { success: false, error: 'Please use the main login page.' };
 
-      logAttempt(false, 'Invalid credentials');
-      return { success: false, error: 'Invalid credentials' };
     } catch (error) {
       console.error('Login error:', error);
       return { success: false, error: 'An error occurred during login' };

@@ -39,6 +39,7 @@ const UsersPage = () => {
   const [userForm, setUserForm] = useState({
     name: '',
     email: '',
+    password: '',
     role: 'user',
     status: 'active',
     phone: '',
@@ -114,6 +115,7 @@ const UsersPage = () => {
     setUserForm({
       name: user.name,
       email: user.email,
+      password: '', // Reset password field
       role: user.role,
       status: user.status,
       phone: user.phone || '',
@@ -184,7 +186,7 @@ const UsersPage = () => {
         // Create new user
         const { data } = await axiosInstance.post('/users', {
           ...userForm,
-          password: 'Password123!', // Temporary default password for created users, or add to form
+          password: userForm.password || 'Password123!', // Use provided password or default
         });
 
         setUsers([data, ...users]); // Add to top
@@ -291,6 +293,30 @@ const UsersPage = () => {
     tooltip: `absolute z-10 px-2 py-1 text-xs font-medium text-white bg-gray-900 dark:bg-gray-700 
       rounded-md shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200 
       -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap`
+  };
+
+  const getRoleColor = (role) => {
+    switch (role?.toLowerCase()) {
+      case 'admin':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300';
+      case 'moderator':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'active':
+        return 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300';
+      case 'inactive':
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+      case 'suspended':
+        return 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+    }
   };
 
   if (isLoading) {
@@ -961,10 +987,139 @@ const UsersPage = () => {
         </div>
       </section>
       {/* User Details/Modal Section */}
-      <section role="region" aria-labelledby="admin-user-details-heading" tabIndex={0}>
-        <h2 id="admin-user-details-heading" className="sr-only">User Details and Actions</h2>
-        {/* ...user details/modal content... */}
-      </section>
+      <AnimatePresence>
+        {showModal && (
+          <div className="fixed z-[100] inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onClick={() => setShowModal(false)}></div>
+
+              <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className={`relative z-50 inline-block align-bottom rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full ${isDarkMode ? 'bg-[#2c353f]' : 'bg-white'}`}
+              >
+                <form onSubmit={handleSubmit}>
+                  <div className={`px-4 pt-5 pb-4 sm:p-6 ${isDarkMode ? 'bg-[#2c353f]' : 'bg-white'}`}>
+                    <div className="sm:flex sm:items-start">
+                      <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                        <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white" id="modal-title">
+                          {isEditing ? 'Edit User' : 'Add New User'}
+                        </h3>
+                        <div className="mt-4 space-y-4">
+                          <div>
+                            <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
+                            <input
+                              type="text"
+                              name="name"
+                              id="name"
+                              required
+                              value={userForm.name}
+                              onChange={handleInputChange}
+                              className={`mt-1 block w-full border ${isDarkMode ? 'border-gray-600 bg-[#1f2937] text-white' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                            />
+                          </div>
+                          <div>
+                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+                            <input
+                              type="email"
+                              name="email"
+                              id="email"
+                              required
+                              value={userForm.email}
+                              onChange={handleInputChange}
+                              className={`mt-1 block w-full border ${isDarkMode ? 'border-gray-600 bg-[#1f2937] text-white' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                            />
+                          </div>
+                          <div>
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                              {isEditing ? 'New Password (Optional)' : 'Password'}
+                            </label>
+                            <input
+                              type="password"
+                              name="password"
+                              id="password"
+                              value={userForm.password}
+                              onChange={handleInputChange}
+                              placeholder={isEditing ? 'Leave blank to keep current' : 'Enter password'}
+                              required={!isEditing}
+                              className={`mt-1 block w-full border ${isDarkMode ? 'border-gray-600 bg-[#1f2937] text-white' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
+                              <select
+                                id="role"
+                                name="role"
+                                value={userForm.role}
+                                onChange={handleInputChange}
+                                className={`mt-1 block w-full border ${isDarkMode ? 'border-gray-600 bg-[#1f2937] text-white' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                              >
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                                <option value="moderator">Moderator</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                              <select
+                                id="status"
+                                name="status"
+                                value={userForm.status}
+                                onChange={handleInputChange}
+                                className={`mt-1 block w-full border ${isDarkMode ? 'border-gray-600 bg-[#1f2937] text-white' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                              >
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="suspended">Suspended</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div>
+                            <label htmlFor="department" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Department</label>
+                            <select
+                              id="department"
+                              name="department"
+                              value={userForm.department}
+                              onChange={handleInputChange}
+                              className={`mt-1 block w-full border ${isDarkMode ? 'border-gray-600 bg-[#1f2937] text-white' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                            >
+                              <option value="">Select Department</option>
+                              <option value="IT">IT</option>
+                              <option value="HR">HR</option>
+                              <option value="Operations">Operations</option>
+                              <option value="Engineering">Engineering</option>
+                              <option value="Marketing">Marketing</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className={`bg-gray-50 dark:bg-[#1f2937] px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse`}>
+                    <button
+                      type="submit"
+                      className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowModal(false)}
+                      className={`mt-3 w-full inline-flex justify-center rounded-md border shadow-sm px-4 py-2 text-base font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm ${isDarkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'}`}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
