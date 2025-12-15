@@ -1,3 +1,472 @@
-import{a as L}from"./chunk-U5LWHTWZ.js";import{b as T}from"./chunk-TEDR2MDT.js";var N=T((j,I)=>{(function(r,t){typeof j=="object"&&typeof I<"u"?t(j):typeof define=="function"&&define.amd?define(["exports"],t):t((r=typeof globalThis<"u"?globalThis:r||self).countUp={})})(j,function(r){"use strict";var t=function(){return t=Object.assign||function(i){for(var a,s=1,u=arguments.length;s<u;s++)for(var e in a=arguments[s])Object.prototype.hasOwnProperty.call(a,e)&&(i[e]=a[e]);return i},t.apply(this,arguments)},n=function(){function i(a,s,u){var e=this;this.endVal=s,this.options=u,this.version="2.9.0",this.defaults={startVal:0,decimalPlaces:0,duration:2,useEasing:!0,useGrouping:!0,useIndianSeparators:!1,smartEasingThreshold:999,smartEasingAmount:333,separator:",",decimal:".",prefix:"",suffix:"",enableScrollSpy:!1,scrollSpyDelay:200,scrollSpyOnce:!1},this.finalEndVal=null,this.useEasing=!0,this.countDown=!1,this.error="",this.startVal=0,this.paused=!0,this.once=!1,this.count=function(o){e.startTime||(e.startTime=o);var l=o-e.startTime;e.remaining=e.duration-l,e.useEasing?e.countDown?e.frameVal=e.startVal-e.easingFn(l,0,e.startVal-e.endVal,e.duration):e.frameVal=e.easingFn(l,e.startVal,e.endVal-e.startVal,e.duration):e.frameVal=e.startVal+(e.endVal-e.startVal)*(l/e.duration);var f=e.countDown?e.frameVal<e.endVal:e.frameVal>e.endVal;e.frameVal=f?e.endVal:e.frameVal,e.frameVal=Number(e.frameVal.toFixed(e.options.decimalPlaces)),e.printValue(e.frameVal),l<e.duration?e.rAF=requestAnimationFrame(e.count):e.finalEndVal!==null?e.update(e.finalEndVal):e.options.onCompleteCallback&&e.options.onCompleteCallback()},this.formatNumber=function(o){var l,f,d,p,O=o<0?"-":"";l=Math.abs(o).toFixed(e.options.decimalPlaces);var b=(l+="").split(".");if(f=b[0],d=b.length>1?e.options.decimal+b[1]:"",e.options.useGrouping){p="";for(var g=3,h=0,y=0,m=f.length;y<m;++y)e.options.useIndianSeparators&&y===4&&(g=2,h=1),y!==0&&h%g==0&&(p=e.options.separator+p),h++,p=f[m-y-1]+p;f=p}return e.options.numerals&&e.options.numerals.length&&(f=f.replace(/[0-9]/g,function(V){return e.options.numerals[+V]}),d=d.replace(/[0-9]/g,function(V){return e.options.numerals[+V]})),O+e.options.prefix+f+d+e.options.suffix},this.easeOutExpo=function(o,l,f,d){return f*(1-Math.pow(2,-10*o/d))*1024/1023+l},this.options=t(t({},this.defaults),u),this.formattingFn=this.options.formattingFn?this.options.formattingFn:this.formatNumber,this.easingFn=this.options.easingFn?this.options.easingFn:this.easeOutExpo,this.el=typeof a=="string"?document.getElementById(a):a,s=s??this.parse(this.el.innerHTML),this.startVal=this.validateValue(this.options.startVal),this.frameVal=this.startVal,this.endVal=this.validateValue(s),this.options.decimalPlaces=Math.max(this.options.decimalPlaces),this.resetDuration(),this.options.separator=String(this.options.separator),this.useEasing=this.options.useEasing,this.options.separator===""&&(this.options.useGrouping=!1),this.el?this.printValue(this.startVal):this.error="[CountUp] target is null or undefined",typeof window<"u"&&this.options.enableScrollSpy&&(this.error?console.error(this.error,a):(window.onScrollFns=window.onScrollFns||[],window.onScrollFns.push(function(){return e.handleScroll(e)}),window.onscroll=function(){window.onScrollFns.forEach(function(o){return o()})},this.handleScroll(this)))}return i.prototype.handleScroll=function(a){if(a&&window&&!a.once){var s=window.innerHeight+window.scrollY,u=a.el.getBoundingClientRect(),e=u.top+window.pageYOffset,o=u.top+u.height+window.pageYOffset;o<s&&o>window.scrollY&&a.paused?(a.paused=!1,setTimeout(function(){return a.start()},a.options.scrollSpyDelay),a.options.scrollSpyOnce&&(a.once=!0)):(window.scrollY>o||e>s)&&!a.paused&&a.reset()}},i.prototype.determineDirectionAndSmartEasing=function(){var a=this.finalEndVal?this.finalEndVal:this.endVal;this.countDown=this.startVal>a;var s=a-this.startVal;if(Math.abs(s)>this.options.smartEasingThreshold&&this.options.useEasing){this.finalEndVal=a;var u=this.countDown?1:-1;this.endVal=a+u*this.options.smartEasingAmount,this.duration=this.duration/2}else this.endVal=a,this.finalEndVal=null;this.finalEndVal!==null?this.useEasing=!1:this.useEasing=this.options.useEasing},i.prototype.start=function(a){this.error||(this.options.onStartCallback&&this.options.onStartCallback(),a&&(this.options.onCompleteCallback=a),this.duration>0?(this.determineDirectionAndSmartEasing(),this.paused=!1,this.rAF=requestAnimationFrame(this.count)):this.printValue(this.endVal))},i.prototype.pauseResume=function(){this.paused?(this.startTime=null,this.duration=this.remaining,this.startVal=this.frameVal,this.determineDirectionAndSmartEasing(),this.rAF=requestAnimationFrame(this.count)):cancelAnimationFrame(this.rAF),this.paused=!this.paused},i.prototype.reset=function(){cancelAnimationFrame(this.rAF),this.paused=!0,this.resetDuration(),this.startVal=this.validateValue(this.options.startVal),this.frameVal=this.startVal,this.printValue(this.startVal)},i.prototype.update=function(a){cancelAnimationFrame(this.rAF),this.startTime=null,this.endVal=this.validateValue(a),this.endVal!==this.frameVal&&(this.startVal=this.frameVal,this.finalEndVal==null&&this.resetDuration(),this.finalEndVal=null,this.determineDirectionAndSmartEasing(),this.rAF=requestAnimationFrame(this.count))},i.prototype.printValue=function(a){var s;if(this.el){var u=this.formattingFn(a);!((s=this.options.plugin)===null||s===void 0)&&s.render?this.options.plugin.render(this.el,u):this.el.tagName==="INPUT"?this.el.value=u:this.el.tagName==="text"||this.el.tagName==="tspan"?this.el.textContent=u:this.el.innerHTML=u}},i.prototype.ensureNumber=function(a){return typeof a=="number"&&!isNaN(a)},i.prototype.validateValue=function(a){var s=Number(a);return this.ensureNumber(s)?s:(this.error="[CountUp] invalid start or end value: ".concat(a),null)},i.prototype.resetDuration=function(){this.startTime=null,this.duration=1e3*Number(this.options.duration),this.remaining=this.duration},i.prototype.parse=function(a){var s=function(l){return l.replace(/([.,'  ])/g,"\\$1")},u=s(this.options.separator),e=s(this.options.decimal),o=a.replace(new RegExp(u,"g"),"").replace(new RegExp(e,"g"),".");return parseFloat(o)},i}();r.CountUp=n})});var it=T(U=>{Object.defineProperty(U,"__esModule",{value:!0});var c=L(),q=N();function Y(r,t){var n=r==null?null:typeof Symbol<"u"&&r[Symbol.iterator]||r["@@iterator"];if(n!=null){var i,a,s,u,e=[],o=!0,l=!1;try{if(s=(n=n.call(r)).next,t===0){if(Object(n)!==n)return;o=!1}else for(;!(o=(i=s.call(n)).done)&&(e.push(i.value),e.length!==t);o=!0);}catch(f){l=!0,a=f}finally{try{if(!o&&n.return!=null&&(u=n.return(),Object(u)!==u))return}finally{if(l)throw a}}return e}}function _(r,t){var n=Object.keys(r);if(Object.getOwnPropertySymbols){var i=Object.getOwnPropertySymbols(r);t&&(i=i.filter(function(a){return Object.getOwnPropertyDescriptor(r,a).enumerable})),n.push.apply(n,i)}return n}function A(r){for(var t=1;t<arguments.length;t++){var n=arguments[t]!=null?arguments[t]:{};t%2?_(Object(n),!0).forEach(function(i){W(r,i,n[i])}):Object.getOwnPropertyDescriptors?Object.defineProperties(r,Object.getOwnPropertyDescriptors(n)):_(Object(n)).forEach(function(i){Object.defineProperty(r,i,Object.getOwnPropertyDescriptor(n,i))})}return r}function k(r,t){if(typeof r!="object"||!r)return r;var n=r[Symbol.toPrimitive];if(n!==void 0){var i=n.call(r,t||"default");if(typeof i!="object")return i;throw new TypeError("@@toPrimitive must return a primitive value.")}return(t==="string"?String:Number)(r)}function H(r){var t=k(r,"string");return typeof t=="symbol"?t:String(t)}function W(r,t,n){return t=H(t),t in r?Object.defineProperty(r,t,{value:n,enumerable:!0,configurable:!0,writable:!0}):r[t]=n,r}function D(){return D=Object.assign?Object.assign.bind():function(r){for(var t=1;t<arguments.length;t++){var n=arguments[t];for(var i in n)Object.prototype.hasOwnProperty.call(n,i)&&(r[i]=n[i])}return r},D.apply(this,arguments)}function $(r,t){if(r==null)return{};var n={},i=Object.keys(r),a,s;for(s=0;s<i.length;s++)a=i[s],!(t.indexOf(a)>=0)&&(n[a]=r[a]);return n}function z(r,t){if(r==null)return{};var n=$(r,t),i,a;if(Object.getOwnPropertySymbols){var s=Object.getOwnPropertySymbols(r);for(a=0;a<s.length;a++)i=s[a],!(t.indexOf(i)>=0)&&Object.prototype.propertyIsEnumerable.call(r,i)&&(n[i]=r[i])}return n}function B(r,t){return K(r)||Y(r,t)||J(r,t)||Q()}function K(r){if(Array.isArray(r))return r}function J(r,t){if(r){if(typeof r=="string")return M(r,t);var n=Object.prototype.toString.call(r).slice(8,-1);if(n==="Object"&&r.constructor&&(n=r.constructor.name),n==="Map"||n==="Set")return Array.from(r);if(n==="Arguments"||/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n))return M(r,t)}}function M(r,t){(t==null||t>r.length)&&(t=r.length);for(var n=0,i=new Array(t);n<t;n++)i[n]=r[n];return i}function Q(){throw new TypeError(`Invalid attempt to destructure non-iterable instance.
-In order to be iterable, non-array objects must have a [Symbol.iterator]() method.`)}var X=typeof window<"u"&&typeof window.document<"u"&&typeof window.document.createElement<"u"?c.useLayoutEffect:c.useEffect;function v(r){var t=c.useRef(r);return X(function(){t.current=r}),c.useCallback(function(){for(var n=arguments.length,i=new Array(n),a=0;a<n;a++)i[a]=arguments[a];return t.current.apply(void 0,i)},[])}var Z=function(t,n){var i=n.decimal,a=n.decimals,s=n.duration,u=n.easingFn,e=n.end,o=n.formattingFn,l=n.numerals,f=n.prefix,d=n.separator,p=n.start,O=n.suffix,b=n.useEasing,g=n.useGrouping,h=n.useIndianSeparators,y=n.enableScrollSpy,m=n.scrollSpyDelay,V=n.scrollSpyOnce,E=n.plugin;return new q.CountUp(t,e,{startVal:p,duration:s,decimal:i,decimalPlaces:a,easingFn:u,formattingFn:o,numerals:l,separator:d,prefix:f,suffix:O,plugin:E,useEasing:b,useIndianSeparators:h,useGrouping:g,enableScrollSpy:y,scrollSpyDelay:m,scrollSpyOnce:V})},tt=["ref","startOnMount","enableReinitialize","delay","onEnd","onStart","onPauseResume","onReset","onUpdate"],et={decimal:".",separator:",",delay:null,prefix:"",suffix:"",duration:2,start:0,decimals:0,startOnMount:!0,enableReinitialize:!0,useEasing:!0,useGrouping:!0,useIndianSeparators:!1},G=function(t){var n=Object.fromEntries(Object.entries(t).filter(function(w){var P=B(w,2),C=P[1];return C!==void 0})),i=c.useMemo(function(){return A(A({},et),n)},[t]),a=i.ref,s=i.startOnMount,u=i.enableReinitialize,e=i.delay,o=i.onEnd,l=i.onStart,f=i.onPauseResume,d=i.onReset,p=i.onUpdate,O=z(i,tt),b=c.useRef(),g=c.useRef(),h=c.useRef(!1),y=v(function(){return Z(typeof a=="string"?a:a.current,O)}),m=v(function(w){var P=b.current;if(P&&!w)return P;var C=y();return b.current=C,C}),V=v(function(){var w=function(){return m(!0).start(function(){o?.({pauseResume:E,reset:S,start:F,update:R})})};e&&e>0?g.current=setTimeout(w,e*1e3):w(),l?.({pauseResume:E,reset:S,update:R})}),E=v(function(){m().pauseResume(),f?.({reset:S,start:F,update:R})}),S=v(function(){m().el&&(g.current&&clearTimeout(g.current),m().reset(),d?.({pauseResume:E,start:F,update:R}))}),R=v(function(w){m().update(w),p?.({pauseResume:E,reset:S,start:F})}),F=v(function(){S(),V()}),x=v(function(w){s&&(w&&S(),V())});return c.useEffect(function(){h.current?u&&x(!0):(h.current=!0,x())},[u,h,x,e,t.start,t.suffix,t.prefix,t.duration,t.separator,t.decimals,t.decimal,t.formattingFn]),c.useEffect(function(){return function(){S()}},[S]),{start:F,pauseResume:E,reset:S,update:R,getCountUp:m}},nt=["className","redraw","containerProps","children","style"],rt=function(t){var n=t.className,i=t.redraw,a=t.containerProps,s=t.children,u=t.style,e=z(t,nt),o=c.useRef(null),l=c.useRef(!1),f=G(A(A({},e),{},{ref:o,startOnMount:typeof s!="function"||t.delay===0,enableReinitialize:!1})),d=f.start,p=f.reset,O=f.update,b=f.pauseResume,g=f.getCountUp,h=v(function(){d()}),y=v(function(E){t.preserveValue||p(),O(E)}),m=v(function(){if(typeof t.children=="function"&&!(o.current instanceof Element)){console.error(`Couldn't find attached element to hook the CountUp instance into! Try to attach "containerRef" from the render prop to a an Element, eg. <span ref={containerRef} />.`);return}g()});c.useEffect(function(){m()},[m]),c.useEffect(function(){l.current&&y(t.end)},[t.end,y]);var V=i&&t;return c.useEffect(function(){i&&l.current&&h()},[h,i,V]),c.useEffect(function(){!i&&l.current&&h()},[h,i,t.start,t.suffix,t.prefix,t.duration,t.separator,t.decimals,t.decimal,t.className,t.formattingFn]),c.useEffect(function(){l.current=!0},[]),typeof s=="function"?s({countUpRef:o,start:d,reset:p,update:O,pauseResume:b,getCountUp:g}):c.createElement("span",D({className:n,ref:o,style:u},a),typeof t.start<"u"?g().formattingFn(t.start):"")};U.default=rt;U.useCountUp=G});export default it();
+import {
+  require_react
+} from "./chunk-4X3XUJ2M.js";
+import {
+  __commonJS
+} from "./chunk-G3PMV62Z.js";
+
+// node_modules/countup.js/dist/countUp.umd.js
+var require_countUp_umd = __commonJS({
+  "node_modules/countup.js/dist/countUp.umd.js"(exports, module) {
+    !function(t, i) {
+      "object" == typeof exports && "undefined" != typeof module ? i(exports) : "function" == typeof define && define.amd ? define(["exports"], i) : i((t = "undefined" != typeof globalThis ? globalThis : t || self).countUp = {});
+    }(exports, function(t) {
+      "use strict";
+      var i = function() {
+        return i = Object.assign || function(t2) {
+          for (var i2, n2 = 1, s = arguments.length; n2 < s; n2++) for (var e in i2 = arguments[n2]) Object.prototype.hasOwnProperty.call(i2, e) && (t2[e] = i2[e]);
+          return t2;
+        }, i.apply(this, arguments);
+      }, n = function() {
+        function t2(t3, n2, s) {
+          var e = this;
+          this.endVal = n2, this.options = s, this.version = "2.9.0", this.defaults = { startVal: 0, decimalPlaces: 0, duration: 2, useEasing: true, useGrouping: true, useIndianSeparators: false, smartEasingThreshold: 999, smartEasingAmount: 333, separator: ",", decimal: ".", prefix: "", suffix: "", enableScrollSpy: false, scrollSpyDelay: 200, scrollSpyOnce: false }, this.finalEndVal = null, this.useEasing = true, this.countDown = false, this.error = "", this.startVal = 0, this.paused = true, this.once = false, this.count = function(t4) {
+            e.startTime || (e.startTime = t4);
+            var i2 = t4 - e.startTime;
+            e.remaining = e.duration - i2, e.useEasing ? e.countDown ? e.frameVal = e.startVal - e.easingFn(i2, 0, e.startVal - e.endVal, e.duration) : e.frameVal = e.easingFn(i2, e.startVal, e.endVal - e.startVal, e.duration) : e.frameVal = e.startVal + (e.endVal - e.startVal) * (i2 / e.duration);
+            var n3 = e.countDown ? e.frameVal < e.endVal : e.frameVal > e.endVal;
+            e.frameVal = n3 ? e.endVal : e.frameVal, e.frameVal = Number(e.frameVal.toFixed(e.options.decimalPlaces)), e.printValue(e.frameVal), i2 < e.duration ? e.rAF = requestAnimationFrame(e.count) : null !== e.finalEndVal ? e.update(e.finalEndVal) : e.options.onCompleteCallback && e.options.onCompleteCallback();
+          }, this.formatNumber = function(t4) {
+            var i2, n3, s2, a, o = t4 < 0 ? "-" : "";
+            i2 = Math.abs(t4).toFixed(e.options.decimalPlaces);
+            var r = (i2 += "").split(".");
+            if (n3 = r[0], s2 = r.length > 1 ? e.options.decimal + r[1] : "", e.options.useGrouping) {
+              a = "";
+              for (var l = 3, u = 0, h = 0, p = n3.length; h < p; ++h) e.options.useIndianSeparators && 4 === h && (l = 2, u = 1), 0 !== h && u % l == 0 && (a = e.options.separator + a), u++, a = n3[p - h - 1] + a;
+              n3 = a;
+            }
+            return e.options.numerals && e.options.numerals.length && (n3 = n3.replace(/[0-9]/g, function(t5) {
+              return e.options.numerals[+t5];
+            }), s2 = s2.replace(/[0-9]/g, function(t5) {
+              return e.options.numerals[+t5];
+            })), o + e.options.prefix + n3 + s2 + e.options.suffix;
+          }, this.easeOutExpo = function(t4, i2, n3, s2) {
+            return n3 * (1 - Math.pow(2, -10 * t4 / s2)) * 1024 / 1023 + i2;
+          }, this.options = i(i({}, this.defaults), s), this.formattingFn = this.options.formattingFn ? this.options.formattingFn : this.formatNumber, this.easingFn = this.options.easingFn ? this.options.easingFn : this.easeOutExpo, this.el = "string" == typeof t3 ? document.getElementById(t3) : t3, n2 = null == n2 ? this.parse(this.el.innerHTML) : n2, this.startVal = this.validateValue(this.options.startVal), this.frameVal = this.startVal, this.endVal = this.validateValue(n2), this.options.decimalPlaces = Math.max(this.options.decimalPlaces), this.resetDuration(), this.options.separator = String(this.options.separator), this.useEasing = this.options.useEasing, "" === this.options.separator && (this.options.useGrouping = false), this.el ? this.printValue(this.startVal) : this.error = "[CountUp] target is null or undefined", "undefined" != typeof window && this.options.enableScrollSpy && (this.error ? console.error(this.error, t3) : (window.onScrollFns = window.onScrollFns || [], window.onScrollFns.push(function() {
+            return e.handleScroll(e);
+          }), window.onscroll = function() {
+            window.onScrollFns.forEach(function(t4) {
+              return t4();
+            });
+          }, this.handleScroll(this)));
+        }
+        return t2.prototype.handleScroll = function(t3) {
+          if (t3 && window && !t3.once) {
+            var i2 = window.innerHeight + window.scrollY, n2 = t3.el.getBoundingClientRect(), s = n2.top + window.pageYOffset, e = n2.top + n2.height + window.pageYOffset;
+            e < i2 && e > window.scrollY && t3.paused ? (t3.paused = false, setTimeout(function() {
+              return t3.start();
+            }, t3.options.scrollSpyDelay), t3.options.scrollSpyOnce && (t3.once = true)) : (window.scrollY > e || s > i2) && !t3.paused && t3.reset();
+          }
+        }, t2.prototype.determineDirectionAndSmartEasing = function() {
+          var t3 = this.finalEndVal ? this.finalEndVal : this.endVal;
+          this.countDown = this.startVal > t3;
+          var i2 = t3 - this.startVal;
+          if (Math.abs(i2) > this.options.smartEasingThreshold && this.options.useEasing) {
+            this.finalEndVal = t3;
+            var n2 = this.countDown ? 1 : -1;
+            this.endVal = t3 + n2 * this.options.smartEasingAmount, this.duration = this.duration / 2;
+          } else this.endVal = t3, this.finalEndVal = null;
+          null !== this.finalEndVal ? this.useEasing = false : this.useEasing = this.options.useEasing;
+        }, t2.prototype.start = function(t3) {
+          this.error || (this.options.onStartCallback && this.options.onStartCallback(), t3 && (this.options.onCompleteCallback = t3), this.duration > 0 ? (this.determineDirectionAndSmartEasing(), this.paused = false, this.rAF = requestAnimationFrame(this.count)) : this.printValue(this.endVal));
+        }, t2.prototype.pauseResume = function() {
+          this.paused ? (this.startTime = null, this.duration = this.remaining, this.startVal = this.frameVal, this.determineDirectionAndSmartEasing(), this.rAF = requestAnimationFrame(this.count)) : cancelAnimationFrame(this.rAF), this.paused = !this.paused;
+        }, t2.prototype.reset = function() {
+          cancelAnimationFrame(this.rAF), this.paused = true, this.resetDuration(), this.startVal = this.validateValue(this.options.startVal), this.frameVal = this.startVal, this.printValue(this.startVal);
+        }, t2.prototype.update = function(t3) {
+          cancelAnimationFrame(this.rAF), this.startTime = null, this.endVal = this.validateValue(t3), this.endVal !== this.frameVal && (this.startVal = this.frameVal, null == this.finalEndVal && this.resetDuration(), this.finalEndVal = null, this.determineDirectionAndSmartEasing(), this.rAF = requestAnimationFrame(this.count));
+        }, t2.prototype.printValue = function(t3) {
+          var i2;
+          if (this.el) {
+            var n2 = this.formattingFn(t3);
+            if (null === (i2 = this.options.plugin) || void 0 === i2 ? void 0 : i2.render) this.options.plugin.render(this.el, n2);
+            else if ("INPUT" === this.el.tagName) this.el.value = n2;
+            else "text" === this.el.tagName || "tspan" === this.el.tagName ? this.el.textContent = n2 : this.el.innerHTML = n2;
+          }
+        }, t2.prototype.ensureNumber = function(t3) {
+          return "number" == typeof t3 && !isNaN(t3);
+        }, t2.prototype.validateValue = function(t3) {
+          var i2 = Number(t3);
+          return this.ensureNumber(i2) ? i2 : (this.error = "[CountUp] invalid start or end value: ".concat(t3), null);
+        }, t2.prototype.resetDuration = function() {
+          this.startTime = null, this.duration = 1e3 * Number(this.options.duration), this.remaining = this.duration;
+        }, t2.prototype.parse = function(t3) {
+          var i2 = function(t4) {
+            return t4.replace(/([.,'  ])/g, "\\$1");
+          }, n2 = i2(this.options.separator), s = i2(this.options.decimal), e = t3.replace(new RegExp(n2, "g"), "").replace(new RegExp(s, "g"), ".");
+          return parseFloat(e);
+        }, t2;
+      }();
+      t.CountUp = n;
+    });
+  }
+});
+
+// node_modules/react-countup/build/index.js
+var require_build = __commonJS({
+  "node_modules/react-countup/build/index.js"(exports) {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var React = require_react();
+    var countup_js = require_countUp_umd();
+    function _iterableToArrayLimit(r, l) {
+      var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"];
+      if (null != t) {
+        var e, n, i, u, a = [], f = true, o = false;
+        try {
+          if (i = (t = t.call(r)).next, 0 === l) {
+            if (Object(t) !== t) return;
+            f = false;
+          } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = true) ;
+        } catch (r2) {
+          o = true, n = r2;
+        } finally {
+          try {
+            if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return;
+          } finally {
+            if (o) throw n;
+          }
+        }
+        return a;
+      }
+    }
+    function ownKeys(e, r) {
+      var t = Object.keys(e);
+      if (Object.getOwnPropertySymbols) {
+        var o = Object.getOwnPropertySymbols(e);
+        r && (o = o.filter(function(r2) {
+          return Object.getOwnPropertyDescriptor(e, r2).enumerable;
+        })), t.push.apply(t, o);
+      }
+      return t;
+    }
+    function _objectSpread2(e) {
+      for (var r = 1; r < arguments.length; r++) {
+        var t = null != arguments[r] ? arguments[r] : {};
+        r % 2 ? ownKeys(Object(t), true).forEach(function(r2) {
+          _defineProperty(e, r2, t[r2]);
+        }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function(r2) {
+          Object.defineProperty(e, r2, Object.getOwnPropertyDescriptor(t, r2));
+        });
+      }
+      return e;
+    }
+    function _toPrimitive(t, r) {
+      if ("object" != typeof t || !t) return t;
+      var e = t[Symbol.toPrimitive];
+      if (void 0 !== e) {
+        var i = e.call(t, r || "default");
+        if ("object" != typeof i) return i;
+        throw new TypeError("@@toPrimitive must return a primitive value.");
+      }
+      return ("string" === r ? String : Number)(t);
+    }
+    function _toPropertyKey(t) {
+      var i = _toPrimitive(t, "string");
+      return "symbol" == typeof i ? i : String(i);
+    }
+    function _defineProperty(obj, key, value) {
+      key = _toPropertyKey(key);
+      if (key in obj) {
+        Object.defineProperty(obj, key, {
+          value,
+          enumerable: true,
+          configurable: true,
+          writable: true
+        });
+      } else {
+        obj[key] = value;
+      }
+      return obj;
+    }
+    function _extends() {
+      _extends = Object.assign ? Object.assign.bind() : function(target) {
+        for (var i = 1; i < arguments.length; i++) {
+          var source = arguments[i];
+          for (var key in source) {
+            if (Object.prototype.hasOwnProperty.call(source, key)) {
+              target[key] = source[key];
+            }
+          }
+        }
+        return target;
+      };
+      return _extends.apply(this, arguments);
+    }
+    function _objectWithoutPropertiesLoose(source, excluded) {
+      if (source == null) return {};
+      var target = {};
+      var sourceKeys = Object.keys(source);
+      var key, i;
+      for (i = 0; i < sourceKeys.length; i++) {
+        key = sourceKeys[i];
+        if (excluded.indexOf(key) >= 0) continue;
+        target[key] = source[key];
+      }
+      return target;
+    }
+    function _objectWithoutProperties(source, excluded) {
+      if (source == null) return {};
+      var target = _objectWithoutPropertiesLoose(source, excluded);
+      var key, i;
+      if (Object.getOwnPropertySymbols) {
+        var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
+        for (i = 0; i < sourceSymbolKeys.length; i++) {
+          key = sourceSymbolKeys[i];
+          if (excluded.indexOf(key) >= 0) continue;
+          if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue;
+          target[key] = source[key];
+        }
+      }
+      return target;
+    }
+    function _slicedToArray(arr, i) {
+      return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();
+    }
+    function _arrayWithHoles(arr) {
+      if (Array.isArray(arr)) return arr;
+    }
+    function _unsupportedIterableToArray(o, minLen) {
+      if (!o) return;
+      if (typeof o === "string") return _arrayLikeToArray(o, minLen);
+      var n = Object.prototype.toString.call(o).slice(8, -1);
+      if (n === "Object" && o.constructor) n = o.constructor.name;
+      if (n === "Map" || n === "Set") return Array.from(o);
+      if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+    }
+    function _arrayLikeToArray(arr, len) {
+      if (len == null || len > arr.length) len = arr.length;
+      for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
+      return arr2;
+    }
+    function _nonIterableRest() {
+      throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+    }
+    var useIsomorphicLayoutEffect = typeof window !== "undefined" && typeof window.document !== "undefined" && typeof window.document.createElement !== "undefined" ? React.useLayoutEffect : React.useEffect;
+    function useEventCallback(fn) {
+      var ref = React.useRef(fn);
+      useIsomorphicLayoutEffect(function() {
+        ref.current = fn;
+      });
+      return React.useCallback(function() {
+        for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+          args[_key] = arguments[_key];
+        }
+        return ref.current.apply(void 0, args);
+      }, []);
+    }
+    var createCountUpInstance = function createCountUpInstance2(el, props) {
+      var decimal = props.decimal, decimals = props.decimals, duration = props.duration, easingFn = props.easingFn, end = props.end, formattingFn = props.formattingFn, numerals = props.numerals, prefix = props.prefix, separator = props.separator, start = props.start, suffix = props.suffix, useEasing = props.useEasing, useGrouping = props.useGrouping, useIndianSeparators = props.useIndianSeparators, enableScrollSpy = props.enableScrollSpy, scrollSpyDelay = props.scrollSpyDelay, scrollSpyOnce = props.scrollSpyOnce, plugin = props.plugin;
+      return new countup_js.CountUp(el, end, {
+        startVal: start,
+        duration,
+        decimal,
+        decimalPlaces: decimals,
+        easingFn,
+        formattingFn,
+        numerals,
+        separator,
+        prefix,
+        suffix,
+        plugin,
+        useEasing,
+        useIndianSeparators,
+        useGrouping,
+        enableScrollSpy,
+        scrollSpyDelay,
+        scrollSpyOnce
+      });
+    };
+    var _excluded$1 = ["ref", "startOnMount", "enableReinitialize", "delay", "onEnd", "onStart", "onPauseResume", "onReset", "onUpdate"];
+    var DEFAULTS = {
+      decimal: ".",
+      separator: ",",
+      delay: null,
+      prefix: "",
+      suffix: "",
+      duration: 2,
+      start: 0,
+      decimals: 0,
+      startOnMount: true,
+      enableReinitialize: true,
+      useEasing: true,
+      useGrouping: true,
+      useIndianSeparators: false
+    };
+    var useCountUp = function useCountUp2(props) {
+      var filteredProps = Object.fromEntries(Object.entries(props).filter(function(_ref) {
+        var _ref2 = _slicedToArray(_ref, 2), value = _ref2[1];
+        return value !== void 0;
+      }));
+      var _useMemo = React.useMemo(function() {
+        return _objectSpread2(_objectSpread2({}, DEFAULTS), filteredProps);
+      }, [props]), ref = _useMemo.ref, startOnMount = _useMemo.startOnMount, enableReinitialize = _useMemo.enableReinitialize, delay = _useMemo.delay, onEnd = _useMemo.onEnd, onStart = _useMemo.onStart, onPauseResume = _useMemo.onPauseResume, onReset = _useMemo.onReset, onUpdate = _useMemo.onUpdate, instanceProps = _objectWithoutProperties(_useMemo, _excluded$1);
+      var countUpRef = React.useRef();
+      var timerRef = React.useRef();
+      var isInitializedRef = React.useRef(false);
+      var createInstance = useEventCallback(function() {
+        return createCountUpInstance(typeof ref === "string" ? ref : ref.current, instanceProps);
+      });
+      var getCountUp = useEventCallback(function(recreate) {
+        var countUp = countUpRef.current;
+        if (countUp && !recreate) {
+          return countUp;
+        }
+        var newCountUp = createInstance();
+        countUpRef.current = newCountUp;
+        return newCountUp;
+      });
+      var start = useEventCallback(function() {
+        var run = function run2() {
+          return getCountUp(true).start(function() {
+            onEnd === null || onEnd === void 0 || onEnd({
+              pauseResume,
+              reset,
+              start: restart,
+              update
+            });
+          });
+        };
+        if (delay && delay > 0) {
+          timerRef.current = setTimeout(run, delay * 1e3);
+        } else {
+          run();
+        }
+        onStart === null || onStart === void 0 || onStart({
+          pauseResume,
+          reset,
+          update
+        });
+      });
+      var pauseResume = useEventCallback(function() {
+        getCountUp().pauseResume();
+        onPauseResume === null || onPauseResume === void 0 || onPauseResume({
+          reset,
+          start: restart,
+          update
+        });
+      });
+      var reset = useEventCallback(function() {
+        if (getCountUp().el) {
+          timerRef.current && clearTimeout(timerRef.current);
+          getCountUp().reset();
+          onReset === null || onReset === void 0 || onReset({
+            pauseResume,
+            start: restart,
+            update
+          });
+        }
+      });
+      var update = useEventCallback(function(newEnd) {
+        getCountUp().update(newEnd);
+        onUpdate === null || onUpdate === void 0 || onUpdate({
+          pauseResume,
+          reset,
+          start: restart
+        });
+      });
+      var restart = useEventCallback(function() {
+        reset();
+        start();
+      });
+      var maybeInitialize = useEventCallback(function(shouldReset) {
+        if (startOnMount) {
+          if (shouldReset) {
+            reset();
+          }
+          start();
+        }
+      });
+      React.useEffect(function() {
+        if (!isInitializedRef.current) {
+          isInitializedRef.current = true;
+          maybeInitialize();
+        } else if (enableReinitialize) {
+          maybeInitialize(true);
+        }
+      }, [enableReinitialize, isInitializedRef, maybeInitialize, delay, props.start, props.suffix, props.prefix, props.duration, props.separator, props.decimals, props.decimal, props.formattingFn]);
+      React.useEffect(function() {
+        return function() {
+          reset();
+        };
+      }, [reset]);
+      return {
+        start: restart,
+        pauseResume,
+        reset,
+        update,
+        getCountUp
+      };
+    };
+    var _excluded = ["className", "redraw", "containerProps", "children", "style"];
+    var CountUp = function CountUp2(props) {
+      var className = props.className, redraw = props.redraw, containerProps = props.containerProps, children = props.children, style = props.style, useCountUpProps = _objectWithoutProperties(props, _excluded);
+      var containerRef = React.useRef(null);
+      var isInitializedRef = React.useRef(false);
+      var _useCountUp = useCountUp(_objectSpread2(_objectSpread2({}, useCountUpProps), {}, {
+        ref: containerRef,
+        startOnMount: typeof children !== "function" || props.delay === 0,
+        // component manually restarts
+        enableReinitialize: false
+      })), start = _useCountUp.start, reset = _useCountUp.reset, updateCountUp = _useCountUp.update, pauseResume = _useCountUp.pauseResume, getCountUp = _useCountUp.getCountUp;
+      var restart = useEventCallback(function() {
+        start();
+      });
+      var update = useEventCallback(function(end) {
+        if (!props.preserveValue) {
+          reset();
+        }
+        updateCountUp(end);
+      });
+      var initializeOnMount = useEventCallback(function() {
+        if (typeof props.children === "function") {
+          if (!(containerRef.current instanceof Element)) {
+            console.error(`Couldn't find attached element to hook the CountUp instance into! Try to attach "containerRef" from the render prop to a an Element, eg. <span ref={containerRef} />.`);
+            return;
+          }
+        }
+        getCountUp();
+      });
+      React.useEffect(function() {
+        initializeOnMount();
+      }, [initializeOnMount]);
+      React.useEffect(function() {
+        if (isInitializedRef.current) {
+          update(props.end);
+        }
+      }, [props.end, update]);
+      var redrawDependencies = redraw && props;
+      React.useEffect(function() {
+        if (redraw && isInitializedRef.current) {
+          restart();
+        }
+      }, [restart, redraw, redrawDependencies]);
+      React.useEffect(function() {
+        if (!redraw && isInitializedRef.current) {
+          restart();
+        }
+      }, [restart, redraw, props.start, props.suffix, props.prefix, props.duration, props.separator, props.decimals, props.decimal, props.className, props.formattingFn]);
+      React.useEffect(function() {
+        isInitializedRef.current = true;
+      }, []);
+      if (typeof children === "function") {
+        return children({
+          countUpRef: containerRef,
+          start,
+          reset,
+          update: updateCountUp,
+          pauseResume,
+          getCountUp
+        });
+      }
+      return React.createElement("span", _extends({
+        className,
+        ref: containerRef,
+        style
+      }, containerProps), typeof props.start !== "undefined" ? getCountUp().formattingFn(props.start) : "");
+    };
+    exports.default = CountUp;
+    exports.useCountUp = useCountUp;
+  }
+});
+export default require_build();
 //# sourceMappingURL=react-countup.js.map

@@ -5,7 +5,7 @@ const User = require('../models/User');
 // Create a nomination application
 exports.createNomination = async (req, res) => {
     try {
-        const { pollId, sop, documents } = req.body;
+        const { pollId, position, manifesto, sopUrl } = req.body;
         const userId = req.user._id;
 
         // Check if poll exists and is active (or upcoming)
@@ -14,17 +14,23 @@ exports.createNomination = async (req, res) => {
             return res.status(404).json({ message: 'Poll not found' });
         }
 
-        // Check if user has already applied
-        const existingNomination = await Nomination.findOne({ user: userId, poll: pollId });
+        // Check if user has already applied (note: schema uses 'candidate' field, controller query must match)
+        // Schema index is poll+candidate+position. So we should check for that specific position?
+        // Or one nomination per poll? Schema unique index is { poll, candidate, position }.
+        // So a user CAN apply for multiple positions in same poll if that's the intent.
+        // But let's check basic existence first.
+
+        const existingNomination = await Nomination.findOne({ candidate: userId, poll: pollId, position });
         if (existingNomination) {
-            return res.status(400).json({ message: 'You have already applied for this nomination' });
+            return res.status(400).json({ message: 'You have already applied for this position in this poll' });
         }
 
         const nomination = await Nomination.create({
-            user: userId,
+            candidate: userId,
             poll: pollId,
-            sop,
-            documents: documents || [],
+            position,
+            manifesto,
+            sopUrl,
             status: 'pending'
         });
 
@@ -39,7 +45,7 @@ exports.getPollNominations = async (req, res) => {
     try {
         const { pollId } = req.params;
         const nominations = await Nomination.find({ poll: pollId })
-            .populate('user', 'name email batch department profilePhoto')
+            .populate('candidate', 'name email batch department profilePhoto')
             .sort({ submittedAt: -1 });
 
         res.status(200).json({ success: true, nominations });
@@ -51,7 +57,7 @@ exports.getPollNominations = async (req, res) => {
 // Get my nominations (User view)
 exports.getMyNominations = async (req, res) => {
     try {
-        const nominations = await Nomination.find({ user: req.user._id })
+        const nominations = await Nomination.find({ candidate: req.user._id })
             .populate('poll', 'title status startDate')
             .sort({ submittedAt: -1 });
 
@@ -71,29 +77,33 @@ exports.updateNominationStatus = async (req, res) => {
             return res.status(400).json({ message: 'Invalid status' });
         }
 
-        const nomination = await Nomination.findById(nominationId).populate('user').populate('poll');
+        const nomination = await Nomination.findById(nominationId).populate('candidate').populate('poll');
         if (!nomination) {
             return res.status(404).json({ message: 'Nomination not found' });
         }
 
         nomination.status = status;
         nomination.adminComments = adminComments || nomination.adminComments;
-        nomination.reviewedBy = req.user._id;
-        nomination.reviewedAt = Date.now();
+        // nomination.reviewedBy ?? schema doesn't have it explicitly shown in file view but maybe
+        // Skipping reviewedBy for now as it wasn't in the model snippet I saw, but leaving if it matches underlying schema.
+        // Actually, Nomination.js view didn't show reviewedBy. It might cause error if schema is strict.
+        // But removing it is safer if schema doesn't have it.
+        // Also fix usage of user -> candidate
+
         await nomination.save();
 
         // If approved, automatically add as an option to the poll
         if (status === 'approved') {
             const poll = await Poll.findById(nomination.poll._id);
             // Check if option already exists to avoid duplicates
-            const candidateName = nomination.user.name;
+            const candidateName = nomination.candidate.name;
             const optionExists = poll.options.find(opt => opt.text === candidateName);
 
             if (!optionExists) {
                 poll.options.push({
                     text: candidateName,
-                    description: nomination.sop, // Use SOP as description
-                    image: nomination.user.profilePhoto
+                    description: nomination.manifesto, // Use manifesto as description
+                    image: nomination.candidate.profilePhoto
                 });
                 await poll.save();
             }

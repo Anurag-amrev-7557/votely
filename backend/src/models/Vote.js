@@ -15,10 +15,10 @@ const voteSchema = new mongoose.Schema({
   // Integrity Fields
   previousBlockHash: {
     type: String,
-    default: '0' // Genesis block prev hash
+    default: '0' // Acts as Previous_Row_Hash in the chain
   },
   hash: {
-    type: String, // SHA-256(pollId + options + userId + timestamp + prevHash)
+    type: String, // SHA-256(Vote_Data + Previous_Row_Hash)
     required: true
   },
   signature: {

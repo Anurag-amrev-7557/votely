@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const { encrypt, decrypt, hash } = require('../utils/cryptoUtils');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -12,10 +13,12 @@ const userSchema = new mongoose.Schema({
   email: {
     type: String,
     required: [true, 'Email is required'],
-    unique: true,
-    trim: true,
-    lowercase: true,
-    match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
+    trim: true, // Unique index removed (moved to emailHash), Validation handled in controller due to encryption
+  },
+  emailHash: {
+    type: String,
+    unique: true, // Uniqueness enforced on the hash
+    select: false // Internal use for lookups
   },
   password: {
     type: String,
@@ -175,6 +178,14 @@ const userSchema = new mongoose.Schema({
 
 // Hash password before saving
 userSchema.pre('save', async function (next) {
+  // Handle PII Encryption
+  if (this.isModified('email')) {
+    // 1. Generate deterministic hash for lookups
+    this.emailHash = hash(this.email.toLowerCase());
+    // 2. Encrypt the actual data
+    this.email = encrypt(this.email.toLowerCase());
+  }
+
   if (!this.isModified('password')) return next();
 
   try {
@@ -190,6 +201,17 @@ userSchema.pre('save', async function (next) {
 userSchema.pre('save', function (next) {
   this.lastActive = new Date();
   next();
+});
+
+// Decrypt PII after retrieving from DB
+userSchema.post('init', function (doc) {
+  if (doc.email && doc.email.includes(':')) { // Simple check if it might be encrypted
+    try {
+      doc.email = decrypt(doc.email);
+    } catch (e) {
+      // Keep as is if decryption fails (legacy data?)
+    }
+  }
 });
 
 // Method to compare password

@@ -1,5 +1,8 @@
-const express = require('express');
 const dotenv = require('dotenv');
+// Load environment variables immediately
+dotenv.config();
+
+const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const path = require('path');
@@ -11,9 +14,6 @@ const http = require('http');
 const { Server } = require('socket.io');
 const User = require('./models/User');
 const mongoose = require('mongoose'); // Added back for health checks
-
-// Load environment variables
-dotenv.config();
 
 // Connect to MongoDB
 // Connect to MongoDB

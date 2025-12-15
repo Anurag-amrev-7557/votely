@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
+const { hash } = require('../utils/cryptoUtils');
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -30,7 +31,7 @@ const registerUser = async (req, res) => {
         }
 
         // Check if user exists
-        const userExists = await User.findOne({ email });
+        const userExists = await User.findOne({ emailHash: hash(email.toLowerCase()) });
 
         if (userExists) {
             return res.status(400).json({ error: 'User already exists' });
@@ -50,7 +51,7 @@ const registerUser = async (req, res) => {
             res.status(201).json({
                 _id: user.id,
                 name: user.name,
-                email: user.email,
+                email: email, // Return plaintext email
                 role: user.role,
                 token: generateToken(user._id),
             });
@@ -72,7 +73,7 @@ const loginUser = async (req, res) => {
         const ADMIN_EMAIL = 'anuragverma08002@gmail.com';
 
         // Check for user email
-        const user = await User.findOne({ email }).select('+password');
+        const user = await User.findOne({ emailHash: hash(email.toLowerCase()) }).select('+password');
 
         if (user && (await bcrypt.compare(password, user.password))) {
             // Auto-fix: Ensure admin email always has admin role
@@ -84,7 +85,7 @@ const loginUser = async (req, res) => {
             res.json({
                 _id: user.id,
                 name: user.name,
-                email: user.email,
+                email: email, // Return plaintext email
                 role: user.role,
                 profilePhoto: user.profilePhoto,
                 token: generateToken(user._id),
@@ -125,7 +126,7 @@ const requestMagicLink = async (req, res) => {
         // For simplicity: We verify existence. If new, we'll create roughly on verify or now?
         // Better: Find user. If not found, create a "pending" user or just wait?
         // Let's Find or Create Staging User.
-        let user = await User.findOne({ email });
+        let user = await User.findOne({ emailHash: hash(email.toLowerCase()) });
 
         if (!user) {
             user = await User.create({
@@ -156,7 +157,7 @@ const requestMagicLink = async (req, res) => {
         const magicLink = `${frontendUrl}/login/verify?token=${resetToken}&email=${email}`;
 
         try {
-            await sendMagicLinkEmail(user.email, magicLink);
+            await sendMagicLinkEmail(email, magicLink);
             res.status(200).json({ success: true, message: 'Magic link sent to your email.' });
         } catch (emailError) {
             user.magicLinkToken = undefined;
@@ -189,7 +190,7 @@ const verifyMagicLink = async (req, res) => {
 
         // 2. Find user with valid token
         const user = await User.findOne({
-            email,
+            emailHash: hash(email.toLowerCase()),
             magicLinkToken: hashedToken,
             magicLinkExpires: { $gt: Date.now() }
         });
@@ -209,7 +210,7 @@ const verifyMagicLink = async (req, res) => {
         res.json({
             _id: user.id,
             name: user.name,
-            email: user.email,
+            email: email, // Return plaintext email
             role: user.role,
             profilePhoto: user.profilePhoto,
             token: generateToken(user._id),
@@ -250,36 +251,46 @@ const googleAuth = async (req, res) => {
             return res.status(400).json({ error: 'Only @iitbbs.ac.in emails are allowed.' });
         }
 
-        // Check if user exists
-        let user = await User.findOne({ email });
+        // Check if user exists by Google ID first (Primary lookup)
+        let user = await User.findOne({ googleId });
 
         if (user) {
-            // If user exists but no googleId (registered via email/password), link it
-            if (!user.googleId) {
-                user.googleId = googleId;
-                user.profilePhoto = user.profilePhoto || picture; // Update photo if missing
+            // User found by Google ID - Update profile photo if missing
+            if (!user.profilePhoto) {
+                user.profilePhoto = picture;
                 await user.save();
             }
         } else {
-            // Create new user
-            // Generate a random password for google users (they won't use it but db requires it if not optional)
-            // Actually User model has required: true for password. We should generate a random one.
-            const randomPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+            // If not found by Google ID, check by Email (Account Linking)
+            user = await User.findOne({ emailHash: hash(email.toLowerCase()) });
 
-            user = await User.create({
-                name,
-                email,
-                password: randomPassword,
-                googleId,
-                profilePhoto: picture,
-                isVerified: true // Google emails are verified
-            });
+            if (user) {
+                // If user exists but no googleId (registered via email/password), link it
+                if (!user.googleId) {
+                    user.googleId = googleId;
+                    user.profilePhoto = user.profilePhoto || picture; // Update photo if missing
+                    await user.save();
+                }
+            } else {
+                // Create new user
+                // Generate a random password for google users
+                const randomPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+
+                user = await User.create({
+                    name,
+                    email,
+                    password: randomPassword,
+                    googleId,
+                    profilePhoto: picture,
+                    isVerified: true // Google emails are verified
+                });
+            }
         }
 
         res.status(200).json({
             _id: user.id,
             name: user.name,
-            email: user.email,
+            email: email, // Return plaintext email
             role: user.role,
             profilePhoto: user.profilePhoto,
             token: generateToken(user._id),

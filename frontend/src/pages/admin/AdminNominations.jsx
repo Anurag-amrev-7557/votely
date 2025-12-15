@@ -75,17 +75,17 @@ const AdminNominations = () => {
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex items-center">
                                         <div className="flex-shrink-0 h-10 w-10">
-                                            {nom.user.profilePhoto ? (
-                                                <img className="h-10 w-10 rounded-full" src={nom.user.profilePhoto} alt="" />
+                                            {nom.candidate?.profilePhoto ? (
+                                                <img className="h-10 w-10 rounded-full" src={nom.candidate.profilePhoto} alt="" />
                                             ) : (
                                                 <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                                                    <span className="text-sm font-bold">{nom.user.name.charAt(0)}</span>
+                                                    <span className="text-sm font-bold">{nom.candidate?.name?.charAt(0) || '?'}</span>
                                                 </div>
                                             )}
                                         </div>
                                         <div className="ml-4">
-                                            <div className="text-sm font-medium text-gray-900 dark:text-white">{nom.user.name}</div>
-                                            <div className="text-sm text-gray-500">{nom.user.email}</div>
+                                            <div className="text-sm font-medium text-gray-900 dark:text-white">{nom.candidate?.name || 'Unknown'}</div>
+                                            <div className="text-sm text-gray-500">{nom.candidate?.email || 'No email'}</div>
                                         </div>
                                     </div>
                                 </td>
@@ -97,8 +97,8 @@ const AdminNominations = () => {
                                     </span>
                                 </td>
                                 <td className="px-6 py-4">
-                                    <div className="text-sm text-gray-900 dark:text-gray-300 max-w-xs truncate" title={nom.sop}>
-                                        {nom.sop}
+                                    <div className="text-sm text-gray-900 dark:text-gray-300 max-w-xs truncate" title={nom.manifesto}>
+                                        {nom.manifesto}
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">

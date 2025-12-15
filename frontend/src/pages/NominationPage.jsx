@@ -29,7 +29,7 @@ const NominationPage = () => {
         if (!selectedPoll || !sop) return;
 
         try {
-            await applyForNomination({ pollId: selectedPoll, sop });
+            await applyForNomination({ pollId: selectedPoll, manifesto: sop, position: 'General' });
             navigate('/profile'); // Redirect to profile or success page
         } catch (err) {
             // Error handled in hook

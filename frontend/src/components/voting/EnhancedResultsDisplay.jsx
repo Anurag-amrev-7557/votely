@@ -411,35 +411,59 @@ const EnhancedResultsDisplay = ({
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Success Message */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: animationDelay }}
-          className="mb-8"
-        >
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-6 border border-green-200 dark:border-green-800">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h2 className="text-lg font-bold text-green-900 dark:text-green-100">
-                  Vote Submitted Successfully!
-                </h2>
-                <p className="text-green-700 dark:text-green-300">
-                  Thank you for participating in this poll. Your vote has been recorded.
-                </p>
-                {userVotedOptions.length > 0 && (
-                  <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                    You voted for: <span className="font-semibold">{userVotedOptions.join(', ')}</span>
+        {/* User Vote Status & Integrity Receipt */}
+        {userVote && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: animationDelay }}
+            className="mb-8"
+          >
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-6 border border-green-200 dark:border-green-800">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-lg font-bold text-green-900 dark:text-green-100">
+                    Vote Recorded
+                  </h2>
+                  <p className="text-green-700 dark:text-green-300">
+                    Your participation in this poll has been securely recorded.
                   </p>
-                )}
+                  {userVotedOptions.length > 0 && (
+                    <p className="text-sm text-green-600 dark:text-green-400 mt-1 mb-3">
+                      You voted for: <span className="font-semibold">{userVotedOptions.join(', ')}</span>
+                    </p>
+                  )}
+
+                  {/* Integrity Receipt */}
+                  {userVote.hash && (
+                    <div className="mt-3 p-3 bg-white/60 dark:bg-black/20 rounded-lg border border-green-200 dark:border-green-800/50 backdrop-blur-sm">
+                      <div className="flex items-center gap-2 mb-1">
+                        <svg className="w-4 h-4 text-green-700 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                        <span className="text-xs font-bold uppercase tracking-wider text-green-800 dark:text-green-300">Integrity Check</span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] text-green-700 dark:text-green-400 opacity-80 uppercase">SHA-256 Hash</span>
+                        <code className="block w-full font-mono text-xs text-green-900 dark:text-green-200 bg-white/50 dark:bg-black/30 p-2 rounded border border-green-100 dark:border-green-900 break-all select-all">
+                          {userVote.hash}
+                        </code>
+                        <span className="text-[10px] text-green-600 dark:text-green-500 italic">
+                          This hash uniquely verifies that your vote is included in the immutable ledger.
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
 
         {/* Quick Stats */}
         <motion.div
@@ -515,8 +539,8 @@ const EnhancedResultsDisplay = ({
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${activeTab === tab.id
-                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 shadow-sm'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
+                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 shadow-sm'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
                       }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -559,8 +583,8 @@ const EnhancedResultsDisplay = ({
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.1 }}
                           className={`relative p-4 rounded-lg border-2 transition-all duration-300 ${isWinning
-                              ? 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-700'
-                              : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600'
+                            ? 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-700'
+                            : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600'
                             } ${isUserVote ? 'ring-2 ring-blue-500 ring-opacity-50' : ''}`}
                         >
                           <div className="flex items-center justify-between mb-2">
@@ -604,8 +628,8 @@ const EnhancedResultsDisplay = ({
                                 animate={{ width: `${percentage}%` }}
                                 transition={{ duration: 1, delay: index * 0.1 }}
                                 className={`h-full rounded-full transition-all duration-300 ${isWinning
-                                    ? 'bg-gradient-to-r from-green-500 to-emerald-500'
-                                    : 'bg-blue-500'
+                                  ? 'bg-gradient-to-r from-green-500 to-emerald-500'
+                                  : 'bg-blue-500'
                                   }`}
                               />
                             </div>

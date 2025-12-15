@@ -1,2 +1,253 @@
-"use client";import{a as H}from"./chunk-U5LWHTWZ.js";import{d as B}from"./chunk-TEDR2MDT.js";var o=B(H());function V(i={}){let{nonce:n,onScriptLoadSuccess:l,onScriptLoadError:d}=i,[u,t]=(0,o.useState)(!1),v=(0,o.useRef)(l);v.current=l;let f=(0,o.useRef)(d);return f.current=d,(0,o.useEffect)(()=>{let c=document.createElement("script");return c.src="https://accounts.google.com/gsi/client",c.async=!0,c.defer=!0,c.nonce=n,c.onload=()=>{var e;t(!0),(e=v.current)===null||e===void 0||e.call(v)},c.onerror=()=>{var e;t(!1),(e=f.current)===null||e===void 0||e.call(f)},document.body.appendChild(c),()=>{document.body.removeChild(c)}},[n]),u}var F=(0,o.createContext)(null);function z({clientId:i,nonce:n,onScriptLoadSuccess:l,onScriptLoadError:d,children:u}){let t=V({nonce:n,onScriptLoadSuccess:l,onScriptLoadError:d}),v=(0,o.useMemo)(()=>({clientId:i,scriptLoadedSuccessfully:t}),[i,t]);return o.default.createElement(F.Provider,{value:v},u)}function q(){let i=(0,o.useContext)(F);if(!i)throw new Error("Google OAuth components must be used within GoogleOAuthProvider");return i}function R(i){var n;return(n=i?.clientId)!==null&&n!==void 0?n:i?.client_id}var $={large:40,medium:32,small:20};function D({onSuccess:i,onError:n,useOneTap:l,promptMomentNotification:d,type:u="standard",theme:t="outline",size:v="large",text:f,shape:c,logo_alignment:e,width:b,locale:m,click_listener:C,containerProps:_,...I}){let E=(0,o.useRef)(null),{clientId:r,scriptLoadedSuccessfully:w}=q(),A=(0,o.useRef)(i);A.current=i;let G=(0,o.useRef)(n);G.current=n;let g=(0,o.useRef)(d);return g.current=d,(0,o.useEffect)(()=>{var a,h,k,p,s,S,L,O,j;if(w)return(k=(h=(a=window?.google)===null||a===void 0?void 0:a.accounts)===null||h===void 0?void 0:h.id)===null||k===void 0||k.initialize({client_id:r,callback:y=>{var x;if(!y?.credential)return(x=G.current)===null||x===void 0?void 0:x.call(G);let{credential:M,select_by:T}=y;A.current({credential:M,clientId:R(y),select_by:T})},...I}),(S=(s=(p=window?.google)===null||p===void 0?void 0:p.accounts)===null||s===void 0?void 0:s.id)===null||S===void 0||S.renderButton(E.current,{type:u,theme:t,size:v,text:f,shape:c,logo_alignment:e,width:b,locale:m,click_listener:C}),l&&((j=(O=(L=window?.google)===null||L===void 0?void 0:L.accounts)===null||O===void 0?void 0:O.id)===null||j===void 0||j.prompt(g.current)),()=>{var y,x,M;l&&((M=(x=(y=window?.google)===null||y===void 0?void 0:y.accounts)===null||x===void 0?void 0:x.id)===null||M===void 0||M.cancel())}},[r,w,l,u,t,v,f,c,e,b,m]),o.default.createElement("div",{..._,ref:E,style:{height:$[v],..._?.style}})}function J(){var i,n,l;(l=(n=(i=window?.google)===null||i===void 0?void 0:i.accounts)===null||n===void 0?void 0:n.id)===null||l===void 0||l.disableAutoSelect()}function K({flow:i="implicit",scope:n="",onSuccess:l,onError:d,onNonOAuthError:u,overrideScope:t,state:v,...f}){let{clientId:c,scriptLoadedSuccessfully:e}=q(),b=(0,o.useRef)(),m=(0,o.useRef)(l);m.current=l;let C=(0,o.useRef)(d);C.current=d;let _=(0,o.useRef)(u);_.current=u,(0,o.useEffect)(()=>{var r,w;if(!e)return;let A=i==="implicit"?"initTokenClient":"initCodeClient",G=(w=(r=window?.google)===null||r===void 0?void 0:r.accounts)===null||w===void 0?void 0:w.oauth2[A]({client_id:c,scope:t?n:`openid profile email ${n}`,callback:g=>{var a,h;if(g.error)return(a=C.current)===null||a===void 0?void 0:a.call(C,g);(h=m.current)===null||h===void 0||h.call(m,g)},error_callback:g=>{var a;(a=_.current)===null||a===void 0||a.call(_,g)},state:v,...f});b.current=G},[c,e,i,n,v]);let I=(0,o.useCallback)(r=>{var w;return(w=b.current)===null||w===void 0?void 0:w.requestAccessToken(r)},[]),E=(0,o.useCallback)(()=>{var r;return(r=b.current)===null||r===void 0?void 0:r.requestCode()},[]);return i==="implicit"?I:E}function N({onSuccess:i,onError:n,promptMomentNotification:l,cancel_on_tap_outside:d,prompt_parent_id:u,state_cookie_domain:t,hosted_domain:v,use_fedcm_for_prompt:f=!1,use_fedcm_for_button:c=!1,disabled:e,auto_select:b}){let{clientId:m,scriptLoadedSuccessfully:C}=q(),_=(0,o.useRef)(i);_.current=i;let I=(0,o.useRef)(n);I.current=n;let E=(0,o.useRef)(l);E.current=l,(0,o.useEffect)(()=>{var r,w,A,G,g,a,h,k,p;if(C){if(e){(A=(w=(r=window?.google)===null||r===void 0?void 0:r.accounts)===null||w===void 0?void 0:w.id)===null||A===void 0||A.cancel();return}return(a=(g=(G=window?.google)===null||G===void 0?void 0:G.accounts)===null||g===void 0?void 0:g.id)===null||a===void 0||a.initialize({client_id:m,callback:s=>{var S;if(!s?.credential)return(S=I.current)===null||S===void 0?void 0:S.call(I);let{credential:L,select_by:O}=s;_.current({credential:L,clientId:R(s),select_by:O})},hosted_domain:v,cancel_on_tap_outside:d,prompt_parent_id:u,state_cookie_domain:t,use_fedcm_for_prompt:f,use_fedcm_for_button:c,auto_select:b}),(p=(k=(h=window?.google)===null||h===void 0?void 0:h.accounts)===null||k===void 0?void 0:k.id)===null||p===void 0||p.prompt(E.current),()=>{var s,S,L;(L=(S=(s=window?.google)===null||s===void 0?void 0:s.accounts)===null||S===void 0?void 0:S.id)===null||L===void 0||L.cancel()}}},[m,C,d,u,t,v,f,c,e,b])}function P(i,n,...l){var d,u,t;return window?.google&&((t=(u=(d=window?.google)===null||d===void 0?void 0:d.accounts)===null||u===void 0?void 0:u.oauth2)===null||t===void 0?void 0:t.hasGrantedAllScopes(i,n,...l))||!1}function Q(i,n,...l){var d,u,t;return window?.google&&((t=(u=(d=window?.google)===null||d===void 0?void 0:d.accounts)===null||u===void 0?void 0:u.oauth2)===null||t===void 0?void 0:t.hasGrantedAnyScope(i,n,...l))||!1}export{D as GoogleLogin,z as GoogleOAuthProvider,J as googleLogout,P as hasGrantedAllScopesGoogle,Q as hasGrantedAnyScopeGoogle,K as useGoogleLogin,q as useGoogleOAuth,N as useGoogleOneTapLogin};
+"use client";
+import {
+  require_react
+} from "./chunk-4X3XUJ2M.js";
+import {
+  __toESM
+} from "./chunk-G3PMV62Z.js";
+
+// node_modules/@react-oauth/google/dist/index.esm.js
+var import_react = __toESM(require_react());
+function useLoadGsiScript(options = {}) {
+  const { nonce, onScriptLoadSuccess, onScriptLoadError } = options;
+  const [scriptLoadedSuccessfully, setScriptLoadedSuccessfully] = (0, import_react.useState)(false);
+  const onScriptLoadSuccessRef = (0, import_react.useRef)(onScriptLoadSuccess);
+  onScriptLoadSuccessRef.current = onScriptLoadSuccess;
+  const onScriptLoadErrorRef = (0, import_react.useRef)(onScriptLoadError);
+  onScriptLoadErrorRef.current = onScriptLoadError;
+  (0, import_react.useEffect)(() => {
+    const scriptTag = document.createElement("script");
+    scriptTag.src = "https://accounts.google.com/gsi/client";
+    scriptTag.async = true;
+    scriptTag.defer = true;
+    scriptTag.nonce = nonce;
+    scriptTag.onload = () => {
+      var _a;
+      setScriptLoadedSuccessfully(true);
+      (_a = onScriptLoadSuccessRef.current) === null || _a === void 0 ? void 0 : _a.call(onScriptLoadSuccessRef);
+    };
+    scriptTag.onerror = () => {
+      var _a;
+      setScriptLoadedSuccessfully(false);
+      (_a = onScriptLoadErrorRef.current) === null || _a === void 0 ? void 0 : _a.call(onScriptLoadErrorRef);
+    };
+    document.body.appendChild(scriptTag);
+    return () => {
+      document.body.removeChild(scriptTag);
+    };
+  }, [nonce]);
+  return scriptLoadedSuccessfully;
+}
+var GoogleOAuthContext = (0, import_react.createContext)(null);
+function GoogleOAuthProvider({ clientId, nonce, onScriptLoadSuccess, onScriptLoadError, children }) {
+  const scriptLoadedSuccessfully = useLoadGsiScript({
+    nonce,
+    onScriptLoadSuccess,
+    onScriptLoadError
+  });
+  const contextValue = (0, import_react.useMemo)(() => ({
+    clientId,
+    scriptLoadedSuccessfully
+  }), [clientId, scriptLoadedSuccessfully]);
+  return import_react.default.createElement(GoogleOAuthContext.Provider, { value: contextValue }, children);
+}
+function useGoogleOAuth() {
+  const context = (0, import_react.useContext)(GoogleOAuthContext);
+  if (!context) {
+    throw new Error("Google OAuth components must be used within GoogleOAuthProvider");
+  }
+  return context;
+}
+function extractClientId(credentialResponse) {
+  var _a;
+  const clientId = (_a = credentialResponse === null || credentialResponse === void 0 ? void 0 : credentialResponse.clientId) !== null && _a !== void 0 ? _a : credentialResponse === null || credentialResponse === void 0 ? void 0 : credentialResponse.client_id;
+  return clientId;
+}
+var containerHeightMap = { large: 40, medium: 32, small: 20 };
+function GoogleLogin({ onSuccess, onError, useOneTap, promptMomentNotification, type = "standard", theme = "outline", size = "large", text, shape, logo_alignment, width, locale, click_listener, containerProps, ...props }) {
+  const btnContainerRef = (0, import_react.useRef)(null);
+  const { clientId, scriptLoadedSuccessfully } = useGoogleOAuth();
+  const onSuccessRef = (0, import_react.useRef)(onSuccess);
+  onSuccessRef.current = onSuccess;
+  const onErrorRef = (0, import_react.useRef)(onError);
+  onErrorRef.current = onError;
+  const promptMomentNotificationRef = (0, import_react.useRef)(promptMomentNotification);
+  promptMomentNotificationRef.current = promptMomentNotification;
+  (0, import_react.useEffect)(() => {
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+    if (!scriptLoadedSuccessfully)
+      return;
+    (_c = (_b = (_a = window === null || window === void 0 ? void 0 : window.google) === null || _a === void 0 ? void 0 : _a.accounts) === null || _b === void 0 ? void 0 : _b.id) === null || _c === void 0 ? void 0 : _c.initialize({
+      client_id: clientId,
+      callback: (credentialResponse) => {
+        var _a2;
+        if (!(credentialResponse === null || credentialResponse === void 0 ? void 0 : credentialResponse.credential)) {
+          return (_a2 = onErrorRef.current) === null || _a2 === void 0 ? void 0 : _a2.call(onErrorRef);
+        }
+        const { credential, select_by } = credentialResponse;
+        onSuccessRef.current({
+          credential,
+          clientId: extractClientId(credentialResponse),
+          select_by
+        });
+      },
+      ...props
+    });
+    (_f = (_e = (_d = window === null || window === void 0 ? void 0 : window.google) === null || _d === void 0 ? void 0 : _d.accounts) === null || _e === void 0 ? void 0 : _e.id) === null || _f === void 0 ? void 0 : _f.renderButton(btnContainerRef.current, {
+      type,
+      theme,
+      size,
+      text,
+      shape,
+      logo_alignment,
+      width,
+      locale,
+      click_listener
+    });
+    if (useOneTap)
+      (_j = (_h = (_g = window === null || window === void 0 ? void 0 : window.google) === null || _g === void 0 ? void 0 : _g.accounts) === null || _h === void 0 ? void 0 : _h.id) === null || _j === void 0 ? void 0 : _j.prompt(promptMomentNotificationRef.current);
+    return () => {
+      var _a2, _b2, _c2;
+      if (useOneTap)
+        (_c2 = (_b2 = (_a2 = window === null || window === void 0 ? void 0 : window.google) === null || _a2 === void 0 ? void 0 : _a2.accounts) === null || _b2 === void 0 ? void 0 : _b2.id) === null || _c2 === void 0 ? void 0 : _c2.cancel();
+    };
+  }, [
+    clientId,
+    scriptLoadedSuccessfully,
+    useOneTap,
+    type,
+    theme,
+    size,
+    text,
+    shape,
+    logo_alignment,
+    width,
+    locale
+  ]);
+  return import_react.default.createElement("div", { ...containerProps, ref: btnContainerRef, style: { height: containerHeightMap[size], ...containerProps === null || containerProps === void 0 ? void 0 : containerProps.style } });
+}
+function googleLogout() {
+  var _a, _b, _c;
+  (_c = (_b = (_a = window === null || window === void 0 ? void 0 : window.google) === null || _a === void 0 ? void 0 : _a.accounts) === null || _b === void 0 ? void 0 : _b.id) === null || _c === void 0 ? void 0 : _c.disableAutoSelect();
+}
+function useGoogleLogin({ flow = "implicit", scope = "", onSuccess, onError, onNonOAuthError, overrideScope, state, ...props }) {
+  const { clientId, scriptLoadedSuccessfully } = useGoogleOAuth();
+  const clientRef = (0, import_react.useRef)();
+  const onSuccessRef = (0, import_react.useRef)(onSuccess);
+  onSuccessRef.current = onSuccess;
+  const onErrorRef = (0, import_react.useRef)(onError);
+  onErrorRef.current = onError;
+  const onNonOAuthErrorRef = (0, import_react.useRef)(onNonOAuthError);
+  onNonOAuthErrorRef.current = onNonOAuthError;
+  (0, import_react.useEffect)(() => {
+    var _a, _b;
+    if (!scriptLoadedSuccessfully)
+      return;
+    const clientMethod = flow === "implicit" ? "initTokenClient" : "initCodeClient";
+    const client = (_b = (_a = window === null || window === void 0 ? void 0 : window.google) === null || _a === void 0 ? void 0 : _a.accounts) === null || _b === void 0 ? void 0 : _b.oauth2[clientMethod]({
+      client_id: clientId,
+      scope: overrideScope ? scope : `openid profile email ${scope}`,
+      callback: (response) => {
+        var _a2, _b2;
+        if (response.error)
+          return (_a2 = onErrorRef.current) === null || _a2 === void 0 ? void 0 : _a2.call(onErrorRef, response);
+        (_b2 = onSuccessRef.current) === null || _b2 === void 0 ? void 0 : _b2.call(onSuccessRef, response);
+      },
+      error_callback: (nonOAuthError) => {
+        var _a2;
+        (_a2 = onNonOAuthErrorRef.current) === null || _a2 === void 0 ? void 0 : _a2.call(onNonOAuthErrorRef, nonOAuthError);
+      },
+      state,
+      ...props
+    });
+    clientRef.current = client;
+  }, [clientId, scriptLoadedSuccessfully, flow, scope, state]);
+  const loginImplicitFlow = (0, import_react.useCallback)((overrideConfig) => {
+    var _a;
+    return (_a = clientRef.current) === null || _a === void 0 ? void 0 : _a.requestAccessToken(overrideConfig);
+  }, []);
+  const loginAuthCodeFlow = (0, import_react.useCallback)(() => {
+    var _a;
+    return (_a = clientRef.current) === null || _a === void 0 ? void 0 : _a.requestCode();
+  }, []);
+  return flow === "implicit" ? loginImplicitFlow : loginAuthCodeFlow;
+}
+function useGoogleOneTapLogin({ onSuccess, onError, promptMomentNotification, cancel_on_tap_outside, prompt_parent_id, state_cookie_domain, hosted_domain, use_fedcm_for_prompt = false, use_fedcm_for_button = false, disabled, auto_select }) {
+  const { clientId, scriptLoadedSuccessfully } = useGoogleOAuth();
+  const onSuccessRef = (0, import_react.useRef)(onSuccess);
+  onSuccessRef.current = onSuccess;
+  const onErrorRef = (0, import_react.useRef)(onError);
+  onErrorRef.current = onError;
+  const promptMomentNotificationRef = (0, import_react.useRef)(promptMomentNotification);
+  promptMomentNotificationRef.current = promptMomentNotification;
+  (0, import_react.useEffect)(() => {
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+    if (!scriptLoadedSuccessfully)
+      return;
+    if (disabled) {
+      (_c = (_b = (_a = window === null || window === void 0 ? void 0 : window.google) === null || _a === void 0 ? void 0 : _a.accounts) === null || _b === void 0 ? void 0 : _b.id) === null || _c === void 0 ? void 0 : _c.cancel();
+      return;
+    }
+    (_f = (_e = (_d = window === null || window === void 0 ? void 0 : window.google) === null || _d === void 0 ? void 0 : _d.accounts) === null || _e === void 0 ? void 0 : _e.id) === null || _f === void 0 ? void 0 : _f.initialize({
+      client_id: clientId,
+      callback: (credentialResponse) => {
+        var _a2;
+        if (!(credentialResponse === null || credentialResponse === void 0 ? void 0 : credentialResponse.credential)) {
+          return (_a2 = onErrorRef.current) === null || _a2 === void 0 ? void 0 : _a2.call(onErrorRef);
+        }
+        const { credential, select_by } = credentialResponse;
+        onSuccessRef.current({
+          credential,
+          clientId: extractClientId(credentialResponse),
+          select_by
+        });
+      },
+      hosted_domain,
+      cancel_on_tap_outside,
+      prompt_parent_id,
+      state_cookie_domain,
+      use_fedcm_for_prompt,
+      use_fedcm_for_button,
+      auto_select
+    });
+    (_j = (_h = (_g = window === null || window === void 0 ? void 0 : window.google) === null || _g === void 0 ? void 0 : _g.accounts) === null || _h === void 0 ? void 0 : _h.id) === null || _j === void 0 ? void 0 : _j.prompt(promptMomentNotificationRef.current);
+    return () => {
+      var _a2, _b2, _c2;
+      (_c2 = (_b2 = (_a2 = window === null || window === void 0 ? void 0 : window.google) === null || _a2 === void 0 ? void 0 : _a2.accounts) === null || _b2 === void 0 ? void 0 : _b2.id) === null || _c2 === void 0 ? void 0 : _c2.cancel();
+    };
+  }, [
+    clientId,
+    scriptLoadedSuccessfully,
+    cancel_on_tap_outside,
+    prompt_parent_id,
+    state_cookie_domain,
+    hosted_domain,
+    use_fedcm_for_prompt,
+    use_fedcm_for_button,
+    disabled,
+    auto_select
+  ]);
+}
+function hasGrantedAllScopesGoogle(tokenResponse, firstScope, ...restScopes) {
+  var _a, _b, _c;
+  if (!(window === null || window === void 0 ? void 0 : window.google))
+    return false;
+  return ((_c = (_b = (_a = window === null || window === void 0 ? void 0 : window.google) === null || _a === void 0 ? void 0 : _a.accounts) === null || _b === void 0 ? void 0 : _b.oauth2) === null || _c === void 0 ? void 0 : _c.hasGrantedAllScopes(tokenResponse, firstScope, ...restScopes)) || false;
+}
+function hasGrantedAnyScopeGoogle(tokenResponse, firstScope, ...restScopes) {
+  var _a, _b, _c;
+  if (!(window === null || window === void 0 ? void 0 : window.google))
+    return false;
+  return ((_c = (_b = (_a = window === null || window === void 0 ? void 0 : window.google) === null || _a === void 0 ? void 0 : _a.accounts) === null || _b === void 0 ? void 0 : _b.oauth2) === null || _c === void 0 ? void 0 : _c.hasGrantedAnyScope(tokenResponse, firstScope, ...restScopes)) || false;
+}
+export {
+  GoogleLogin,
+  GoogleOAuthProvider,
+  googleLogout,
+  hasGrantedAllScopesGoogle,
+  hasGrantedAnyScopeGoogle,
+  useGoogleLogin,
+  useGoogleOAuth,
+  useGoogleOneTapLogin
+};
 //# sourceMappingURL=@react-oauth_google.js.map

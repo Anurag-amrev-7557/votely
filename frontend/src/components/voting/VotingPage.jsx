@@ -203,6 +203,17 @@ const VotingPage = () => {
 
       toast.success('Vote submitted successfully!');
 
+      // Update local poll state with the user's vote details immediately
+      // This ensures EnhancedResultsDisplay receives the correct userVote prop, including the hash
+      setPoll(prev => ({
+        ...prev,
+        userVote: {
+          options: response.data.votedOptions,
+          hash: response.data.voteHash,
+          votedAt: new Date().toISOString()
+        }
+      }));
+
       // Show results after successful vote
       setShowVoteConfirmation(false);
       setShowResults(true);

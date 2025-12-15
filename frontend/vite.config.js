@@ -2,7 +2,6 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { compression } from 'vite-plugin-compression2'
 import { visualizer } from 'rollup-plugin-visualizer'
-import { splitVendorChunkPlugin } from 'vite'
 import { resolve } from 'path'
 import { VitePWA } from 'vite-plugin-pwa'
 
@@ -10,34 +9,16 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   plugins: [
     react({
-      babel: {
-        plugins: [
-          ['@babel/plugin-transform-runtime', { 
-            regenerator: true,
-            helpers: true,
-            useESModules: true
-          }],
-          ['@babel/plugin-transform-react-jsx', { 
-            runtime: 'automatic',
-            throwIfNamespace: false
-          }]
-        ],
-        // Add babel optimization options
-        compact: true,
-        minified: true,
-        comments: false
-      },
-      // Enable Fast Refresh at the plugin level
+      // Revert to default esbuild behavior which is faster
       fastRefresh: true
     }),
-    // Split vendor chunks for better caching
-    splitVendorChunkPlugin(),
+
     // Enable compression for production builds
     compression({
       algorithm: 'gzip',
       exclude: [/\.(br)$/, /\.(gz)$/],
       deleteOriginalAssets: false,
-      threshold: 1024, // Only compress files larger than 1KB
+      threshold: 1024,
     }),
     compression({
       algorithm: 'brotliCompress',
@@ -45,14 +26,16 @@ export default defineConfig({
       deleteOriginalAssets: false,
       threshold: 1024,
     }),
-    // Visualize bundle size
+
+    // Visualize bundle size - configured to write to stats.html but not open by default
     visualizer({
       filename: 'dist/stats.html',
-      open: true,
+      open: false,
       gzipSize: true,
       brotliSize: true,
       template: 'treemap',
     }),
+
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
@@ -127,14 +110,10 @@ export default defineConfig({
     },
     // Enable compression
     compress: true,
-    // Optimize middleware
-    middlewareMode: false,
-    // Enable CORS
     cors: true,
     headers: {
       'Access-Control-Allow-Origin': '*',
     },
-    // Optimize dev server
     fs: {
       strict: true,
       allow: ['..'],
@@ -152,12 +131,10 @@ export default defineConfig({
   },
   css: {
     postcss: './postcss.config.js',
-    // Enable CSS code splitting
     modules: {
       localsConvention: 'camelCase',
       generateScopedName: '[name]__[local]___[hash:base64:5]'
     },
-    // Optimize CSS
     devSourcemap: true,
     preprocessorOptions: {
       scss: {
@@ -169,86 +146,51 @@ export default defineConfig({
     target: 'esnext',
     minify: 'terser',
     sourcemap: true,
-    // Optimize chunk size
     chunkSizeWarningLimit: 1000,
-    // Enable CSS code splitting
     cssCodeSplit: true,
-    // Optimize rollup options
     rollupOptions: {
       output: {
-        // Optimize chunk splitting with better granularity
+        // Optimized manual chunks strategy
         manualChunks: (id) => {
-          if (id.includes('node_modules/')) return 'vendor';
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+              return 'react-vendor';
+            }
+            if (id.includes('framer-motion') || id.includes('@headlessui') || id.includes('@heroicons') || id.includes('lucide-react')) {
+              return 'ui-vendor';
+            }
+            if (id.includes('axios') || id.includes('date-fns') || id.includes('lodash')) {
+              return 'utils-vendor';
+            }
+            // Group remaining small dependencies into a common vendor chunk
+            return 'vendor';
+          }
         },
-        // Optimize chunk loading with better naming
-        chunkFileNames: (chunkInfo) => {
-          const name = chunkInfo.name || 'chunk';
-          return `assets/js/${name}-[hash].js`;
-        },
+        chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',
         assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
-        // Optimize code splitting
         experimentalMinChunkSize: 10000,
       },
     },
-    // Optimize terser options
     terserOptions: {
       compress: {
         drop_console: true,
         drop_debugger: true,
         pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn'],
-        passes: 5,
-        dead_code: true,
-        unsafe: true,
-        unsafe_arrows: true,
-        unsafe_comps: true,
-        unsafe_Function: true,
-        unsafe_math: true,
-        unsafe_methods: true,
-        unsafe_proto: true,
-        unsafe_regexp: true,
-        unsafe_undefined: true,
-        sequences: true,
-        booleans: true,
-        loops: true,
-        unused: true,
-        if_return: true,
-        join_vars: true,
-        collapse_vars: true,
-        reduce_vars: true,
-        hoist_funs: true,
-        hoist_vars: true,
-        properties: true,
-        keep_fargs: false,
-        keep_infinity: true,
+        passes: 2, // Reduced from 5 to 2 to improve build speed with minimal size impact
       },
       mangle: {
         safari10: true,
-        properties: {
-          regex: /^_/,
-          reserved: ['__esModule'],
-        },
-        toplevel: true,
-      },
-      format: {
-        comments: false,
-        ascii_only: true,
-        beautify: false,
-        braces: false,
-        semicolons: true,
       },
     },
-    // Enable build optimization
     assetsInlineLimit: 4096,
     cssMinify: true,
     reportCompressedSize: false,
-    // Optimize module loading
     modulePreload: {
       polyfill: true,
     },
   },
   optimizeDeps: {
-    // Pre-bundle dependencies
     include: [
       'react',
       'react-dom',
@@ -259,24 +201,16 @@ export default defineConfig({
       'date-fns',
       'framer-motion',
     ],
-    // Exclude dependencies that should not be pre-bundled
     exclude: ['@vitejs/plugin-react'],
-    // Optimize dependency pre-bundling
     esbuildOptions: {
       target: 'esnext',
       supported: {
         'top-level-await': true,
       },
       treeShaking: true,
-      minify: true,
-      minifyIdentifiers: true,
-      minifySyntax: true,
-      minifyWhitespace: true,
     },
   },
-  // Enable caching
   cacheDir: '.vite_cache',
-  // Enable esbuild optimization
   esbuild: {
     jsxInject: undefined,
     jsxFactory: 'React.createElement',
@@ -285,24 +219,12 @@ export default defineConfig({
     supported: {
       'top-level-await': true
     },
-    // Optimize esbuild options
-    minify: true,
-    minifyIdentifiers: true,
-    minifySyntax: true,
-    minifyWhitespace: true,
-    treeShaking: true,
     legalComments: 'none',
   },
-  // Optimize preview server
   preview: {
     port: 4173,
     strictPort: true,
     host: true,
-    https: false,
-    open: true,
     cors: true,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-    },
   },
 })

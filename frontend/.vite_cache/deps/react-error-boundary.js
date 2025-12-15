@@ -1,2 +1,154 @@
-"use client";import{a as y}from"./chunk-U5LWHTWZ.js";import{d as f}from"./chunk-TEDR2MDT.js";var o=f(y()),h=(0,o.createContext)(null),l={didCatch:!1,error:null},u=class extends o.Component{constructor(r){super(r),this.resetErrorBoundary=this.resetErrorBoundary.bind(this),this.state=l}static getDerivedStateFromError(r){return{didCatch:!0,error:r}}resetErrorBoundary(){let{error:r}=this.state;if(r!==null){for(var e,t,a=arguments.length,s=new Array(a),i=0;i<a;i++)s[i]=arguments[i];(e=(t=this.props).onReset)===null||e===void 0||e.call(t,{args:s,reason:"imperative-api"}),this.setState(l)}}componentDidCatch(r,e){var t,a;(t=(a=this.props).onError)===null||t===void 0||t.call(a,r,e)}componentDidUpdate(r,e){let{didCatch:t}=this.state,{resetKeys:a}=this.props;if(t&&e.error!==null&&m(r.resetKeys,a)){var s,i;(s=(i=this.props).onReset)===null||s===void 0||s.call(i,{next:a,prev:r.resetKeys,reason:"keys"}),this.setState(l)}}render(){let{children:r,fallbackRender:e,FallbackComponent:t,fallback:a}=this.props,{didCatch:s,error:i}=this.state,d=r;if(s){let c={error:i,resetErrorBoundary:this.resetErrorBoundary};if(typeof e=="function")d=e(c);else if(t)d=(0,o.createElement)(t,c);else if(a!==void 0)d=a;else throw console.error("react-error-boundary requires either a fallback, fallbackRender, or FallbackComponent prop"),i}return(0,o.createElement)(h.Provider,{value:{didCatch:s,error:i,resetErrorBoundary:this.resetErrorBoundary}},d)}};function m(){let n=arguments.length>0&&arguments[0]!==void 0?arguments[0]:[],r=arguments.length>1&&arguments[1]!==void 0?arguments[1]:[];return n.length!==r.length||n.some((e,t)=>!Object.is(e,r[t]))}function E(n){if(n==null||typeof n.didCatch!="boolean"||typeof n.resetErrorBoundary!="function")throw new Error("ErrorBoundaryContext not found")}function p(){let n=(0,o.useContext)(h);E(n);let[r,e]=(0,o.useState)({error:null,hasError:!1}),t=(0,o.useMemo)(()=>({resetBoundary:()=>{n.resetErrorBoundary(),e({error:null,hasError:!1})},showBoundary:a=>e({error:a,hasError:!0})}),[n.resetErrorBoundary]);if(r.hasError)throw r.error;return t}function B(n,r){let e=(0,o.forwardRef)((a,s)=>(0,o.createElement)(u,r,(0,o.createElement)(n,{...a,ref:s}))),t=n.displayName||n.name||"Unknown";return e.displayName="withErrorBoundary(".concat(t,")"),e}export{u as ErrorBoundary,h as ErrorBoundaryContext,p as useErrorBoundary,B as withErrorBoundary};
+"use client";
+import {
+  require_react
+} from "./chunk-4X3XUJ2M.js";
+import {
+  __toESM
+} from "./chunk-G3PMV62Z.js";
+
+// node_modules/react-error-boundary/dist/react-error-boundary.development.js
+var import_react = __toESM(require_react());
+var ErrorBoundaryContext = (0, import_react.createContext)(null);
+var initialState = {
+  didCatch: false,
+  error: null
+};
+var ErrorBoundary = class extends import_react.Component {
+  constructor(props) {
+    super(props);
+    this.resetErrorBoundary = this.resetErrorBoundary.bind(this);
+    this.state = initialState;
+  }
+  static getDerivedStateFromError(error) {
+    return {
+      didCatch: true,
+      error
+    };
+  }
+  resetErrorBoundary() {
+    const {
+      error
+    } = this.state;
+    if (error !== null) {
+      var _this$props$onReset, _this$props;
+      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
+      }
+      (_this$props$onReset = (_this$props = this.props).onReset) === null || _this$props$onReset === void 0 ? void 0 : _this$props$onReset.call(_this$props, {
+        args,
+        reason: "imperative-api"
+      });
+      this.setState(initialState);
+    }
+  }
+  componentDidCatch(error, info) {
+    var _this$props$onError, _this$props2;
+    (_this$props$onError = (_this$props2 = this.props).onError) === null || _this$props$onError === void 0 ? void 0 : _this$props$onError.call(_this$props2, error, info);
+  }
+  componentDidUpdate(prevProps, prevState) {
+    const {
+      didCatch
+    } = this.state;
+    const {
+      resetKeys
+    } = this.props;
+    if (didCatch && prevState.error !== null && hasArrayChanged(prevProps.resetKeys, resetKeys)) {
+      var _this$props$onReset2, _this$props3;
+      (_this$props$onReset2 = (_this$props3 = this.props).onReset) === null || _this$props$onReset2 === void 0 ? void 0 : _this$props$onReset2.call(_this$props3, {
+        next: resetKeys,
+        prev: prevProps.resetKeys,
+        reason: "keys"
+      });
+      this.setState(initialState);
+    }
+  }
+  render() {
+    const {
+      children,
+      fallbackRender,
+      FallbackComponent,
+      fallback
+    } = this.props;
+    const {
+      didCatch,
+      error
+    } = this.state;
+    let childToRender = children;
+    if (didCatch) {
+      const props = {
+        error,
+        resetErrorBoundary: this.resetErrorBoundary
+      };
+      if (typeof fallbackRender === "function") {
+        childToRender = fallbackRender(props);
+      } else if (FallbackComponent) {
+        childToRender = (0, import_react.createElement)(FallbackComponent, props);
+      } else if (fallback !== void 0) {
+        childToRender = fallback;
+      } else {
+        {
+          console.error("react-error-boundary requires either a fallback, fallbackRender, or FallbackComponent prop");
+        }
+        throw error;
+      }
+    }
+    return (0, import_react.createElement)(ErrorBoundaryContext.Provider, {
+      value: {
+        didCatch,
+        error,
+        resetErrorBoundary: this.resetErrorBoundary
+      }
+    }, childToRender);
+  }
+};
+function hasArrayChanged() {
+  let a = arguments.length > 0 && arguments[0] !== void 0 ? arguments[0] : [];
+  let b = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : [];
+  return a.length !== b.length || a.some((item, index) => !Object.is(item, b[index]));
+}
+function assertErrorBoundaryContext(value) {
+  if (value == null || typeof value.didCatch !== "boolean" || typeof value.resetErrorBoundary !== "function") {
+    throw new Error("ErrorBoundaryContext not found");
+  }
+}
+function useErrorBoundary() {
+  const context = (0, import_react.useContext)(ErrorBoundaryContext);
+  assertErrorBoundaryContext(context);
+  const [state, setState] = (0, import_react.useState)({
+    error: null,
+    hasError: false
+  });
+  const memoized = (0, import_react.useMemo)(() => ({
+    resetBoundary: () => {
+      context.resetErrorBoundary();
+      setState({
+        error: null,
+        hasError: false
+      });
+    },
+    showBoundary: (error) => setState({
+      error,
+      hasError: true
+    })
+  }), [context.resetErrorBoundary]);
+  if (state.hasError) {
+    throw state.error;
+  }
+  return memoized;
+}
+function withErrorBoundary(component, errorBoundaryProps) {
+  const Wrapped = (0, import_react.forwardRef)((props, ref) => (0, import_react.createElement)(ErrorBoundary, errorBoundaryProps, (0, import_react.createElement)(component, {
+    ...props,
+    ref
+  })));
+  const name = component.displayName || component.name || "Unknown";
+  Wrapped.displayName = "withErrorBoundary(".concat(name, ")");
+  return Wrapped;
+}
+export {
+  ErrorBoundary,
+  ErrorBoundaryContext,
+  useErrorBoundary,
+  withErrorBoundary
+};
 //# sourceMappingURL=react-error-boundary.js.map

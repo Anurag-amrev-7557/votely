@@ -1,2 +1,190 @@
-import{g as b,h as C,i as E,j as v,k as y,l as A,m as R,n as w,z as h}from"./chunk-C4FAJH5D.js";import{a as T}from"./chunk-U5LWHTWZ.js";import{d as L}from"./chunk-TEDR2MDT.js";var n=L(T());var P="label";function D(t,e){typeof t=="function"?t(e):t&&(t.current=e)}function j(t,e){let a=t.options;a&&e&&Object.assign(a,e)}function B(t,e){t.labels=e}function I(t,e){let a=arguments.length>2&&arguments[2]!==void 0?arguments[2]:P,l=[];t.datasets=e.map(s=>{let o=t.datasets.find(d=>d[a]===s[a]);return!o||!s.data||l.includes(o)?{...s}:(l.push(o),Object.assign(o,s),o)})}function O(t){let e=arguments.length>1&&arguments[1]!==void 0?arguments[1]:P,a={labels:[],datasets:[]};return B(a,t.labels),I(a,t.datasets,e),a}function q(t,e){return t.getElementsAtEventForMode(e.nativeEvent,"dataset",{intersect:!0},!1)}function z(t,e){return t.getElementsAtEventForMode(e.nativeEvent,"nearest",{intersect:!0},!1)}function G(t,e){return t.getElementsAtEventForMode(e.nativeEvent,"index",{intersect:!0},!1)}function S(t,e){let{height:a=150,width:l=300,redraw:s=!1,datasetIdKey:o,type:d,data:u,options:i,plugins:K=[],fallbackContent:M,updateMode:p,...F}=t,f=(0,n.useRef)(null),r=(0,n.useRef)(null),g=()=>{f.current&&(r.current=new h(f.current,{type:d,data:O(u,o),options:i&&{...i},plugins:K}),D(e,r.current))},m=()=>{D(e,null),r.current&&(r.current.destroy(),r.current=null)};return(0,n.useEffect)(()=>{!s&&r.current&&i&&j(r.current,i)},[s,i]),(0,n.useEffect)(()=>{!s&&r.current&&B(r.current.config.data,u.labels)},[s,u.labels]),(0,n.useEffect)(()=>{!s&&r.current&&u.datasets&&I(r.current.config.data,u.datasets,o)},[s,u.datasets]),(0,n.useEffect)(()=>{r.current&&(s?(m(),setTimeout(g)):r.current.update(p))},[s,i,u.labels,u.datasets,p]),(0,n.useEffect)(()=>{r.current&&(m(),setTimeout(g))},[d]),(0,n.useEffect)(()=>(g(),()=>m()),[]),n.default.createElement("canvas",{ref:f,role:"img",height:a,width:l,...F},M)}var k=(0,n.forwardRef)(S);function c(t,e){return h.register(e),(0,n.forwardRef)((a,l)=>n.default.createElement(k,{...a,ref:l,type:t}))}var H=c("line",v),J=c("bar",b),N=c("radar",R),Q=c("doughnut",E),U=c("polarArea",y),V=c("bubble",C),W=c("pie",A),X=c("scatter",w);export{J as Bar,V as Bubble,k as Chart,Q as Doughnut,H as Line,W as Pie,U as PolarArea,N as Radar,X as Scatter,q as getDatasetAtEvent,z as getElementAtEvent,G as getElementsAtEvent};
+import {
+  BarController,
+  BubbleController,
+  Chart,
+  DoughnutController,
+  LineController,
+  PieController,
+  PolarAreaController,
+  RadarController,
+  ScatterController
+} from "./chunk-O4A6HC3X.js";
+import {
+  require_react
+} from "./chunk-4X3XUJ2M.js";
+import {
+  __toESM
+} from "./chunk-G3PMV62Z.js";
+
+// node_modules/react-chartjs-2/dist/index.js
+var import_react = __toESM(require_react());
+var defaultDatasetIdKey = "label";
+function reforwardRef(ref, value) {
+  if (typeof ref === "function") {
+    ref(value);
+  } else if (ref) {
+    ref.current = value;
+  }
+}
+function setOptions(chart, nextOptions) {
+  const options = chart.options;
+  if (options && nextOptions) {
+    Object.assign(options, nextOptions);
+  }
+}
+function setLabels(currentData, nextLabels) {
+  currentData.labels = nextLabels;
+}
+function setDatasets(currentData, nextDatasets) {
+  let datasetIdKey = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : defaultDatasetIdKey;
+  const addedDatasets = [];
+  currentData.datasets = nextDatasets.map((nextDataset) => {
+    const currentDataset = currentData.datasets.find((dataset) => dataset[datasetIdKey] === nextDataset[datasetIdKey]);
+    if (!currentDataset || !nextDataset.data || addedDatasets.includes(currentDataset)) {
+      return {
+        ...nextDataset
+      };
+    }
+    addedDatasets.push(currentDataset);
+    Object.assign(currentDataset, nextDataset);
+    return currentDataset;
+  });
+}
+function cloneData(data) {
+  let datasetIdKey = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : defaultDatasetIdKey;
+  const nextData = {
+    labels: [],
+    datasets: []
+  };
+  setLabels(nextData, data.labels);
+  setDatasets(nextData, data.datasets, datasetIdKey);
+  return nextData;
+}
+function getDatasetAtEvent(chart, event) {
+  return chart.getElementsAtEventForMode(event.nativeEvent, "dataset", {
+    intersect: true
+  }, false);
+}
+function getElementAtEvent(chart, event) {
+  return chart.getElementsAtEventForMode(event.nativeEvent, "nearest", {
+    intersect: true
+  }, false);
+}
+function getElementsAtEvent(chart, event) {
+  return chart.getElementsAtEventForMode(event.nativeEvent, "index", {
+    intersect: true
+  }, false);
+}
+function ChartComponent(props, ref) {
+  const { height = 150, width = 300, redraw = false, datasetIdKey, type, data, options, plugins = [], fallbackContent, updateMode, ...canvasProps } = props;
+  const canvasRef = (0, import_react.useRef)(null);
+  const chartRef = (0, import_react.useRef)(null);
+  const renderChart = () => {
+    if (!canvasRef.current) return;
+    chartRef.current = new Chart(canvasRef.current, {
+      type,
+      data: cloneData(data, datasetIdKey),
+      options: options && {
+        ...options
+      },
+      plugins
+    });
+    reforwardRef(ref, chartRef.current);
+  };
+  const destroyChart = () => {
+    reforwardRef(ref, null);
+    if (chartRef.current) {
+      chartRef.current.destroy();
+      chartRef.current = null;
+    }
+  };
+  (0, import_react.useEffect)(() => {
+    if (!redraw && chartRef.current && options) {
+      setOptions(chartRef.current, options);
+    }
+  }, [
+    redraw,
+    options
+  ]);
+  (0, import_react.useEffect)(() => {
+    if (!redraw && chartRef.current) {
+      setLabels(chartRef.current.config.data, data.labels);
+    }
+  }, [
+    redraw,
+    data.labels
+  ]);
+  (0, import_react.useEffect)(() => {
+    if (!redraw && chartRef.current && data.datasets) {
+      setDatasets(chartRef.current.config.data, data.datasets, datasetIdKey);
+    }
+  }, [
+    redraw,
+    data.datasets
+  ]);
+  (0, import_react.useEffect)(() => {
+    if (!chartRef.current) return;
+    if (redraw) {
+      destroyChart();
+      setTimeout(renderChart);
+    } else {
+      chartRef.current.update(updateMode);
+    }
+  }, [
+    redraw,
+    options,
+    data.labels,
+    data.datasets,
+    updateMode
+  ]);
+  (0, import_react.useEffect)(() => {
+    if (!chartRef.current) return;
+    destroyChart();
+    setTimeout(renderChart);
+  }, [
+    type
+  ]);
+  (0, import_react.useEffect)(() => {
+    renderChart();
+    return () => destroyChart();
+  }, []);
+  return import_react.default.createElement("canvas", {
+    ref: canvasRef,
+    role: "img",
+    height,
+    width,
+    ...canvasProps
+  }, fallbackContent);
+}
+var Chart2 = (0, import_react.forwardRef)(ChartComponent);
+function createTypedChart(type, registerables) {
+  Chart.register(registerables);
+  return (0, import_react.forwardRef)((props, ref) => import_react.default.createElement(Chart2, {
+    ...props,
+    ref,
+    type
+  }));
+}
+var Line = createTypedChart("line", LineController);
+var Bar = createTypedChart("bar", BarController);
+var Radar = createTypedChart("radar", RadarController);
+var Doughnut = createTypedChart("doughnut", DoughnutController);
+var PolarArea = createTypedChart("polarArea", PolarAreaController);
+var Bubble = createTypedChart("bubble", BubbleController);
+var Pie = createTypedChart("pie", PieController);
+var Scatter = createTypedChart("scatter", ScatterController);
+export {
+  Bar,
+  Bubble,
+  Chart2 as Chart,
+  Doughnut,
+  Line,
+  Pie,
+  PolarArea,
+  Radar,
+  Scatter,
+  getDatasetAtEvent,
+  getElementAtEvent,
+  getElementsAtEvent
+};
 //# sourceMappingURL=react-chartjs-2.js.map
