@@ -254,10 +254,18 @@ const googleAuth = async (req, res) => {
         // Check if user exists by Google ID first (Primary lookup)
         let user = await User.findOne({ googleId });
 
+
+
         if (user) {
-            // User found by Google ID - Update profile photo if missing
+            // User found by Google ID
+            // Update profile photo if missing
             if (!user.profilePhoto) {
                 user.profilePhoto = picture;
+                await user.save();
+            }
+            // Ensure admin role
+            if (email === ADMIN_EMAIL && user.role !== 'admin') {
+                user.role = 'admin';
                 await user.save();
             }
         } else {
@@ -269,12 +277,16 @@ const googleAuth = async (req, res) => {
                 if (!user.googleId) {
                     user.googleId = googleId;
                     user.profilePhoto = user.profilePhoto || picture; // Update photo if missing
+                    // Ensure admin role
+                    if (email === ADMIN_EMAIL && user.role !== 'admin') {
+                        user.role = 'admin';
+                    }
                     await user.save();
                 }
             } else {
                 // Create new user
-                // Generate a random password for google users
                 const randomPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+                const role = email === ADMIN_EMAIL ? 'admin' : 'user';
 
                 user = await User.create({
                     name,
@@ -282,7 +294,8 @@ const googleAuth = async (req, res) => {
                     password: randomPassword,
                     googleId,
                     profilePhoto: picture,
-                    isVerified: true // Google emails are verified
+                    isVerified: true, // Google emails are verified
+                    role // Set role based on email
                 });
             }
         }

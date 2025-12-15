@@ -1,4 +1,4 @@
-import "./chunk-G3PMV62Z.js";
+import "./chunk-V4OQ3NZ2.js";
 
 // node_modules/@heroicons/react/index.esm.js
 var index_esm_default = new Proxy(

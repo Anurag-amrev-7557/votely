@@ -1,9 +1,9 @@
 import {
   require_react
-} from "./chunk-4X3XUJ2M.js";
+} from "./chunk-2PIBWAMS.js";
 import {
   __toESM
-} from "./chunk-G3PMV62Z.js";
+} from "./chunk-V4OQ3NZ2.js";
 
 // node_modules/qrcode.react/lib/esm/index.js
 var import_react = __toESM(require_react());

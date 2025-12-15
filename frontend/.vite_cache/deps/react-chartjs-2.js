@@ -11,10 +11,10 @@ import {
 } from "./chunk-O4A6HC3X.js";
 import {
   require_react
-} from "./chunk-4X3XUJ2M.js";
+} from "./chunk-2PIBWAMS.js";
 import {
   __toESM
-} from "./chunk-G3PMV62Z.js";
+} from "./chunk-V4OQ3NZ2.js";
 
 // node_modules/react-chartjs-2/dist/index.js
 var import_react = __toESM(require_react());
