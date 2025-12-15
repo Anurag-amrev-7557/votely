@@ -326,7 +326,7 @@ export const ThemeProvider = ({ children }) => {
             if (storage === 'local') {
               localStorage.setItem('__theme_broadcast', JSON.stringify({ theme: next, ts: Date.now() }));
             }
-          } catch {}
+          } catch { }
 
           // Accessibility: announce theme change for screen readers
           if (announce) {
@@ -634,10 +634,15 @@ export const useTheme = () => {
 
   // --- Toggle theme: cycles through dark, light, system, with optional custom order ---
   const toggleTheme = useCallback(
-    (order = ['light', 'dark', 'system']) => {
+    (orderOrEvent) => {
+      // If passed as an event handler or with invalid type, use default order
+      const order = Array.isArray(orderOrEvent) ? orderOrEvent : ['light', 'dark', 'system'];
+
       const userTheme = localStorage.getItem('theme') || 'system';
       const idx = order.indexOf(userTheme);
-      const next = order[(idx + 1) % order.length];
+      // If current theme not in cycle, start from beginning
+      const nextIdx = idx === -1 ? 0 : (idx + 1) % order.length;
+      const next = order[nextIdx];
       setTheme(next, { force: true });
     },
     [setTheme]

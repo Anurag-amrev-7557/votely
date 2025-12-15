@@ -1,492 +1,165 @@
-import React, { useMemo, useState } from 'react';
+import React, { useRef } from 'react';
+import { motion, useScroll, useTransform, useMotionTemplate, useMotionValue } from 'framer-motion';
 import { useTheme } from '../../../context/ThemeContext';
+import { ShieldCheck, Accessibility, Sparkles, ArrowRight, Lock, Eye, Zap, Fingerprint } from 'lucide-react';
 
-const FEATURES_DATA = [
+// --- DATA ---
+const FEATURES = [
   {
-    index: 0,
-    icon: (
-      <span className="relative flex items-center justify-center w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-full shadow-inner">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="text-blue-600 dark:text-blue-400 drop-shadow"
-        >
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-          <path d="M9 12l2 2 4-4" />
-          <path d="M12 2v4">
-            <animate attributeName="opacity" values="1;0.5;1" dur="1.2s" repeatCount="indefinite" />
-          </path>
-          <path d="M12 18v4">
-            <animate attributeName="opacity" values="1;0.5;1" dur="1.2s" begin="0.6s" repeatCount="indefinite" />
-          </path>
-        </svg>
-        <span className="absolute -right-1 -top-1 w-2 h-2 bg-green-400 dark:bg-green-500 rounded-full animate-pulse shadow" aria-hidden="true" />
-      </span>
-    ),
-    title: "End-to-End Security",
-    description: (
-      <>
-        <span className="font-semibold text-blue-700 dark:text-blue-300">Advanced encryption</span> and security measures to protect the integrity of every vote.
-        <span className="block mt-1 text-xs text-gray-500 dark:text-gray-400">AES-256, TLS 1.3, regular audits</span>
-      </>
-    ),
-    imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuCImRpMJbw6NJe3sKp-VwJSkIZEx3qS859OjXDQay1ID6trYEDjwE4uUZLB-N6AInzS_FdPNM71YGUk0jndqKi7OFlqxyKb24dAFd3gIoIQmDIf-oAKE2btPc53ZGDYueyvtgq07EoWkEYHc_CoU8JhFZFLN5_7ROYRoHcsZ4FDnSMlimGbeT1B30Rm7er0En3phHH9RyLyXWeTDzHySfwDZDgY_Jw0bdipVfYTepktEt3CTLQ-KlA159St8iBhkiV0TKW8fV8isfg",
-    details: (
-      <>
-        <strong>Industry-standard encryption</strong> (AES-256, TLS 1.3) ensures all votes are private and tamper-proof.<br />
-        <span className="text-green-600 dark:text-green-400">Regular security audits</span> and <span className="text-blue-600 dark:text-blue-400">real-time monitoring</span> keep your data safe.
-      </>
-    ),
-    badges: [
-      { label: "AES-256", color: "bg-blue-100 text-blue-700" },
-      { label: "TLS 1.3", color: "bg-green-100 text-green-700" },
-      { label: "Audit Ready", color: "bg-yellow-100 text-yellow-700" }
-    ]
+    id: 'security',
+    title: "Cryptographic Integrity.",
+    description: "AES-256 encryption. TLS 1.3 transmission. Zero-knowledge proofs. Your vote is mathematically secure.",
+    icon: ShieldCheck,
+    span: "md:col-span-2",
   },
   {
-    index: 1,
-    icon: (
-      <span className="relative flex items-center justify-center w-10 h-10 bg-indigo-50 dark:bg-indigo-900/30 rounded-full shadow-inner">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="text-blue-600 dark:text-blue-400"
-        >
-          <circle cx="12" cy="12" r="10" className="opacity-30" />
-          <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5" />
-          <path d="M8.5 8.5v.01" />
-          <path d="M16 15.5v.01" />
-          <path d="M12 12v.01" />
-          <path d="M11 17v.01" />
-          <path d="M7 14v.01" />
-        </svg>
-        <span className="absolute -left-1 -bottom-1 w-2 h-2 bg-yellow-400 dark:bg-yellow-500 rounded-full animate-pulse shadow" aria-hidden="true" />
-      </span>
-    ),
-    title: "Universal Accessibility",
-    description: (
-      <>
-        <span className="font-semibold text-blue-700 dark:text-blue-300">Accessible for all</span> with support for screen readers, keyboard navigation, and high contrast modes.
-        <span className="block mt-1 text-xs text-gray-500 dark:text-gray-400">WCAG 2.2, ARIA, keyboard shortcuts</span>
-      </>
-    ),
-    imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuCEmbNMcibtHC0idiNIshqEceQlpt00c5onlLbHmKYJuOJIL4D71lJ7ker7-FtRssWO03uNQ7vFbPeO4NKsL-dmqED8axLmzhdTbVfabs83-fFmSZdL7qGZEP0UJSlQLPP01UFEQzZKABYSARRwODsyePkFncsWvkLqK_hIwEVhaPehPXkMqw5NgTJ8Wfnh_fEYw3OOYQlq4c7ZklSvclmbY4vLFNolTgfVpWnvA1vDqM74tOiXgthO05GM34mYxOC6OQVFe_5HuxA",
-    details: (
-      <>
-        <strong>Screen reader support</strong> and <strong>keyboard navigation</strong> for seamless use.<br />
-        <span className="text-indigo-600 dark:text-indigo-400">High contrast</span> and <span className="text-yellow-600 dark:text-yellow-400">color-blind friendly</span> themes included.
-      </>
-    ),
-    badges: [
-      { label: "WCAG 2.2", color: "bg-indigo-100 text-indigo-700" },
-      { label: "ARIA", color: "bg-yellow-100 text-yellow-700" },
-      { label: "Keyboard Nav", color: "bg-blue-100 text-blue-700" }
-    ]
+    id: 'accessibility',
+    title: "Universally Inclusive.",
+    description: "WCAG 2.2 compliant. Screen reader optimized. High contrast modes.",
+    icon: Accessibility,
+    span: "md:col-span-1",
   },
   {
-    index: 2,
-    icon: (
-      <span className="relative flex items-center justify-center w-10 h-10 bg-purple-50 dark:bg-purple-900/30 rounded-full shadow-inner">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="text-blue-600 dark:text-blue-400"
-        >
-          <path d="M12 2v4">
-            <animate attributeName="opacity" values="1;0.5;1" dur="1.2s" repeatCount="indefinite" />
-          </path>
-          <path d="M12 18v4">
-            <animate attributeName="opacity" values="1;0.5;1" dur="1.2s" begin="0.6s" repeatCount="indefinite" />
-          </path>
-          <path d="M4.93 4.93l2.83 2.83" />
-          <path d="M16.24 16.24l2.83 2.83" />
-          <path d="M2 12h4" />
-          <path d="M18 12h4" />
-          <path d="M4.93 19.07l2.83-2.83" />
-          <path d="M16.24 7.76l2.83-2.83" />
-        </svg>
-        <span className="absolute -right-1 -bottom-1 w-2 h-2 bg-purple-400 dark:bg-purple-500 rounded-full animate-pulse shadow" aria-hidden="true" />
-      </span>
-    ),
-    title: "Intuitive Experience",
-    description: (
-      <>
-        <span className="font-semibold text-blue-700 dark:text-blue-300">Simple &amp; straightforward</span> interface that makes voting easy for everyone, from first-time users to administrators.
-        <span className="block mt-1 text-xs text-gray-500 dark:text-gray-400">Guided flows, tooltips, and instant feedback</span>
-      </>
-    ),
-    imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuBksrhtFAIdg2kwABWsJP1BiX8s23v42Jp5alMqjEJFDr1pMwV2ZOjNlFZh_1ogdqeaz0xyXNXpM9Wa3SbnbGVwcq0_ObkfmaF6xr98PA1I_sfJFL4YmmU9geX707-hvegI8mVjjCl4oi2lg8t9_753ymVMFjHMWpMMjJZzIyx-lJqspSpr-sHHKeM07TptJu_Stk2RuNlcL0WpcB7Pp-TbAq2xe1fegKn3v7rxmJ7_6tpHDJmrYwOK7rxqOFwwDCdb_LQIYCwtA4Y",
-    details: (
-      <>
-        <strong>Guided voting flows</strong> and <strong>contextual tooltips</strong> help users at every step.<br />
-        <span className="text-purple-600 dark:text-purple-400">Instant feedback</span> and <span className="text-blue-600 dark:text-blue-400">responsive design</span> for all devices.
-      </>
-    ),
-    badges: [
-      { label: "Guided", color: "bg-purple-100 text-purple-700" },
-      { label: "Tooltips", color: "bg-blue-100 text-blue-700" },
-      { label: "Responsive", color: "bg-green-100 text-green-700" }
-    ]
+    id: 'ux',
+    title: "Frictionless Flow.",
+    description: "Zero learning curve. Guided participation. Instant confirmation.",
+    icon: Sparkles,
+    span: "md:col-span-1",
+  },
+  {
+    id: 'audit',
+    title: "Total Transparency.",
+    description: "Real-time audit logs. Verifiable results. Immutable ledger.",
+    icon: Eye,
+    span: "md:col-span-2",
   }
 ];
 
-const ADDITIONAL_FEATURES = [
-  {
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-      </svg>
-    ),
-    text: "End-to-End Encryption"
-  },
-  {
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-      </svg>
-    ),
-    text: "Real-time Analytics"
-  },
-  {
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-      </svg>
-    ),
-    text: "Multi-language Support"
-  },
-  {
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-      </svg>
-    ),
-    text: "Mobile Responsive"
-  },
-  {
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-      </svg>
-    ),
-    text: "Instant Results"
-  },
-  {
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-      </svg>
-    ),
-    text: "Fraud Prevention"
-  },
-  {
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-      </svg>
-    ),
-    text: "Custom Ballots"
-  },
-  {
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-      </svg>
-    ),
-    text: "Automated Notifications"
-  }
-];
+// --- COMPONENTS ---
 
-const FeatureCard = React.memo(({ icon, title, description, imageUrl, index, onLearnMore }) => (
-  <div className="group relative flex flex-col gap-3 pb-3 transition-all duration-300 hover:scale-[1.02] sm:min-h-[400px]">
+const BentoCard = ({ title, description, icon: Icon, span, index }) => {
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
 
-
-    {/* Advanced Image Container with Animation, Accessibility, and Effects */}
-    <div
-      className="relative aspect-video group/image focus-within:ring-2 focus-within:ring-blue-400 rounded-xl overflow-hidden"
-      tabIndex={0}
-      aria-label={`Feature image for ${title}`}
-      role="img"
-    >
-      {/* Background Image with Parallax and Animated Gradient Overlay */}
-      <div className="absolute inset-0 w-full h-full rounded-xl overflow-hidden">
-        <img
-          src={imageUrl}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03] group-focus:scale-[1.03]"
-        />
-
-        {/* Animated Gradient Overlay */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          aria-hidden="true"
-        >
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-blue-900/10 to-transparent opacity-90 group-hover:from-black/50 group-hover:opacity-100 transition-all duration-500" />
-          {/* Subtle animated shimmer */}
-          <div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 animate-shimmer pointer-events-none"
-            style={{
-              animationDuration: "2.2s",
-              animationIterationCount: "infinite",
-            }}
-            aria-hidden="true"
-          />
-        </div>
-        {/* Decorative floating sparkles */}
-        <svg
-          className="absolute right-4 bottom-4 w-8 h-8 opacity-0 group-hover:opacity-80 transition-opacity duration-500 pointer-events-none animate-float-sparkle"
-          viewBox="0 0 32 32"
-          fill="none"
-          aria-hidden="true"
-        >
-          <circle cx="16" cy="16" r="2.5" fill="#60a5fa" opacity="0.7" />
-          <circle cx="8" cy="24" r="1.2" fill="#818cf8" opacity="0.5" />
-          <circle cx="26" cy="10" r="1.1" fill="#a78bfa" opacity="0.4" />
-        </svg>
-      </div>
-
-      {/* Feature Number Badge with Animation */}
-      <div
-        className="absolute top-4 left-4 px-3 py-1 bg-white/90 dark:bg-gray-800/90 backdrop-blur-[2px] rounded-full text-sm font-medium text-gray-900 dark:text-white flex items-center gap-1.5 transition-all duration-300 shadow-lg group-hover:scale-105 group-hover:bg-blue-50/90 dark:group-hover:bg-blue-900/60"
-        tabIndex={0}
-        aria-label={`Feature number ${index + 1}`}
-        role="status"
-      >
-        <span className="w-5 h-5 flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-semibold transition-colors duration-300 shadow">
-          {index + 1}
-        </span>
-        <span className="font-semibold">Feature</span>
-      </div>
-
-      {/* Hover Overlay with Animated Gradient and Focus Ring */}
-      <div
-        className="absolute inset-0 bg-gradient-to-t from-blue-600/30 via-blue-400/10 to-transparent opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-400 rounded-xl pointer-events-none"
-        aria-hidden="true"
-      >
-        {/* Animated highlight ring */}
-        <span
-          className="absolute -inset-1 rounded-xl pointer-events-none"
-          style={{
-            background: "linear-gradient(90deg,rgba(59,130,246,0.10) 0%,rgba(99,102,241,0.04) 100%)",
-            opacity: 0.18,
-            transition: "opacity 0.18s"
-          }}
-          aria-hidden="true"
-        />
-      </div>
-    </div>
-
-    {/* Content Container */}
-    <div className="relative flex items-start gap-3 p-4 flex-1">
-      {/* Icon Container */}
-      <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors duration-300 flex-shrink-0">
-        {icon}
-      </div>
-
-      {/* Text Content */}
-      <div className="flex-1 min-h-[80px]">
-        <p className="text-gray-900 dark:text-white text-base font-semibold leading-normal mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
-          {title}
-        </p>
-        <p className="text-gray-600 dark:text-gray-300 text-sm font-normal leading-normal transition-colors duration-300">
-          {description}
-        </p>
-      </div>
-    </div>
-
-    {/* Enhanced Learn More Link */}
-    <div className="px-4 pb-4 min-h-[40px] flex items-end">
-      <button
-        type="button"
-        onClick={onLearnMore}
-        className="inline-flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 font-semibold opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 dark:focus-visible:ring-blue-500 rounded-full px-3 py-1 hover:bg-blue-50 dark:hover:bg-blue-900/30 active:scale-95 shadow-sm"
-        aria-label={`Learn more about ${title}`}
-      >
-        <span className="relative flex items-center">
-          Learn more
-          {/* Animated underline */}
-          <span className="absolute left-0 -bottom-0.5 w-full h-0.5 bg-gradient-to-r from-blue-400 via-blue-600 to-blue-400 rounded-full scale-x-0 group-hover:scale-x-100 group-focus:scale-x-100 transition-transform duration-300 origin-left" />
-        </span>
-        <span className="relative flex items-center">
-          <svg
-            className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1 group-focus:translate-x-1"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-          </svg>
-        </span>
-      </button>
-    </div>
-
-    {/* Decorative Elements */}
-    <div className="absolute -right-2 -top-2 w-24 h-24 bg-blue-200 dark:bg-blue-900/20 rounded-full blur-2xl opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
-    <div className="absolute -left-2 -bottom-2 w-24 h-24 bg-indigo-200 dark:bg-indigo-900/20 rounded-full blur-2xl opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
-  </div>
-));
-
-const FeaturesSection = ({ isVisible }) => {
-  const { isDarkMode } = useTheme();
-  const sectionBg = useMemo(() => isDarkMode ? 'dark:bg-gray-900' : 'bg-white', [isDarkMode]);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalContent, setModalContent] = useState({});
-
-  const handleLearnMore = (feature) => {
-    setModalContent(feature);
-    setModalOpen(true);
+  const handleMouseMove = ({ clientX, clientY, currentTarget }) => {
+    const { left, top } = currentTarget.getBoundingClientRect();
+    mouseX.set(clientX - left);
+    mouseY.set(clientY - top);
   };
 
-
-
   return (
-    <section className={`w-full flex flex-col gap-8 sm:gap-12 px-4 @container rounded-xl relative overflow-hidden ${sectionBg} transition-all duration-500`} aria-labelledby="features-main-heading" role="region" tabIndex={0}>
-      {/* Visually hidden heading for accessibility */}
-      <h2 id="features-main-heading" className="sr-only">Votely Features</h2>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 0.7, delay: index * 0.1, ease: [0.21, 0.47, 0.32, 0.98] }}
+      onMouseMove={handleMouseMove}
+      className={`group relative flex flex-col justify-between p-8 md:p-12 overflow-hidden bg-gray-50 dark:bg-zinc-900/50 border border-transparent dark:border-zinc-800/50 hover:border-gray-200 dark:hover:border-zinc-700 transition-all duration-700 rounded-3xl ${span}`}
+    >
+      {/* Subtle Noise Texture */}
+      <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none"
+        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}>
+      </div>
 
-      <div className="flex flex-col gap-4 text-center max-w-2xl mx-auto relative min-h-[120px] w-full mt-2">
-        <div className="relative flex items-center justify-center mx-auto mb-2">
-          {/* Animated Gradient Glow */}
-          <span
-            className="absolute inset-0 rounded-full pointer-events-none z-0"
-            style={{
-              background: "radial-gradient(ellipse at 60% 40%,rgba(59,130,246,0.18) 0%,rgba(99,102,241,0.10) 60%,rgba(255,255,255,0.01) 100%)",
-              filter: "blur(8px)",
-              opacity: 0.85,
-              transition: "opacity 0.3s"
-            }}
-            aria-hidden="true"
-          />
-          {/* Advanced Animated Newsletter Badge (adapted for "Powerful Features") */}
-          <div
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-100 via-blue-200 to-blue-100 dark:from-blue-900/40 dark:via-blue-800/30 dark:to-blue-900/40 text-blue-700 dark:text-blue-300 text-sm font-semibold shadow-lg ring-1 ring-blue-200 dark:ring-blue-900/40 mb-2 relative group transition-all duration-500"
-            tabIndex={0}
-            role="status"
-            aria-label="Powerful Features"
-          >
-            {/* Animated Glow Effect */}
-            <span
-              className="absolute -inset-1.5 rounded-full bg-blue-400/20 dark:bg-blue-700/20 blur-xl pointer-events-none z-0"
-              style={{
-                animation: "pulse-orb 2.8s ease-in-out infinite"
-              }}
-              aria-hidden="true"
-            />
-            {/* Animated Lightning Icon */}
-            <svg
-              className="relative z-10 w-5 h-5 text-blue-500 dark:text-blue-300 drop-shadow-[0_1px_2px_rgba(59,130,246,0.15)]"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M13 10V3L4 14h7v7l9-11h-7z"
-              >
-                <animate
-                  attributeName="opacity"
-                  values="0.7;1;0.7"
-                  dur="2.2s"
-                  repeatCount="indefinite"
-                />
-              </path>
-              {/* Sparkle effect */}
-              <g>
-                <circle className="animate-float-sparkle sparkle-0" cx="19" cy="6" r="1.1" fill="#60a5fa" opacity="0.7" />
-                <circle className="animate-float-sparkle sparkle-1" cx="6" cy="5" r="0.7" fill="#818cf8" opacity="0.6" />
-                <circle className="animate-float-sparkle sparkle-2" cx="12" cy="3.5" r="0.6" fill="#a78bfa" opacity="0.5" />
-              </g>
-            </svg>
-            <span className="relative z-10 font-semibold tracking-wide bg-gradient-to-r from-blue-700 via-blue-500 to-blue-400 dark:from-blue-300 dark:via-blue-400 dark:to-blue-500 bg-clip-text text-transparent">
-              Powerful Features
+      {/* Hover Spotlight Effect */}
+      <motion.div
+        className="pointer-events-none absolute -inset-px rounded-3xl opacity-0 transition duration-500 group-hover:opacity-100"
+        style={{
+          background: useMotionTemplate`
+            radial-gradient(
+              650px circle at ${mouseX}px ${mouseY}px,
+              rgba(14, 165, 233, 0.08),
+              transparent 80%
+            )
+          `,
+        }}
+      />
+
+      <div className="relative z-10 flex flex-col h-full justify-between gap-12">
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-white dark:bg-zinc-800 shadow-sm border border-gray-100 dark:border-zinc-700/50 group-hover:scale-110 transition-transform duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275)">
+          <Icon className="w-5 h-5 text-gray-900 dark:text-white" strokeWidth={1.5} />
+        </div>
+
+        <div>
+          <h3 className="text-3xl md:text-4xl font-bold tracking-tighter text-gray-900 dark:text-white mb-4 leading-[0.9]">
+            {title}
+          </h3>
+          <p className="text-lg text-gray-500 dark:text-gray-400 leading-relaxed max-w-sm text-balance">
+            {description}
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+const FeaturesSection = () => {
+  return (
+    <section className="relative w-full py-32 px-4 md:px-16 bg-white dark:bg-black overflow-hidden selection:bg-gray-200 dark:selection:bg-zinc-800">
+
+      {/* Massive Header */}
+      <div className="max-w-8xl mx-auto mb-32">
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <div className="flex items-center gap-3 mb-8">
+            <span className="h-px w-12 bg-gray-300 dark:bg-zinc-700"></span>
+            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500 dark:text-zinc-500">
+              System Architecture
+            </h2>
+          </div>
+
+          <h1 className="text-7xl md:text-[10rem] font-bold tracking-tighter text-gray-900 dark:text-white leading-[0.8] mb-12 -ml-1 md:-ml-2">
+            Vote with <br /> <span className="text-gray-400 dark:text-zinc-600">confidence.</span>
+          </h1>
+
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+            <div className="md:col-span-5 md:col-start-8">
+              <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-400 leading-relaxed tracking-tight text-balance">
+                A minimalist fortress for democracy. We stripped away the noise to focus on what matters: <span className="text-gray-900 dark:text-white font-medium">Integrity, Accessibility,</span> and <span className="text-gray-900 dark:text-white font-medium">Speed.</span>
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Bento Grid */}
+      <div className="max-w-8xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+        {FEATURES.map((feature, idx) => (
+          <BentoCard key={feature.id} {...feature} index={idx} />
+        ))}
+      </div>
+
+      {/* Professional Footer */}
+      <div className="max-w-8xl mx-auto mt-8 border-t border-gray-100 dark:border-zinc-900 pt-12">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+          <div className="flex items-center gap-4">
+            <div className="flex space-x-1">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-zinc-800"></div>
+              ))}
+            </div>
+            <p className="text-sm text-gray-400 font-mono tracking-wider uppercase">
+              Secure Voting Infrastructure V2.0
+            </p>
+          </div>
+
+          <a href="#demo" className="group flex items-center gap-4 text-lg font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+            <span className="relative">
+              View Technical Specs
+              <span className="absolute left-0 -bottom-1 w-full h-px bg-current scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-right group-hover:origin-left"></span>
             </span>
-            {/* Tooltip on focus/hover for accessibility */}
-            <div
-              className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-3 py-1 rounded bg-gray-900/90 text-xs text-white shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 z-20"
-              role="tooltip"
-            >
-              Explore the advanced capabilities of Votely!
-            </div>
-          </div>
-          {/* Subtle Pulse Animation */}
-          <span className="absolute inset-0 rounded-full pointer-events-none z-0 animate-pulse bg-blue-400/10 dark:bg-blue-800/10" aria-hidden="true" />
+            <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1 duration-300" />
+          </a>
         </div>
-        <h1 className="text-gray-900 dark:text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em]">
-          Everything You Need for Secure Voting
-        </h1>
-        <p className="text-gray-600 dark:text-gray-300 text-base font-normal leading-normal">
-          Votely offers a comprehensive suite of features designed to enhance the voting experience and ensure the integrity of every vote.
-        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative w-full">
-        {FEATURES_DATA.map((feature, idx) => (
-          <FeatureCard key={feature.index} {...feature} onLearnMore={() => handleLearnMore(feature)} />
-        ))}
-      </div>
-
-      {/* Additional Features List */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-8 w-full">
-        {ADDITIONAL_FEATURES.map((feature, index) => (
-          <div key={index} className="flex items-center gap-2 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 min-h-[48px]">
-            <div className="text-blue-600 dark:text-blue-400 flex-shrink-0">
-              {feature.icon}
-            </div>
-            <span className="text-sm text-gray-700 dark:text-gray-300">{feature.text}</span>
-          </div>
-        ))}
-      </div>
-
-      {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white dark:bg-gray-900 rounded-xl p-8 max-w-md w-full shadow-lg relative">
-            <button
-              className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 dark:hover:text-white"
-              onClick={() => setModalOpen(false)}
-              aria-label="Close modal"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            <h2 className="text-xl font-bold mb-2">{modalContent.title}</h2>
-            <p className="mb-4">{modalContent.details || modalContent.description}</p>
-            {modalContent.imageUrl && (
-              <img src={modalContent.imageUrl} alt={modalContent.title} className="rounded-lg w-full h-40 object-cover" />
-            )}
-          </div>
-        </div>
-      )}
     </section>
   );
 };
 
 FeaturesSection.displayName = 'FeaturesSection';
-export default React.memo(FeaturesSection); 
+export default FeaturesSection; 

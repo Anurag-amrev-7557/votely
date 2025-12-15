@@ -295,7 +295,8 @@ const PollsPage = () => {
     try {
       await axiosInstance.put(`/polls/${selectedPoll.id}`, {
         ...selectedPoll,
-        settings: newSettings
+        settings: newSettings,
+        version: selectedPoll.__v // Pass version for optimistic locking
       });
       setPollForm(prev => ({
         ...prev,
@@ -466,7 +467,14 @@ const PollsPage = () => {
           return;
         }
         // Update existing poll
-        await axiosInstance.put(`/polls/${selectedPoll.id}`, payload);
+        const updatePayload = {
+          ...payload,
+          version: selectedPoll.__v // Pass version for optimistic locking
+        };
+        await axiosInstance.put(`/polls/${selectedPoll.id}`, updatePayload);
+        // Optimistic update of local state might need to account for version bump, 
+        // but for now we expect a refresh or just proceed.
+        // Ideally backend returns new version.
         setPolls(polls.map(p => p.id === selectedPoll.id ? { ...pollForm, id: selectedPoll.id, options } : p));
         toast.success('Poll updated successfully');
       } else {

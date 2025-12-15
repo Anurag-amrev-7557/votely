@@ -1,342 +1,264 @@
-import React, { useMemo } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useRef, useEffect } from 'react';
+import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useTheme } from '../../../context/ThemeContext';
+import { Eye, Code, Cpu, Scan, CheckCircle2, ShieldAlert } from 'lucide-react';
 
-const AccessibilityFeature = React.memo(({ icon, title, description }) => (
-    <div className="flex flex-col gap-3 p-4 bg-white dark:bg-gray-900 rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
-        <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg w-fit">
-            {icon}
-        </div>
-        <h3 className="text-gray-900 dark:text-white font-semibold">{title}</h3>
-        <p className="text-gray-600 dark:text-gray-300 text-sm">{description}</p>
-    </div>
-));
-
-AccessibilityFeature.displayName = 'AccessibilityFeature';
-
-const FEATURES = [
-    {
-        title: "Screen Reader Support",
-        description: "Full compatibility with screen readers and assistive technologies for seamless navigation.",
-        icon: (
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-purple-600 dark:text-purple-400"
-            >
-                <path d="M12 2v4" />
-                <path d="M12 18v4" />
-                <path d="M4.93 4.93l14.14 14.14" />
-                <path d="M19.07 4.93L4.93 19.07" />
-                <path d="M12 8v4" />
-                <path d="M12 16h.01" />
-                <path d="M8 12h8" />
-            </svg>
-        )
-    },
-    {
-        title: "Keyboard Navigation",
-        description: "Intuitive keyboard controls and shortcuts for efficient navigation without a mouse.",
-        icon: (
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-purple-600 dark:text-purple-400"
-            >
-                <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                <path d="M12 15v2" />
-                <path d="M8 15v2" />
-                <path d="M16 15v2" />
-            </svg>
-        )
-    },
-    {
-        title: "High Contrast Mode",
-        description: "Enhanced visibility options with customizable contrast settings for better readability.",
-        icon: (
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-purple-600 dark:text-purple-400"
-            >
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 2v4" />
-                <path d="M12 18v4" />
-                <path d="M4.93 4.93l2.83 2.83" />
-                <path d="M16.24 16.24l2.83 2.83" />
-                <path d="M2 12h4" />
-                <path d="M18 12h4" />
-                <path d="m4.93 19.07 2.83-2.83" />
-                <path d="m16.24 7.76 2.83-2.83" />
-            </svg>
-        )
-    },
-    {
-        title: "Text Scaling",
-        description: "Adjustable text sizes and spacing to accommodate different visual needs.",
-        icon: (
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-purple-600 dark:text-purple-400"
-            >
-                <path d="M12 2v4" />
-                <path d="M12 18v4" />
-                <path d="M4.93 4.93l14.14 14.14" />
-                <path d="M19.07 4.93L4.93 19.07" />
-                <path d="M12 8v4" />
-                <path d="M12 16h.01" />
-                <path d="M8 12h8" />
-                <path d="M12 8v8" />
-            </svg>
-        )
-    },
-    {
-        title: "Voice Commands",
-        description: "Voice control support for hands-free navigation and interaction.",
-        icon: (
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-purple-600 dark:text-purple-400"
-            >
-                <path d="M12 2v4" />
-                <path d="M12 18v4" />
-                <path d="M4.93 4.93l14.14 14.14" />
-                <path d="M19.07 4.93L4.93 19.07" />
-                <path d="M12 8v4" />
-                <path d="M12 16h.01" />
-                <path d="M8 12h8" />
-                <path d="M12 8v8" />
-                <path d="M8 8h8" />
-                <path d="M12 2v20" />
-            </svg>
-        )
-    },
-    {
-        title: "Alternative Text",
-        description: "Comprehensive alt text and ARIA labels for all visual elements.",
-        icon: (
-            <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-purple-600 dark:text-purple-400"
-            >
-                <path d="M12 2v4" />
-                <path d="M12 18v4" />
-                <path d="M4.93 4.93l14.14 14.14" />
-                <path d="M19.07 4.93L4.93 19.07" />
-                <path d="M12 8v4" />
-                <path d="M12 16h.01" />
-                <path d="M8 12h8" />
-                <path d="M12 8v8" />
-                <path d="M8 8h8" />
-                <path d="M12 2v20" />
-            </svg>
-        )
-    }
-];
-
-const AccessibilitySection = ({ isVisible }) => {
-    const { isDarkMode } = useTheme();
-    const sectionBg = useMemo(() => isDarkMode ? 'dark:bg-gray-900' : 'bg-white', [isDarkMode]);
+// --- SHARED UI COMPONENT (The "Subject") ---
+// This component renders twice: once for the look, once for the code.
+const AccessibilityDemoUI = ({ mode = 'visual' }) => {
+    const isSemantic = mode === 'semantic';
 
     return (
-        <section className={`max-w-7xl mx-auto ${sectionBg} transition-all duration-500 will-change-[background-color,color,box-shadow,filter]`} aria-labelledby="accessibility-main-heading" role="region" tabIndex={0}>
-            <h2 id="accessibility-main-heading" className="sr-only">Accessibility Commitment</h2>
-            <div className="flex flex-col gap-8 px-4 py-12">
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex flex-col gap-6 text-center max-w-3xl mx-auto"
-                >
-                    {/* Advanced Animated Accessibility Badge */}
-                    <div
-                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-100 via-purple-200 to-purple-100 dark:from-purple-900/40 dark:via-purple-800/30 dark:to-purple-900/40 text-purple-700 dark:text-purple-300 text-sm font-semibold shadow-lg ring-1 ring-purple-200 dark:ring-purple-900/40 mb-4 relative group transition-all duration-500 will-change-[background-color,color,box-shadow] mx-auto"
-                        tabIndex={0}
-                        role="status"
-                        aria-label="Universal Access"
-                    >
-                        {/* Animated Glow Effect */}
-                        <span
-                            className="absolute -inset-1.5 rounded-full bg-purple-400/20 dark:bg-purple-700/20 blur-xl pointer-events-none z-0"
-                            style={{
-                                animation: "pulse-orb 2.8s ease-in-out infinite"
-                            }}
-                            aria-hidden="true"
-                        />
-                        {/* Animated Accessibility Icon */}
-                        <svg
-                            className="relative z-10 w-5 h-5 text-purple-500 dark:text-purple-300 drop-shadow-[0_1px_2px_rgba(168,85,247,0.15)]"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            aria-hidden="true"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
-                            >
-                                <animate
-                                    attributeName="opacity"
-                                    values="0.7;1;0.7"
-                                    dur="2.2s"
-                                    repeatCount="indefinite"
-                                />
-                            </path>
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1Z"
-                            />
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M12 11h4"
-                            />
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M12 16h4"
-                            />
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M8 11h.01"
-                            />
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M8 16h.01"
-                            />
-                            {/* Sparkle effect */}
-                            <g>
-                                <circle className="animate-float-sparkle sparkle-0" cx="19" cy="6" r="1.1" fill="#a78bfa" opacity="0.7" />
-                                <circle className="animate-float-sparkle sparkle-1" cx="6" cy="5" r="0.7" fill="#c4b5fd" opacity="0.6" />
-                                <circle className="animate-float-sparkle sparkle-2" cx="12" cy="3.5" r="0.6" fill="#f3e8ff" opacity="0.5" />
-                            </g>
-                        </svg>
-                        <span className="relative z-10 font-semibold tracking-wide bg-gradient-to-r from-purple-700 via-purple-500 to-purple-400 dark:from-purple-300 dark:via-purple-400 dark:to-purple-500 bg-clip-text text-transparent">
-                            Universal Access
-                        </span>
-                        {/* Tooltip on focus/hover for accessibility */}
-                        <div
-                            className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-3 py-1 rounded bg-gray-900/90 text-xs text-white shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-200 z-20"
-                            role="tooltip"
-                        >
-                            Designed for everyone, everywhere.
+        <div className={`w-full max-w-xl mx-auto p-8 rounded-2xl border transition-all duration-300 relative overflow-hidden
+            ${isSemantic
+                ? 'bg-black border-green-500/50 font-mono text-green-500 shadow-[0_0_30px_rgba(34,197,94,0.1)]'
+                : 'bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 shadow-2xl'
+            }`}
+        >
+            {/* Semantic Grid / Background overlay */}
+            {isSemantic && (
+                <div className="absolute inset-0 z-0 opacity-20 pointer-events-none"
+                    style={{ backgroundImage: 'linear-gradient(0deg, transparent 24%, rgba(34, 197, 94, .3) 25%, rgba(34, 197, 94, .3) 26%, transparent 27%, transparent 74%, rgba(34, 197, 94, .3) 75%, rgba(34, 197, 94, .3) 76%, transparent 77%, transparent), linear-gradient(90deg, transparent 24%, rgba(34, 197, 94, .3) 25%, rgba(34, 197, 94, .3) 26%, transparent 27%, transparent 74%, rgba(34, 197, 94, .3) 75%, rgba(34, 197, 94, .3) 76%, transparent 77%, transparent)', backgroundSize: '30px 30px' }}
+                />
+            )}
+
+            <div className="relative z-10 flex flex-col gap-6">
+
+                {/* Header Area */}
+                <div className="flex items-center justify-between border-b pb-4 border-gray-100 dark:border-zinc-800/50">
+                    <div className="flex items-center gap-3">
+                        {isSemantic ? (
+                            <div className="text-xs border border-green-500 px-2 py-1 rounded bg-green-900/20">
+                                &lt;h3 role="status"&gt;
+                            </div>
+                        ) : (
+                            <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-600/20">
+                                <Scan className="w-5 h-5" />
+                            </div>
+                        )}
+
+                        <div className="flex flex-col">
+                            <span className={`font-bold text-lg ${isSemantic ? 'text-green-400' : 'text-gray-900 dark:text-white'}`}>
+                                {isSemantic ? 'DOM_NODE_342' : 'Vote Confirmation'}
+                            </span>
+                            {isSemantic && <span className="text-[10px] opacity-70">CONFIDENCE: 99.8%</span>}
                         </div>
                     </div>
+                </div>
 
-                    <h2 className="text-gray-900 dark:text-white text-[28px] font-bold leading-tight tracking-[-0.015em] @[480px]:text-3xl">
-                        Accessibility Commitment
-                    </h2>
-                    <p className="text-gray-600 dark:text-gray-300 text-base">
-                        Votely is dedicated to ensuring that our platform is accessible to all users. We adhere to WCAG guidelines and continuously improve our design to meet the diverse needs of our voters.
+                {/* Content Area */}
+                <div className="space-y-4">
+                    <div className={`p-4 rounded-xl ${isSemantic ? 'border border-dashed border-green-500/30 bg-green-900/10' : 'bg-gray-50 dark:bg-zinc-800/50'}`}>
+                        {isSemantic ? (
+                            <div className="text-xs space-y-1 opacity-80">
+                                <p>&lt;p aria-live="polite"&gt;</p>
+                                <p className="pl-4 text-green-300">"Your voice is encrypted..."</p>
+                                <p>&lt;/p&gt;</p>
+                                <p className="mt-2 text-[10px] text-green-600">CONTRAST: 21.05 (AAA)</p>
+                            </div>
+                        ) : (
+                            <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                                Your voice is encrypted and permanently recorded on the immutable ledger.
+                            </p>
+                        )}
+                    </div>
+
+                    <div className="flex gap-4">
+                        <button className={`flex-1 py-3 rounded-xl font-semibold transition-all
+                            ${isSemantic
+                                ? 'border border-green-500 text-green-500 hover:bg-green-500/10'
+                                : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-600/20'
+                            }`}
+                        >
+                            {isSemantic ? (
+                                <span className="flex flex-col items-center">
+                                    <span className="text-xs">&lt;button tabindex="0"&gt;</span>
+                                    <span className="text-[10px] mt-0.5 opacity-70">ACTION: SUBMIT</span>
+                                </span>
+                            ) : (
+                                "Verify Record"
+                            )}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Footer Metadata */}
+                {isSemantic && (
+                    <div className="flex justify-between text-[10px] pt-2 border-t border-green-500/30 opacity-60">
+                        <span>NODE_ID: #8x2A</span>
+                        <span>WCAG: PASS</span>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+
+const AccessibilitySection = () => {
+    const sectionRef = useRef(null);
+    const [isHovering, setIsHovering] = useState(false);
+
+    // Mouse Metrics
+    const mouseX = useMotionValue(0);
+    const mouseY = useMotionValue(0);
+
+    // Smooth physics for the lens
+    const springConfig = { damping: 25, stiffness: 120, mass: 0.5 };
+    const lensX = useSpring(mouseX, springConfig);
+    const lensY = useSpring(mouseY, springConfig);
+
+    const handleMouseMove = (e) => {
+        if (!sectionRef.current) return;
+        const rect = sectionRef.current.getBoundingClientRect();
+        mouseX.set(e.clientX - rect.left);
+        mouseY.set(e.clientY - rect.top);
+        setIsHovering(true);
+    };
+
+    const handleMouseLeave = () => {
+        setIsHovering(false);
+    };
+
+    // Auto-scan animation when not hovering
+    useEffect(() => {
+        if (isHovering) return;
+
+        const startTime = Date.now();
+        const animate = () => {
+            if (isHovering) return;
+            const now = Date.now();
+            const t = (now - startTime) * 0.001;
+
+            // Lissajous figure for auto-scan path
+            if (sectionRef.current) {
+                const rect = sectionRef.current.getBoundingClientRect();
+                const cx = rect.width / 2;
+                const cy = rect.height / 2;
+                const rx = rect.width * 0.3;
+                const ry = rect.height * 0.2;
+
+                mouseX.set(cx + Math.cos(t) * rx);
+                mouseY.set(cy + Math.sin(t * 1.5) * ry);
+            }
+            requestAnimationFrame(animate);
+        };
+        const id = requestAnimationFrame(animate);
+        return () => cancelAnimationFrame(id);
+    }, [isHovering, mouseX, mouseY]);
+
+
+    return (
+        <section
+            id="accessibility"
+            className="relative w-full py-16 bg-zinc-950 overflow-hidden cursor-crosshair selection:bg-green-500/30"
+        >
+            {/* Background Grid */}
+            <div className="absolute inset-0 pointer-events-none opacity-[0.03]"
+                style={{ backgroundImage: `linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)`, backgroundSize: '40px 40px' }}>
+            </div>
+
+            <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
+
+                {/* Header - Industrial/Technical */}
+                <div className="flex flex-col items-center text-center mb-24">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="inline-flex items-center gap-2 px-3 py-1 rounded bg-zinc-900 border border-zinc-800 text-xs font-mono text-zinc-400 mb-6 uppercase tracking-widest"
+                    >
+                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        System Integrity: Verified
+                    </motion.div>
+
+                    <motion.h2
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        className="text-5xl md:text-8xl font-black text-white tracking-tighter mb-6"
+                    >
+                        INVISIBLE <span className="text-transparent bg-clip-text bg-gradient-to-b from-zinc-500 to-zinc-800">ENGINEERING</span>
+                    </motion.h2>
+
+                    <p className="max-w-2xl text-zinc-400 text-lg md:text-xl font-light leading-relaxed">
+                        True accessibility isn't just about colors. It's built into the <span className="text-white font-mono">DOM Architecture</span>.
+                        <br />We engineer the semantic layer first, visual layer second.
                     </p>
-                </motion.div>
+                </div>
 
-                <div className="grid grid-cols-1 @[640px]:grid-cols-2 @[1024px]:grid-cols-3 gap-6">
-                    {FEATURES.map((feature, index) => (
-                        <AccessibilityFeature
-                            key={index}
-                            icon={feature.icon}
-                            title={feature.title}
-                            description={feature.description}
-                        />
+                {/* THE SCANNER INTERACTION */}
+                <div
+                    ref={sectionRef}
+                    onMouseMove={handleMouseMove}
+                    onMouseLeave={handleMouseLeave}
+                    className="relative min-h-[500px] flex items-center justify-center"
+                >
+
+                    {/* Layer 1: Visual (Base) */}
+                    <div className="relative z-10 w-full flex justify-center opacity-40 blur-[2px] grayscale transition-all duration-500 hover:blur-none hover:grayscale-0 hover:opacity-100">
+                        <AccessibilityDemoUI mode="visual" />
+                    </div>
+
+                    {/* Layer 2: Semantic (Revealed by Scanner) */}
+                    <motion.div
+                        className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none"
+                        style={{
+                            maskImage: useTransform(
+                                [lensX, lensY],
+                                ([x, y]) => `radial-gradient(circle 180px at ${x}px ${y}px, black 100%, transparent 100%)`
+                            ),
+                            WebkitMaskImage: useTransform(
+                                [lensX, lensY],
+                                ([x, y]) => `radial-gradient(circle 180px at ${x}px ${y}px, black 100%, transparent 100%)`
+                            )
+                        }}
+                    >
+                        <AccessibilityDemoUI mode="semantic" />
+                    </motion.div>
+
+                    {/* Scanner Visual Ring (Follows Mouse) */}
+                    <motion.div
+                        className="absolute top-0 left-0 w-[360px] h-[360px] rounded-full border border-green-500/50 z-30 pointer-events-none flex items-center justify-center"
+                        style={{
+                            x: useTransform(lensX, (x) => x - 180),
+                            y: useTransform(lensY, (y) => y - 180),
+                        }}
+                    >
+                        {/* Scanner Decor */}
+                        <div className="absolute inset-0 rounded-full border border-dashed border-green-500/20 animate-[spin_10s_linear_infinite]" />
+                        <div className="absolute top-0 left-1/2 -ml-[1px] h-4 w-[2px] bg-green-500" />
+                        <div className="absolute bottom-0 left-1/2 -ml-[1px] h-4 w-[2px] bg-green-500" />
+                        <div className="absolute left-0 top-1/2 -mt-[1px] w-4 h-[2px] bg-green-500" />
+                        <div className="absolute right-0 top-1/2 -mt-[1px] w-4 h-[2px] bg-green-500" />
+
+                        <div className="absolute bottom-4 right-8 text-[10px] font-mono text-green-500 bg-black/80 px-1">
+                            SCANNING_LAYER_02
+                        </div>
+                    </motion.div>
+
+                </div>
+
+                {/* Metric Strip */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-24 border-t border-zinc-900 pt-12">
+                    {[
+                        { label: "ARIA Coverage", value: "100%", icon: CheckCircle2 },
+                        { label: "Keyboard Nav", value: "NATIVE", icon: Cpu },
+                        { label: "Color Contrast", value: "AAA", icon: Eye },
+                        { label: "Semantics", value: "VALID", icon: Code },
+                    ].map((metric, i) => (
+                        <div key={i} className="flex flex-col items-center md:items-start p-4 hover:bg-zinc-900/50 rounded-xl transition-colors group">
+                            <metric.icon className="w-6 h-6 text-zinc-600 group-hover:text-white transition-colors mb-3" />
+                            <div className="text-3xl font-black text-white mb-1 group-hover:scale-105 transition-transform origin-left">{metric.value}</div>
+                            <div className="text-xs font-mono text-zinc-500 uppercase tracking-wider">{metric.label}</div>
+                        </div>
                     ))}
                 </div>
 
-                <div className="flex flex-col items-center gap-4 mt-4">
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        >
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-                            <path d="m9 12 2 2 4-4" />
-                        </svg>
-                        <span>WCAG 2.1 AA Compliant</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        >
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-                            <path d="m9 12 2 2 4-4" />
-                        </svg>
-                        <span>Section 508 Compliant</span>
-                    </div>
-                </div>
             </div>
         </section>
     );
-}
+};
 
 AccessibilitySection.displayName = 'AccessibilitySection';
 export default React.memo(AccessibilitySection);

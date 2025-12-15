@@ -383,6 +383,18 @@ exports.updatePoll = async (req, res) => {
       return res.status(403).json({ error: 'Not authorized to update this poll' });
     }
 
+    // --- Optimistic Locking Check ---
+    // If client sends a version, we must ensure it matches the current DB version
+    if (req.body.version !== undefined) {
+      if (poll.__v !== req.body.version) {
+        return res.status(409).json({
+          error: 'Version Conflict',
+          message: 'The poll has been modified by someone else. Please refresh and try again.',
+          currentVersion: poll.__v
+        });
+      }
+    }
+
     // --- Robust Validation (same as create) ---
     const { title, description, startDate, endDate, options, resultDate, settings, category } = req.body;
     if (!title || typeof title !== 'string' || title.trim().length < 3 || title.length > 100) {

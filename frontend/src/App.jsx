@@ -1,184 +1,27 @@
 import { Suspense, lazy, useEffect, memo, useCallback, useState, useMemo } from 'react'
-import React from 'react'
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft } from './components/ui/icons'
+import { ArrowLeft } from './components/icons'
 import { ErrorBoundary } from 'react-error-boundary'
 import { ThemeProvider } from './context/ThemeContext'
 import { AdminAuthProvider } from './context/AdminAuthContext'
-import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider } from './context/AuthContext'
 import { Toaster } from 'react-hot-toast'
 import Navbar from './components/layout/navbar/Navbar'
 import Footer from './components/layout/Footer/Footer'
 import ProfilePage from './pages/profile/ProfilePage'
-import PrivacyPolicy from './pages/legal/PrivacyPolicy'
-import TermsOfService from './pages/legal/TermsOfService'
-import CookiesPolicy from './pages/legal/CookiesPolicy'
-import AccessibilityStatement from './pages/legal/AccessibilityStatement'
 
-// Enhanced lazy loading wrapper with better error handling
-const createLazyComponent = (importFn, displayName) => {
-  // Create a safe fallback component
-  const SafeFallbackComponent = () => (
-    <div className="flex items-center justify-center min-h-[200px] text-red-500">
-      Failed to load {displayName}
-    </div>
-  );
-
-  // Ensure fallback component has proper naming
-  SafeFallbackComponent.displayName = `${displayName}_Fallback`;
-  SafeFallbackComponent.$$typeof = Symbol.for('react.element');
-
-  const LazyComponent = lazy(() =>
-    importFn().then(module => {
-      // Ensure the module has a default export
-      if (!module || !module.default) {
-        console.error(`Lazy component ${displayName} failed to load properly:`, module);
-        // Return the safe fallback instead of throwing
-        return { default: SafeFallbackComponent };
-      }
-
-      // Set displayName after successful load
-      if (module.default) {
-        module.default.displayName = displayName;
-
-        // Ensure the component has all required React properties
-        if (!module.default.$$typeof) {
-          module.default.$$typeof = Symbol.for('react.element');
-        }
-      }
-
-      return module;
-    }).catch(error => {
-      console.error(`Error loading lazy component ${displayName}:`, error);
-      // Return the safe fallback component
-      return { default: SafeFallbackComponent };
-    })
-  );
-
-  // Set displayName on the lazy component itself
-  LazyComponent.displayName = displayName;
-
-  // Add additional safety properties
-  LazyComponent._init = LazyComponent._init || (() => { });
-  LazyComponent._payload = LazyComponent._payload || {};
-  LazyComponent.$$typeof = Symbol.for('react.lazy');
-
-  return LazyComponent;
-};
-
-// Lazy load components with enhanced error handling
-const LandingPage = createLazyComponent(
-  () => import(/* webpackChunkName: "LandingPage" */'./pages/landing/LandingPage'),
-  'LandingPage'
-);
-const AvailablePolls = createLazyComponent(
-  () => import(/* webpackChunkName: "AvailablePolls" */'./components/voting/AvailablePolls'),
-  'AvailablePolls'
-);
-const VotingPage = createLazyComponent(
-  () => import(/* webpackChunkName: "VotingPage" */'./components/voting/VotingPage'),
-  'VotingPage'
-);
-const AdminPage = createLazyComponent(
-  () => import(/* webpackChunkName: "AdminPage" */'./components/admin/AdminPage'),
-  'AdminPage'
-);
-const AdminLogin = createLazyComponent(
-  () => import(/* webpackChunkName: "AdminLogin" */'./components/admin/AdminLogin'),
-  'AdminLogin'
-);
-const ProtectedAdminRoute = createLazyComponent(
-  () => import(/* webpackChunkName: "ProtectedAdminRoute" */'./components/routes/ProtectedAdminRoute'),
-  'ProtectedAdminRoute'
-);
-const ProtectedVotingRoute = createLazyComponent(
-  () => import(/* webpackChunkName: "ProtectedVotingRoute" */'./components/routes/ProtectedVotingRoute'),
-  'ProtectedVotingRoute'
-);
-const AboutUs = createLazyComponent(
-  () => import(/* webpackChunkName: "AboutUs" */'./pages/AboutUs'),
-  'AboutUs'
-);
-const ContactUs = createLazyComponent(
-  () => import(/* webpackChunkName: "ContactUs" */'./pages/ContactUs'),
-  'ContactUs'
-);
-const LoginPage = createLazyComponent(
-  () => import(/* webpackChunkName: "LoginPage" */'./pages/auth/LoginPage'),
-  'LoginPage'
-);
-const MagicLinkVerifyPage = createLazyComponent(
-  () => import(/* webpackChunkName: "MagicLinkVerifyPage" */'./pages/auth/MagicLinkVerifyPage'),
-  'MagicLinkVerifyPage'
-);
-const RegisterPage = createLazyComponent(
-  () => import(/* webpackChunkName: "RegisterPage" */'./pages/auth/RegisterPage'),
-  'RegisterPage'
-);
-const AuthSuccessPage = createLazyComponent(
-  () => import(/* webpackChunkName: "AuthSuccessPage" */'./pages/auth-result/AuthSuccessPage'),
-  'AuthSuccessPage'
-);
-const AuthErrorPage = createLazyComponent(
-  () => import(/* webpackChunkName: "AuthErrorPage" */'./pages/auth-result/AuthErrorPage'),
-  'AuthErrorPage'
-);
-
-// Product pages
-const Enterprise = createLazyComponent(
-  () => import(/* webpackChunkName: "Enterprise" */'./pages/product/Enterprise'),
-  'Enterprise'
-);
-const Changelog = createLazyComponent(
-  () => import(/* webpackChunkName: "Changelog" */'./pages/product/Changelog'),
-  'Changelog'
-);
-
-// Resources pages
-const Documentation = createLazyComponent(
-  () => import(/* webpackChunkName: "Documentation" */'./pages/resources/Documentation'),
-  'Documentation'
-);
-const Guides = createLazyComponent(
-  () => import(/* webpackChunkName: "Guides" */'./pages/resources/Guides'),
-  'Guides'
-);
-const ApiReference = createLazyComponent(
-  () => import(/* webpackChunkName: "ApiReference" */'./pages/resources/ApiReference'),
-  'ApiReference'
-);
-const Community = createLazyComponent(
-  () => import(/* webpackChunkName: "Community" */'./pages/resources/Community'),
-  'Community'
-);
-const Status = createLazyComponent(
-  () => import(/* webpackChunkName: "Status" */'./pages/resources/Status'),
-  'Status'
-);
-
-// Company pages
-const Blog = createLazyComponent(
-  () => import(/* webpackChunkName: "Blog" */'./pages/company/Blog'),
-  'Blog'
-);
-const Careers = createLazyComponent(
-  () => import(/* webpackChunkName: "Careers" */'./pages/company/Careers'),
-  'Careers'
-);
-const Partners = createLazyComponent(
-  () => import(/* webpackChunkName: "Partners" */'./pages/company/Partners'),
-  'Partners'
-);
-const NominationPage = createLazyComponent(
-  () => import(/* webpackChunkName: "NominationPage" */'./pages/NominationPage'),
-  'NominationPage'
-);
-const AdminNominations = createLazyComponent(
-  () => import(/* webpackChunkName: "AdminNominations" */'./pages/admin/AdminNominations'),
-  'AdminNominations'
-);
+// Lazy load components with prefetching and chunk naming for better debugging
+const LandingPage = lazy(() => import(/* webpackChunkName: "LandingPage" */'./pages/landing/LandingPage'))
+const AvailablePolls = lazy(() => import(/* webpackChunkName: "AvailablePolls" */'./components/voting/AvailablePolls'))
+const VotingPage = lazy(() => import(/* webpackChunkName: "VotingPage" */'./components/voting/VotingPage'))
+const AdminPage = lazy(() => import(/* webpackChunkName: "AdminPage" */'./components/admin/AdminPage'))
+const AdminLogin = lazy(() => import(/* webpackChunkName: "AdminLogin" */'./components/admin/AdminLogin'))
+const ProtectedAdminRoute = lazy(() => import(/* webpackChunkName: "ProtectedAdminRoute" */'./components/routes/ProtectedAdminRoute'))
+const AboutUs = lazy(() => import(/* webpackChunkName: "AboutUs" */'./pages/AboutUs'))
+const ContactUs = lazy(() => import(/* webpackChunkName: "ContactUs" */'./pages/ContactUs'))
+const LoginPage = lazy(() => import(/* webpackChunkName: "LoginPage" */'./pages/auth/LoginPage'))
+const RegisterPage = lazy(() => import(/* webpackChunkName: "RegisterPage" */'./pages/auth/RegisterPage'))
 
 // Advanced Loading Component with Progressive States, Accessibility, and Performance Optimizations
 const LoadingSpinner = memo(() => {
@@ -345,9 +188,30 @@ const LoadingSpinner = memo(() => {
 
 // Advanced Toaster Configuration with Enhanced UX, Accessibility, and Performance
 const ToasterConfig = memo(() => {
+  // Dynamic theme-aware styling with CSS custom properties
+  const toastStyles = useMemo(() => ({
+    background: 'var(--toast-bg, #23272f)',
+    color: 'var(--toast-text, #fff)',
+    fontWeight: 500,
+    letterSpacing: '0.01em',
+    borderRadius: '12px',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08)',
+    border: '1px solid var(--toast-border, rgba(255, 255, 255, 0.1))',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    maxWidth: '400px',
+    minWidth: '300px',
+    padding: '16px 20px',
+    fontSize: '14px',
+    lineHeight: '1.5',
+    transform: 'translateZ(0)', // Force hardware acceleration
+  }), []);
+
   // Enhanced toast options with progressive enhancement
   const toastOptions = useMemo(() => ({
     duration: 3500,
+    style: toastStyles,
+    className: 'toast-notification',
     role: 'alert',
     'aria-live': 'polite',
     'aria-atomic': 'true',
@@ -355,28 +219,78 @@ const ToasterConfig = memo(() => {
     // Success toast configuration
     success: {
       duration: 3500,
+      iconTheme: {
+        primary: '#10b981',
+        secondary: '#23272f',
+      },
+      style: {
+        ...toastStyles,
+        borderLeft: '4px solid #10b981',
+        background: 'linear-gradient(135deg, #23272f 0%, #1f2937 100%)',
+      },
+      className: 'toast-success',
     },
 
     // Error toast configuration
     error: {
       duration: 4000,
+      iconTheme: {
+        primary: '#ef4444',
+        secondary: '#23272f',
+      },
+      style: {
+        ...toastStyles,
+        borderLeft: '4px solid #ef4444',
+        background: 'linear-gradient(135deg, #23272f 0%, #1f1f1f 100%)',
+      },
+      className: 'toast-error',
     },
 
     // Warning toast configuration
     warning: {
       duration: 4000,
+      iconTheme: {
+        primary: '#f59e0b',
+        secondary: '#23272f',
+      },
+      style: {
+        ...toastStyles,
+        borderLeft: '4px solid #f59e0b',
+        background: 'linear-gradient(135deg, #23272f 0%, #1f2937 100%)',
+      },
+      className: 'toast-warning',
     },
 
     // Info toast configuration
     info: {
       duration: 3000,
+      iconTheme: {
+        primary: '#3b82f6',
+        secondary: '#23272f',
+      },
+      style: {
+        ...toastStyles,
+        borderLeft: '4px solid #3b82f6',
+        background: 'linear-gradient(135deg, #23272f 0%, #1e3a8a 100%)',
+      },
+      className: 'toast-info',
     },
 
     // Loading toast configuration
     loading: {
       duration: Infinity,
+      iconTheme: {
+        primary: '#6366f1',
+        secondary: '#23272f',
+      },
+      style: {
+        ...toastStyles,
+        borderLeft: '4px solid #6366f1',
+        background: 'linear-gradient(135deg, #23272f 0%, #312e81 100%)',
+      },
+      className: 'toast-loading',
     },
-  }), []);
+  }), [toastStyles]);
 
   // Responsive container positioning
   const containerStyle = useMemo(() => ({
@@ -408,19 +322,24 @@ const ToasterConfig = memo(() => {
 });
 
 // Enhanced Layout with skip-to-content and focus management
-const Layout = memo(({ children }) => (
-  <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200 pt-[68px]">
-    <a href="#main-content" className="sr-only focus:not-sr-only absolute z-50 left-2 top-2 bg-blue-600 text-white px-4 py-2 rounded transition">Skip to main content</a>
-    <ToasterConfig />
-    <Navbar />
-    <main id="main-content" tabIndex={-1} className="flex-grow outline-none">
-      <Suspense fallback={<LoadingSpinner />}>
-        {children}
-      </Suspense>
-    </main>
-    <Footer />
-  </div>
-))
+const Layout = memo(({ children }) => {
+  const location = useLocation();
+  const isLanding = location.pathname === '/';
+
+  return (
+    <div className={`flex flex-col min-h-screen bg-gray-50 dark:bg-black transition-colors duration-200 ${isLanding ? '' : 'pt-[68px]'}`}>
+      <a href="#main-content" className="sr-only focus:not-sr-only absolute z-50 left-2 top-2 bg-blue-600 text-white px-4 py-2 rounded transition">Skip to main content</a>
+      <ToasterConfig />
+      <Navbar />
+      <main id="main-content" tabIndex={-1} className="flex-grow outline-none">
+        <Suspense fallback={<LoadingSpinner />}>
+          {children}
+        </Suspense>
+      </main>
+      <Footer />
+    </div>
+  );
+})
 
 // Route change handler with analytics and improved prefetching
 const RouteChangeHandler = memo(() => {
@@ -452,11 +371,6 @@ const RouteChangeHandler = memo(() => {
   return null
 })
 
-LoadingSpinner.displayName = 'LoadingSpinner';
-ToasterConfig.displayName = 'ToasterConfig';
-Layout.displayName = 'Layout';
-RouteChangeHandler.displayName = 'RouteChangeHandler';
-
 // Router future flags
 const router = {
   future: {
@@ -466,14 +380,6 @@ const router = {
 }
 
 const App = () => {
-  return (
-    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-      <AppContent />
-    </GoogleOAuthProvider>
-  );
-};
-
-const AppContent = () => {
   // Handle initial theme load and accessibility focus
   useEffect(() => {
     // Add no-transition class during initial load
@@ -516,133 +422,27 @@ const AppContent = () => {
   }, [])
 
   // Advanced Route Configuration with Enhanced Performance, Security, and UX
-  const routeConfig = useMemo(() => {
-    // Validate that all components are defined
-    const validateComponent = (component, name) => {
-      if (!component) {
-        console.error(`Component ${name} is undefined`);
-        return false;
-      }
-      return true;
-    };
-
-    const publicRoutes = [
+  const routeConfig = useMemo(() => ({
+    public: [
       { path: '/', element: LandingPage, priority: 'critical' },
       { path: '/about', element: AboutUs, priority: 'normal' },
       { path: '/contact', element: ContactUs, priority: 'normal' },
       { path: '/polls', element: AvailablePolls, priority: 'high' },
-      { path: '/vote/:pollId', element: VotingPage, priority: 'high', protected: 'voting' },
+      { path: '/vote/:pollId', element: VotingPage, priority: 'high' },
       { path: '/login', element: LoginPage, priority: 'high' },
-      { path: '/login/verify', element: MagicLinkVerifyPage, priority: 'high' },
-      { path: '/register', element: () => <Navigate to="/login" replace />, priority: 'low' },
-      { path: '/profile', element: ProfilePage, priority: 'normal' },
-      { path: '/privacy-policy', element: PrivacyPolicy, priority: 'normal' },
-      { path: '/terms-of-service', element: TermsOfService, priority: 'normal' },
-      { path: '/cookies-policy', element: CookiesPolicy, priority: 'normal' },
-      { path: '/accessibility-statement', element: AccessibilityStatement, priority: 'normal' },
-      { path: '/auth-success', element: AuthSuccessPage, priority: 'high' },
-      { path: '/auth-error', element: AuthErrorPage, priority: 'high' },
-
-      // Product pages
-      { path: '/enterprise', element: Enterprise, priority: 'normal' },
-      { path: '/changelog', element: Changelog, priority: 'normal' },
-
-      // Resources pages
-      { path: '/documentation', element: Documentation, priority: 'normal' },
-      { path: '/guides', element: Guides, priority: 'normal' },
-      { path: '/api-reference', element: ApiReference, priority: 'normal' },
-      { path: '/community', element: Community, priority: 'normal' },
-      { path: '/status', element: Status, priority: 'normal' },
-
-      { path: '/nominate', element: NominationPage, priority: 'normal', protected: true },
-      // Company pages
-      { path: '/blog', element: Blog, priority: 'normal' },
-      { path: '/careers', element: Careers, priority: 'normal' },
-      { path: '/partners', element: Partners, priority: 'normal' }
-    ].filter(route => validateComponent(route.element, route.path));
-
-    const adminRoutes = [
+      { path: '/register', element: RegisterPage, priority: 'high' },
+      { path: '/profile', element: ProfilePage, priority: 'normal' }
+    ],
+    admin: [
       { path: '/admin-login', element: AdminLogin, priority: 'normal' },
-      // AdminNominations is handled within AdminPage via /admin/*
       { path: '/admin/*', element: AdminPage, protected: true, priority: 'high' }
-    ].filter(route => validateComponent(route.element, route.path));
-
-    return {
-      public: publicRoutes,
-      admin: adminRoutes
-    };
-  }, []);
+    ]
+  }), []);
 
   // Enhanced route rendering with progressive loading, error boundaries, and analytics
   const renderRoutes = useCallback(() => {
-    // Debug route configuration in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Route configuration:', {
-        public: routeConfig.public.length,
-        admin: routeConfig.admin.length,
-        total: routeConfig.public.length + routeConfig.admin.length
-      });
-    }
-
-    const createRouteElement = (routeData) => {
-      const { element: Component, protected: isProtected, priority, path } = routeData;
-
-      // Enhanced safety check: ensure Component is defined and log details
-      if (!Component) {
-        console.error('Component is undefined for route:', routeData);
-        return null;
-      }
-
-      // Additional validation: ensure Component is a valid React component
-      if (typeof Component !== 'function' && typeof Component !== 'object') {
-        console.error('Invalid component type for route:', routeData, 'Component:', Component);
-        return null;
-      }
-
-      // Handle React.lazy components specifically
-      if (Component && Component.$$typeof === Symbol.for('react.lazy')) {
-        // For lazy components, we need to handle them differently
-        // Don't try to modify read-only properties
-
-        // Validate that the lazy component is properly structured
-        if (typeof Component !== 'function' && typeof Component !== 'object') {
-          console.error('Invalid lazy component structure:', Component);
-          // Create a safe replacement component
-          const SafeComponent = () => (
-            <div className="flex items-center justify-center min-h-[200px] text-red-500">
-              Invalid component structure for {path}
-            </div>
-          );
-          SafeComponent.displayName = `SafeComponent_${path?.replace(/[^a-zA-Z0-9]/g, '_') || 'Unknown'}`;
-          SafeComponent.$$typeof = Symbol.for('react.element');
-          return <SafeComponent />;
-        }
-      }
-
-      // Final safety check - ensure Component is a valid React component
-      if (!Component || (typeof Component !== 'function' && typeof Component !== 'object')) {
-        console.error('Component is not a valid React component:', Component);
-        const SafeComponent = () => (
-          <div className="flex items-center justify-center min-h-[200px] text-red-500">
-            Invalid component for {path}
-          </div>
-        );
-        SafeComponent.displayName = `SafeComponent_${path?.replace(/[^a-zA-Z0-9]/g, '_') || 'Unknown'}`;
-        SafeComponent.$$typeof = Symbol.for('react.element');
-        return <SafeComponent />;
-      }
-
-      // Log component details for debugging (only when there are issues)
-      if (process.env.NODE_ENV === 'development' && (!Component?.displayName && !Component?.name)) {
-        console.log('Creating route element:', {
-          path: path,
-          component: Component,
-          displayName: Component?.displayName,
-          name: Component?.name,
-          type: typeof Component,
-          isReactComponent: Component?.$$typeof === Symbol.for('react.element') || typeof Component === 'function'
-        });
-      }
+    const createRouteElement = (routeConfig) => {
+      const { element: Component, protected: isProtected, priority } = routeConfig;
 
       // Wrap component with error boundary and performance monitoring
       const EnhancedComponent = memo(() => {
@@ -703,207 +503,219 @@ const AppContent = () => {
                   </motion.div>
                 </div>
               }
-              onError={(error, errorInfo) => {
-                console.error('Component error:', error, errorInfo);
-              }}
             >
-              {Component ? (
-                <React.Suspense fallback={
-                  <div className="flex items-center justify-center min-h-[200px]">
-                    <motion.div
-                      className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full"
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    />
-                  </div>
-                }>
-                  {(() => {
-                    try {
-                      // Final validation before rendering
-                      if (!Component) {
-                        throw new Error('Component is undefined');
-                      }
-
-                      // Validate that the component can be called
-                      if (Component.$$typeof === Symbol.for('react.lazy')) {
-                        // For lazy components, we need to ensure they're properly loaded
-                        if (!Component._init || !Component._payload) {
-                          throw new Error('Lazy component not properly initialized');
-                        }
-                      }
-
-                      // Render the component directly without trying to modify its properties
-                      return <Component />;
-                    } catch (error) {
-                      console.error('Error preparing component for rendering:', error);
-                      const ErrorComponent = () => (
-                        <div className="flex items-center justify-center min-h-[200px] text-red-500">
-                          <div className="text-center">
-                            <div className="text-2xl mb-2">⚠️</div>
-                            <div>Component Error</div>
-                            <div className="text-sm text-gray-500 mt-1">{error.message}</div>
-                          </div>
-                        </div>
-                      );
-                      ErrorComponent.displayName = 'ErrorComponent';
-                      return <ErrorComponent />;
-                    }
-                  })()}
-                </React.Suspense>
-              ) : (
-                <div className="flex items-center justify-center min-h-[200px] text-gray-500">
-                  Component not found
-                </div>
-              )}
+              <Component />
             </ErrorBoundary>
           </Suspense>
         );
       });
 
-      // Set displayName for debugging (don't try to modify read-only properties)
-      const componentName = Component?.displayName || Component?.name || 'Unknown';
-      try {
-        EnhancedComponent.displayName = `EnhancedComponent(${componentName})`;
-      } catch (e) {
-        // Ignore if we can't set displayName
-      }
-
-      // Additional safety check for displayName (just log, don't modify)
-      if (!Component.displayName && !Component.name) {
-        console.warn('Component missing both displayName and name:', Component);
-      }
-
-      // Handle different types of protection
-      if (isProtected === true) {
-        return (
-          <ProtectedAdminRoute key={path}>
-            <EnhancedComponent />
-          </ProtectedAdminRoute>
-        );
-      } else if (isProtected === 'voting') {
-        return (
-          <ProtectedVotingRoute key={path}>
-            <EnhancedComponent />
-          </ProtectedVotingRoute>
-        );
-      } else {
-        return <EnhancedComponent key={path} />;
-      }
+      return isProtected ? (
+        <ProtectedAdminRoute key={routeConfig.path}>
+          <EnhancedComponent />
+        </ProtectedAdminRoute>
+      ) : (
+        <EnhancedComponent key={routeConfig.path} />
+      );
     };
 
     return (
       <Routes>
         {/* Public Routes with Enhanced Performance */}
-        {routeConfig.public.map(({ path, element: Element, priority, protected: isProtected }) => {
-          // Skip routes with undefined paths
-          if (!path) {
-            console.warn('Route with undefined path skipped:', { element: Element, priority, protected: isProtected });
-            return null;
-          }
+        {routeConfig.public.map(({ path, element: Element, priority }) => (
+          <Route
+            key={path}
+            path={path}
+            element={createRouteElement({ element: Element, priority })}
+            errorElement={
+              <div className="relative flex items-center justify-center min-h-screen overflow-hidden">
+                {/* Animated Background with Particle Effect */}
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-50/80 via-blue-50/40 to-indigo-50/30 dark:from-slate-900/80 dark:via-slate-800/40 dark:to-slate-900/30">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.1),transparent_50%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.05),transparent_50%)]" />
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(99,102,241,0.08),transparent_40%)] dark:bg-[radial-gradient(circle_at_80%_20%,rgba(99,102,241,0.04),transparent_40%)]" />
+                </div>
 
-          try {
-            return (
-              <Route
-                key={path}
-                path={path}
-                element={createRouteElement({ element: Element, protected: isProtected, priority, path })}
-                errorElement={
-                  <div className="relative flex items-center justify-center min-h-screen overflow-hidden">
-                    {/* Animated Background with Particle Effect */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-slate-50/80 via-blue-50/40 to-indigo-50/30 dark:from-slate-900/80 dark:via-slate-800/40 dark:to-slate-900/30">
-                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.1),transparent_50%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.05),transparent_50%)]" />
-                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(99,102,241,0.08),transparent_40%)] dark:bg-[radial-gradient(circle_at_80%_20%,rgba(99,102,241,0.04),transparent_40%)]" />
-                    </div>
+                {/* Floating Particles Animation */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                  {[...Array(6)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="absolute w-2 h-2 bg-blue-400/20 dark:bg-blue-500/20 rounded-full"
+                      initial={{
+                        x: Math.random() * window.innerWidth,
+                        y: Math.random() * window.innerHeight,
+                        opacity: 0
+                      }}
+                      animate={{
+                        x: Math.random() * window.innerWidth,
+                        y: Math.random() * window.innerHeight,
+                        opacity: [0, 1, 0]
+                      }}
+                      transition={{
+                        duration: 8 + Math.random() * 4,
+                        repeat: Infinity,
+                        ease: "linear",
+                        delay: i * 0.5
+                      }}
+                    />
+                  ))}
+                </div>
 
-                    {/* Floating Particles Animation */}
-                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                      {[...Array(6)].map((_, i) => (
-                        <motion.div
-                          key={i}
-                          className="absolute w-2 h-2 bg-blue-400/20 dark:bg-blue-500/20 rounded-full"
-                          initial={{
-                            x: Math.random() * window.innerWidth,
-                            y: Math.random() * window.innerHeight,
-                            opacity: 0
-                          }}
+                {/* Main Error Content */}
+                <motion.div
+                  initial={{ opacity: 0, y: 30, scale: 0.9, rotateX: -15 }}
+                  animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
+                  transition={{
+                    duration: 0.8,
+                    ease: [0.25, 0.46, 0.45, 0.94],
+                    staggerChildren: 0.15
+                  }}
+                  className="relative z-10 text-center max-w-md mx-auto p-8 backdrop-blur-sm bg-white/70 dark:bg-slate-900/70 rounded-2xl border border-white/20 dark:border-slate-700/20 shadow-2xl"
+                >
+                  {/* Animated Error Icon */}
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.5, rotate: -180 }}
+                    animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                    transition={{
+                      delay: 0.3,
+                      type: "spring",
+                      stiffness: 300,
+                      damping: 15
+                    }}
+                    className="mb-8"
+                  >
+                    <div className="relative w-20 h-20 mx-auto mb-6">
+                      {/* Outer Ring */}
+                      <motion.div
+                        className="absolute inset-0 rounded-full border-4 border-red-200 dark:border-red-800/30"
+                        animate={{
+                          scale: [1, 1.1, 1],
+                          opacity: [0.5, 0.8, 0.5]
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut"
+                        }}
+                      />
+                      {/* Inner Circle */}
+                      <div className="absolute inset-2 rounded-full bg-gradient-to-br from-red-100 via-red-50 to-red-200 dark:from-red-900/40 dark:via-red-800/20 dark:to-red-900/40 flex items-center justify-center shadow-inner">
+                        <motion.span
+                          className="text-3xl font-bold text-red-600 dark:text-red-400"
                           animate={{
-                            x: Math.random() * window.innerWidth,
-                            y: Math.random() * window.innerHeight,
-                            opacity: [0, 1, 0]
+                            scale: [1, 1.1, 1],
+                            rotate: [0, 5, -5, 0]
                           }}
                           transition={{
-                            duration: Math.random() * 10 + 10,
+                            duration: 3,
                             repeat: Infinity,
-                            ease: "linear"
+                            ease: "easeInOut"
                           }}
-                        />
+                        >
+                          404
+                        </motion.span>
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  {/* Error Title with Typing Effect */}
+                  <motion.h2
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-3 tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent"
+                  >
+                    Page Not Found
+                  </motion.h2>
+
+                  {/* Error Description with Enhanced Typography */}
+                  <motion.p
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.7 }}
+                    className="text-base text-slate-600 dark:text-slate-400 mb-8 leading-relaxed font-medium"
+                  >
+                    The page you're looking for doesn't exist or has been moved to a new location.
+                  </motion.p>
+
+                  {/* Action Buttons */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.9 }}
+                    className="space-y-4"
+                  >
+                    {/* Primary Action */}
+                    <Link
+                      to="/"
+                      className="group inline-flex items-center justify-center w-full px-8 py-4 bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 hover:from-blue-700 hover:via-blue-800 hover:to-blue-900 text-white text-base font-semibold rounded-xl transition-all duration-500 transform hover:scale-105 hover:shadow-2xl shadow-lg border border-blue-500/20"
+                    >
+                      <motion.div
+                        className="flex items-center"
+                        whileHover={{ x: -3 }}
+                        transition={{ type: "spring", stiffness: 400 }}
+                      >
+                        <ArrowLeft className="w-5 h-5 mr-3 transition-transform group-hover:-translate-x-1" />
+                        Return Home
+                      </motion.div>
+                    </Link>
+
+                    {/* Secondary Action */}
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => window.history.back()}
+                      className="group inline-flex items-center justify-center w-full px-8 py-3 bg-gradient-to-r from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 hover:from-slate-200 hover:to-slate-300 dark:hover:from-slate-700 dark:hover:to-slate-600 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-xl transition-all duration-300 border border-slate-300/50 dark:border-slate-600/50"
+                    >
+                      <svg className="w-4 h-4 mr-2 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                      </svg>
+                      Go Back
+                    </motion.button>
+                  </motion.div>
+
+                  {/* Helpful Suggestions */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1.1 }}
+                    className="mt-8 pt-6 border-t border-slate-200/50 dark:border-slate-700/50"
+                  >
+                    <p className="text-xs text-slate-500 dark:text-slate-500 mb-3 font-medium">
+                      Need help? Try these:
+                    </p>
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      {['Home', 'Polls', 'About', 'Contact'].map((item, index) => (
+                        <motion.div
+                          key={item}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 1.2 + index * 0.1 }}
+                        >
+                          <Link
+                            to={item === 'Home' ? '/' : `/${item.toLowerCase()}`}
+                            className="px-3 py-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors"
+                          >
+                            {item}
+                          </Link>
+                        </motion.div>
                       ))}
                     </div>
-
-                    {/* Error Content */}
-                    <div className="relative z-10 text-center">
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="max-w-md mx-auto p-8 bg-white/90 dark:bg-gray-800/90 rounded-2xl shadow-2xl backdrop-blur-md border border-gray-200 dark:border-gray-700"
-                      >
-                        <div className="text-6xl mb-4">🚧</div>
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                          Route Error
-                        </h1>
-                        <p className="text-gray-600 dark:text-gray-300 mb-6">
-                          Something went wrong with this route. Please try navigating to a different page.
-                        </p>
-                        <Link
-                          to="/"
-                          className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl"
-                        >
-                          <ArrowLeft className="w-5 h-5 mr-2" />
-                          Go Home
-                        </Link>
-                      </motion.div>
-                    </div>
-                  </div>
-                }
-              />
-            );
-          } catch (error) {
-            console.error(`Error creating route for ${path}:`, error, {
-              component: Element,
-              componentType: typeof Element,
-              hasDisplayName: !!Element?.displayName,
-              hasName: !!Element?.name
-            });
-            return null;
-          }
-        })}
+                  </motion.div>
+                </motion.div>
+              </div>
+            }
+          />
+        ))}
 
         {/* Admin Routes with Enhanced Security */}
-        {routeConfig.admin.map(({ path, element: Element, protected: isProtected, priority }) => {
-          // Skip routes with undefined paths
-          if (!path) {
-            console.warn('Admin route with undefined path skipped:', { element: Element, priority, protected: isProtected });
-            return null;
-          }
-
-          try {
-            return (
-              <Route
-                key={path}
-                path={path}
-                element={createRouteElement({ element: Element, protected: isProtected, priority, path })}
-              />
-            );
-          } catch (error) {
-            console.error(`Error creating admin route for ${path}:`, error, {
-              component: Element,
-              componentType: typeof Element,
-              hasDisplayName: !!Element?.displayName,
-              hasName: !!Element?.name
-            });
-            return null;
-          }
-        })}
+        {routeConfig.admin.map(({ path, element: Element, protected: isProtected, priority }) => (
+          <Route
+            key={path}
+            path={path}
+            element={createRouteElement({ element: Element, protected: isProtected, priority })}
+          />
+        ))}
 
         {/* Advanced 404 Fallback with Smart Redirect */}
         <Route
@@ -959,47 +771,6 @@ const AppContent = () => {
     );
   }, [routeConfig]);
 
-  // Add global error handler for displayName issues
-  useEffect(() => {
-    // Override React's internal getDisplayNameForFiber function
-    if (typeof window !== 'undefined') {
-      // Create a safe version that never throws
-      window.getDisplayNameForFiber = (fiber) => {
-        try {
-          if (fiber && fiber.type) {
-            // Ensure the type has the required properties
-            if (fiber.type && typeof fiber.type === 'object') {
-              return fiber.type.displayName || fiber.type.name || 'Unknown';
-            } else if (typeof fiber.type === 'function') {
-              return fiber.type.displayName || fiber.type.name || 'Function';
-            }
-          }
-          return 'Unknown';
-        } catch (error) {
-          console.warn('Error getting display name for fiber:', error);
-          return 'Unknown';
-        }
-      };
-    }
-
-    // Add error event listener for unhandled errors
-    const handleError = (event) => {
-      if (event.error && event.error.message && event.error.message.includes('displayName')) {
-        event.preventDefault();
-        console.warn('DisplayName error prevented:', event.error);
-      }
-    };
-
-    window.addEventListener('error', handleError);
-
-    return () => {
-      if (typeof window !== 'undefined') {
-        // Remove error listener
-        window.removeEventListener('error', handleError);
-      }
-    };
-  }, []);
-
   return (
     <ErrorBoundary
       FallbackComponent={({ error, resetErrorBoundary }) => (
@@ -1017,25 +788,17 @@ const AppContent = () => {
             >
               <div className="text-6xl mb-4">⚠️</div>
               <h1 className="text-3xl font-bold text-red-900 dark:text-red-100 mb-2">
-                Application Error
+                Something went wrong
               </h1>
               <p className="text-red-600 dark:text-red-300 mb-4">
                 {error?.message || 'An unexpected error occurred'}
               </p>
-              <div className="space-y-3">
-                <button
-                  onClick={resetErrorBoundary}
-                  className="w-full px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 transform hover:scale-105"
-                >
-                  Try Again
-                </button>
-                <button
-                  onClick={() => window.location.reload()}
-                  className="w-full px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-200"
-                >
-                  Reload Page
-                </button>
-              </div>
+              <button
+                onClick={resetErrorBoundary}
+                className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 transform hover:scale-105"
+              >
+                Try Again
+              </button>
             </motion.div>
           </div>
         </motion.div>
@@ -1088,5 +851,4 @@ const AppContent = () => {
   )
 }
 
-App.displayName = 'App';
 export default memo(App)

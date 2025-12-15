@@ -26,6 +26,23 @@ const registerUser = async (req, res) => {
             return res.status(400).json({ error: 'Only @iitbbs.ac.in emails are allowed.' });
         }
 
+        // Strict ID Validation: Check for student ID format
+        const idRegex = /^([a-z]{1,2})?(\d{2})([a-z]{2})(\d+)$/i; // Matches s18cs01, 20cs01, etc.
+        const localPart = email.split('@')[0];
+
+        // Allow 'admin' or 'gymkhana' or similar official IDs, but enforce format for students
+        const restrictedNames = ['admin', 'gymkhana', 'election', 'president'];
+        const isOfficial = restrictedNames.some(name => localPart.includes(name));
+
+        if (!isOfficial && !idRegex.test(localPart)) {
+            // Fallback for valid non-student staff/faculty emails if needed (e.g. name.surname) which usually contain dots
+            // But for now, we enforce strict student ID or known official accounts as per requirements.
+            // If dot is present, it might be faculty/staff.
+            if (!localPart.includes('.')) {
+                return res.status(400).json({ error: 'Invalid Student ID Format. Use your Roll Number based email.' });
+            }
+        }
+
         // Check if user exists
         const userExists = await User.findOne({ emailHash: hash(email.toLowerCase()) });
 

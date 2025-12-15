@@ -1,64 +1,222 @@
-import React, { useState } from 'react';
-import FooterBackground from './FooterBackground';
-import Newsletter from './Newsletter';
-import FooterLinks from './FooterLinks';
-import FooterBottom from './FooterBottom';
+import React, { useRef } from 'react';
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import { Twitter, Github, Linkedin, Globe, ArrowUpRight, Heart, Shield, CheckCircle } from 'lucide-react';
+import { useTheme } from '../../../context/ThemeContext';
 
-const Footer = () => {
-    const [modalOpen, setModalOpen] = useState(false);
-    const [modalContent, setModalContent] = useState('');
+// --- DATA ---
+const FOOTER_LINKS = [
+    {
+        title: "Product",
+        links: [
+            { label: "Features", href: "#" },
+            { label: "Security", href: "#security" },
+            { label: "Integrations", href: "#" },
+            { label: "Enterprise", href: "#" },
+            { label: "Changelog", href: "#" },
+        ]
+    },
+    {
+        title: "Resources",
+        links: [
+            { label: "Documentation", href: "#" },
+            { label: "API Reference", href: "#" },
+            { label: "Community", href: "#" },
+            { label: "Case Studies", href: "#" },
+            { label: "Help Center", href: "#" },
+        ]
+    },
+    {
+        title: "Company",
+        links: [
+            { label: "About", href: "#" },
+            { label: "Careers", href: "#" },
+            { label: "Blog", href: "#" },
+            { label: "Contact", href: "#" },
+            { label: "Partners", href: "#" },
+        ]
+    },
+    {
+        title: "Legal",
+        links: [
+            { label: "Privacy Policy", href: "#" },
+            { label: "Terms of Service", href: "#" },
+            { label: "Cookie Policy", href: "#" },
+            { label: "Security Audit", href: "#" },
+        ]
+    }
+];
 
-    const handleStubClick = (label) => (e) => {
-        e.preventDefault();
-        setModalContent(label);
-        setModalOpen(true);
-    };
+const SOCIALS = [
+    { icon: Twitter, href: "#", label: "Twitter" },
+    { icon: Github, href: "#", label: "GitHub" },
+    { icon: Linkedin, href: "#", label: "LinkedIn" },
+    { icon: Globe, href: "#", label: "Website" },
+];
+
+const MagneticButton = ({ children, className }) => {
+    const ref = useRef(null);
+    const { mouseX, mouseY } = { mouseX: 0, mouseY: 0 }; // Simplified for now, can be complex if needed
 
     return (
-        <footer className="bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800" role="contentinfo" aria-label="Footer" tabIndex={0}>
-            {/* Skip to content link for keyboard users */}
-            <a href="#main-content" className="sr-only focus:not-sr-only absolute top-2 left-2 z-50 bg-blue-600 text-white px-4 py-2 rounded focus-visible:ring-2 focus-visible:ring-blue-400/70" tabIndex={0}>Skip to main content</a>
-            {/* Top Border Gradient */}
-            <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500"></div>
+        <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            className={className}
+        >
+            {children}
+        </motion.button>
+    );
+};
 
-            <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-8 sm:py-12">
-                {/* Newsletter Section */}
-                <div className="mb-8 sm:mb-12 p-4 sm:p-8 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 relative overflow-hidden">
-                    <FooterBackground />
-                    <Newsletter />
-                </div>
+const Footer = () => {
+    const containerRef = useRef(null);
+    const { scrollYProgress } = useScroll({
+        target: containerRef,
+        offset: ["start end", "end end"]
+    });
 
-                {/* Main Footer Content */}
-                <FooterLinks handleStubClick={handleStubClick} />
+    const isDarkMode = true; // Force dark mode aesthetic specifically for footer if desired, or use context
+    // const { isDarkMode } = useTheme(); 
 
-                {/* Enhanced Bottom Section */}
-                <FooterBottom />
+    const y = useTransform(scrollYProgress, [0, 1], [-100, 0]);
+    const opacity = useTransform(scrollYProgress, [0, 0.5], [0, 1]);
+
+    return (
+        <footer
+            ref={containerRef}
+            className="relative w-full bg-white dark:bg-black text-gray-900 dark:text-white pt-32 pb-12 px-4 md:px-16 overflow-hidden z-40 border-t border-gray-100 dark:border-zinc-900"
+        >
+            {/* Massive Parallax Text Background */}
+            <div className="absolute top-0 left-0 w-full overflow-hidden pointer-events-none opacity-[0.03] dark:opacity-[0.05] select-none">
+                <motion.div style={{ y }} className="whitespace-nowrap">
+                    <span className="text-[20vw] font-black tracking-tighter leading-none">
+                        VOTELY SECURE VOTING
+                    </span>
+                </motion.div>
             </div>
 
-            {modalOpen && (
-                <div
-                    className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center"
-                    style={{ pointerEvents: 'auto' }}
-                    onClick={() => setModalOpen(false)}
-                >
-                    <div
-                        className="bg-white dark:bg-gray-900 rounded-xl p-8 max-w-md w-full shadow-lg relative mx-4"
-                        onClick={e => e.stopPropagation()}
-                    >
-                        <button
-                            className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 dark:hover:text-white"
-                            onClick={() => setModalOpen(false)}
-                            aria-label="Close modal"
+            <div className="max-w-8xl mx-auto relative z-10 flex flex-col h-full">
+
+                {/* Top Section: CTA & Logo */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-24 gap-12">
+                    <div className="max-w-2xl">
+                        <motion.h2
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.8 }}
+                            className="text-6xl md:text-8xl font-bold tracking-tighter mb-8 leading-[0.9]"
                         >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                        <h2 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">{modalContent}</h2>
-                        <p className="mb-4 text-gray-600 dark:text-gray-300">This page is under construction. Please check back soon!</p>
+                            Ready to <br />
+                            <span className="text-gray-400 dark:text-zinc-600">
+                                upgrade democracy?
+                            </span>
+                        </motion.h2>
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.2, duration: 0.8 }}
+                            className="flex flex-wrap gap-4"
+                        >
+                            <button className="group relative px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-black rounded-full font-bold text-lg tracking-tight overflow-hidden hover:scale-105 transition-transform duration-300">
+                                <span className="relative z-10 flex items-center gap-2">
+                                    Start a Poll
+                                    <ArrowUpRight className="w-5 h-5 group-hover:rotate-45 transition-transform duration-300" />
+                                </span>
+                            </button>
+                            <button className="px-8 py-4 border border-gray-200 dark:border-zinc-800 rounded-full font-medium text-lg hover:bg-gray-50 dark:hover:bg-zinc-900 transition-colors duration-300">
+                                Contact Sales
+                            </button>
+                        </motion.div>
+                    </div>
+
+                    {/* Status Indicator */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        whileInView={{ opacity: 1 }}
+                        viewport={{ once: true }}
+                        className="flex items-center gap-3 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20 backdrop-blur-sm"
+                    >
+                        <span className="relative flex h-3 w-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                        </span>
+                        <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                            All Systems Operational
+                        </span>
+                    </motion.div>
+                </div>
+
+                {/* Divider */}
+                <div className="w-full h-px bg-gray-200 dark:bg-zinc-800 mb-20" />
+
+                {/* Main Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 mb-24">
+                    {/* Branding Column */}
+                    <div className="col-span-2 lg:col-span-1">
+                        <div className="flex items-center gap-2 mb-6">
+                            <div className="w-8 h-8 bg-black dark:bg-white rounded-lg flex items-center justify-center">
+                                <span className="text-white dark:text-black font-bold text-xl">V</span>
+                            </div>
+                            <span className="font-bold text-2xl tracking-tight">Votely</span>
+                        </div>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-6">
+                            Cryptographically secure voting infrastructure for the modern internet. Built for scale, security, and transparency.
+                        </p>
+                        <div className="flex gap-4">
+                            {SOCIALS.map((social, idx) => (
+                                <a
+                                    key={idx}
+                                    href={social.href}
+                                    className="w-10 h-10 rounded-full bg-gray-100 dark:bg-zinc-900 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-zinc-800 hover:text-black dark:hover:text-white transition-all duration-300"
+                                    aria-label={social.label}
+                                >
+                                    <social.icon className="w-5 h-5" />
+                                </a>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Links Columns */}
+                    {FOOTER_LINKS.map((group, idx) => (
+                        <div key={idx} className="col-span-1">
+                            <h4 className="font-bold text-gray-900 dark:text-white mb-6 tracking-wide">
+                                {group.title}
+                            </h4>
+                            <ul className="space-y-4">
+                                {group.links.map((link, linkIdx) => (
+                                    <li key={linkIdx}>
+                                        <a
+                                            href={link.href}
+                                            className="text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm font-medium flex items-center gap-1 group"
+                                        >
+                                            {link.label}
+                                            {/* Subtle arrow on hover */}
+                                            <span className="opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
+                                                <ArrowUpRight className="w-3 h-3" />
+                                            </span>
+                                        </a>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Bottom Bar */}
+                <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-8 border-t border-gray-200 dark:border-zinc-800">
+                    <p className="text-gray-500 dark:text-gray-500 text-sm">
+                        © {new Date().getFullYear()} Votely Inc. All rights reserved.
+                    </p>
+                    <div className="flex items-center gap-6">
+                        <span className="text-sm text-gray-500 dark:text-gray-500 flex items-center gap-1">
+                            Designed with <Heart className="w-4 h-4 text-red-500 fill-red-500" /> by Anurag
+                        </span>
                     </div>
                 </div>
-            )}
+
+            </div>
         </footer>
     );
 };
