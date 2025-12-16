@@ -41,7 +41,7 @@ const NominationPage = () => {
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8"
+                className="mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8"
             >
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Nomination Application</h1>
                 <p className="text-gray-600 dark:text-gray-300 mb-8">

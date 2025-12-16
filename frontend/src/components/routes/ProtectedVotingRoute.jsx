@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import toast from 'react-hot-toast';
+import { toast } from '../../utils/toastUtils';
 import { Shield, CheckCircle, AlertCircle, Loader2, Eye } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext';

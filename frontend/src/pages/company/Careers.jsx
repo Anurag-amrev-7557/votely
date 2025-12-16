@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
+import {
   BriefcaseIcon,
   MapPinIcon,
   ClockIcon,
@@ -214,8 +214,8 @@ export default function Careers() {
   const [selectedDepartment, setSelectedDepartment] = useState('All Departments');
   const [selectedJob, setSelectedJob] = useState(null);
 
-  const filteredJobs = selectedDepartment === 'All Departments' 
-    ? jobOpenings 
+  const filteredJobs = selectedDepartment === 'All Departments'
+    ? jobOpenings
     : jobOpenings.filter(job => job.department === selectedDepartment);
 
   return (
@@ -289,7 +289,7 @@ export default function Careers() {
               transition={{ delay: 0.4 }}
               className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto"
             >
-              Join our mission to make voting accessible, secure, and transparent for everyone. 
+              Join our mission to make voting accessible, secure, and transparent for everyone.
               Help us build technology that strengthens democracy.
             </motion.p>
 
@@ -332,10 +332,11 @@ export default function Careers() {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8" role="list">
             {companyValues.map((value, index) => (
               <motion.div
                 key={value.title}
+                role="listitem"
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: index * 0.1 }}
@@ -375,10 +376,11 @@ export default function Careers() {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8" role="list">
             {benefits.map((benefit, index) => (
               <motion.div
                 key={benefit.title}
+                role="listitem"
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: index * 0.1 }}
@@ -432,11 +434,10 @@ export default function Careers() {
               <button
                 key={department}
                 onClick={() => setSelectedDepartment(department)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                  selectedDepartment === department
-                    ? 'bg-blue-600 text-white shadow-lg'
-                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600'
-                }`}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${selectedDepartment === department
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600'
+                  }`}
               >
                 {department}
               </button>
@@ -444,10 +445,11 @@ export default function Careers() {
           </motion.div>
 
           {/* Job Listings */}
-          <div className="space-y-6">
+          <div className="space-y-6" role="list">
             {filteredJobs.map((job, index) => (
               <motion.div
                 key={job.id}
+                role="listitem"
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: index * 0.1 }}
@@ -465,15 +467,15 @@ export default function Careers() {
                           {job.type}
                         </span>
                       </div>
-                      
+
                       <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                         {job.title}
                       </h3>
-                      
+
                       <p className="text-gray-600 dark:text-gray-300 mb-4">
                         {job.description}
                       </p>
-                      
+
                       <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-4">
                         <span className="flex items-center gap-1">
                           <MapPinIcon className="w-4 h-4" />
@@ -488,7 +490,7 @@ export default function Careers() {
                           {job.salary}
                         </span>
                       </div>
-                      
+
                       <div className="flex flex-wrap gap-2 mb-4">
                         {job.tags.map((tag) => (
                           <span
@@ -500,7 +502,7 @@ export default function Careers() {
                         ))}
                       </div>
                     </div>
-                    
+
                     <button
                       onClick={() => setSelectedJob(selectedJob === job.id ? null : job.id)}
                       className="ml-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
@@ -509,7 +511,7 @@ export default function Careers() {
                       <ChevronDownIcon className={`w-4 h-4 transition-transform ${selectedJob === job.id ? 'rotate-180' : ''}`} />
                     </button>
                   </div>
-                  
+
                   {/* Job Details */}
                   {selectedJob === job.id && (
                     <motion.div
@@ -531,7 +533,7 @@ export default function Careers() {
                             ))}
                           </ul>
                         </div>
-                        
+
                         <div>
                           <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Benefits</h4>
                           <ul className="space-y-2">
@@ -544,7 +546,7 @@ export default function Careers() {
                           </ul>
                         </div>
                       </div>
-                      
+
                       <div className="mt-6 flex flex-col sm:flex-row gap-3">
                         <button className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105">
                           Apply Now
@@ -560,7 +562,7 @@ export default function Careers() {
               </motion.div>
             ))}
           </div>
-          
+
           {filteredJobs.length === 0 && (
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -596,11 +598,11 @@ export default function Careers() {
               Join our team and help build technology that strengthens democracy for everyone.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="inline-flex items-center gap-3 px-8 py-4 bg-white text-blue-600 font-semibold rounded-xl hover:bg-gray-100 transition-all duration-300 transform hover:scale-105">
+              <button className="inline-flex items-center gap-3 px-8 py-4 bg-white text-blue-700 font-semibold rounded-xl hover:bg-gray-100 transition-all duration-300 transform hover:scale-105">
                 <BriefcaseIcon className="w-5 h-5" />
                 View All Positions
               </button>
-              <button className="inline-flex items-center gap-3 px-8 py-4 bg-transparent text-white font-semibold rounded-xl border-2 border-white hover:bg-white hover:text-blue-600 transition-all duration-300 transform hover:scale-105">
+              <button className="inline-flex items-center gap-3 px-8 py-4 bg-transparent text-white font-semibold rounded-xl border-2 border-white hover:bg-white hover:text-blue-700 transition-all duration-300 transform hover:scale-105">
                 <UserGroupIcon className="w-5 h-5" />
                 Contact Recruiting
               </button>

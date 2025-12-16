@@ -4,9 +4,53 @@ import { toast } from 'react-hot-toast';
 import debounce from 'lodash/debounce';
 import { CSVLink } from 'react-csv';
 import format from 'date-fns/format';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useMotionTemplate } from 'framer-motion';
 import { showNotification, showSuccessToast, showErrorToast, showWarningToast, showInfoToast, showLoadingToast, showCustomToast } from '../../utils/toastUtils.jsx';
-import axiosInstance from '../../utils/api/axiosConfig';
+import adminAxios from '../../utils/api/adminAxios';
+import {
+  Search,
+  Plus,
+  Filter,
+  Users,
+  Download,
+  RefreshCw,
+  Activity,
+  CheckCircle,
+  AlertCircle,
+  Clock,
+  Edit2,
+  Trash2,
+  ChevronDown,
+  ChevronUp,
+  Shield,
+  UserCircle,
+  X
+} from 'lucide-react';
+
+// --- VISUAL UTILITIES (From PollsPage) ---
+const NoiseTexture = () => (
+  <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none"
+    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}>
+  </div>
+);
+
+const SpotlightEffect = ({ mouseX, mouseY }) => (
+  <motion.div
+    className="pointer-events-none absolute -inset-px rounded-3xl opacity-0 transition duration-500 group-hover:opacity-100"
+    style={{
+      background: useMotionTemplate`radial-gradient(
+        650px circle at ${mouseX}px ${mouseY}px,
+        rgba(14, 165, 233, 0.08),
+        transparent 80%
+      )`,
+    }}
+  />
+);
+
+import { StepIndicator } from '../../components/ui/StepIndicator';
+import { CustomDropdown } from '../../components/ui/CustomDropdown';
+import { AnimatedModal } from '../../components/ui/AnimatedModal';
+import { CustomDateTimePicker } from '../../components/ui/CustomDateTimePicker'; // Added import
 
 const UsersPage = () => {
   const { isDarkMode } = useTheme();
@@ -22,9 +66,11 @@ const UsersPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState({
     dateRange: { start: '', end: '' },
     department: '',
@@ -72,9 +118,10 @@ const UsersPage = () => {
         order: sortConfig.direction
       };
 
-      const { data } = await axiosInstance.get('/users', { params });
+      const { data } = await adminAxios.get('/users', { params });
       setUsers(data.users || []);
       setTotalPages(data.totalPages || 1);
+      setTotalUsers(data.totalUsers || data.count || (data.users || []).length);
     } catch (error) {
       console.error('Failed to fetch users:', error);
       showErrorToast(error.response?.data?.message || 'Failed to load users');
@@ -168,7 +215,7 @@ const UsersPage = () => {
     try {
       if (isEditing) {
         // Update existing user
-        const { data } = await axiosInstance.put(`/users/${selectedUser.id}`, userForm);
+        const { data } = await adminAxios.put(`/users/${selectedUser.id}`, userForm);
         setUsers(users.map(user =>
           user.id === selectedUser?.id
             ? { ...user, ...data } // Merge updated data
@@ -184,7 +231,7 @@ const UsersPage = () => {
         });
       } else {
         // Create new user
-        const { data } = await axiosInstance.post('/users', {
+        const { data } = await adminAxios.post('/users', {
           ...userForm,
           password: userForm.password || 'Password123!', // Use provided password or default
         });
@@ -236,12 +283,12 @@ const UsersPage = () => {
 
   // Add these new button styles at the top of the component
   const buttonStyles = {
-    primary: `inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white 
-      bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 
+    primary: `inline-flex items-center px-4 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white 
+      bg-gray-900 dark:bg-white text-white dark:text-black hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 
       transition-all duration-200 transform hover:scale-105 active:scale-95`,
-    secondary: `inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm 
-      text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 
-      hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 
+    secondary: `inline-flex items-center px-4 py-2.5 border border-gray-300 dark:border-zinc-700 rounded-lg shadow-sm 
+      text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-zinc-800 
+      hover:bg-gray-50 dark:hover:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 
       transition-all duration-200 transform hover:scale-105 active:scale-95`,
     danger: `inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white 
       bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 
@@ -319,298 +366,323 @@ const UsersPage = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
+  // Removed early return for isLoading to prevent page flash on search/filter updates
 
   return (
-    <div role="main" aria-label="Admin users management" tabIndex={0}>
+    <div className="w-full min-h-screen p-6 md:p-8 md:pr-0 space-y-8 animate-fade-in pb-24" role="main" aria-label="Admin users management" tabIndex={0}>
       {/* Users List Section */}
-      <section role="region" aria-labelledby="admin-users-list-heading" tabIndex={0}>
-        <h2 id="admin-users-list-heading" className="sr-only">Users List</h2>
-        {/* Header Section */}
-        <div className="mb-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">User Management</h1>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Manage and monitor user accounts across your organization
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={() => {
-                  setShowModal(true);
-                  setIsEditing(false);
-                  setUserForm({
-                    name: '',
-                    email: '',
-                    role: 'user',
-                    status: 'active',
-                    phone: '',
-                    address: '',
-                    organization: '',
-                    department: '',
-                    lastLogin: '',
-                    permissions: {
-                      canCreatePolls: false,
-                      canManageUsers: false,
-                      canViewResults: true,
-                      canExportData: false
-                    }
-                  });
-                }}
-                className={buttonStyles.primary}
-              >
-                <svg className={`${iconStyles.md} mr-2`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                </svg>
-                Add User
-              </button>
-              <CSVLink
-                data={filteredUsers.map(user => ({
-                  name: user.name,
-                  email: user.email,
-                  role: user.role,
-                  status: user.status,
-                  organization: user.organization,
-                  department: user.department,
-                  lastLogin: user.lastLogin,
-                }))}
-                headers={[
-                  { label: "Name", key: "name" },
-                  { label: "Email", key: "email" },
-                  { label: "Role", key: "role" },
-                  { label: "Status", key: "status" },
-                  { label: "Organization", key: "organization" },
-                  { label: "Department", key: "department" },
-                  { label: "Last Login", key: "lastLogin" }
-                ]}
-                filename={`users-${format(new Date(), 'yyyy-MM-dd')}.csv`}
-                className={buttonStyles.secondary}
-              >
-                <svg className={`${iconStyles.md} mr-2 text-gray-500 dark:text-gray-400`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 00-1.414-1.414L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 101.414 1.414l-3 3a1 1 0 00-1.414 0l-3-3a1 1 0 000-1.414z" clipRule="evenodd" />
-                </svg>
-                Export CSV
-              </CSVLink>
-            </div>
-          </div>
+      {/* Users List Section */}
+      {/* Header Section - Redesigned with Pill Stats */}
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+        <div>
+          <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gray-600 dark:text-zinc-400 mb-2">
+            Administration
+          </h2>
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tighter text-gray-900 dark:text-white leading-none">
+            Manage <span className="text-gray-600 dark:text-zinc-400">Users.</span>
+          </h1>
         </div>
 
-        {/* Stats Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className={`p-6 rounded-xl ${isDarkMode ? 'bg-[#2c353f]' : 'bg-white'} shadow-sm border border-gray-200 dark:border-gray-700`}>
-            <div className="flex items-center">
-              <div className="p-3 rounded-lg bg-blue-100 dark:bg-blue-900">
-                <svg className="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
+        <div className="flex flex-col-reverse md:flex-row items-end md:items-center gap-4">
+          {/* Pill Shaped Stats */}
+          <div className="flex items-center gap-4 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-full px-5 py-2.5 shadow-sm">
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4 text-gray-400 dark:text-zinc-500" />
+              <div className="flex items-baseline gap-1">
+                <span className="text-sm font-bold text-gray-900 dark:text-white">{users.length}</span>
+                <span className="text-xs text-gray-500 dark:text-zinc-500 font-medium">total</span>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Users</p>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{users.length}</p>
+            </div>
+
+            <div className="w-px h-4 bg-gray-200 dark:bg-zinc-800"></div>
+
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-green-500" />
+              <div className="flex items-baseline gap-1">
+                <span className="text-sm font-bold text-gray-900 dark:text-white">{users.filter(u => u.status === 'active').length}</span>
+                <span className="text-xs text-gray-500 dark:text-zinc-500 font-medium">active</span>
+              </div>
+            </div>
+
+            <div className="w-px h-4 bg-gray-200 dark:bg-zinc-800"></div>
+
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-purple-500" />
+              <div className="flex items-baseline gap-1">
+                <span className="text-sm font-bold text-gray-900 dark:text-white">{users.filter(u => u.role === 'admin').length}</span>
+                <span className="text-xs text-gray-500 dark:text-zinc-500 font-medium">admins</span>
               </div>
             </div>
           </div>
-          <div className={`p-6 rounded-xl ${isDarkMode ? 'bg-[#2c353f]' : 'bg-white'} shadow-sm border border-gray-200 dark:border-gray-700`}>
-            <div className="flex items-center">
-              <div className="p-3 rounded-lg bg-green-100 dark:bg-green-900">
-                <svg className="h-6 w-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Active Users</p>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                  {users.filter(user => user.status === 'active').length}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className={`p-6 rounded-xl ${isDarkMode ? 'bg-[#2c353f]' : 'bg-white'} shadow-sm border border-gray-200 dark:border-gray-700`}>
-            <div className="flex items-center">
-              <div className="p-3 rounded-lg bg-purple-100 dark:bg-purple-900">
-                <svg className="h-6 w-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Admins</p>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                  {users.filter(user => user.role === 'admin').length}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className={`p-6 rounded-xl ${isDarkMode ? 'bg-[#2c353f]' : 'bg-white'} shadow-sm border border-gray-200 dark:border-gray-700`}>
-            <div className="flex items-center">
-              <div className="p-3 rounded-lg bg-yellow-100 dark:bg-yellow-900">
-                <svg className="h-6 w-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">New This Month</p>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                  {users.filter(user => {
-                    const lastLogin = new Date(user.lastLogin);
-                    const now = new Date();
-                    return lastLogin.getMonth() === now.getMonth() && lastLogin.getFullYear() === now.getFullYear();
-                  }).length}
-                </p>
-              </div>
-            </div>
+
+          <div className="w-px h-8 bg-gray-200 dark:bg-zinc-800 hidden md:block"></div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                setShowModal(true);
+                setIsEditing(false);
+                setUserForm({
+                  name: '',
+                  email: '',
+                  password: '',
+                  role: 'user',
+                  status: 'active',
+                  phone: '',
+                  address: '',
+                  organization: '',
+                  department: '',
+                  lastLogin: '',
+                  permissions: {
+                    canCreatePolls: false,
+                    canManageUsers: false,
+                    canViewResults: true,
+                    canExportData: false
+                  }
+                });
+              }}
+              className="flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-gray-900 dark:bg-white text-white dark:text-black font-bold tracking-tight hover:scale-105 transition-transform duration-200 shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
+              aria-label="Create new user"
+            >
+              <Plus className="w-5 h-5" />
+              <span>New User</span>
+            </button>
+            <CSVLink
+              data={filteredUsers.map(user => ({
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                status: user.status,
+                organization: user.organization,
+                department: user.department,
+                lastLogin: user.lastLogin,
+              }))}
+              headers={[
+                { label: "Name", key: "name" },
+                { label: "Email", key: "email" },
+                { label: "Role", key: "role" },
+                { label: "Status", key: "status" },
+                { label: "Organization", key: "organization" },
+                { label: "Department", key: "department" },
+                { label: "Last Login", key: "lastLogin" }
+              ]}
+              filename={`users-${format(new Date(), 'yyyy-MM-dd')}.csv`}
+              className="flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-gray-50 dark:bg-zinc-900/50 border border-gray-200 dark:border-zinc-800 text-gray-700 dark:text-gray-300 font-medium hover:border-gray-300 dark:hover:border-zinc-700 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              aria-label="Export users to CSV"
+            >
+              <Download className="w-4 h-4" />
+              <span>Export</span>
+            </CSVLink>
           </div>
         </div>
+      </header>
 
-        {/* Filters Section */}
-        <div className={`mb-6 p-4 rounded-xl ${isDarkMode ? 'bg-[#2c353f]' : 'bg-white'} shadow-sm border border-gray-200 dark:border-gray-700`}>
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <input
-                  type="text"
-                  placeholder="Search users..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`block w-full pl-10 pr-3 py-2 border ${isDarkMode
-                    ? 'bg-[#1f2937] border-gray-600 text-white placeholder-gray-400'
-                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                    } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200`}
-                />
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className={`px-3 py-2 border ${isDarkMode
-                  ? 'bg-[#1f2937] border-gray-600 text-white'
-                  : 'bg-white border-gray-300 text-gray-900'
-                  } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200`}
-              >
-                <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="suspended">Suspended</option>
-              </select>
-              <select
-                value={filterRole}
-                onChange={(e) => setFilterRole(e.target.value)}
-                className={`px-3 py-2 border ${isDarkMode
-                  ? 'bg-[#1f2937] border-gray-600 text-white'
-                  : 'bg-white border-gray-300 text-gray-900'
-                  } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200`}
-              >
-                <option value="all">All Roles</option>
-                <option value="admin">Admin</option>
-                <option value="moderator">Moderator</option>
-                <option value="user">User</option>
-              </select>
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={buttonStyles.secondary}
-              >
-                <svg className={`${iconStyles.md} mr-2 text-gray-500 dark:text-gray-400`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
-                </svg>
-                Advanced Filters
-              </button>
-            </div>
+      {/* Filters Section - Simplified Layout */}
+      <form
+        className="mb-8 mt-6"
+        onSubmit={(e) => e.preventDefault()}
+      >
+        <div className="flex flex-wrap items-stretch gap-3 h-11">
+          {/* Search */}
+          <div className="relative flex-1 min-w-[250px] h-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search by name, email, department..."
+              autoComplete="off"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                }
+              }}
+              className="w-full h-full pl-9 pr-4 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 focus:border-gray-400 transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
+              aria-label="Search users"
+            />
           </div>
 
-          {/* Advanced Filters */}
-          <AnimatePresence>
-            {showFilters && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 overflow-hidden"
-              >
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date Range</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <input
-                      type="date"
-                      value={advancedFilters.dateRange.start}
-                      onChange={(e) => setAdvancedFilters(prev => ({
-                        ...prev,
-                        dateRange: { ...prev.dateRange, start: e.target.value }
-                      }))}
-                      className={`block w-full px-3 py-2 border ${isDarkMode
-                        ? 'bg-[#1f2937] border-gray-600 text-white'
-                        : 'bg-white border-gray-300 text-gray-900'
-                        } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200`}
-                    />
-                    <input
-                      type="date"
-                      value={advancedFilters.dateRange.end}
-                      onChange={(e) => setAdvancedFilters(prev => ({
-                        ...prev,
-                        dateRange: { ...prev.dateRange, end: e.target.value }
-                      }))}
-                      className={`block w-full px-3 py-2 border ${isDarkMode
-                        ? 'bg-[#1f2937] border-gray-600 text-white'
-                        : 'bg-white border-gray-300 text-gray-900'
-                        } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200`}
-                    />
+          {/* Status Filter */}
+          <div className="w-40 h-full">
+            <CustomDropdown
+              value={filterStatus}
+              onChange={(value) => setFilterStatus(value)}
+              options={[
+                { value: 'all', label: 'All Status' },
+                { value: 'active', label: 'Active' },
+                { value: 'inactive', label: 'Inactive' },
+                { value: 'suspended', label: 'Suspended' }
+              ]}
+              icon={Activity}
+              placeholder="Status"
+              className="h-full"
+            />
+          </div>
+
+          {/* Role Filter */}
+          <div className="w-40 h-full">
+            <CustomDropdown
+              value={filterRole}
+              onChange={(value) => setFilterRole(value)}
+              options={[
+                { value: 'all', label: 'All Roles' },
+                { value: 'admin', label: 'Admin' },
+                { value: 'moderator', label: 'Moderator' },
+                { value: 'user', label: 'User' }
+              ]}
+              icon={Shield}
+              placeholder="Role"
+              className="h-full"
+            />
+          </div>
+
+          {/* Advanced Filters Toggle */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center gap-2 px-4 h-full rounded-lg text-sm font-medium transition-all ${showFilters
+              ? 'bg-black text-white dark:bg-white dark:text-black shadow-lg'
+              : 'bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-zinc-800'
+              } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset`}
+            aria-expanded={showFilters}
+            aria-controls="advanced-filters"
+          >
+            <Filter className="w-4 h-4" />
+            <span>Filters</span>
+            {showFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+
+          {/* Refresh Button */}
+          <button
+            onClick={fetchUsers}
+            disabled={isLoading}
+            title="Refresh"
+            aria-label="Refresh user list"
+            className="px-4 h-full bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-all disabled:opacity-50 flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-inset"
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
+
+        {/* Advanced Filters */}
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-visible" // Changed from hidden to visible
+              id="advanced-filters"
+            >
+              <div className="p-4 rounded-xl bg-gray-50 dark:bg-zinc-900/50 border border-gray-200 dark:border-zinc-800 mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-2">Date Range</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <CustomDateTimePicker
+                        value={advancedFilters.dateRange.start}
+                        onChange={(e) => setAdvancedFilters(prev => ({
+                          ...prev,
+                          dateRange: { ...prev.dateRange, start: e.target.value }
+                        }))}
+                        type="date"
+                        placeholder="Start Date"
+                      />
+                      <CustomDateTimePicker
+                        value={advancedFilters.dateRange.end}
+                        onChange={(e) => setAdvancedFilters(prev => ({
+                          ...prev,
+                          dateRange: { ...prev.dateRange, end: e.target.value }
+                        }))}
+                        type="date"
+                        placeholder="End Date"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-2">Department</label>
+                    <div className="w-full relative z-20">
+                      <CustomDropdown
+                        value={advancedFilters.department}
+                        onChange={(value) => setAdvancedFilters(prev => ({
+                          ...prev,
+                          department: value
+                        }))}
+                        options={[
+                          { value: '', label: 'All Departments' },
+                          { value: 'IT', label: 'IT' },
+                          { value: 'HR', label: 'HR' },
+                          { value: 'Operations', label: 'Operations' }
+                        ]}
+                        placeholder="Select Department"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-2">Organization</label>
+                    <div className="w-full relative z-10">
+                      <CustomDropdown
+                        value={advancedFilters.organization}
+                        onChange={(value) => setAdvancedFilters(prev => ({
+                          ...prev,
+                          organization: value
+                        }))}
+                        options={[
+                          { value: '', label: 'All Organizations' },
+                          { value: 'VoteSafe Inc', label: 'VoteSafe Inc' }
+                        ]}
+                        placeholder="Select Organization"
+                      />
+                    </div>
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Department</label>
-                  <select
-                    value={advancedFilters.department}
-                    onChange={(e) => setAdvancedFilters(prev => ({
-                      ...prev,
-                      department: e.target.value
-                    }))}
-                    className={`block w-full px-3 py-2 border ${isDarkMode
-                      ? 'bg-[#1f2937] border-gray-600 text-white'
-                      : 'bg-white border-gray-300 text-gray-900'
-                      } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200`}
-                  >
-                    <option value="">All Departments</option>
-                    <option value="IT">IT</option>
-                    <option value="HR">HR</option>
-                    <option value="Operations">Operations</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Organization</label>
-                  <select
-                    value={advancedFilters.organization}
-                    onChange={(e) => setAdvancedFilters(prev => ({
-                      ...prev,
-                      organization: e.target.value
-                    }))}
-                    className={`block w-full px-3 py-2 border ${isDarkMode
-                      ? 'bg-[#1f2937] border-gray-600 text-white'
-                      : 'bg-white border-gray-300 text-gray-900'
-                      } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200`}
-                  >
-                    <option value="">All Organizations</option>
-                    <option value="VoteSafe Inc">VoteSafe Inc</option>
-                  </select>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
 
-        {/* Bulk Actions */}
-        {selectedUsers.length > 0 && (
+                {/* Filter Summary Badges */}
+                {(searchQuery || filterStatus !== 'all' || filterRole !== 'all' || advancedFilters.department || advancedFilters.organization) && (
+                  <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-zinc-800 text-xs text-gray-500 dark:text-zinc-400">
+                    <span>Active Filters:</span>
+                    {searchQuery && (
+                      <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full">
+                        Search: "{searchQuery}"
+                      </span>
+                    )}
+                    {filterStatus !== 'all' && (
+                      <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
+                        Status: {filterStatus}
+                      </span>
+                    )}
+                    {filterRole !== 'all' && (
+                      <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-full">
+                        Role: {filterRole}
+                      </span>
+                    )}
+                    {advancedFilters.department && (
+                      <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full">
+                        Dept: {advancedFilters.department}
+                      </span>
+                    )}
+                    <button
+                      onClick={() => {
+                        setSearchQuery('');
+                        setFilterStatus('all');
+                        setFilterRole('all');
+                        setAdvancedFilters({ dateRange: { start: '', end: '' }, department: '', organization: '', lastLogin: '' });
+                      }}
+                      className="ml-auto text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 font-medium transition-colors"
+                    >
+                      Clear all
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </form>
+
+      {/* Bulk Actions */}
+      {
+        selectedUsers.length > 0 && (
           <div className={bulkActionsStyles.container}>
             <div className={bulkActionsStyles.content}>
               <div className={bulkActionsStyles.header}>
@@ -625,28 +697,22 @@ const UsersPage = () => {
                 <div className={bulkActionsStyles.actions}>
                   <button
                     onClick={async () => {
-                      for (const userId of selectedUsers) {
-                        try {
-                          await axiosInstance.post('/users/bulk-update', {
-                            userIds: [userId],
-                            action: 'setActive',
-                            value: true
-                          });
-                          // Update local state
-                          setUsers(prev => prev.map(u => u.id === userId ? { ...u, isActive: true, status: 'active' } : u));
-                        } catch (err) {
-                          toast.error(`Failed to activate user ${userId}`);
-                        }
+                      try {
+                        await adminAxios.post('/users/bulk-update', {
+                          userIds: selectedUsers,
+                          action: 'setActive',
+                          value: true
+                        });
+                        // Update local state
+                        setUsers(prev => prev.map(u => selectedUsers.includes(u.id) ? { ...u, isActive: true, status: 'active' } : u));
+                        setSelectedUsers([]);
+                        toast.success('Selected users activated successfully', {
+                          icon: '✅',
+                          style: { borderRadius: '10px', background: '#10B981', color: '#fff' },
+                        });
+                      } catch (err) {
+                        toast.error('Failed to activate selected users');
                       }
-                      setSelectedUsers([]);
-                      toast.success('Selected users activated successfully', {
-                        icon: '✅',
-                        style: {
-                          borderRadius: '10px',
-                          background: '#10B981',
-                          color: '#fff',
-                        },
-                      });
                     }}
                     className={`${bulkActionsStyles.button.base} ${bulkActionsStyles.button.success}`}
                   >
@@ -657,28 +723,22 @@ const UsersPage = () => {
                   </button>
                   <button
                     onClick={async () => {
-                      for (const userId of selectedUsers) {
-                        try {
-                          await axiosInstance.post('/users/bulk-update', {
-                            userIds: [userId],
-                            action: 'setActive',
-                            value: false
-                          });
-                          // Update local state
-                          setUsers(prev => prev.map(u => u.id === userId ? { ...u, isActive: false, status: 'inactive' } : u));
-                        } catch (err) {
-                          toast.error(`Failed to deactivate user ${userId}`);
-                        }
+                      try {
+                        await adminAxios.post('/users/bulk-update', {
+                          userIds: selectedUsers,
+                          action: 'setActive',
+                          value: false
+                        });
+                        // Update local state
+                        setUsers(prev => prev.map(u => selectedUsers.includes(u.id) ? { ...u, isActive: false, status: 'inactive' } : u));
+                        setSelectedUsers([]);
+                        toast.success('Selected users deactivated successfully', {
+                          icon: '⚠️',
+                          style: { borderRadius: '10px', background: '#F59E0B', color: '#fff' },
+                        });
+                      } catch (err) {
+                        toast.error('Failed to deactivate selected users');
                       }
-                      setSelectedUsers([]);
-                      toast.success('Selected users deactivated successfully', {
-                        icon: '⚠️',
-                        style: {
-                          borderRadius: '10px',
-                          background: '#F59E0B',
-                          color: '#fff',
-                        },
-                      });
                     }}
                     className={`${bulkActionsStyles.button.base} ${bulkActionsStyles.button.warning}`}
                   >
@@ -688,28 +748,7 @@ const UsersPage = () => {
                     Deactivate
                   </button>
                   <button
-                    onClick={async () => {
-                      if (window.confirm('Are you sure you want to delete the selected users? This action cannot be undone.')) {
-                        try {
-                          await axiosInstance.post('/users/bulk-update', {
-                            userIds: selectedUsers,
-                            action: 'delete'
-                          });
-                          setUsers(users.filter(user => !selectedUsers.includes(user.id)));
-                          setSelectedUsers([]);
-                          toast.success('Selected users deleted successfully', {
-                            icon: '🗑️',
-                            style: {
-                              borderRadius: '10px',
-                              background: '#EF4444',
-                              color: '#fff',
-                            },
-                          });
-                        } catch (err) {
-                          showErrorToast('Failed to delete selected users');
-                        }
-                      }
-                    }}
+                    onClick={() => setShowBulkDeleteConfirm(true)}
                     className={`${bulkActionsStyles.button.base} ${bulkActionsStyles.button.danger}`}
                   >
                     <svg className={`${iconStyles.md} mr-2`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -728,398 +767,413 @@ const UsersPage = () => {
               </div>
             </div>
           </div>
-        )}
+        )
+      }
 
-        {/* Users Table */}
-        <div className={`rounded-xl overflow-hidden ${isDarkMode ? 'bg-[#2c353f]' : 'bg-white'} shadow-sm border border-gray-200 dark:border-gray-700`}>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className={`${isDarkMode ? 'bg-[#1f2937]' : 'bg-gray-50'}`}>
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    <input
-                      type="checkbox"
-                      checked={selectedUsers.length === users.length}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedUsers(users.map(user => user.id));
-                        } else {
-                          setSelectedUsers([]);
-                        }
-                      }}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    User
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Role
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Department
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Last Login
-                  </th>
-                  <th scope="col" className="relative px-6 py-3">
-                    <span className="sr-only">Actions</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className={`divide-y divide-gray-200 dark:divide-gray-700 ${isDarkMode ? 'bg-[#2c353f]' : 'bg-white'}`}>
-                {filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={selectedUsers.includes(user.id)}
-                          onChange={() => handleUserSelect(user.id)}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                        />
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                            <span className="text-lg font-medium text-gray-600 dark:text-gray-300">
-                              {user.name.charAt(0)}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900 dark:text-white">{user.name}</div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400">{user.email}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getRoleColor(user.role)}`}>
-                        {user.role}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(user.status)}`}>
-                        {user.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {user.department}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {user.lastLogin}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center justify-end space-x-3">
-                        <div className="relative group">
-                          <button
-                            onClick={() => {
-                              setSelectedUser(user);
-                              setUserForm({
-                                name: user.name,
-                                email: user.email,
-                                role: user.role,
-                                status: user.status,
-                                phone: user.phone || '',
-                                address: user.address || '',
-                                organization: user.organization || '',
-                                department: user.department || '',
-                                lastLogin: user.lastLogin || '',
-                                permissions: user.permissions || {
-                                  canCreatePolls: false,
-                                  canManageUsers: false,
-                                  canViewResults: true,
-                                  canExportData: false
-                                }
-                              });
-                              setIsEditing(true);
-                              setShowModal(true);
-                            }}
-                            className={`${actionButtonStyles.base} ${actionButtonStyles.edit}`}
-                            aria-label="Edit user"
-                          >
-                            <svg className={iconStyles.md} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          </button>
-                          <span className={actionButtonStyles.tooltip}>
-                            Edit User
-                          </span>
-                        </div>
-                        <div className="relative group">
-                          <button
-                            onClick={async () => {
-                              if (window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-                                try {
-                                  await axiosInstance.delete(`/users/${user.id}`);
-                                  // Optimistic update or refetch
-                                  setUsers(users.filter(u => u.id !== user.id));
-                                  toast.success('User deleted successfully', {
-                                    icon: '🗑️',
-                                    style: {
-                                      borderRadius: '10px',
-                                      background: '#EF4444',
-                                      color: '#fff',
-                                    },
-                                  });
-                                } catch (error) {
-                                  showErrorToast('Failed to delete user');
-                                }
-                              }
-                            }}
-                            className={`${actionButtonStyles.base} ${actionButtonStyles.delete}`}
-                            aria-label="Delete user"
-                          >
-                            <svg className={iconStyles.md} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          </button>
-                          <span className={actionButtonStyles.tooltip}>
-                            Delete User
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+
+      {/* Users Table */}
+      {/* Pagination moved above table */}
+      <div className="flex flex-col md:flex-row justify-between items-center bg-white dark:bg-zinc-900 px-4 py-3 border-x border-t border-gray-200 dark:border-zinc-800 rounded-t-xl mb-0">
+        <div>
+          <p className="text-sm text-gray-700 dark:text-gray-300">
+            Showing <span className="font-medium">{users.length > 0 ? (page - 1) * 10 + 1 : 0}</span> to{' '}
+            <span className="font-medium">{Math.min(page * 10, totalUsers)}</span> of{' '}
+            <span className="font-medium">{totalUsers}</span> results
+          </p>
         </div>
-
-        {/* Pagination */}
-        <div className="mt-6 flex items-center justify-between">
-          <div className="flex-1 flex justify-between sm:hidden">
+        <div>
+          <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
             <button
               onClick={() => setPage(page - 1)}
               disabled={page === 1}
-              className={`relative inline-flex items-center px-4 py-2 border ${isDarkMode ? 'border-gray-600' : 'border-gray-300'
-                } text-sm font-medium rounded-md ${isDarkMode
+              className={`relative inline-flex items-center px-2 py-2 rounded-l-md border ${isDarkMode ? 'border-gray-600' : 'border-gray-300'
+                } text-sm font-medium ${isDarkMode
                   ? 'text-gray-300 bg-[#2c353f] hover:bg-gray-700'
-                  : 'text-gray-700 bg-white hover:bg-gray-50'
-                }`}
+                  : 'text-gray-500 bg-white hover:bg-gray-50'
+                } transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              Previous
+              <span className="sr-only">Previous</span>
+              <ChevronDown className="h-4 w-4 rotate-90" />
             </button>
-            <button
-              onClick={() => setPage(page + 1)}
-              disabled={page === totalPages}
-              className={`ml-3 relative inline-flex items-center px-4 py-2 border ${isDarkMode ? 'border-gray-600' : 'border-gray-300'
-                } text-sm font-medium rounded-md ${isDarkMode
-                  ? 'text-gray-300 bg-[#2c353f] hover:bg-gray-700'
-                  : 'text-gray-700 bg-white hover:bg-gray-50'
-                }`}
-            >
-              Next
-            </button>
-          </div>
-          <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
-                Showing <span className="font-medium">{(page - 1) * 10 + 1}</span> to{' '}
-                <span className="font-medium">{Math.min(page * 10, filteredUsers.length)}</span> of{' '}
-                <span className="font-medium">{filteredUsers.length}</span> results
-              </p>
-            </div>
-            <div>
-              <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+            {/* Smart Pagination */}
+            {(() => {
+              const pages = [];
+              if (totalPages <= 7) {
+                for (let i = 1; i <= totalPages; i++) pages.push(i);
+              } else {
+                if (page <= 4) {
+                  pages.push(1, 2, 3, 4, 5, '...', totalPages);
+                } else if (page >= totalPages - 3) {
+                  pages.push(1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+                } else {
+                  pages.push(1, '...', page - 1, page, page + 1, '...', totalPages);
+                }
+              }
+
+              return pages.map((p, i) => (
                 <button
-                  onClick={() => setPage(page - 1)}
-                  disabled={page === 1}
-                  className={`relative inline-flex items-center px-2 py-2 rounded-l-md border ${isDarkMode ? 'border-gray-600' : 'border-gray-300'
-                    } text-sm font-medium ${isDarkMode
-                      ? 'text-gray-300 bg-[#2c353f] hover:bg-gray-700'
-                      : 'text-gray-500 bg-white hover:bg-gray-50'
-                    } transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  <span className="sr-only">Previous</span>
-                  <svg className={`${iconStyles.md} text-gray-500`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                </button>
-                {[...Array(totalPages)].map((_, i) => (
-                  <button
-                    key={i + 1}
-                    onClick={() => setPage(i + 1)}
-                    className={`relative inline-flex items-center px-4 py-2 border ${isDarkMode ? 'border-gray-600' : 'border-gray-300'
-                      } text-sm font-medium ${page === i + 1
-                        ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                  key={i}
+                  onClick={() => typeof p === 'number' && setPage(p)}
+                  disabled={typeof p !== 'number'}
+                  className={`relative inline-flex items-center px-4 py-2 border ${isDarkMode ? 'border-gray-600' : 'border-gray-300'
+                    } text-sm font-medium ${page === p
+                      ? 'z-10 bg-black text-white dark:bg-white dark:text-black border-transparent'
+                      : typeof p !== 'number'
+                        ? 'text-gray-500 bg-white dark:bg-[#2c353f] cursor-default'
                         : isDarkMode
                           ? 'text-gray-300 bg-[#2c353f] hover:bg-gray-700'
                           : 'text-gray-500 bg-white hover:bg-gray-50'
-                      }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-                <button
-                  onClick={() => setPage(page + 1)}
-                  disabled={page === totalPages}
-                  className={`relative inline-flex items-center px-2 py-2 rounded-r-md border ${isDarkMode ? 'border-gray-600' : 'border-gray-300'
-                    } text-sm font-medium ${isDarkMode
-                      ? 'text-gray-300 bg-[#2c353f] hover:bg-gray-700'
-                      : 'text-gray-500 bg-white hover:bg-gray-50'
                     }`}
                 >
-                  <span className="sr-only">Next</span>
-                  <svg className={`${iconStyles.md} text-gray-500`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                  </svg>
+                  {p}
                 </button>
-              </nav>
-            </div>
-          </div>
+              ));
+            })()}
+            <button
+              onClick={() => setPage(page + 1)}
+              disabled={page === totalPages}
+              className={`relative inline-flex items-center px-2 py-2 rounded-r-md border ${isDarkMode ? 'border-gray-600' : 'border-gray-300'
+                } text-sm font-medium ${isDarkMode
+                  ? 'text-gray-300 bg-[#2c353f] hover:bg-gray-700'
+                  : 'text-gray-500 bg-white hover:bg-gray-50'
+                } transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              <span className="sr-only">Next</span>
+              <ChevronDown className="h-4 w-4 -rotate-90" />
+            </button>
+          </nav>
         </div>
-      </section>
-      {/* User Details/Modal Section */}
-      <AnimatePresence>
-        {showModal && (
-          <div className="fixed z-[100] inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onClick={() => setShowModal(false)}></div>
+      </div>
 
-              <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+      <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 shadow-sm rounded-b-xl overflow-hidden relative min-h-[400px] border-t-0 !mt-0">
+        <AnimatePresence>
+          {isLoading && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center"
+            >
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-black dark:border-white"></div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-gray-50 dark:bg-zinc-800/50 border-b border-gray-200 dark:border-zinc-800">
+              <th className="px-5 py-4 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 w-12">
+                <input
+                  type="checkbox"
+                  checked={selectedUsers.length === users.length && users.length > 0}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedUsers(users.map(user => user.id));
+                    } else {
+                      setSelectedUsers([]);
+                    }
+                  }}
+                  className="h-4 w-4 text-black focus:ring-black border-gray-300 dark:border-zinc-600 rounded bg-white dark:bg-zinc-800 cursor-pointer"
+                />
+              </th>
+              <th className="px-5 py-4 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">User</th>
+              <th className="px-5 py-4 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">Role</th>
+              <th className="px-5 py-4 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">Status</th>
+              <th className="px-5 py-4 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">Department</th>
+              <th className="px-5 py-4 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">Last Login</th>
+              <th className="px-5 py-4 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100 dark:divide-zinc-800">
+            <AnimatePresence mode="popLayout">
+              {filteredUsers.map((user, index) => (
+                <motion.tr
+                  layout
+                  key={user.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2, delay: index * 0.05 }}
+                  className="group bg-white dark:bg-zinc-900 hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors"
+                >
+                  {/* Checkbox */}
+                  <td className="px-5 py-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedUsers.includes(user.id)}
+                      onChange={() => handleUserSelect(user.id)}
+                      className="h-4 w-4 text-black focus:ring-black border-gray-300 dark:border-zinc-600 rounded bg-white dark:bg-zinc-800 cursor-pointer"
+                    />
+                  </td>
 
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className={`relative z-50 inline-block align-bottom rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full ${isDarkMode ? 'bg-[#2c353f]' : 'bg-white'}`}
-              >
-                <form onSubmit={handleSubmit}>
-                  <div className={`px-4 pt-5 pb-4 sm:p-6 ${isDarkMode ? 'bg-[#2c353f]' : 'bg-white'}`}>
-                    <div className="sm:flex sm:items-start">
-                      <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                        <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white" id="modal-title">
-                          {isEditing ? 'Edit User' : 'Add New User'}
-                        </h3>
-                        <div className="mt-4 space-y-4">
-                          <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
-                            <input
-                              type="text"
-                              name="name"
-                              id="name"
-                              required
-                              value={userForm.name}
-                              onChange={handleInputChange}
-                              className={`mt-1 block w-full border ${isDarkMode ? 'border-gray-600 bg-[#1f2937] text-white' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                            />
-                          </div>
-                          <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
-                            <input
-                              type="email"
-                              name="email"
-                              id="email"
-                              required
-                              value={userForm.email}
-                              onChange={handleInputChange}
-                              className={`mt-1 block w-full border ${isDarkMode ? 'border-gray-600 bg-[#1f2937] text-white' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                            />
-                          </div>
-                          <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                              {isEditing ? 'New Password (Optional)' : 'Password'}
-                            </label>
-                            <input
-                              type="password"
-                              name="password"
-                              id="password"
-                              value={userForm.password}
-                              onChange={handleInputChange}
-                              placeholder={isEditing ? 'Leave blank to keep current' : 'Enter password'}
-                              required={!isEditing}
-                              className={`mt-1 block w-full border ${isDarkMode ? 'border-gray-600 bg-[#1f2937] text-white' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                            />
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
-                              <select
-                                id="role"
-                                name="role"
-                                value={userForm.role}
-                                onChange={handleInputChange}
-                                className={`mt-1 block w-full border ${isDarkMode ? 'border-gray-600 bg-[#1f2937] text-white' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                              >
-                                <option value="user">User</option>
-                                <option value="admin">Admin</option>
-                                <option value="moderator">Moderator</option>
-                              </select>
-                            </div>
-                            <div>
-                              <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-                              <select
-                                id="status"
-                                name="status"
-                                value={userForm.status}
-                                onChange={handleInputChange}
-                                className={`mt-1 block w-full border ${isDarkMode ? 'border-gray-600 bg-[#1f2937] text-white' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                              >
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                                <option value="suspended">Suspended</option>
-                              </select>
-                            </div>
-                          </div>
-                          <div>
-                            <label htmlFor="department" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Department</label>
-                            <select
-                              id="department"
-                              name="department"
-                              value={userForm.department}
-                              onChange={handleInputChange}
-                              className={`mt-1 block w-full border ${isDarkMode ? 'border-gray-600 bg-[#1f2937] text-white' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-                            >
-                              <option value="">Select Department</option>
-                              <option value="IT">IT</option>
-                              <option value="HR">HR</option>
-                              <option value="Operations">Operations</option>
-                              <option value="Engineering">Engineering</option>
-                              <option value="Marketing">Marketing</option>
-                            </select>
-                          </div>
-                        </div>
+                  {/* User Info */}
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-zinc-800 dark:to-zinc-700 flex items-center justify-center text-sm font-bold text-gray-700 dark:text-gray-200 uppercase shrink-0 border border-gray-200 dark:border-zinc-700">
+                        {user.name?.charAt(0) || 'U'}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-gray-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                          {user.name}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-zinc-500 font-mono mt-0.5">
+                          {user.email.length > 25 ? `${user.email.substring(0, 22)}...` : user.email}
+                        </p>
                       </div>
                     </div>
-                  </div>
-                  <div className={`bg-gray-50 dark:bg-[#1f2937] px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse`}>
-                    <button
-                      type="submit"
-                      className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
-                    >
-                      Save
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowModal(false)}
-                      className={`mt-3 w-full inline-flex justify-center rounded-md border shadow-sm px-4 py-2 text-base font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm ${isDarkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700' : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'}`}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              </motion.div>
+                  </td>
+
+                  {/* Role */}
+                  <td className="px-5 py-4">
+                    <span className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${user.role === 'admin'
+                      ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800'
+                      : user.role === 'moderator'
+                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800'
+                        : 'bg-gray-50 dark:bg-zinc-800/50 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-zinc-700'
+                      }`}>
+                      {user.role}
+                    </span>
+                  </td>
+
+                  {/* Status */}
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-2">
+                      <span className={`h-2 w-2 rounded-full ${user.status === 'active' ? 'bg-green-500' :
+                        user.status === 'inactive' ? 'bg-gray-400' : 'bg-red-500'
+                        }`}></span>
+                      <span className="text-sm text-gray-600 dark:text-gray-300 capitalize">{user.status}</span>
+                    </div>
+                  </td>
+
+                  {/* Department */}
+                  <td className="px-5 py-4">
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{user.department || '—'}</p>
+                  </td>
+
+                  {/* Last Login */}
+                  <td className="px-5 py-4">
+                    <p className="text-xs text-gray-500 dark:text-zinc-500 font-mono">{user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}</p>
+                  </td>
+
+                  {/* Actions */}
+                  <td className="px-5 py-4 text-right">
+                    <div className="flex items-center justify-end space-x-2">
+                      <button
+                        onClick={() => handleEdit(user)}
+                        className="p-2 text-gray-400 hover:text-black dark:text-zinc-500 dark:hover:text-white transition-colors"
+                        title="Edit"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setUserToDelete(user);
+                          setShowDeleteConfirm(true);
+                        }}
+                        className="p-2 text-gray-400 hover:text-red-600 dark:text-zinc-500 dark:hover:text-red-400 transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </motion.tr>
+              ))}
+            </AnimatePresence>
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination removed from bottom and moved top */}
+      {/* User Details/Modal Section */}
+      <AnimatedModal isOpen={showModal} onClose={() => setShowModal(false)} className="w-full max-w-lg bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-zinc-800">
+        <form onSubmit={handleSubmit}>
+          <div className="p-6 border-b border-gray-100 dark:border-zinc-800 bg-gradient-to-r from-gray-50 to-white dark:from-zinc-900 dark:to-[#0a0a0a] rounded-t-2xl">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight" id="modal-title">
+              {isEditing ? 'Edit User' : 'Create New User'}
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-zinc-500 mt-1">
+              {isEditing ? 'Update the user information below.' : 'Fill in the details to add a new user.'}
+            </p>
+          </div>
+          <div className="p-6 space-y-4 custom-scrollbar">
+            <div>
+              <label htmlFor="name" className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-2">Name</label>
+              <input
+                type="text"
+                name="name"
+                id="name"
+                required
+                value={userForm.name}
+                onChange={handleInputChange}
+                className="block w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 focus:border-gray-400 transition-all"
+              />
+            </div>
+            <div>
+              <label htmlFor="email" className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-2">Email</label>
+              <input
+                type="email"
+                name="email"
+                id="email"
+                required
+                value={userForm.email}
+                onChange={handleInputChange}
+                className="block w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 focus:border-gray-400 transition-all"
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-2">
+                {isEditing ? 'New Password (Optional)' : 'Password'}
+              </label>
+              <input
+                type="password"
+                name="password"
+                id="password"
+                value={userForm.password}
+                onChange={handleInputChange}
+                placeholder={isEditing ? 'Leave blank to keep current' : 'Enter password'}
+                required={!isEditing}
+                className="block w-full px-4 py-3 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 focus:border-gray-400 transition-all"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="role" className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-2">Role</label>
+                <CustomDropdown
+                  id="role"
+                  value={userForm.role}
+                  onChange={(value) => setUserForm(prev => ({ ...prev, role: value }))}
+                  options={[
+                    { value: 'user', label: 'User' },
+                    { value: 'admin', label: 'Admin' },
+                    { value: 'moderator', label: 'Moderator' }
+                  ]}
+                />
+              </div>
+              <div>
+                <label htmlFor="status" className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-2">Status</label>
+                <CustomDropdown
+                  id="status"
+                  value={userForm.status}
+                  onChange={(value) => setUserForm(prev => ({ ...prev, status: value }))}
+                  options={[
+                    { value: 'active', label: 'Active' },
+                    { value: 'inactive', label: 'Inactive' },
+                    { value: 'suspended', label: 'Suspended' }
+                  ]}
+                />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="department" className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-2">Department</label>
+              <div className="w-full">
+                <CustomDropdown
+                  id="department"
+                  value={userForm.department}
+                  onChange={(value) => setUserForm(prev => ({ ...prev, department: value }))}
+                  options={[
+                    { value: '', label: 'Select Department' },
+                    { value: 'IT', label: 'IT' },
+                    { value: 'HR', label: 'HR' },
+                    { value: 'Operations', label: 'Operations' },
+                    { value: 'Engineering', label: 'Engineering' },
+                    { value: 'Marketing', label: 'Marketing' }
+                  ]}
+                  placeholder="Select Department"
+                />
+              </div>
             </div>
           </div>
-        )}
-      </AnimatePresence>
+          <div className="p-6 border-t border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/50 flex gap-3 justify-end rounded-b-2xl">
+            <button
+              type="button"
+              onClick={() => setShowModal(false)}
+              className="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 text-gray-700 dark:text-gray-300 font-medium text-sm hover:bg-gray-100 dark:hover:bg-zinc-800 transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-6 py-2.5 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-black font-bold text-sm hover:opacity-90 transition-all shadow-lg"
+            >
+              {isEditing ? 'Update User' : 'Create User'}
+            </button>
+          </div>
+        </form>
+      </AnimatedModal>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatedModal isOpen={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden shadow-2xl border border-gray-200 dark:border-zinc-800">
+        <div className="p-6 text-center">
+          <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-500" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Delete User?</h3>
+          <p className="text-sm text-gray-500 dark:text-zinc-400 mb-6">
+            Are you sure you want to delete <span className="font-bold text-gray-900 dark:text-white">{userToDelete?.name}</span>? This action cannot be undone.
+          </p>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={() => setShowDeleteConfirm(false)}
+              className="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 text-gray-700 dark:text-gray-300 font-medium text-sm hover:bg-gray-100 dark:hover:bg-zinc-800 transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmDelete}
+              className="px-6 py-2.5 rounded-xl bg-red-600 text-white font-bold text-sm hover:bg-red-700 transition-all shadow-lg shadow-red-500/20"
+            >
+              Yes, Delete
+            </button>
+          </div>
+        </div>
+      </AnimatedModal>
+
+      {/* Bulk Delete Confirmation Modal */}
+      <AnimatedModal isOpen={showBulkDeleteConfirm} onClose={() => setShowBulkDeleteConfirm(false)} className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden shadow-2xl border border-gray-200 dark:border-zinc-800">
+        <div className="p-6 text-center">
+          <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-500" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Delete {selectedUsers.length} Users?</h3>
+          <p className="text-sm text-gray-500 dark:text-zinc-400 mb-6">
+            Are you sure you want to delete <span className="font-bold text-gray-900 dark:text-white">{selectedUsers.length} selected users</span>? This action cannot be undone.
+          </p>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={() => setShowBulkDeleteConfirm(false)}
+              className="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 text-gray-700 dark:text-gray-300 font-medium text-sm hover:bg-gray-100 dark:hover:bg-zinc-800 transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={async () => {
+                try {
+                  await adminAxios.post('/users/bulk-update', {
+                    userIds: selectedUsers,
+                    action: 'delete'
+                  });
+                  setUsers(users.filter(user => !selectedUsers.includes(user.id)));
+                  setSelectedUsers([]);
+                  setShowBulkDeleteConfirm(false);
+                  toast.success('Selected users deleted successfully', {
+                    icon: '🗑️',
+                    style: {
+                      borderRadius: '10px',
+                      background: '#EF4444',
+                      color: '#fff',
+                    },
+                  });
+                } catch (err) {
+                  showErrorToast('Failed to delete selected users');
+                }
+              }}
+              className="px-6 py-2.5 rounded-xl bg-red-600 text-white font-bold text-sm hover:bg-red-700 transition-all shadow-lg shadow-red-500/20"
+            >
+              Yes, Delete All
+            </button>
+          </div>
+        </div>
+      </AnimatedModal>
     </div>
   );
 };

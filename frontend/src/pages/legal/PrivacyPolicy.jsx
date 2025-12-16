@@ -1,20 +1,20 @@
 import { Link } from 'react-router-dom';
-import { 
-  ShieldCheckIcon, 
-  UserIcon, 
-  Cog6ToothIcon, 
-  DocumentArrowDownIcon, 
-  TrashIcon, 
-  EyeSlashIcon, 
-  LockClosedIcon, 
-  GlobeAltIcon, 
-  ExclamationTriangleIcon, 
-  InformationCircleIcon 
+import {
+  ShieldCheckIcon,
+  UserIcon,
+  Cog6ToothIcon,
+  DocumentArrowDownIcon,
+  TrashIcon,
+  EyeSlashIcon,
+  LockClosedIcon,
+  GlobeAltIcon,
+  ExclamationTriangleIcon,
+  InformationCircleIcon
 } from '@heroicons/react/24/outline';
 
 const sections = [
   { id: 'summary', label: 'Summary', icon: GlobeAltIcon },
-  { id: 'data-we-collect', label: 'Data We Collect', icon:UserIcon },
+  { id: 'data-we-collect', label: 'Data We Collect', icon: UserIcon },
   { id: 'how-we-use', label: 'How We Use Data', icon: Cog6ToothIcon },
   { id: 'security', label: 'Security & Compliance', icon: ShieldCheckIcon },
   { id: 'user-rights', label: 'Your Rights & Choices', icon: EyeSlashIcon },
@@ -35,7 +35,7 @@ export default function PrivacyPolicy() {
             </span>
             <h1 className="text-3xl md:text-4xl font-extrabold text-blue-700 dark:text-blue-400 tracking-tight flex items-center gap-2">
               Privacy Policy
-              <span className="inline-block align-middle ml-2 px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-xs font-semibold text-blue-600 dark:text-blue-200 shadow-sm animate-fade-in">
+              <span className="inline-block align-middle ml-2 px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-xs font-semibold text-blue-700 dark:text-blue-200 shadow-sm animate-fade-in">
                 Updated
               </span>
             </h1>
@@ -85,7 +85,7 @@ export default function PrivacyPolicy() {
                   }}
                 >
                   <span className="relative flex items-center">
-                    <Icon className="w-5 h-5 group-hover:scale-125 group-hover:text-blue-600 dark:group-hover:text-blue-200 transition-transform duration-200 drop-shadow-sm" aria-hidden="true" />
+                    <Icon className="w-5 h-5 group-hover:scale-125 group-hover:text-blue-700 dark:group-hover:text-blue-200 transition-transform duration-200 drop-shadow-sm" aria-hidden="true" />
                     <span className="sr-only">{label} section</span>
                   </span>
                   <span className="hidden sm:inline">{label}</span>
@@ -121,16 +121,16 @@ export default function PrivacyPolicy() {
             </p>
             <ul className="list-disc pl-6 space-y-1">
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Minimal Data Collection:</span> We only collect information essential to provide and improve our services.
+                <span className="font-medium text-blue-700 dark:text-blue-300">Minimal Data Collection:</span> We only collect information essential to provide and improve our services.
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Global Compliance:</span> We adhere to leading privacy and security standards, including <abbr title="General Data Protection Regulation" className="underline decoration-dotted cursor-help">GDPR</abbr>, ISO 27001, SOC 2, and accessibility guidelines (<abbr title="Web Content Accessibility Guidelines" className="underline decoration-dotted cursor-help">WCAG 2.1 AA</abbr>, Section 508).
+                <span className="font-medium text-blue-700 dark:text-blue-300">Global Compliance:</span> We adhere to leading privacy and security standards, including <abbr title="General Data Protection Regulation" className="underline decoration-dotted cursor-help">GDPR</abbr>, ISO 27001, SOC 2, and accessibility guidelines (<abbr title="Web Content Accessibility Guidelines" className="underline decoration-dotted cursor-help">WCAG 2.1 AA</abbr>, Section 508).
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">No Data Selling:</span> Your data is <span className="underline decoration-wavy decoration-blue-400">never</span> sold or shared with third parties for marketing or advertising.
+                <span className="font-medium text-blue-700 dark:text-blue-300">No Data Selling:</span> Your data is <span className="underline decoration-wavy decoration-blue-400">never</span> sold or shared with third parties for marketing or advertising.
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">User Empowerment:</span> You control your data, with clear options to access, export, or delete your information at any time.
+                <span className="font-medium text-blue-700 dark:text-blue-300">User Empowerment:</span> You control your data, with clear options to access, export, or delete your information at any time.
               </li>
             </ul>
             <div className="mt-3 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
@@ -158,42 +158,42 @@ export default function PrivacyPolicy() {
             </p>
             <ul className="list-disc pl-6 space-y-2">
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Account Information:</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">Account Information:</span>
                 <span className="ml-1 text-gray-700 dark:text-gray-300">
                   Name, email address, <span className="italic">hashed</span> password, profile photo, bio, and optional social links.
                 </span>
                 <span className="block text-xs text-gray-500 dark:text-gray-400 ml-1">Used for authentication, personalization, and profile display.</span>
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Preferences:</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">Preferences:</span>
                 <span className="ml-1 text-gray-700 dark:text-gray-300">
                   Theme (light/dark), notification settings, language, timezone.
                 </span>
                 <span className="block text-xs text-gray-500 dark:text-gray-400 ml-1">Helps us tailor your experience and accessibility.</span>
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Voting Activity:</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">Voting Activity:</span>
                 <span className="ml-1 text-gray-700 dark:text-gray-300">
                   Votes cast, polls created, comments, shares, and participation statistics.
                 </span>
                 <span className="block text-xs text-gray-500 dark:text-gray-400 ml-1">Enables core platform features and analytics.</span>
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Security Data:</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">Security Data:</span>
                 <span className="ml-1 text-gray-700 dark:text-gray-300">
                   Device fingerprint, two-factor authentication (2FA) status, login history, anonymized voting metadata.
                 </span>
                 <span className="block text-xs text-gray-500 dark:text-gray-400 ml-1">Protects your account and ensures voting integrity.</span>
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Usage Data:</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">Usage Data:</span>
                 <span className="ml-1 text-gray-700 dark:text-gray-300">
                   Browser and device information, IP address <span className="italic">(for security only)</span>, cookies.
                 </span>
                 <span className="block text-xs text-gray-500 dark:text-gray-400 ml-1">Used for security, troubleshooting, and improving our services. Never sold or used for advertising.</span>
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Accessibility Settings & Feedback:</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">Accessibility Settings & Feedback:</span>
                 <span className="ml-1 text-gray-700 dark:text-gray-300">
                   Custom accessibility preferences (e.g., font size, contrast), and any feedback you provide to help us improve accessibility.
                 </span>
@@ -217,27 +217,27 @@ export default function PrivacyPolicy() {
           </h2>
           <ul className="list-disc pl-6 text-gray-700 dark:text-gray-300 space-y-2">
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Account Management:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Account Management:</span>
               <span className="ml-1">We use your information to create, maintain, and personalize your account and profile, including your preferences and accessibility settings.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Voting & Participation:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Voting & Participation:</span>
               <span className="ml-1">Your data enables secure voting, poll creation, commenting, and participation in platform activities, while maintaining vote integrity and anonymity where applicable.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Personalization & Accessibility:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Personalization & Accessibility:</span>
               <span className="ml-1">We tailor features, notifications, and accessibility options (such as dark mode, language, or assistive settings) to enhance your experience.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Security & Fraud Prevention:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Security & Fraud Prevention:</span>
               <span className="ml-1">We analyze login activity, device data, and usage patterns to detect and prevent fraud, abuse, and unauthorized access, and to protect your account and voting rights.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Platform Improvement & Analytics:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Platform Improvement & Analytics:</span>
               <span className="ml-1">Aggregated, anonymized data helps us understand usage trends, improve features, and ensure our platform is accessible and reliable for all users.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Legal & Compliance:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Legal & Compliance:</span>
               <span className="ml-1">We may process your data to comply with legal obligations, respond to lawful requests, and uphold the integrity of democratic processes.</span>
             </li>
           </ul>
@@ -265,31 +265,31 @@ export default function PrivacyPolicy() {
           </div>
           <ul className="list-disc pl-6 text-gray-700 dark:text-gray-300 space-y-2">
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">End-to-End Encryption:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">End-to-End Encryption:</span>
               <span className="ml-1">All votes and sensitive data are encrypted in transit and at rest, ensuring only authorized parties can access your information.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Multi-Factor Authentication (2FA):</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Multi-Factor Authentication (2FA):</span>
               <span className="ml-1">We support 2FA and device fingerprinting to prevent unauthorized access to your account.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Anonymous & Verifiable Voting:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Anonymous & Verifiable Voting:</span>
               <span className="ml-1">We offer anonymous voting options and use cryptographic anonymization to separate your identity from your vote, while maintaining verifiability and auditability.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Continuous Security Audits:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Continuous Security Audits:</span>
               <span className="ml-1">Our systems undergo regular third-party security audits, penetration testing, and vulnerability assessments.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Compliance & Accessibility:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Compliance & Accessibility:</span>
               <span className="ml-1">We comply with global standards including <abbr title="General Data Protection Regulation">GDPR</abbr>, <abbr title="International Organization for Standardization">ISO 27001</abbr>, <abbr title="Service Organization Control 2">SOC 2</abbr>, <abbr title="Web Content Accessibility Guidelines">WCAG 2.1 AA</abbr>, and <abbr title="Section 508 of the Rehabilitation Act">Section 508</abbr> to ensure your data is handled lawfully and our platform is accessible to all.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Strict Access Controls:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Strict Access Controls:</span>
               <span className="ml-1">Only authorized personnel can access sensitive systems, with all access logged and regularly reviewed. We use the principle of least privilege and maintain detailed audit trails.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Incident Response:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Incident Response:</span>
               <span className="ml-1">We have a robust incident response plan to quickly address and notify users of any security issues or breaches, in accordance with legal requirements.</span>
             </li>
           </ul>
@@ -299,7 +299,7 @@ export default function PrivacyPolicy() {
               <span className="font-semibold text-blue-700 dark:text-blue-300">Your Security Matters:</span>
             </span>
             <span>
-              We continually invest in advanced security technologies and best practices to safeguard your data and the democratic process. If you have security concerns or discover a vulnerability, please contact us immediately at <a href="mailto:security@votely.com" className="text-blue-600 dark:text-blue-400 underline">security@votely.com</a>.
+              We continually invest in advanced security technologies and best practices to safeguard your data and the democratic process. If you have security concerns or discover a vulnerability, please contact us immediately at <a href="mailto:security@votely.com" className="text-blue-700 dark:text-blue-400 underline">security@votely.com</a>.
             </span>
           </div>
         </section>
@@ -317,35 +317,35 @@ export default function PrivacyPolicy() {
           </div>
           <ul className="list-disc pl-6 text-gray-700 dark:text-gray-300 space-y-2">
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Access & Correction:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Access & Correction:</span>
               <span className="ml-1">View, update, or correct your personal data at any time in your profile settings.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Data Portability:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Data Portability:</span>
               <span className="ml-1">Export your data in a machine-readable format whenever you wish (see Profile & Data settings).</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Account & Data Deletion:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Account & Data Deletion:</span>
               <span className="ml-1">Permanently delete your account and all associated data. This action is irreversible and can be done from your profile settings.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Privacy & Notification Preferences:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Privacy & Notification Preferences:</span>
               <span className="ml-1">Customize your privacy settings and choose which notifications you receive.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Communication Choices:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Communication Choices:</span>
               <span className="ml-1">Opt-in or opt-out of marketing, product updates, and other communications at any time.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Transparency:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Transparency:</span>
               <span className="ml-1">Request detailed information about how your data is collected, used, and protected.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Objection & Restriction:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Objection & Restriction:</span>
               <span className="ml-1">Object to or restrict certain types of data processing, as permitted by law.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Withdraw Consent:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Withdraw Consent:</span>
               <span className="ml-1">Withdraw your consent for data processing where consent is the legal basis, without affecting the lawfulness of processing before withdrawal.</span>
             </li>
           </ul>
@@ -355,7 +355,7 @@ export default function PrivacyPolicy() {
               <span className="font-semibold text-blue-700 dark:text-blue-300">Need Help?</span>
             </span>
             <span>
-              To exercise any of these rights, visit your <a href="/profile" className="text-blue-600 dark:text-blue-400 underline">Profile</a> or <a href="mailto:privacy@votely.com" className="text-blue-600 dark:text-blue-400 underline">contact our privacy team</a>. We respond promptly to all requests and are committed to supporting your privacy choices.
+              To exercise any of these rights, visit your <a href="/profile" className="text-blue-700 dark:text-blue-400 underline">Profile</a> or <a href="mailto:privacy@votely.com" className="text-blue-700 dark:text-blue-400 underline">contact our privacy team</a>. We respond promptly to all requests and are committed to supporting your privacy choices.
             </span>
           </div>
         </section>
@@ -379,12 +379,12 @@ export default function PrivacyPolicy() {
               We regularly review our data retention practices to ensure we do not keep your information longer than needed. When your data is no longer required, we securely delete or anonymize it.
             </p>
             <p>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Your Control:</span> You may request deletion of your data at any time via your <a href="/profile" className="text-blue-600 dark:text-blue-400 underline">Profile</a> or by <a href="mailto:privacy@votely.com" className="text-blue-600 dark:text-blue-400 underline">contacting our privacy team</a>. We will honor your request unless retention is required by law (e.g., for fraud prevention or legal compliance).
+              <span className="font-medium text-blue-700 dark:text-blue-300">Your Control:</span> You may request deletion of your data at any time via your <a href="/profile" className="text-blue-700 dark:text-blue-400 underline">Profile</a> or by <a href="mailto:privacy@votely.com" className="text-blue-700 dark:text-blue-400 underline">contacting our privacy team</a>. We will honor your request unless retention is required by law (e.g., for fraud prevention or legal compliance).
             </p>
             <div className="flex items-center gap-2 mt-2 text-xs text-gray-500 dark:text-gray-400">
               <InformationCircleIcon className="w-4 h-4 text-blue-400" aria-hidden="true" />
               <span>
-                For more details on how long specific types of data are retained, please refer to our <a href="/faq" className="text-blue-600 dark:text-blue-400 underline">FAQ</a> or reach out to us directly.
+                For more details on how long specific types of data are retained, please refer to our <a href="/faq" className="text-blue-700 dark:text-blue-400 underline">FAQ</a> or reach out to us directly.
               </span>
             </div>
           </div>
@@ -398,30 +398,30 @@ export default function PrivacyPolicy() {
           </h2>
           <div className="text-gray-700 dark:text-gray-300 mb-2 space-y-2">
             <p>
-              We believe in your right to be forgotten. You can permanently delete your account and all associated data at any time from your <a href="/profile" className="text-blue-600 dark:text-blue-400 underline">Profile settings</a>. This process is designed to be simple and transparent.
+              We believe in your right to be forgotten. You can permanently delete your account and all associated data at any time from your <a href="/profile" className="text-blue-700 dark:text-blue-400 underline">Profile settings</a>. This process is designed to be simple and transparent.
             </p>
             <ul className="list-disc pl-6 space-y-1">
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Irreversible:</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">Irreversible:</span>
                 <span className="ml-1">Account deletion is permanent. Once deleted, your data cannot be recovered.</span>
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">What is deleted:</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">What is deleted:</span>
                 <span className="ml-1">Your personal information, voting history, and profile data will be removed from our systems.</span>
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">What may be retained:</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">What may be retained:</span>
                 <span className="ml-1">Some data may be retained if required by law (e.g., for fraud prevention, legal compliance, or security purposes). Such data will be minimized and protected.</span>
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">How to delete:</span>
-                <span className="ml-1">Go to your <a href="/profile" className="text-blue-600 dark:text-blue-400 underline">Profile</a> and select <span className="font-semibold">Delete Account</span>. You may be asked to confirm your identity for security.</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">How to delete:</span>
+                <span className="ml-1">Go to your <a href="/profile" className="text-blue-700 dark:text-blue-400 underline">Profile</a> and select <span className="font-semibold">Delete Account</span>. You may be asked to confirm your identity for security.</span>
               </li>
             </ul>
             <div className="flex items-center gap-2 mt-2 text-xs text-gray-500 dark:text-gray-400">
               <ExclamationTriangleIcon className="w-4 h-4 text-red-400" aria-hidden="true" />
               <span>
-                If you need assistance or have concerns about account deletion, please <a href="mailto:privacy@votely.com" className="text-blue-600 dark:text-blue-400 underline">contact our privacy team</a>. We are here to help and will respond promptly.
+                If you need assistance or have concerns about account deletion, please <a href="mailto:privacy@votely.com" className="text-blue-700 dark:text-blue-400 underline">contact our privacy team</a>. We are here to help and will respond promptly.
               </span>
             </div>
           </div>
@@ -439,15 +439,15 @@ export default function PrivacyPolicy() {
             </p>
             <ul className="list-disc pl-6 space-y-1">
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">General Support:</span>
-                <span className="ml-1">Email us at <a href="mailto:support@votely.com" className="text-blue-600 dark:text-blue-400 underline">support@votely.com</a> for any general inquiries or technical issues.</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">General Support:</span>
+                <span className="ml-1">Email us at <a href="mailto:support@votely.com" className="text-blue-700 dark:text-blue-400 underline">support@votely.com</a> for any general inquiries or technical issues.</span>
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Privacy Requests:</span>
-                <span className="ml-1">For privacy-specific questions, data access, or deletion requests, contact our privacy team at <a href="mailto:privacy@votely.com" className="text-blue-600 dark:text-blue-400 underline">privacy@votely.com</a>.</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">Privacy Requests:</span>
+                <span className="ml-1">For privacy-specific questions, data access, or deletion requests, contact our privacy team at <a href="mailto:privacy@votely.com" className="text-blue-700 dark:text-blue-400 underline">privacy@votely.com</a>.</span>
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Feedback:</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">Feedback:</span>
                 <span className="ml-1">We welcome your feedback to help us improve. Let us know how we can serve you better.</span>
               </li>
             </ul>
@@ -462,27 +462,27 @@ export default function PrivacyPolicy() {
 
         <footer className="mt-10 flex flex-col items-center text-xs text-gray-500 dark:text-gray-400 space-y-1">
           <div>
-            &copy; {new Date().getFullYear()} <span className="font-semibold text-blue-600 dark:text-blue-300">Votely</span>. All rights reserved.
+            &copy; {new Date().getFullYear()} <span className="font-semibold text-blue-700 dark:text-blue-300">Votely</span>. All rights reserved.
           </div>
           <div>
             <span>
               <a
                 href="/terms"
-                className="underline hover:text-blue-600 dark:hover:text-blue-400 transition"
+                className="underline hover:text-blue-700 dark:hover:text-blue-400 transition"
               >
                 Terms of Service
               </a>
               <span className="mx-1">|</span>
               <a
                 href="/privacy"
-                className="underline hover:text-blue-600 dark:hover:text-blue-400 transition"
+                className="underline hover:text-blue-700 dark:hover:text-blue-400 transition"
               >
                 Privacy Policy
               </a>
               <span className="mx-1">|</span>
               <a
                 href="mailto:privacy@votely.com"
-                className="underline hover:text-blue-600 dark:hover:text-blue-400 transition"
+                className="underline hover:text-blue-700 dark:hover:text-blue-400 transition"
               >
                 Contact Privacy Team
               </a>

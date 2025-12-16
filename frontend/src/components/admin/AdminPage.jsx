@@ -1,6 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Routes, Route, useLocation } from 'react-router-dom';
+import { motion, useMotionTemplate, useMotionValue, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
+import {
+  LayoutDashboard,
+  Vote,
+  Users,
+  BarChart2,
+  ShieldCheck,
+  Settings,
+  Award,
+  LogOut,
+  Plus,
+  HelpCircle,
+  Menu,
+  X,
+  Zap,
+  Activity,
+  ChevronRight,
+  Cpu,
+  Wifi
+} from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import PollsPage from './PollsPage';
 import UsersPage from './UsersPage';
@@ -9,7 +29,156 @@ import SecurityPage from './SecurityPage';
 import SettingsPage from './SettingsPage';
 import AdminDashboard from './AdminDashboard';
 import AdminNominations from '../../pages/admin/AdminNominations';
-import axiosInstance from '../../utils/api/axiosConfig';
+import adminAxios from '../../utils/api/adminAxios';
+
+// --- VISUAL UTILITIES ---
+const NoiseTexture = () => (
+  <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.04] pointer-events-none"
+    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}>
+  </div>
+);
+
+const SpotlightEffect = ({ mouseX, mouseY }) => (
+  <motion.div
+    className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 transition duration-500 group-hover:opacity-100"
+    style={{
+      background: useMotionTemplate`radial-gradient(
+        400px circle at ${mouseX}px ${mouseY}px,
+        rgba(255, 255, 255, 0.05),
+        transparent 80%
+      )`,
+    }}
+  />
+);
+
+// --- SIDEBAR MENU ITEM ---
+const SidebarMenuItem = ({ icon, label, isActive, onClick, hasNotification, index }) => {
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  const handleMouseMove = ({ clientX, clientY, currentTarget }) => {
+    const { left, top } = currentTarget.getBoundingClientRect();
+    mouseX.set(clientX - left);
+    mouseY.set(clientY - top);
+  };
+
+  return (
+    <motion.button
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: index * 0.05, duration: 0.3 }}
+      onMouseMove={handleMouseMove}
+      onClick={onClick}
+      className={`group relative w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 overflow-hidden ${isActive
+        ? 'bg-white dark:bg-zinc-800 shadow-lg shadow-black/5 dark:shadow-black/30'
+        : 'hover:bg-gray-50 dark:hover:bg-zinc-800/50'
+        } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900`}
+    >
+      <SpotlightEffect mouseX={mouseX} mouseY={mouseY} />
+
+      {/* Active indicator */}
+      <AnimatePresence>
+        {isActive && (
+          <motion.div
+            layoutId="activeIndicator"
+            initial={{ opacity: 0, scaleY: 0 }}
+            animate={{ opacity: 1, scaleY: 1 }}
+            exit={{ opacity: 0, scaleY: 0 }}
+            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-full bg-gray-900 dark:bg-white"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Icon container */}
+      <div className={`relative z-10 flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-300 ${isActive
+        ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-md'
+        : 'bg-gray-100 dark:bg-zinc-700/50 text-gray-600 dark:text-zinc-400 group-hover:bg-gray-200 dark:group-hover:bg-zinc-700 group-hover:text-gray-900 dark:group-hover:text-white'
+        }`}>
+        <motion.div
+          whileHover={{ scale: 1.1, rotate: isActive ? 0 : 5 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+        >
+          {icon}
+        </motion.div>
+      </div>
+
+      {/* Label */}
+      <span className={`relative z-10 text-sm font-medium tracking-tight transition-colors duration-300 ${isActive
+        ? 'text-gray-900 dark:text-white'
+        : 'text-gray-600 dark:text-zinc-400 group-hover:text-gray-900 dark:group-hover:text-white'
+        }`}>
+        {label}
+      </span>
+
+      {/* Arrow indicator */}
+      <ChevronRight className={`ml-auto w-4 h-4 transition-all duration-300 ${isActive
+        ? 'opacity-100 text-gray-900 dark:text-white translate-x-0'
+        : 'opacity-0 -translate-x-2 text-gray-400'
+        }`} />
+
+      {/* Notification badge */}
+      {hasNotification && (
+        <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-lg shadow-red-500/50" />
+      )}
+
+      {/* Hover shimmer effect */}
+      <div className="absolute inset-0 bg-gradient-to-r from-gray-500/0 via-gray-500/5 to-gray-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-out pointer-events-none" />
+    </motion.button>
+  );
+};
+
+// --- SYSTEM STATUS WIDGET ---
+const SystemStatusWidget = ({ isCollapsed, onToggle }) => {
+  const [stats, setStats] = useState({ cpu: 34, memory: 56, network: 98 });
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.4 }}
+      className="relative p-4 rounded-2xl bg-gray-50 dark:bg-zinc-800/50 border border-gray-100 dark:border-zinc-700/50 overflow-hidden"
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Activity className="w-4 h-4 text-gray-500 dark:text-zinc-400" />
+          <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-500">
+            System
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500" />
+          </span>
+          <span className="text-[10px] font-bold text-green-600 dark:text-green-400 uppercase">Live</span>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        {[
+          { label: 'CPU', value: stats.cpu, icon: Cpu },
+          { label: 'MEM', value: stats.memory, icon: Zap },
+          { label: 'NET', value: stats.network, icon: Wifi },
+        ].map((stat, i) => (
+          <div key={stat.label} className="space-y-1">
+            <div className="flex justify-between items-center">
+              <span className="text-[11px] font-medium text-gray-500 dark:text-zinc-500 uppercase tracking-wide">{stat.label}</span>
+              <span className="text-xs font-mono font-bold text-gray-700 dark:text-zinc-300">{stat.value}%</span>
+            </div>
+            <div className="h-1 w-full bg-gray-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${stat.value}%` }}
+                transition={{ delay: 0.5 + i * 0.1, duration: 0.8, ease: 'easeOut' }}
+                className="h-full rounded-full bg-gray-900 dark:bg-white"
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+};
 
 const AdminPage = () => {
   // ... (existing helper function calls)
@@ -53,71 +222,43 @@ const AdminPage = () => {
 
   const menuItems = [
     {
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-          <path d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"></path>
-        </svg>
-      ),
+      icon: <LayoutDashboard size={20} />,
       label: 'Dashboard',
       path: 'dashboard',
       active: activeTab === 'dashboard',
     },
     {
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-          <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm40-88a8,8,0,0,1-8,8H136v32a8,8,0,0,1-16,0V136a8,8,0,0,1-8-8V96a8,8,0,0,1,16,0v32h24A8,8,0,0,1,168,128Z"></path>
-        </svg>
-      ),
+      icon: <Award size={20} />,
       label: 'Nominations',
       path: 'nominations',
       active: activeTab === 'nominations',
     },
     {
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-          <path d="M80,64a8,8,0,0,1,8-8H216a8,8,0,0,1,0,16H88A8,8,0,0,1,80,64Zm136,56H88a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Zm0,64H88a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16ZM44,52A12,12,0,1,0,56,64,12,12,0,0,0,44,52Zm0,64a12,12,0,1,0,12,12A12,12,0,0,0,44,116Zm0,64a12,12,0,1,0,12,12A12,12,0,0,0,44,180Z"></path>
-        </svg>
-      ),
+      icon: <Vote size={20} />,
       label: 'Polls',
       path: 'polls',
       active: activeTab === 'polls',
     },
     {
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-          <path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"></path>
-        </svg>
-      ),
+      icon: <Users size={20} />,
       label: 'Users',
       path: 'users',
       active: activeTab === 'users',
     },
     {
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-          <path d="M216,40H48A16,16,0,0,0,32,56V58.78c0,89.61,75.82,119.34,91,124.39a15.53,15.53,0,0,0,10,0c15.2-5.05,91-34.78,91-124.39V56A16,16,0,0,0,208,40Zm0,74.79c0,78.42-66.35,104.62-80,109.18-13.53-4.51-80-30.69-80-109.18V56H208ZM82.34,141.66a8,8,0,0,1,11.32-11.32L112,148.68l50.34-50.34a8,8,0,0,1,11.32,11.32l-56,56a8,8,0,0,1-11.32,0Z"></path>
-        </svg>
-      ),
+      icon: <BarChart2 size={20} />,
       label: 'Results',
       path: 'results',
       active: activeTab === 'results',
     },
     {
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-          <path d="M208,40H48A16,16,0,0,0,32,56v58.78c0,89.61,75.82,119.34,91,124.39a15.53,15.53,0,0,0,10,0c15.2-5.05,91-34.78,91-124.39V56A16,16,0,0,0,208,40Zm0,74.79c0,78.42-66.35,104.62-80,109.18-13.53-4.51-80-30.69-80-109.18V56H208ZM82.34,141.66a8,8,0,0,1,11.32-11.32L112,148.68l50.34-50.34a8,8,0,0,1,11.32,11.32l-56,56a8,8,0,0,1-11.32,0Z"></path>
-        </svg>
-      ),
+      icon: <ShieldCheck size={20} />,
       label: 'Security',
       path: 'security',
       active: activeTab === 'security',
     },
     {
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-          <path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.21,107.21,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3-3L186,40.54a8,8,0,0,0-3.94-6,107.71,107.71,0,0,0-26.25-10.87,8,8,0,0,0-7.06,1.49L130.16,40Q128,40,125.84,40L107.2,25.11a8,8,0,0,0-7.06-1.48A107.6,107.6,0,0,0,73.89,34.51a8,8,0,0,0-3.93,6L67.32,64.27q-1.56,1.49-3,3L40.54,70a8,8,0,0,0-6,3.94,107.71,107.71,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L40,125.84Q40,128,40,130.16L25.11,148.8a8,8,0,0,0-1.48,7.06,107.21,107.21,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.49,1.56,3,3L70,215.46a8,8,0,0,0,3.94,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.48,107.21,107.21,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3-3L215.46,186a8,8,0,0,0,6-3.94,107.71,107.71,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06Z"></path>
-        </svg>
-      ),
+      icon: <Settings size={20} />,
       label: 'Settings',
       path: 'settings',
       active: activeTab === 'settings',
@@ -199,13 +340,13 @@ const AdminPage = () => {
               <div className="flex gap-4 mt-2">
                 <button
                   onClick={refreshSession}
-                  className="px-5 py-2 rounded-lg bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition-colors"
+                  className="px-5 py-2 rounded-lg bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900"
                 >
                   Stay Logged In
                 </button>
                 <button
                   onClick={logout}
-                  className="px-5 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                  className="px-5 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900"
                 >
                   Logout Now
                 </button>
@@ -215,175 +356,182 @@ const AdminPage = () => {
         </div>
       )}
       {/* Main Layout */}
-      <div className={`relative flex size-full min-h-screen flex-col ${isDarkMode ? 'bg-[#15191e]' : 'bg-gray-50'} transition-colors duration-200`}>
+      <div className={`relative flex size-full min-h-screen flex-col ${isDarkMode ? 'bg-zinc-950' : 'bg-gray-50'} transition-colors duration-200`}>
         <div className="layout-container flex h-full grow flex-col">
-          <div className="gap-1 px-6 mt-16 flex flex-1 justify-center py-5">
+          <div className="gap-1 px-6 flex flex-1 justify-center py-5">
             {/* Sidebar */}
-            <aside className="layout-content-container flex flex-col w-90" role="complementary" aria-label="Admin sidebar navigation" tabIndex={0}>
-              <div className={`flex h-full min-h-[700px] flex-col ${isDarkMode ? 'bg-[#15191e]' : 'bg-white'} p-6 rounded-xl shadow-sm transition-all duration-200 relative overflow-hidden`}>
-                {/* Background Pattern */}
-                <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20"></div>
-                  <div className="absolute inset-0" style={{
-                    backgroundImage: `radial-gradient(circle at 1px 1px, ${isDarkMode ? '#ffffff' : '#000000'} 1px, transparent 0)`,
-                    backgroundSize: '24px 24px'
-                  }}></div>
-                </div>
+            <aside className="layout-content-container flex flex-col w-80 shrink-0" role="complementary" aria-label="Admin sidebar navigation" tabIndex={0}>
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5 }}
+                className={`flex h-full min-h-[700px] flex-col ${isDarkMode ? 'bg-zinc-900/80 backdrop-blur-xl' : 'bg-white/90 backdrop-blur-xl'} p-5 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/30 transition-all duration-300 relative overflow-hidden border border-gray-200/50 dark:border-zinc-700/50`}
+              >
+                <NoiseTexture />
 
-                {/* Profile Section */}
-                <div className="flex items-center gap-4 pb-6 border-b border-gray-200 dark:border-gray-700">
-                  <div className="relative group">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold shadow-lg shadow-blue-500/20 transition-transform duration-300 group-hover:scale-110">
-                      AS
+                {/* Gradient Border Effect */}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-gray-500/5 via-transparent to-gray-500/5 pointer-events-none" />
+
+                {/* Logo/Branding Section */}
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="relative z-10 pb-6 border-b border-gray-200/50 dark:border-zinc-700/50"
+                >
+                  <div className="flex items-center gap-3">
+                    {/* Animated Logo */}
+                    <div className="relative">
+                      <div className="w-10 h-10 rounded-xl bg-gray-900 dark:bg-white flex items-center justify-center shadow-lg">
+                        <Vote className="w-5 h-5 text-white dark:text-gray-900" />
+                      </div>
+                      <div className="absolute -inset-0.5 rounded-xl bg-gray-900 dark:bg-white blur opacity-20 animate-pulse" />
                     </div>
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-green-500 border-2 border-white dark:border-[#15191e] shadow-lg shadow-green-500/20">
-                      <div className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-75"></div>
+                    <div className="flex flex-col">
+                      <span className="text-lg font-black tracking-tight text-gray-900 dark:text-white">
+                        VOTELY
+                      </span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600 dark:text-zinc-500">
+                        Admin Console
+                      </span>
                     </div>
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-600/20 animate-pulse"></div>
+                    <div className="ml-auto px-2 py-1 rounded-md bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700/50">
+                      <span className="text-[10px] font-bold text-gray-600 dark:text-zinc-400">v2.1</span>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h2 className={`text-base font-semibold truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Admin User</h2>
-                    <p className={`text-sm truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{adminEmail || 'admin@votesafe.com'}</p>
-                  </div>
-                  <button className={`p-2 rounded-lg transition-all duration-200 ${isDarkMode
-                    ? 'hover:bg-[#2c353f] text-gray-400 hover:text-white'
-                    : 'hover:bg-gray-100 text-gray-500 hover:text-gray-900'
-                    }`}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                </div>
+                </motion.div>
 
                 {/* Navigation Menu */}
-                <nav className="flex flex-col gap-1 mt-2">
-                  {menuItems.map((item, index) => (
-                    <button
-                      key={index}
-                      className={`group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 relative overflow-hidden ${item.active
-                        ? isDarkMode
-                          ? 'bg-[#2c353f] text-white'
-                          : 'bg-blue-50 text-blue-600'
-                        : isDarkMode
-                          ? 'text-gray-400 hover:bg-[#2c353f] hover:text-white'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                        }`}
-                      onClick={() => {
-                        setActiveTab(item.path);
-                        navigate(`/admin/${item.path}`);
-                      }}
-                    >
-                      {/* Hover Effect */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/10 to-blue-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+                <nav className="flex-1 flex flex-col gap-6 mt-6 relative z-10 overflow-y-auto">
+                  {/* Core Section */}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 px-2 mb-3">
+                      <span className="h-px flex-1 bg-gray-200 dark:bg-zinc-700/50" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600 dark:text-zinc-500">Core</span>
+                      <span className="h-px flex-1 bg-gray-200 dark:bg-zinc-700/50" />
+                    </div>
+                    {menuItems.slice(0, 3).map((item, index) => (
+                      <SidebarMenuItem
+                        key={item.path}
+                        icon={item.icon}
+                        label={item.label}
+                        isActive={item.active}
+                        hasNotification={item.label === 'Polls'}
+                        index={index}
+                        onClick={() => {
+                          setActiveTab(item.path);
+                          navigate(`/admin/${item.path}`);
+                        }}
+                      />
+                    ))}
+                  </div>
 
-                      <div className={`transition-colors duration-200 ${item.active
-                        ? isDarkMode
-                          ? 'text-white'
-                          : 'text-blue-600'
-                        : isDarkMode
-                          ? 'text-gray-400 group-hover:text-white'
-                          : 'text-gray-500 group-hover:text-gray-900'
-                        }`}>
-                        {item.icon}
-                      </div>
-                      <span className={`text-sm font-medium transition-colors duration-200 ${item.active
-                        ? isDarkMode
-                          ? 'text-white'
-                          : 'text-blue-600'
-                        : isDarkMode
-                          ? 'text-gray-400 group-hover:text-white'
-                          : 'text-gray-600 group-hover:text-gray-900'
-                        }`}>
-                        {item.label}
-                      </span>
-                      {item.active && (
-                        <div className={`ml-auto w-1 h-6 rounded-full ${isDarkMode ? 'bg-blue-500' : 'bg-blue-600'
-                          }`} />
-                      )}
-                      {/* Notification Badge */}
-                      {item.label === 'Polls' && (
-                        <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-                      )}
-                    </button>
-                  ))}
+                  {/* Management Section */}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 px-2 mb-3">
+                      <span className="h-px flex-1 bg-gray-200 dark:bg-zinc-700/50" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600 dark:text-zinc-500">Manage</span>
+                      <span className="h-px flex-1 bg-gray-200 dark:bg-zinc-700/50" />
+                    </div>
+                    {menuItems.slice(3, 5).map((item, index) => (
+                      <SidebarMenuItem
+                        key={item.path}
+                        icon={item.icon}
+                        label={item.label}
+                        isActive={item.active}
+                        index={index + 3}
+                        onClick={() => {
+                          setActiveTab(item.path);
+                          navigate(`/admin/${item.path}`);
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  {/* System Section */}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 px-2 mb-3">
+                      <span className="h-px flex-1 bg-gray-200 dark:bg-zinc-700/50" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600 dark:text-zinc-500">System</span>
+                      <span className="h-px flex-1 bg-gray-200 dark:bg-zinc-700/50" />
+                    </div>
+                    {menuItems.slice(5, 7).map((item, index) => (
+                      <SidebarMenuItem
+                        key={item.path}
+                        icon={item.icon}
+                        label={item.label}
+                        isActive={item.active}
+                        index={index + 5}
+                        onClick={() => {
+                          setActiveTab(item.path);
+                          navigate(`/admin/${item.path}`);
+                        }}
+                      />
+                    ))}
+                  </div>
                 </nav>
-              </div>
 
-              {/* Bottom Section */}
-              <div className="flex flex-col gap-4 pt-6 border-t border-gray-200 dark:border-gray-700 relative">
-                {/* Quick Actions */}
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <h3 className={`text-xs font-semibold uppercase tracking-wider ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      Quick Actions
-                    </h3>
-                    <button className={`text-xs font-medium ${isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}>
-                      View All
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button className={`group flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 relative overflow-hidden ${isDarkMode
-                      ? 'bg-[#2c353f] text-gray-200 hover:bg-[#3a4552]'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}>
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/10 to-blue-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                      </svg>
-                      New Poll
-                    </button>
-                    <button className={`group flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 relative overflow-hidden ${isDarkMode
-                      ? 'bg-[#2c353f] text-gray-200 hover:bg-[#3a4552]'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}>
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/10 to-blue-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                      </svg>
-                      Help
-                    </button>
-                  </div>
-                </div>
-
-                {/* System Status */}
-                <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-[#2c353f]' : 'bg-gray-50'}`}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className={`text-xs font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>System Status</span>
-                    <span className="text-xs font-medium text-green-500 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                      All Systems Operational
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      <span className="block">CPU Load</span>
-                      <span className="font-medium text-green-500">32%</span>
+                {/* Bottom Section */}
+                <div className="mt-auto space-y-4 relative z-10 pt-6">
+                  {/* User Profile Card */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="relative p-4 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 dark:from-zinc-800 dark:to-zinc-800/50 border border-gray-200/50 dark:border-zinc-700/50 overflow-hidden"
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="relative group">
+                        <div className="w-10 h-10 rounded-full bg-gray-900 dark:bg-white flex items-center justify-center text-white dark:text-gray-900 text-sm font-bold shadow-lg transition-transform duration-300 group-hover:scale-110">
+                          {(adminEmail?.[0] || 'A').toUpperCase()}
+                        </div>
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-white dark:border-zinc-800">
+                          <div className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-75" />
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                          Admin User
+                        </p>
+                        <p className="text-xs text-gray-600 dark:text-zinc-500 truncate">
+                          {adminEmail || 'admin@votely.io'}
+                        </p>
+                      </div>
                     </div>
-                    <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      <span className="block">Memory</span>
-                      <span className="font-medium text-green-500">45%</span>
-                    </div>
-                  </div>
-                </div>
 
-                {/* Logout Button */}
-                <button
-                  onClick={handleLogout}
-                  className={`group flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 relative overflow-hidden ${isDarkMode
-                    ? 'bg-red-600/10 text-red-400 hover:bg-red-600/20'
-                    : 'bg-red-50 text-red-600 hover:bg-red-100'
-                    }`}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-red-500/0 via-red-500/10 to-red-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V7.414l-5-5H3zm7 8a1 1 0 10-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                  </svg>
-                  Logout
-                </button>
-              </div>
+                    {/* Quick Action Buttons */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => { setActiveTab('settings'); navigate('/admin/settings'); }}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-white dark:bg-zinc-700/50 border border-gray-200 dark:border-zinc-600/50 text-gray-600 dark:text-zinc-300 text-xs font-medium hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-zinc-800"
+                      >
+                        <Settings className="w-3.5 h-3.5" />
+                        Settings
+                      </button>
+                      <button className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-white dark:bg-zinc-700/50 border border-gray-200 dark:border-zinc-600/50 text-gray-600 dark:text-zinc-300 text-xs font-medium hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-zinc-800">
+                        <HelpCircle className="w-3.5 h-3.5" />
+                        Help
+                      </button>
+                    </div>
+                  </motion.div>
+
+                  {/* Logout Button */}
+                  <motion.button
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 }}
+                    onClick={handleLogout}
+                    className="group relative w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200/50 dark:border-red-800/30 text-red-600 dark:text-red-400 font-medium transition-all duration-300 hover:bg-red-100 dark:hover:bg-red-900/30 hover:shadow-lg hover:shadow-red-500/10 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-red-500/0 via-red-500/10 to-red-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-out" />
+                    <LogOut className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+                    <span className="text-sm">Sign Out</span>
+                  </motion.button>
+                </div>
+              </motion.div>
             </aside>
             {/* Main Content */}
-            <main className="flex-1" role="region" aria-labelledby="admin-main-heading" tabIndex={0}>
+            <main className="flex-1 min-w-0" role="region" aria-labelledby="admin-main-heading" tabIndex={0}>
               <h1 id="admin-main-heading" className="sr-only">Admin Dashboard Main Content</h1>
               <Routes>
                 <Route path="polls" element={<PollsPage />} />
@@ -426,19 +574,11 @@ const AdminPage = () => {
             {/* Close Button */}
             <button
               onClick={() => setShowLogoutConfirm(false)}
-              className="absolute top-4 right-4 p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="absolute top-4 right-4 p-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition hover:bg-gray-200 dark:hover:bg-gray-700"
               aria-label="Close"
               tabIndex={0}
             >
-              <svg
-                className={`h-5 w-5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <X className={`h-5 w-5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
             </button>
             {/* Icon */}
             <div className="flex items-center justify-center mb-4">
@@ -494,7 +634,7 @@ const AdminPage = () => {
                   ${isDarkMode
                     ? 'bg-gray-700 hover:bg-gray-600 text-white'
                     : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                  }`}
+                  } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800`}
                 autoFocus
               >
                 Cancel
@@ -505,7 +645,7 @@ const AdminPage = () => {
                   ${isDarkMode
                     ? 'bg-gradient-to-r from-red-700 via-red-600 to-red-500 hover:from-red-800 hover:to-red-600 text-white shadow-md'
                     : 'bg-gradient-to-r from-red-500 via-red-400 to-red-600 hover:from-red-600 hover:to-red-500 text-white shadow-md'
-                  }`}
+                  } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800`}
                 aria-label="Confirm logout"
               >
                 <span className="inline-flex items-center gap-2">
@@ -519,9 +659,12 @@ const AdminPage = () => {
             {/* Accessibility: Focus trap */}
             <div tabIndex={0} aria-hidden="true" />
           </div>
-          {/* Animations */}
-          <style>
-            {`
+        </div>
+      )}
+
+      {/* Animations & Styles */}
+      <style>
+        {`
               @keyframes fadeIn {
                 from { opacity: 0; }
                 to { opacity: 1; }
@@ -536,21 +679,7 @@ const AdminPage = () => {
               .animate-modalPop {
                 animation: modalPop 0.3s cubic-bezier(.4,0,.2,1);
               }
-            `}
-          </style>
-        </div>
-      )}
-
-      {/* 
-        Advanced Responsive Table Styles:
-        - Uses @container queries for fine-grained column hiding
-        - Adds smooth transitions for column appearance/disappearance
-        - Supports dark mode and accessibility
-        - Includes print-friendly adjustments
-        - Animates column visibility for enhanced UX
-      */}
-      <style>
-        {`
+          
           /* Container queries for responsive column hiding */
           @container (max-width: 120px) {
             .table-column-120 { display: none !important; }
@@ -616,8 +745,8 @@ const AdminPage = () => {
           }
         `}
       </style>
-    </div>
+    </div >
   );
 };
 
-export default AdminPage; 
+export default AdminPage;

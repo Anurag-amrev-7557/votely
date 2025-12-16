@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
-import { 
-  DocumentTextIcon, 
-  UserIcon, 
-  ShieldCheckIcon, 
-  ExclamationTriangleIcon, 
+import {
+  DocumentTextIcon,
+  UserIcon,
+  ShieldCheckIcon,
+  ExclamationTriangleIcon,
   InformationCircleIcon,
   HandRaisedIcon,
   Cog6ToothIcon,
@@ -36,7 +36,7 @@ export default function TermsOfService() {
             </span>
             <h1 className="text-3xl md:text-4xl font-extrabold text-blue-700 dark:text-blue-400 tracking-tight flex items-center gap-2">
               Terms of Service
-              <span className="inline-block align-middle ml-2 px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-xs font-semibold text-blue-600 dark:text-blue-200 shadow-sm animate-fade-in">
+              <span className="inline-block align-middle ml-2 px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-xs font-semibold text-blue-700 dark:text-blue-200 shadow-sm animate-fade-in">
                 Updated
               </span>
             </h1>
@@ -85,7 +85,7 @@ export default function TermsOfService() {
                   }}
                 >
                   <span className="relative flex items-center">
-                    <Icon className="w-5 h-5 group-hover:scale-125 group-hover:text-blue-600 dark:group-hover:text-blue-200 transition-transform duration-200 drop-shadow-sm" aria-hidden="true" />
+                    <Icon className="w-5 h-5 group-hover:scale-125 group-hover:text-blue-700 dark:group-hover:text-blue-200 transition-transform duration-200 drop-shadow-sm" aria-hidden="true" />
                     <span className="sr-only">{label} section</span>
                   </span>
                   <span className="hidden sm:inline">{label}</span>
@@ -119,19 +119,19 @@ export default function TermsOfService() {
             </p>
             <ul className="list-disc pl-6 space-y-1">
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Service Description:</span> Votely offers secure online voting, poll creation, and democratic engagement tools with accessibility features.
+                <span className="font-medium text-blue-700 dark:text-blue-300">Service Description:</span> Votely offers secure online voting, poll creation, and democratic engagement tools with accessibility features.
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">User Responsibilities:</span> Users must provide accurate information, follow platform rules, and respect others' rights and privacy.
+                <span className="font-medium text-blue-700 dark:text-blue-300">User Responsibilities:</span> Users must provide accurate information, follow platform rules, and respect others' rights and privacy.
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Security & Compliance:</span> We maintain high security standards and comply with relevant laws and accessibility guidelines.
+                <span className="font-medium text-blue-700 dark:text-blue-300">Security & Compliance:</span> We maintain high security standards and comply with relevant laws and accessibility guidelines.
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Intellectual Property:</span> Users retain rights to their content while granting Votely license to provide services.
+                <span className="font-medium text-blue-700 dark:text-blue-300">Intellectual Property:</span> Users retain rights to their content while granting Votely license to provide services.
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Liability & Termination:</span> Clear limits on liability and conditions for account termination or service suspension.
+                <span className="font-medium text-blue-700 dark:text-blue-300">Liability & Termination:</span> Clear limits on liability and conditions for account termination or service suspension.
               </li>
             </ul>
             <div className="mt-3 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
@@ -159,19 +159,19 @@ export default function TermsOfService() {
             </p>
             <ul className="list-disc pl-6 space-y-2">
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Agreement:</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">Agreement:</span>
                 <span className="ml-1">Your use of Votely constitutes acceptance of these terms and any future modifications.</span>
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Age Requirement:</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">Age Requirement:</span>
                 <span className="ml-1">You must be at least 13 years old to use Votely. Users under 18 must have parental consent.</span>
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Legal Capacity:</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">Legal Capacity:</span>
                 <span className="ml-1">You represent that you have the legal capacity to enter into these terms and use our services.</span>
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Updates:</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">Updates:</span>
                 <span className="ml-1">We may update these terms periodically. Continued use after changes constitutes acceptance.</span>
               </li>
             </ul>
@@ -197,27 +197,27 @@ export default function TermsOfService() {
           </div>
           <ul className="list-disc pl-6 text-gray-700 dark:text-gray-300 space-y-2">
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Voting Platform:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Voting Platform:</span>
               <span className="ml-1">Secure online voting with cryptographic verification, anonymous voting options, and real-time results.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Poll Creation:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Poll Creation:</span>
               <span className="ml-1">Tools to create, customize, and manage polls with various question types and voting methods.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Accessibility Features:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Accessibility Features:</span>
               <span className="ml-1">Screen reader support, keyboard navigation, high contrast modes, and other accessibility tools.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Analytics & Reporting:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Analytics & Reporting:</span>
               <span className="ml-1">Comprehensive analytics, result visualization, and export capabilities for voting data.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Integration & API:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Integration & API:</span>
               <span className="ml-1">API access and integration tools for enterprise users and third-party applications.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Support & Documentation:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Support & Documentation:</span>
               <span className="ml-1">Comprehensive documentation, tutorials, and customer support for all users.</span>
             </li>
           </ul>
@@ -245,31 +245,31 @@ export default function TermsOfService() {
           </div>
           <ul className="list-disc pl-6 text-gray-700 dark:text-gray-300 space-y-2">
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Accurate Information:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Accurate Information:</span>
               <span className="ml-1">Provide accurate, complete, and current information when creating your account and using our services.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">One Vote Per Person:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">One Vote Per Person:</span>
               <span className="ml-1">Do not attempt to vote multiple times in the same poll or create multiple accounts to circumvent voting limits.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Respectful Behavior:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Respectful Behavior:</span>
               <span className="ml-1">Treat other users with respect. Do not harass, threaten, or discriminate against others.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">No Misuse:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">No Misuse:</span>
               <span className="ml-1">Do not use our services for illegal activities, fraud, or to interfere with legitimate voting processes.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Security:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Security:</span>
               <span className="ml-1">Protect your account credentials and report any suspicious activity immediately.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Compliance:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Compliance:</span>
               <span className="ml-1">Follow all applicable laws, regulations, and platform rules when using our services.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Accessibility:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Accessibility:</span>
               <span className="ml-1">Do not intentionally interfere with accessibility features or create content that excludes users with disabilities.</span>
             </li>
           </ul>
@@ -297,27 +297,27 @@ export default function TermsOfService() {
           </div>
           <ul className="list-disc pl-6 text-gray-700 dark:text-gray-300 space-y-2">
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Votely Platform:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Votely Platform:</span>
               <span className="ml-1">The Votely platform, including software, design, and branding, is owned by Votely and protected by intellectual property laws.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">User Content:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">User Content:</span>
               <span className="ml-1">You retain ownership of content you create (polls, comments, etc.) while granting Votely a license to use it for service provision.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">License Grant:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">License Grant:</span>
               <span className="ml-1">By posting content, you grant Votely a worldwide, non-exclusive license to use, display, and distribute your content for platform functionality.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Third-Party Content:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Third-Party Content:</span>
               <span className="ml-1">Respect third-party intellectual property rights. Do not post content that infringes on others' rights.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Trademarks:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Trademarks:</span>
               <span className="ml-1">Votely trademarks and logos may not be used without written permission.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Open Source:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Open Source:</span>
               <span className="ml-1">Some components of our platform may use open-source software, subject to their respective licenses.</span>
             </li>
           </ul>
@@ -327,7 +327,7 @@ export default function TermsOfService() {
               <span className="font-semibold text-blue-700 dark:text-blue-300">Infringement Claims:</span>
             </span>
             <span>
-              If you believe your intellectual property rights have been violated, please contact us at <a href="mailto:legal@votely.com" className="text-blue-600 dark:text-blue-400 underline">legal@votely.com</a>.
+              If you believe your intellectual property rights have been violated, please contact us at <a href="mailto:legal@votely.com" className="text-blue-700 dark:text-blue-400 underline">legal@votely.com</a>.
             </span>
           </div>
         </section>
@@ -345,27 +345,27 @@ export default function TermsOfService() {
           </div>
           <ul className="list-disc pl-6 text-gray-700 dark:text-gray-300 space-y-2">
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Data Protection:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Data Protection:</span>
               <span className="ml-1">We implement industry-standard security measures to protect your personal information and voting data.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Encryption:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Encryption:</span>
               <span className="ml-1">All sensitive data is encrypted in transit and at rest using strong encryption protocols.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Access Controls:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Access Controls:</span>
               <span className="ml-1">Strict access controls and authentication measures protect your account and voting integrity.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Compliance:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Compliance:</span>
               <span className="ml-1">We comply with applicable privacy laws and regulations, including GDPR, CCPA, and accessibility standards.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Breach Notification:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Breach Notification:</span>
               <span className="ml-1">In the event of a security breach, we will notify affected users in accordance with legal requirements.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Your Responsibilities:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Your Responsibilities:</span>
               <span className="ml-1">You are responsible for maintaining the security of your account credentials and reporting suspicious activity.</span>
             </li>
           </ul>
@@ -375,7 +375,7 @@ export default function TermsOfService() {
               <span className="font-semibold text-blue-700 dark:text-blue-300">Privacy Policy:</span>
             </span>
             <span>
-              For detailed information about our privacy practices, please review our <a href="/privacy-policy" className="text-blue-600 dark:text-blue-400 underline">Privacy Policy</a>.
+              For detailed information about our privacy practices, please review our <a href="/privacy-policy" className="text-blue-700 dark:text-blue-400 underline">Privacy Policy</a>.
             </span>
           </div>
         </section>
@@ -393,27 +393,27 @@ export default function TermsOfService() {
           </div>
           <ul className="list-disc pl-6 text-gray-700 dark:text-gray-300 space-y-2">
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Service Availability:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Service Availability:</span>
               <span className="ml-1">While we strive for high availability, we do not guarantee uninterrupted service and are not liable for temporary outages.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Data Loss:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Data Loss:</span>
               <span className="ml-1">We implement backup and recovery procedures, but we are not liable for data loss due to circumstances beyond our control.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">User Content:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">User Content:</span>
               <span className="ml-1">We are not responsible for content created by users or third parties on our platform.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Third-Party Services:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Third-Party Services:</span>
               <span className="ml-1">We are not liable for issues arising from third-party services, integrations, or external websites.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Limitation of Damages:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Limitation of Damages:</span>
               <span className="ml-1">Our liability is limited to the amount you paid for our services in the 12 months preceding the claim.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Exclusions:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Exclusions:</span>
               <span className="ml-1">We are not liable for indirect, incidental, consequential, or punitive damages.</span>
             </li>
           </ul>
@@ -441,27 +441,27 @@ export default function TermsOfService() {
           </div>
           <ul className="list-disc pl-6 text-gray-700 dark:text-gray-300 space-y-2">
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">User-Initiated Termination:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">User-Initiated Termination:</span>
               <span className="ml-1">You may terminate your account at any time through your profile settings or by contacting support.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Violation of Terms:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Violation of Terms:</span>
               <span className="ml-1">We may suspend or terminate accounts that violate these terms, with or without notice depending on the severity.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Fraud or Abuse:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Fraud or Abuse:</span>
               <span className="ml-1">Accounts involved in fraud, abuse, or illegal activities will be terminated immediately.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Inactivity:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Inactivity:</span>
               <span className="ml-1">Accounts inactive for extended periods may be suspended or terminated after reasonable notice.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Data Retention:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Data Retention:</span>
               <span className="ml-1">Upon termination, we will delete your personal data in accordance with our Privacy Policy and legal obligations.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Surviving Provisions:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Surviving Provisions:</span>
               <span className="ml-1">Certain provisions of these terms survive termination, including intellectual property and liability limitations.</span>
             </li>
           </ul>
@@ -471,7 +471,7 @@ export default function TermsOfService() {
               <span className="font-semibold text-blue-700 dark:text-blue-300">Appeal Process:</span>
             </span>
             <span>
-              If you believe your account was terminated in error, you may appeal by contacting <a href="mailto:support@votely.com" className="text-blue-600 dark:text-blue-400 underline">support@votely.com</a>.
+              If you believe your account was terminated in error, you may appeal by contacting <a href="mailto:support@votely.com" className="text-blue-700 dark:text-blue-400 underline">support@votely.com</a>.
             </span>
           </div>
         </section>
@@ -488,20 +488,20 @@ export default function TermsOfService() {
             </p>
             <ul className="list-disc pl-6 space-y-1">
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">General Support:</span>
-                <span className="ml-1">Email us at <a href="mailto:support@votely.com" className="text-blue-600 dark:text-blue-400 underline">support@votely.com</a> for technical issues or general inquiries.</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">General Support:</span>
+                <span className="ml-1">Email us at <a href="mailto:support@votely.com" className="text-blue-700 dark:text-blue-400 underline">support@votely.com</a> for technical issues or general inquiries.</span>
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Legal Questions:</span>
-                <span className="ml-1">For legal matters or terms-related questions, contact <a href="mailto:legal@votely.com" className="text-blue-600 dark:text-blue-400 underline">legal@votely.com</a>.</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">Legal Questions:</span>
+                <span className="ml-1">For legal matters or terms-related questions, contact <a href="mailto:legal@votely.com" className="text-blue-700 dark:text-blue-400 underline">legal@votely.com</a>.</span>
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Privacy Concerns:</span>
-                <span className="ml-1">For privacy-related questions, contact <a href="mailto:privacy@votely.com" className="text-blue-600 dark:text-blue-400 underline">privacy@votely.com</a>.</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">Privacy Concerns:</span>
+                <span className="ml-1">For privacy-related questions, contact <a href="mailto:privacy@votely.com" className="text-blue-700 dark:text-blue-400 underline">privacy@votely.com</a>.</span>
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Accessibility Support:</span>
-                <span className="ml-1">For accessibility issues or feedback, contact <a href="mailto:accessibility@votely.com" className="text-blue-600 dark:text-blue-400 underline">accessibility@votely.com</a>.</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">Accessibility Support:</span>
+                <span className="ml-1">For accessibility issues or feedback, contact <a href="mailto:accessibility@votely.com" className="text-blue-700 dark:text-blue-400 underline">accessibility@votely.com</a>.</span>
               </li>
             </ul>
             <div className="flex items-center gap-2 mt-2 text-xs text-gray-500 dark:text-gray-400">
@@ -515,27 +515,27 @@ export default function TermsOfService() {
 
         <footer className="mt-10 flex flex-col items-center text-xs text-gray-500 dark:text-gray-400 space-y-1">
           <div>
-            &copy; {new Date().getFullYear()} <span className="font-semibold text-blue-600 dark:text-blue-300">Votely</span>. All rights reserved.
+            &copy; {new Date().getFullYear()} <span className="font-semibold text-blue-700 dark:text-blue-300">Votely</span>. All rights reserved.
           </div>
           <div>
             <span>
               <a
                 href="/terms-of-service"
-                className="underline hover:text-blue-600 dark:hover:text-blue-400 transition"
+                className="underline hover:text-blue-700 dark:hover:text-blue-400 transition"
               >
                 Terms of Service
               </a>
               <span className="mx-1">|</span>
               <a
                 href="/privacy-policy"
-                className="underline hover:text-blue-600 dark:hover:text-blue-400 transition"
+                className="underline hover:text-blue-700 dark:hover:text-blue-400 transition"
               >
                 Privacy Policy
               </a>
               <span className="mx-1">|</span>
               <a
                 href="mailto:legal@votely.com"
-                className="underline hover:text-blue-600 dark:hover:text-blue-400 transition"
+                className="underline hover:text-blue-700 dark:hover:text-blue-400 transition"
               >
                 Contact Legal Team
               </a>

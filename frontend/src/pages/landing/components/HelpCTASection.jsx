@@ -35,28 +35,31 @@ const FAQS = [
 
 const FaqItem = ({ item, isOpen, onClick }) => {
     return (
-        <div className="border-b border-gray-200 dark:border-zinc-800">
+        <div className="border-b border-gray-300 dark:border-zinc-800">
             <button
                 onClick={() => onClick(item.id)}
                 className="w-full py-6 flex items-center justify-between text-left group focus:outline-none"
+                aria-expanded={isOpen}
+                aria-controls={`faq-answer-${item.id}`}
             >
-                <span className={`text-lg md:text-xl font-medium tracking-tight transition-colors duration-200 ${isOpen ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-zinc-400 group-hover:text-gray-900 dark:group-hover:text-zinc-200'}`}>
+                <span className={`text-lg md:text-xl font-medium tracking-tight transition-colors duration-200 ${isOpen ? 'text-gray-900 dark:text-white' : 'text-gray-800 dark:text-zinc-400 group-hover:text-gray-900 dark:group-hover:text-zinc-200'}`}>
                     {item.question}
                 </span>
-                <span className={`flex items-center justify-center ml-4 w-6 h-6 rounded-full border transition-all duration-200 ${isOpen ? 'bg-gray-900 border-gray-900 text-white dark:bg-white dark:border-white dark:text-black rotate-45' : 'border-gray-300 dark:border-zinc-700 text-gray-400 dark:text-zinc-500 group-hover:border-gray-900 dark:group-hover:border-white'}`}>
+                <span className={`flex items-center justify-center ml-4 w-6 h-6 rounded-full border transition-all duration-200 ${isOpen ? 'bg-gray-900 border-gray-900 text-white dark:bg-white dark:border-white dark:text-black rotate-45' : 'border-gray-400 dark:border-zinc-700 text-gray-600 dark:text-zinc-500 group-hover:border-gray-900 dark:group-hover:border-white'}`}>
                     <Plus className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-45' : ''}`} />
                 </span>
             </button>
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
+                        id={`faq-answer-${item.id}`}
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
                         className="overflow-hidden"
                     >
-                        <div className="pb-8 text-base text-gray-500 dark:text-gray-400 leading-relaxed max-w-2xl">
+                        <div className="pb-8 text-base text-gray-700 dark:text-gray-400 leading-relaxed max-w-2xl">
                             {item.answer}
                         </div>
                     </motion.div>
@@ -244,7 +247,7 @@ const HelpCTASection = () => {
                     <h2 className="text-4xl md:text-6xl font-bold tracking-tighter text-gray-900 dark:text-white mb-6">
                         Questions & Support
                     </h2>
-                    <p className="text-xl text-gray-500 dark:text-zinc-500 max-w-xl leading-relaxed">
+                    <p className="text-xl text-gray-700 dark:text-zinc-500 max-w-xl leading-relaxed">
                         Everything you need to know about secure, verifiable governance.
                     </p>
                 </div>
@@ -264,7 +267,7 @@ const HelpCTASection = () => {
                             ))}
                         </div>
                         <div className="mt-12">
-                            <a href="#" className="inline-flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white border-b border-gray-200 dark:border-zinc-800 pb-1 hover:border-gray-900 dark:hover:border-white transition-colors duration-200">
+                            <a href="#" className="inline-flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-white border-b border-gray-300 dark:border-zinc-800 pb-1 hover:border-gray-900 dark:hover:border-white transition-colors duration-200">
                                 View full documentation <ArrowRight className="w-4 h-4" />
                             </a>
                         </div>

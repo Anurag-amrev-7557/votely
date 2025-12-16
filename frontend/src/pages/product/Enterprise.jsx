@@ -1,12 +1,12 @@
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useState } from 'react';
-import { 
-  BuildingOffice2Icon, 
+import {
+  BuildingOffice2Icon,
   BuildingOfficeIcon,
   FlagIcon,
-  ShieldCheckIcon, 
-  ChartBarIcon, 
+  ShieldCheckIcon,
+  ChartBarIcon,
   Cog6ToothIcon,
   UserGroupIcon,
   GlobeAltIcon,
@@ -282,7 +282,7 @@ export default function Enterprise() {
   const [selectedPlan, setSelectedPlan] = useState('professional');
   const [openFaq, setOpenFaq] = useState(null);
   const [showVideo, setShowVideo] = useState(false);
-  
+
   const { scrollYProgress } = useScroll();
   const y = useTransform(scrollYProgress, [0, 1], [0, -50]);
 
@@ -344,7 +344,7 @@ export default function Enterprise() {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-              whileHover={{ 
+              whileHover={{
                 scale: 1.05,
                 y: -2,
                 transition: { duration: 0.3 }
@@ -364,9 +364,9 @@ export default function Enterprise() {
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 />
               </motion.div>
-              
+
               <span className="font-bold text-base">Enterprise Solutions</span>
-              
+
               {/* Enhanced "New" badge with animation */}
               <motion.div
                 className="relative"
@@ -378,7 +378,7 @@ export default function Enterprise() {
                 </span>
                 <motion.div
                   className="absolute -inset-1 bg-green-400/30 rounded-full blur-sm"
-                  animate={{ 
+                  animate={{
                     scale: [1, 1.3, 1],
                     opacity: [0.5, 0.8, 0.5]
                   }}
@@ -389,7 +389,7 @@ export default function Enterprise() {
               {/* Floating decorative elements */}
               <motion.div
                 className="absolute -top-2 -right-2 w-3 h-3 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full opacity-60"
-                animate={{ 
+                animate={{
                   scale: [1, 1.8, 0.8, 1],
                   opacity: [0.6, 0.2, 0.8, 0.6],
                   rotate: [0, 180, 360, 0]
@@ -398,7 +398,7 @@ export default function Enterprise() {
               />
               <motion.div
                 className="absolute -bottom-2 -left-2 w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full opacity-60"
-                animate={{ 
+                animate={{
                   scale: [1, 1.5, 0.7, 1],
                   opacity: [0.6, 0.3, 0.7, 0.6],
                   rotate: [0, -180, -360, 0]
@@ -422,7 +422,7 @@ export default function Enterprise() {
               >
                 Enterprise-Grade
               </motion.span>
-              <motion.span 
+              <motion.span
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5 }}
@@ -435,11 +435,11 @@ export default function Enterprise() {
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 />
               </motion.span>
-              
+
               {/* Floating decorative elements */}
               <motion.div
                 className="absolute -top-4 -left-4 w-3 h-3 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full opacity-60 shadow-lg"
-                animate={{ 
+                animate={{
                   scale: [1, 1.8, 0.8, 1],
                   opacity: [0.6, 0.2, 0.8, 0.6],
                   rotate: [0, 180, 360, 0]
@@ -448,7 +448,7 @@ export default function Enterprise() {
               />
               <motion.div
                 className="absolute -bottom-4 -right-4 w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full opacity-60 shadow-lg"
-                animate={{ 
+                animate={{
                   scale: [1, 1.5, 0.7, 1],
                   opacity: [0.6, 0.3, 0.7, 0.6],
                   rotate: [0, -180, -360, 0]
@@ -464,16 +464,16 @@ export default function Enterprise() {
               transition={{ delay: 0.4 }}
               className="relative mb-8 max-w-4xl mx-auto"
             >
-              <div className="text-lg md:text-lg lg:text-xl text-gray-600 dark:text-gray-300 leading-relaxed">
+              <div className="text-lg md:text-lg lg:text-xl text-gray-700 dark:text-gray-300 leading-relaxed">
                 <motion.span
                   className="inline-flex mb-4 items-center gap-1 px-1.5 py-1 bg-gradient-to-r from-green-100 to-emerald-200 dark:from-green-900/40 dark:to-emerald-800/40 text-green-700 dark:text-green-300 rounded-xl font-semibold shadow-sm border border-green-200 dark:border-green-700/50"
-                  whileHover={{ 
-                    scale: 1.08, 
+                  whileHover={{
+                    scale: 1.08,
                     y: -3,
                     rotate: [-2, 2]
                   }}
                   whileTap={{ scale: 0.95 }}
-                  transition={{ 
+                  transition={{
                     duration: 0.3,
                     type: "spring",
                     stiffness: 300
@@ -485,13 +485,13 @@ export default function Enterprise() {
                 ,{' '}
                 <motion.span
                   className="inline-flex items-center gap-1 px-1 py-1 bg-gradient-to-r from-blue-100 to-indigo-200 dark:from-blue-900/40 dark:to-indigo-800/40 text-blue-700 dark:text-blue-300 rounded-xl font-semibold shadow-sm border border-blue-200 dark:border-blue-700/50"
-                  whileHover={{ 
-                    scale: 1.08, 
+                  whileHover={{
+                    scale: 1.08,
                     y: -3,
                     rotate: [2, -2]
                   }}
                   whileTap={{ scale: 0.95 }}
-                  transition={{ 
+                  transition={{
                     duration: 0.3,
                     type: "spring",
                     stiffness: 300
@@ -503,13 +503,13 @@ export default function Enterprise() {
                 , and{' '}
                 <motion.span
                   className="inline-flex items-center gap-1 px-1 py-1 bg-gradient-to-r from-purple-100 to-violet-200 dark:from-purple-900/40 dark:to-violet-800/40 text-purple-700 dark:text-purple-300 rounded-xl font-semibold shadow-sm border border-purple-200 dark:border-purple-700/50"
-                  whileHover={{ 
-                    scale: 1.08, 
+                  whileHover={{
+                    scale: 1.08,
                     y: -3,
                     rotate: [-1, 1]
                   }}
                   whileTap={{ scale: 0.95 }}
-                  transition={{ 
+                  transition={{
                     duration: 0.3,
                     type: "spring",
                     stiffness: 300
@@ -521,13 +521,13 @@ export default function Enterprise() {
                 {' '}voting solutions designed for{' '}
                 <motion.span
                   className="inline-flex items-center gap-1 px-1 py-1 bg-gradient-to-r from-orange-100 to-amber-200 dark:from-orange-900/40 dark:to-amber-800/40 text-orange-700 dark:text-orange-300 rounded-xl font-semibold shadow-sm border border-orange-200 dark:border-orange-700/50"
-                  whileHover={{ 
-                    scale: 1.08, 
+                  whileHover={{
+                    scale: 1.08,
                     y: -3,
                     rotate: [1, -1]
                   }}
                   whileTap={{ scale: 0.95 }}
-                  transition={{ 
+                  transition={{
                     duration: 0.3,
                     type: "spring",
                     stiffness: 300
@@ -539,13 +539,13 @@ export default function Enterprise() {
                 ,{' '}
                 <motion.span
                   className="inline-flex items-center gap-1 px-1 py-1 bg-gradient-to-r from-red-100 to-rose-200 dark:from-red-900/40 dark:to-rose-800/40 text-red-700 dark:text-red-300 rounded-xl font-semibold shadow-sm border border-red-200 dark:border-red-700/50"
-                  whileHover={{ 
-                    scale: 1.08, 
+                  whileHover={{
+                    scale: 1.08,
                     y: -3,
                     rotate: [-1, 1]
                   }}
                   whileTap={{ scale: 0.95 }}
-                  transition={{ 
+                  transition={{
                     duration: 0.3,
                     type: "spring",
                     stiffness: 300
@@ -557,13 +557,13 @@ export default function Enterprise() {
                 , and{' '}
                 <motion.span
                   className="inline-flex items-center gap-1 px-1 py-1 bg-gradient-to-r from-indigo-100 to-blue-200 dark:from-indigo-900/40 dark:to-blue-800/40 text-indigo-700 dark:text-indigo-300 rounded-xl font-semibold shadow-sm border border-indigo-200 dark:border-indigo-700/50"
-                  whileHover={{ 
-                    scale: 1.08, 
+                  whileHover={{
+                    scale: 1.08,
                     y: -3,
                     rotate: [2, -2]
                   }}
                   whileTap={{ scale: 0.95 }}
-                  transition={{ 
+                  transition={{
                     duration: 0.3,
                     type: "spring",
                     stiffness: 300
@@ -574,11 +574,11 @@ export default function Enterprise() {
                 </motion.span>
                 .
               </div>
-              
+
               {/* Floating decorative elements */}
               <motion.div
                 className="absolute -top-2 -left-2 w-2 h-2 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full opacity-60 shadow-lg"
-                animate={{ 
+                animate={{
                   scale: [1, 1.5, 0.8, 1],
                   opacity: [0.6, 0.2, 0.8, 0.6],
                   rotate: [0, 180, 360, 0]
@@ -587,7 +587,7 @@ export default function Enterprise() {
               />
               <motion.div
                 className="absolute -bottom-2 -right-2 w-1.5 h-1.5 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full opacity-60 shadow-lg"
-                animate={{ 
+                animate={{
                   scale: [1, 1.3, 0.7, 1],
                   opacity: [0.6, 0.3, 0.7, 0.6],
                   rotate: [0, -180, -360, 0]
@@ -611,7 +611,7 @@ export default function Enterprise() {
                 Get Enterprise Demo
                 <ArrowRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
-              <button 
+              <button
                 onClick={() => setShowVideo(true)}
                 className="group inline-flex items-center gap-3 px-8 py-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-semibold rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-300 transform hover:scale-105"
               >
@@ -641,7 +641,7 @@ export default function Enterprise() {
                 >
                   <stat.icon className="w-8 h-8 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
                   <div className="text-2xl font-bold text-gray-900 dark:text-white">{stat.number}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">{stat.label}</div>
+                  <div className="text-sm text-gray-700 dark:text-gray-400">{stat.label}</div>
                 </motion.div>
               ))}
             </motion.div>
@@ -662,7 +662,7 @@ export default function Enterprise() {
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4">
               Enterprise Features
             </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto">
               Built for scale, security, and compliance with enterprise-grade features that organizations trust.
             </p>
           </motion.div>
@@ -687,12 +687,12 @@ export default function Enterprise() {
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
                       {feature.title}
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
+                    <p className="text-gray-700 dark:text-gray-300 mb-4 leading-relaxed">
                       {feature.description}
                     </p>
                     <ul className="space-y-2">
                       {feature.benefits.map((benefit, idx) => (
-                        <li key={idx} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <li key={idx} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-400">
                           <CheckCircleIcon className="w-4 h-4 text-green-500 flex-shrink-0" />
                           {benefit}
                         </li>
@@ -719,7 +719,7 @@ export default function Enterprise() {
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4">
               Enterprise Plans
             </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto">
               Choose the plan that scales with your organization's needs and growth.
             </p>
           </motion.div>
@@ -732,11 +732,10 @@ export default function Enterprise() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: index * 0.1 }}
                 viewport={{ once: true }}
-                className={`relative p-8 bg-white dark:bg-gray-800 rounded-2xl border-2 transition-all duration-300 hover:shadow-xl hover:-translate-y-2 ${
-                  plan.popular 
-                    ? 'border-blue-500 dark:border-blue-400 shadow-lg scale-105' 
+                className={`relative p-8 bg-white dark:bg-gray-800 rounded-2xl border-2 transition-all duration-300 hover:shadow-xl hover:-translate-y-2 ${plan.popular
+                    ? 'border-blue-500 dark:border-blue-400 shadow-lg scale-105'
                     : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600'
-                }`}
+                  }`}
               >
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
@@ -750,14 +749,14 @@ export default function Enterprise() {
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                     {plan.name}
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-300 mb-4">
+                  <p className="text-gray-700 dark:text-gray-300 mb-4">
                     {plan.description}
                   </p>
                   <div className="flex items-baseline justify-center gap-1 mb-4">
                     <span className="text-4xl font-bold text-gray-900 dark:text-white">
                       {plan.price}
                     </span>
-                    <span className="text-gray-600 dark:text-gray-300">
+                    <span className="text-gray-700 dark:text-gray-300">
                       {plan.period}
                     </span>
                   </div>
@@ -773,11 +772,10 @@ export default function Enterprise() {
                   ))}
                 </ul>
 
-                <button className={`w-full py-4 px-6 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 ${
-                  plan.popular
+                <button className={`w-full py-4 px-6 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 ${plan.popular
                     ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600'
-                }`}>
+                  }`}>
                   {plan.name === 'Enterprise' ? 'Contact Sales' : 'Get Started'}
                 </button>
               </motion.div>
@@ -799,7 +797,7 @@ export default function Enterprise() {
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4">
               Plan Comparison
             </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto">
               Compare features across all enterprise plans to find the perfect fit.
             </p>
           </motion.div>
@@ -825,9 +823,9 @@ export default function Enterprise() {
                     className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                   >
                     <td className="p-6 font-medium text-gray-900 dark:text-white">{row.feature}</td>
-                    <td className="p-6 text-center text-gray-600 dark:text-gray-300">{row.starter}</td>
+                    <td className="p-6 text-center text-gray-700 dark:text-gray-300">{row.starter}</td>
                     <td className="p-6 text-center text-blue-600 dark:text-blue-400 font-semibold">{row.professional}</td>
-                    <td className="p-6 text-center text-gray-600 dark:text-gray-300">{row.enterprise}</td>
+                    <td className="p-6 text-center text-gray-700 dark:text-gray-300">{row.enterprise}</td>
                   </motion.tr>
                 ))}
               </tbody>
@@ -849,7 +847,7 @@ export default function Enterprise() {
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4">
               Trusted by Enterprise Leaders
             </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto">
               See what enterprise customers say about Votely's platform and support.
             </p>
           </motion.div>
@@ -882,7 +880,7 @@ export default function Enterprise() {
                     <p className="font-semibold text-gray-900 dark:text-white">
                       {testimonial.name}
                     </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-sm text-gray-700 dark:text-gray-400">
                       {testimonial.role}, {testimonial.company}
                     </p>
                   </div>
@@ -906,7 +904,7 @@ export default function Enterprise() {
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4">
               Frequently Asked Questions
             </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300">
+            <p className="text-xl text-gray-700 dark:text-gray-300">
               Get answers to common questions about our enterprise solutions.
             </p>
           </motion.div>
@@ -941,7 +939,7 @@ export default function Enterprise() {
                     exit={{ opacity: 0, height: 0 }}
                     className="px-6 pb-6"
                   >
-                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                       {faq.answer}
                     </p>
                   </motion.div>
@@ -1014,7 +1012,7 @@ export default function Enterprise() {
             <div className="aspect-video bg-gray-200 dark:bg-gray-700 rounded-xl flex items-center justify-center">
               <div className="text-center">
                 <PlayIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 dark:text-gray-300">Demo video would be embedded here</p>
+                <p className="text-gray-700 dark:text-gray-300">Demo video would be embedded here</p>
               </div>
             </div>
           </motion.div>

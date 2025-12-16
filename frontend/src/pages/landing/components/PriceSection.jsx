@@ -51,7 +51,7 @@ const PriceCard = ({ tier, billing, index }) => {
     };
 
     const isEnterprise = tier.id === 'empire';
-    const accentColor = isEnterprise ? 'bg-white text-black' : 'bg-transparent text-gray-900 dark:text-white border border-gray-200 dark:border-zinc-800 hover:border-gray-300 dark:hover:border-zinc-700';
+    const accentColor = isEnterprise ? 'bg-white text-black' : 'bg-transparent text-gray-900 dark:text-white border border-gray-300 dark:border-zinc-800 hover:border-gray-400 dark:hover:border-zinc-700';
 
     return (
         <motion.div
@@ -89,7 +89,7 @@ const PriceCard = ({ tier, billing, index }) => {
                     <h3 className="text-xl md:text-2xl font-bold tracking-tight text-gray-900 dark:text-white mb-2">
                         {tier.name}.
                     </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 font-mono tracking-wide uppercase">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 font-mono tracking-wide uppercase">
                         {tier.description}
                     </p>
                 </div>
@@ -100,7 +100,7 @@ const PriceCard = ({ tier, billing, index }) => {
                         <span className="text-5xl md:text-6xl font-bold tracking-tighter text-gray-900 dark:text-white">
                             {tier.price === 'Custom' ? 'Custom' : `$${tier.price}`}
                         </span>
-                        {tier.price !== 'Custom' && <span className="text-sm text-gray-500 dark:text-gray-400">/mo</span>}
+                        {tier.price !== 'Custom' && <span className="text-sm text-gray-600 dark:text-gray-400">/mo</span>}
                     </div>
                 </div>
 
@@ -114,7 +114,7 @@ const PriceCard = ({ tier, billing, index }) => {
                             ) : (
                                 <Minus className="w-4 h-4 text-gray-300 dark:text-zinc-700 mt-0.5 shrink-0" />
                             )}
-                            <span className={`${feat.included ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-zinc-600'}`}>
+                            <span className={`${feat.included ? 'text-gray-700 dark:text-gray-300' : 'text-gray-500 dark:text-zinc-600'}`}>
                                 {feat.name}
                             </span>
                         </li>
@@ -129,7 +129,7 @@ const PriceCard = ({ tier, billing, index }) => {
                     </button>
                     {isEnterprise && (
                         <div className="mt-4 text-center">
-                            <span className="text-[10px] font-mono uppercase text-gray-400 dark:text-zinc-600">
+                            <span className="text-[10px] font-mono uppercase text-gray-600 dark:text-zinc-600">
                                 24/7 Priority Support Included
                             </span>
                         </div>
@@ -196,19 +196,19 @@ const PriceSection = () => {
                     transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
                 >
                     <div className="flex items-center gap-3 mb-8">
-                        <span className="h-px w-12 bg-gray-300 dark:bg-zinc-700"></span>
-                        <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500 dark:text-zinc-500">
+                        <span className="h-px w-12 bg-gray-400 dark:bg-zinc-700"></span>
+                        <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gray-700 dark:text-zinc-500">
                             Resource Allocation
                         </h2>
                     </div>
 
-                    <h1 className="text-7xl md:text-[10rem] font-bold tracking-tighter text-gray-900 dark:text-white leading-[0.8] mb-12 -ml-1 md:-ml-2">
-                        Proof of <br /> <span className="text-gray-400 dark:text-zinc-600">Scale.</span>
+                    <h1 className="text-5xl md:text-[10rem] font-bold tracking-tighter text-gray-900 dark:text-white leading-[0.8] mb-12 -ml-1 md:-ml-2">
+                        Proof of <br /> <span className="text-gray-600 dark:text-zinc-600">Scale.</span>
                     </h1>
 
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-                        <div className="md:col-span-12 flex justify-between items-end border-b border-gray-100 dark:border-zinc-900 pb-12">
-                            <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-400 leading-relaxed tracking-tight max-w-2xl">
+                        <div className="md:col-span-12 flex justify-between items-end border-b border-gray-300 dark:border-zinc-900 pb-12">
+                            <p className="text-xl md:text-2xl text-gray-700 dark:text-gray-400 leading-relaxed tracking-tight max-w-2xl">
                                 Select the computational density required for your governance model.
                             </p>
 
@@ -219,8 +219,8 @@ const PriceSection = () => {
                                         key={cycle}
                                         onClick={() => setBilling(cycle)}
                                         className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${billing === cycle
-                                                ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-sm'
-                                                : 'text-gray-400 dark:text-zinc-600 hover:text-gray-600'
+                                            ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-sm'
+                                            : 'text-gray-600 dark:text-zinc-600 hover:text-gray-800'
                                             }`}
                                     >
                                         {cycle}
@@ -232,15 +232,17 @@ const PriceSection = () => {
                 </motion.div>
             </div>
 
-            {/* Cards Grid */}
-            <div className="max-w-8xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 items-stretch">
+            {/* Cards Grid / Mobile Carousel */}
+            <div className="max-w-8xl mx-auto flex md:grid overflow-x-auto md:overflow-visible snap-x snap-mandatory md:grid-cols-3 gap-4 md:gap-6 items-stretch pb-8 md:pb-0 px-4 md:px-0 -mx-4 md:mx-0 no-scrollbar" role="list">
                 {TIERS.map((tier, idx) => (
-                    <PriceCard key={tier.id} tier={tier} billing={billing} index={idx} />
+                    <div key={tier.id} className="flex-shrink-0 min-w-full md:min-w-0 md:w-auto snap-center" role="listitem">
+                        <PriceCard tier={tier} billing={billing} index={idx} />
+                    </div>
                 ))}
             </div>
 
             {/* Footer Info */}
-            <div className="max-w-8xl mx-auto mt-24 flex flex-col md:flex-row justify-between text-gray-400 dark:text-zinc-600 font-mono text-xs tracking-wider uppercase border-t border-gray-100 dark:border-zinc-900 pt-8">
+            <div className="max-w-8xl mx-auto mt-24 flex flex-col md:flex-row justify-between text-gray-600 dark:text-zinc-600 font-mono text-xs tracking-wider uppercase border-t border-gray-300 dark:border-zinc-900 pt-8">
                 <div>* Prices exclude VAT</div>
                 <div className="flex gap-8">
                     <span>Docs</span>

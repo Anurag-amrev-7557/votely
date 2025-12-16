@@ -6,6 +6,17 @@ const optionSchema = new mongoose.Schema({
   description: { type: String },
   party: { type: String },
   image: { type: String },
+  sop: { type: String },
+  motto: { type: String },
+  website: { type: String },
+  socialMedia: {
+    twitter: String,
+    instagram: String,
+    facebook: String,
+    linkedin: String
+  },
+  additionalPhotos: [String],
+  links: [{ label: String, url: String }],
   votes: { type: Number, default: 0 },
 });
 
@@ -36,7 +47,7 @@ const pollSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Pre-save hook to set status based on dates
-pollSchema.pre('save', async function(next) {
+pollSchema.pre('save', async function (next) {
   const now = new Date();
   const wasCompleted = this.isModified('status') && this.status === 'completed';
   if (this.endDate && now > this.endDate) {
@@ -46,7 +57,7 @@ pollSchema.pre('save', async function(next) {
   } else {
     this.status = 'upcoming';
   }
-  
+
   // Send notification if poll just completed - make it non-blocking
   if (wasCompleted) {
     // Use setImmediate to make this non-blocking and prevent poll creation from failing
@@ -68,7 +79,7 @@ pollSchema.pre('save', async function(next) {
 });
 
 // Static method to update all poll statuses
-pollSchema.statics.updateStatuses = async function() {
+pollSchema.statics.updateStatuses = async function () {
   const now = new Date();
   await this.updateMany({ endDate: { $lt: now } }, { status: 'completed' });
   await this.updateMany({ startDate: { $lte: now }, endDate: { $gte: now } }, { status: 'active' });

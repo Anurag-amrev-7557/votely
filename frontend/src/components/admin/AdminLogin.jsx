@@ -3,22 +3,112 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import { startAuthentication } from '@simplewebauthn/browser';
 import { useAuth } from '../../context/AuthContext';
-import { EyeIcon, EyeSlashIcon, ShieldCheckIcon, ExclamationTriangleIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
-import axios from 'axios';
+import { EyeIcon, EyeSlashIcon, ShieldCheckIcon, CheckCircleIcon, KeyIcon, FingerPrintIcon } from '@heroicons/react/24/outline';
 import axiosInstance from '../../utils/api/axiosConfig';
 import { useTheme } from '../../context/ThemeContext';
-import toast from 'react-hot-toast';
+import { toast } from '../../utils/toastUtils';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { Points, PointMaterial } from '@react-three/drei';
+import * as random from 'maath/random/dist/maath-random.esm';
+
+// --- Visual Components ---
+
+// 3D Background - Darker, more "Admin/Security" feel (Deep Violet/Gold accents)
+const AdminParticleField = ({ isDarkMode }) => {
+  const ref = useRef();
+  const [sphere] = useState(() => random.inSphere(new Float32Array(6000), { radius: 1.8 })); // Denser field
+
+  useFrame((state, delta) => {
+    if (ref.current) {
+      ref.current.rotation.x -= delta / 15;
+      ref.current.rotation.y -= delta / 20;
+    }
+  });
+
+  return (
+    <group rotation={[0, 0, Math.PI / 4]}>
+      <Points ref={ref} positions={sphere} stride={3} frustumCulled={false}>
+        <PointMaterial
+          transparent
+          color={isDarkMode ? '#ffd700' : '#4f46e5'} // Gold in dark mode, Indigo in light
+          size={0.003}
+          sizeAttenuation={true}
+          depthWrite={false}
+          opacity={isDarkMode ? 0.4 : 0.6}
+        />
+      </Points>
+    </group>
+  );
+};
+
+const AdminBackground = ({ isDarkMode }) => {
+  const bgColor = isDarkMode ? '#050505' : '#f8fafc'; // Deep black vs off-white
+
+  return (
+    <div className="absolute inset-0 z-0 overflow-hidden transition-colors duration-500" style={{ backgroundColor: bgColor }} aria-hidden="true">
+      <Canvas camera={{ position: [0, 0, 1] }}>
+        <AdminParticleField isDarkMode={isDarkMode} />
+      </Canvas>
+      {/* Vignette & Gradients */}
+      <div className={`absolute inset-0 bg-gradient-to-t ${isDarkMode ? 'from-black via-transparent to-black/80' : 'from-slate-100 via-transparent to-white/80'} pointer-events-none transition-colors duration-500`} />
+      <div className={`absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,transparent_0%,rgba(0,0,0,0.4)_100%)] pointer-events-none`} />
+    </div>
+  );
+};
+
+// Abstract Semantic Visual for Security Score
+const SecurityVisual = ({ score }) => {
+  // Normalize score to 0-1
+  const normalized = score / 100;
+
+  return (
+    <div className="relative w-16 h-16 flex items-center justify-center" role="img" aria-label={`Security Score: ${score}%`}>
+      {/* Outer Glow Ring */}
+      <motion.div
+        animate={{
+          opacity: [0.5, 0.8, 0.5],
+          scale: [1, 1.05, 1],
+          borderColor: score < 40 ? '#ef4444' : score < 70 ? '#eab308' : '#22c55e'
+        }}
+        transition={{ duration: 3, repeat: Infinity }}
+        className="absolute inset-0 rounded-full border-2 border-transparent"
+        style={{
+          boxShadow: `0 0 ${normalized * 20}px ${score < 40 ? '#ef4444' : score < 70 ? '#eab308' : '#22c55e'}40`
+        }}
+      />
+
+      {/* Progress Circle SVG */}
+      <svg className="w-full h-full -rotate-90">
+        <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="2" fill="none" className="text-gray-200 dark:text-gray-800" />
+        <motion.circle
+          cx="32" cy="32" r="28"
+          stroke="currentColor"
+          strokeWidth="2"
+          fill="none"
+          strokeLinecap="round"
+          className={`${score < 40 ? 'text-red-500' : score < 70 ? 'text-yellow-500' : 'text-green-500'} transition-colors duration-500`}
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: normalized }}
+          transition={{ duration: 1, ease: "easeOut" }}
+          style={{ strokeDasharray: 176, strokeDashoffset: 0 }} // 2 * PI * 28 ≈ 176
+        />
+      </svg>
+
+      {/* Inner Icon */}
+      <ShieldCheckIcon className={`w-6 h-6 ${score < 40 ? 'text-red-500' : score < 70 ? 'text-yellow-500' : 'text-green-500'} transition-colors duration-500`} />
+    </div>
+  );
+};
 
 const AdminLogin = () => {
-  // Enhanced state management
+  // --- STATE MANAGEMENT ---
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     twoFactorCode: '',
     rememberMe: false
   });
-
-
 
   const [securityState, setSecurityState] = useState({
     error: '',
@@ -28,12 +118,12 @@ const AdminLogin = () => {
     showTwoFactor: false,
     attempts: 0,
     lockoutTime: null,
-    lastLoginAttempt: null,
     passwordStrength: 0,
     isBiometricAvailable: false,
     biometricSupported: false,
     showSecurityTips: false,
     loginHistory: [],
+    // Fingerprinting
     deviceFingerprint: null,
     geoLocation: null,
     networkInfo: null
@@ -47,87 +137,32 @@ const AdminLogin = () => {
     realTimeValidation: true
   });
 
-  // Refs for advanced functionality
+  const [focusedInput, setFocusedInput] = useState(null);
+
+  // Refs
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
-  const twoFactorRef = useRef(null);
   const formRef = useRef(null);
-  const biometricRef = useRef(null);
 
   // Hooks
   const navigate = useNavigate();
   const location = useLocation();
-  const { login: adminLogin, validateSession, logout } = useAdminAuth();
+  const { isDarkMode } = useTheme();
+  const { login: adminLogin, validateSession } = useAdminAuth();
   const { login: authLogin } = useAuth();
 
   // Constants
   const from = location.state?.from?.pathname || '/admin';
   const MAX_ATTEMPTS = 5;
-  const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
-  const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+  const LOCKOUT_DURATION = 15 * 60 * 1000;
   const PASSWORD_MIN_LENGTH = 8;
-  const TWO_FACTOR_LENGTH = 6;
-
-  // Advanced validation patterns
   const VALIDATION_PATTERNS = {
     email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-    // Modified to allow ANY SPECIAL CHARACTER (non-alphanumeric)
     password: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/,
     twoFactor: /^\d{6}$/
   };
 
-  // Security scoring system
-  const calculateSecurityScore = useCallback((data) => {
-    let score = 0;
-
-    // Email validation
-    if (VALIDATION_PATTERNS.email.test(data.email)) score += 20;
-
-    // Password strength
-    if (data.password.length >= PASSWORD_MIN_LENGTH) score += 20;
-    if (VALIDATION_PATTERNS.password.test(data.password)) score += 30;
-
-    // Two-factor authentication
-    if (data.twoFactorCode && VALIDATION_PATTERNS.twoFactor.test(data.twoFactorCode)) score += 30;
-
-    return Math.min(score, 100);
-  }, []);
-
-  // Enhanced form validation with real-time feedback
-  const validateForm = useCallback((data = formData) => {
-    const errors = [];
-    const warnings = [];
-
-    // Email validation
-    if (!data.email.trim()) {
-      errors.push('Email is required');
-    } else if (!VALIDATION_PATTERNS.email.test(data.email)) {
-      errors.push('Please enter a valid email address');
-    } else if (data.email.includes('+')) {
-      warnings.push('Email aliases may not work with admin accounts');
-    }
-
-    // Password validation
-    if (!data.password) {
-      errors.push('Password is required');
-    } else {
-      if (data.password.length < PASSWORD_MIN_LENGTH) {
-        errors.push(`Password must be at least ${PASSWORD_MIN_LENGTH} characters`);
-      }
-      if (!VALIDATION_PATTERNS.password.test(data.password)) {
-        warnings.push('Password should contain uppercase, lowercase, number, and special character');
-      }
-    }
-
-    // Two-factor validation
-    if (securityState.showTwoFactor && data.twoFactorCode) {
-      if (!VALIDATION_PATTERNS.twoFactor.test(data.twoFactorCode)) {
-        errors.push('Two-factor code must be 6 digits');
-      }
-    }
-
-    return { errors, warnings };
-  }, [formData, securityState.showTwoFactor]);
+  // --- LOGIC & HELPERS ---
 
   // Device fingerprinting
   const generateDeviceFingerprint = useCallback(async () => {
@@ -204,6 +239,8 @@ const AdminLogin = () => {
       getNetworkInfo(),
       generateCanvasFingerprint()
     ]);
+
+    // Detailed security context for the backend
     const checks = {
       deviceFingerprint,
       geoLocation,
@@ -218,258 +255,26 @@ const AdminLogin = () => {
       plugins: Array.from(navigator.plugins).map(p => p.name),
       canvasFingerprint
     };
-    setSecurityState(prev => ({ ...prev, ...checks }));
+
+    // Update local state for debugging/display
+    setSecurityState(prev => ({ ...prev, deviceFingerprint, geoLocation, networkInfo }));
+
     return checks;
   }, [generateDeviceFingerprint, getGeoLocation, getNetworkInfo, generateCanvasFingerprint]);
 
-  // Biometric authentication support
-  const checkBiometricSupport = useCallback(async () => {
-    if (!window.PublicKeyCredential) {
-      return false;
-    }
-
-    try {
-      const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-      setSecurityState(prev => ({
-        ...prev,
-        isBiometricAvailable: available,
-        biometricSupported: true
-      }));
-      return available;
-    } catch (error) {
-      return false;
-    }
-  }, []);
-
-  // Advanced password strength calculation
-  const calculatePasswordStrength = useCallback((password) => {
-    if (!password) return 0;
-
-    let strength = 0;
-
-    // Length contribution
-    strength += Math.min(password.length * 4, 40);
-
-    // Character variety contribution
-    if (/[a-z]/.test(password)) strength += 10;
-    if (/[A-Z]/.test(password)) strength += 10;
-    if (/\d/.test(password)) strength += 10;
-    if (/[@$!%*?&]/.test(password)) strength += 10;
-
-    // Complexity bonus
-    if (password.length >= 16) strength += 20;
-    if (/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(password)) strength += 20;
-
-    return Math.min(strength, 100);
-  }, []);
-
-  // Enhanced input handling with real-time validation
-  const handleInputChange = useCallback((field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-
-    if (validationState.realTimeValidation) {
-      const newData = { ...formData, [field]: value };
-      const { errors } = validateForm(newData);
-
-      setValidationState(prev => ({
-        ...prev,
-        [`${field}Valid`]: !errors.some(e => e.toLowerCase().includes(field)),
-        formValid: errors.length === 0
-      }));
-    }
-
-    setSecurityState(prev => ({ ...prev, error: '' }));
-  }, [formData, validationState.realTimeValidation, validateForm]);
-
-  // Enhanced security measures
-  useEffect(() => {
-    const initializeSecurity = async () => {
-      // Check lockout status
-      const storedLockout = localStorage.getItem('adminLoginLockout');
-      if (storedLockout) {
-        const lockoutData = JSON.parse(storedLockout);
-        const now = Date.now();
-        if (now < lockoutData.until) {
-          setSecurityState(prev => ({
-            ...prev,
-            lockoutTime: lockoutData.until,
-            attempts: lockoutData.attempts
-          }));
-        } else {
-          localStorage.removeItem('adminLoginLockout');
-        }
-      }
-      // Validate existing session
-      try {
-        const sessionValid = await validateSession();
-        if (sessionValid) {
-          navigate(from, { replace: true });
-        }
-      } catch (error) {
-        console.warn('Session validation failed:', error);
-      }
-    };
-
-    initializeSecurity();
-
-    // Defer heavy checks to after render
-    setTimeout(() => {
-      checkBiometricSupport();
-      performSecurityChecks();
-    }, 0);
-  }, [checkBiometricSupport, performSecurityChecks, validateSession, navigate, from]);
-
-  // Auto-focus and accessibility
-  useEffect(() => {
-    if (emailRef.current && !securityState.lockoutTime) {
-      emailRef.current.focus();
-    }
-  }, [securityState.lockoutTime]);
-
-  // Password strength monitoring
-  useEffect(() => {
-    const strength = calculatePasswordStrength(formData.password);
-    setSecurityState(prev => ({ ...prev, passwordStrength: strength }));
-  }, [formData.password, calculatePasswordStrength]);
-
-  // Enhanced submit handler with comprehensive security
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (securityState.isLoading || securityState.lockoutTime) {
-      return;
-    }
-
-    const { errors, warnings } = validateForm();
-    if (errors.length > 0) {
-      setSecurityState(prev => ({ ...prev, error: errors[0] }));
-      return;
-    }
-
-    setSecurityState(prev => ({
-      ...prev,
-      error: '',
-      isLoading: true,
-      isValidating: true,
-      lastLoginAttempt: Date.now()
-    }));
-
-    try {
-      // Perform additional security checks
-      const securityChecks = await performSecurityChecks();
-
-      // Simulate network delay for better UX
-      // Authenticate via main AuthContext first
-      const authResult = await authLogin(formData.email.trim(), formData.password);
-
-      if (!authResult.success) {
-        throw new Error(authResult.error || 'Authentication failed');
-      }
-
-      // Then verify admin access
-      const loginPromise = adminLogin(
-        formData.email.trim(),
-        formData.password,
-        formData.twoFactorCode || undefined,
-        securityChecks,
-        authResult.user // Pass explicit user for immediate validation
-      );
-
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Request timeout')), 15000)
-      );
-
-      const result = await Promise.race([loginPromise, timeoutPromise]);
-
-      if (result.success) {
-        // Clear lockout on successful login
-        localStorage.removeItem('adminLoginLockout');
-
-        // Store login history
-        const loginRecord = {
-          timestamp: Date.now(),
-          ip: result.ip || 'unknown',
-          userAgent: navigator.userAgent,
-          success: true
-        };
-
-        setSecurityState(prev => ({
-          ...prev,
-          attempts: 0,
-          lockoutTime: null,
-          loginHistory: [...prev.loginHistory, loginRecord].slice(-10)
-        }));
-
-        // Note: authLogin already sets the token in localStorage and AuthContext state
-        // So the manual axios calls below were redundant/backwards and have been removed.
-
-        // Add success feedback before navigation
-        setTimeout(() => {
-          navigate(from, { replace: true });
-        }, 1000);
-      } else {
-        const newAttempts = securityState.attempts + 1;
-
-        if (newAttempts >= MAX_ATTEMPTS) {
-          const lockoutUntil = Date.now() + LOCKOUT_DURATION;
-          setSecurityState(prev => ({ ...prev, lockoutTime: lockoutUntil }));
-
-          localStorage.setItem('adminLoginLockout', JSON.stringify({
-            attempts: newAttempts,
-            until: lockoutUntil
-          }));
-
-          setSecurityState(prev => ({
-            ...prev,
-            error: `Too many failed attempts. Account locked for 15 minutes.`,
-            attempts: newAttempts
-          }));
-        } else {
-          setSecurityState(prev => ({
-            ...prev,
-            error: result.error || `Invalid credentials. ${MAX_ATTEMPTS - newAttempts} attempts remaining.`,
-            attempts: newAttempts
-          }));
-        }
-      }
-    } catch (err) {
-      const newAttempts = securityState.attempts + 1;
-
-      if (err.message === 'Request timeout') {
-        setSecurityState(prev => ({
-          ...prev,
-          error: 'Request timed out. Please check your connection and try again.',
-          attempts: newAttempts
-        }));
-      } else {
-        setSecurityState(prev => ({
-          ...prev,
-          error: 'An unexpected error occurred. Please try again later.',
-          attempts: newAttempts
-        }));
-      }
-
-      console.error('Login error:', err);
-    } finally {
-      setSecurityState(prev => ({
-        ...prev,
-        isLoading: false,
-        isValidating: false
-      }));
-    }
-  };
-
-  // Enhanced submit handler
-  const handleFormSubmit = (e) => {
-    handleSubmit(e);
-  };
-
-  // Handle biometric login
+  // Handle biometric login - Full WebAuthn Flow
   const handleBiometricLogin = useCallback(async () => {
-    setSecurityState(prev => ({ ...prev, isLoading: true }));
+    if (!formData.email.trim()) {
+      setSecurityState(prev => ({ ...prev, error: 'Please enter your email to identify account' }));
+      emailRef.current?.focus();
+      return;
+    }
+
+    setSecurityState(prev => ({ ...prev, isLoading: true, error: '' }));
+    const loadingToast = toast.loading("Initializing secure handshake...");
 
     try {
-      // 1. Get options from backend (requires email to find user, or user interaction)
+      // 1. Get options from backend 
       const optionsResp = await axiosInstance.post('/auth/webauthn/login/options', {
         email: formData.email.trim()
       });
@@ -479,747 +284,413 @@ const AdminLogin = () => {
       const asseResp = await startAuthentication({ optionsJSON: options });
 
       // 3. Verify with backend
+      toast.loading("Verifying cryptographic signature...", { id: loadingToast });
       const verifyResp = await axiosInstance.post('/auth/webauthn/login/verify', {
         email: formData.email.trim(),
         output: asseResp
       });
-      console.log('Biometric verify response:', verifyResp.data); // Debug Log
 
       const { success, token, ...userData } = verifyResp.data;
 
-      const adminResult = await adminLogin(userData.email, null, null, await performSecurityChecks(), userData);
+      // 4. Finalize Admin Login with Context
+      const checks = await performSecurityChecks();
+      toast.dismiss(loadingToast);
+
+      const adminResult = await adminLogin(userData.email, null, null, checks, userData);
 
       if (adminResult.success || (adminResult.then && (await adminResult).success)) {
-        toast.success('Biometric login successful');
+        toast.success('Biometric Identity Verified');
+        localStorage.removeItem('adminLoginLockout');
         navigate(from, { replace: true });
       } else {
-        toast.error('Biometric verified, but admin access denied.');
+        toast.error('Identity verified, but admin access was denied.');
       }
     } catch (error) {
       console.error('Biometric login error:', error);
+      toast.dismiss(loadingToast);
       const serverError = error.response?.data?.error;
-      const serverDetails = error.response?.data?.details;
-      toast.error(`Biometric failed: ${serverError || error.message} `);
-      if (serverDetails) console.error('Server error details:', serverDetails);
+      toast.error(`Biometric validation failed: ${serverError || error.message}`);
     } finally {
       setSecurityState(prev => ({ ...prev, isLoading: false }));
     }
   }, [adminLogin, navigate, from, performSecurityChecks, formData.email]);
 
-  // Enhanced keyboard navigation
-  const handleKeyDown = useCallback((e) => {
-    if (e.key === 'Enter' && !securityState.isLoading && !securityState.lockoutTime) {
-      handleSubmit(e);
+
+  const calculateSecurityScore = useCallback((data) => {
+    let score = 0;
+    if (VALIDATION_PATTERNS.email.test(data.email)) score += 20;
+    if (data.password.length >= PASSWORD_MIN_LENGTH) score += 20;
+    if (VALIDATION_PATTERNS.password.test(data.password)) score += 30;
+    if (data.twoFactorCode && VALIDATION_PATTERNS.twoFactor.test(data.twoFactorCode)) score += 30;
+    return Math.min(score, 100);
+  }, []);
+
+  const validateForm = useCallback((data = formData) => {
+    const errors = [];
+    if (!data.email.trim()) errors.push('Email is required');
+    else if (!VALIDATION_PATTERNS.email.test(data.email)) errors.push('Invalid email format');
+
+    if (!data.password) errors.push('Password is required');
+    else if (data.password.length < PASSWORD_MIN_LENGTH) errors.push(`Password too short`);
+
+    if (securityState.showTwoFactor && data.twoFactorCode && !VALIDATION_PATTERNS.twoFactor.test(data.twoFactorCode)) {
+      errors.push('Invalid 2FA code');
     }
+    return { errors };
+  }, [formData, securityState.showTwoFactor]);
 
-    // Tab navigation enhancement
-    if (e.key === 'Tab') {
-      const focusableElements = formRef.current?.querySelectorAll(
-        'input, button, [tabindex]:not([tabindex="-1"])'
-      );
+  // Fingerprinting & Support Checks (Simplified for brevity but retaining logic)
 
-      if (focusableElements) {
-        const firstElement = focusableElements[0];
-        const lastElement = focusableElements[focusableElements.length - 1];
+  const checkBiometricSupport = useCallback(async () => {
+    if (window.PublicKeyCredential) {
+      try {
+        const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+        setSecurityState(prev => ({ ...prev, isBiometricAvailable: available, biometricSupported: true }));
+      } catch (e) { /* ignore */ }
+    }
+  }, []);
 
-        if (e.shiftKey && document.activeElement === firstElement) {
-          e.preventDefault();
-          lastElement.focus();
-        } else if (!e.shiftKey && document.activeElement === lastElement) {
-          e.preventDefault();
-          firstElement.focus();
-        }
+  const calculatePasswordStrength = useCallback((password) => {
+    if (!password) return 0;
+    let strength = 0;
+    strength += Math.min(password.length * 4, 40);
+    if (/[a-z]/.test(password)) strength += 10;
+    if (/[A-Z]/.test(password)) strength += 10;
+    if (/\d/.test(password)) strength += 10;
+    if (/[@$!%*?&]/.test(password)) strength += 10;
+    if (password.length >= 16) strength += 20;
+    return Math.min(strength, 100);
+  }, []);
+
+  const handleInputChange = useCallback((field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (validationState.realTimeValidation) {
+      // Quick local feedback logic
+      if (field === 'email') setValidationState(prev => ({ ...prev, emailValid: VALIDATION_PATTERNS.email.test(value) }));
+      if (field === 'password') setValidationState(prev => ({ ...prev, passwordValid: value.length >= PASSWORD_MIN_LENGTH }));
+    }
+    setSecurityState(prev => ({ ...prev, error: '' }));
+  }, [validationState.realTimeValidation]);
+
+  // Effects
+  useEffect(() => {
+    const storedLockout = localStorage.getItem('adminLoginLockout');
+    if (storedLockout) {
+      const data = JSON.parse(storedLockout);
+      if (Date.now() < data.until) {
+        setSecurityState(prev => ({ ...prev, lockoutTime: data.until, attempts: data.attempts }));
+      } else {
+        localStorage.removeItem('adminLoginLockout');
       }
     }
-  }, [securityState.isLoading, securityState.lockoutTime, handleSubmit]);
+    validateSession().then(valid => {
+      if (valid) navigate(from, { replace: true });
+    }).catch(() => { });
 
-  // Password visibility toggle
-  const togglePasswordVisibility = useCallback(() => {
-    setSecurityState(prev => ({ ...prev, showPassword: !prev.showPassword }));
-  }, []);
+    setTimeout(() => {
+      checkBiometricSupport();
+      performSecurityChecks();
+    }, 0);
+  }, [validateSession, navigate, from, checkBiometricSupport, performSecurityChecks]);
 
-  // Two-factor authentication toggle
-  const toggleTwoFactor = useCallback(() => {
-    setSecurityState(prev => ({ ...prev, showTwoFactor: !prev.showTwoFactor }));
-  }, []);
+  useEffect(() => {
+    setSecurityState(prev => ({ ...prev, passwordStrength: calculatePasswordStrength(formData.password) }));
+  }, [formData.password, calculatePasswordStrength]);
 
-  // Security tips toggle
-  const toggleSecurityTips = useCallback(() => {
-    setSecurityState(prev => ({ ...prev, showSecurityTips: !prev.showSecurityTips }));
-  }, []);
+  // Submit Handler
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (securityState.isLoading || securityState.lockoutTime) return;
 
-  // Computed values
+    const { errors } = validateForm();
+    if (errors.length > 0) {
+      setSecurityState(prev => ({ ...prev, error: errors[0] }));
+      return;
+    }
+
+    setSecurityState(prev => ({ ...prev, error: '', isLoading: true, isValidating: true }));
+
+    try {
+      // Use REAL security checks now
+      const checks = await performSecurityChecks();
+
+      // DECOUPLED LOGIN: Direct API Call instead of useAuth()
+      // This prevents the user from being logged in to the main site
+      let authUser = null;
+      try {
+        const authResponse = await axiosInstance.post('/auth/login', {
+          email: formData.email.trim(),
+          password: formData.password
+        });
+        // We do NOT store 'token' in localStorage here to avoid overwriting user session
+        // We pass the data to adminLogin context which will save 'adminToken'
+        authUser = authResponse.data;
+      } catch (authErr) {
+        throw new Error(authErr.response?.data?.error || 'Authentication failed');
+      }
+
+      const result = await adminLogin(
+        formData.email.trim(),
+        formData.password,
+        formData.twoFactorCode || undefined,
+        checks,
+        authUser // Pass the authenticated user object
+      );
+
+      if (result.success) {
+        localStorage.removeItem('adminLoginLockout');
+        setSecurityState(prev => ({ ...prev, attempts: 0, lockoutTime: null }));
+        toast.success('Admin Session Established');
+        setTimeout(() => navigate(from, { replace: true }), 800);
+      } else {
+        const newAttempts = securityState.attempts + 1;
+        if (newAttempts >= MAX_ATTEMPTS) {
+          const lockoutUntil = Date.now() + LOCKOUT_DURATION;
+          localStorage.setItem('adminLoginLockout', JSON.stringify({ attempts: newAttempts, until: lockoutUntil }));
+          setSecurityState(prev => ({ ...prev, lockoutTime: lockoutUntil, attempts: newAttempts, error: 'Maximum attempts exceeded. Account locked.' }));
+        } else {
+          setSecurityState(prev => ({ ...prev, attempts: newAttempts, error: result.error || 'Access Denied. Check credentials.' }));
+        }
+      }
+    } catch (err) {
+      setSecurityState(prev => ({ ...prev, error: err.message || 'Authentication failed', attempts: securityState.attempts + 1 }));
+    } finally {
+      setSecurityState(prev => ({ ...prev, isLoading: false, isValidating: false }));
+    }
+  };
+
   const isLockedOut = securityState.lockoutTime && Date.now() < securityState.lockoutTime;
-  const remainingAttempts = MAX_ATTEMPTS - securityState.attempts;
-  const lockoutRemaining = securityState.lockoutTime ?
-    Math.ceil((securityState.lockoutTime - Date.now()) / 1000 / 60) : 0;
-
   const securityScore = useMemo(() => calculateSecurityScore(formData), [formData, calculateSecurityScore]);
-  const passwordStrengthColor = useMemo(() => {
-    if (securityState.passwordStrength < 40) return 'text-red-500';
-    if (securityState.passwordStrength < 70) return 'text-yellow-500';
-    return 'text-green-500';
-  }, [securityState.passwordStrength]);
+
+  // --- RENDER ---
+
+  const inputClass = (valid, hasValue, isDark) => `
+    w-full bg-transparent border-b-2 px-4 py-3 outline-none transition-all duration-300
+    font-mono text-sm tracking-wide placeholder-transparent
+    focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:rounded-lg
+    ${isDark ? 'text-white' : 'text-zinc-900'}
+    ${valid
+      ? 'border-green-500/50 focus:border-green-400'
+      : hasValue
+        ? 'border-red-500/50 focus:border-red-400'
+        : isDark ? 'border-zinc-700 focus:border-white' : 'border-zinc-300 focus:border-black'
+    }
+  `;
 
   return (
-    <div className="min-h-screen w-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 dark:from-[#0f1419] dark:via-[#1a1f2e] dark:to-[#15191e] py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full mx-auto space-y-8">
-        {/* Ultra-Advanced Header */}
-        <div className="text-center relative">
-          {/* Animated Security Icon with Glow */}
-          <div className="mx-auto h-20 w-20 bg-gradient-to-br from-blue-700 via-indigo-600 to-purple-700 rounded-full flex items-center justify-center mb-4 shadow-lg relative group">
-            <span className="absolute inset-0 rounded-full animate-pulse bg-blue-400/20 group-hover:bg-blue-500/30 transition" />
-            <ShieldCheckIcon className="h-10 w-10 text-white drop-shadow-lg z-10 relative" />
-            {/* Accessibility: Security Icon */}
-            <span className="sr-only">Enterprise Security Shield</span>
-          </div>
-          {/* Animated Title with Gradient Text */}
-          <h2 className="text-4xl font-extrabold bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-700 bg-clip-text text-transparent tracking-tight drop-shadow-sm animate-fade-in">
-            Admin Portal
-          </h2>
-          <p className="mt-2 text-base text-gray-600 dark:text-gray-400 flex items-center justify-center gap-1 animate-fade-in-slow whitespace-nowrap">
-            Secure access to administrative dashboard
-          </p>
-          {/* Security Score Indicator with Tooltip and Animation */}
-          <div className="mt-5">
-            <div className="flex items-center justify-center space-x-2 whitespace-nowrap">
-              <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 whitespace-nowrap">
-                <span>Security Score</span>
-                <svg className="w-3 h-3 text-blue-400 dark:text-blue-300" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" />
-                </svg>
-                {/* Tooltip */}
-                <span className="relative group">
-                  <span className="sr-only">Security Score Info</span>
-                  <span className="absolute left-1/2 -translate-x-1/2 top-6 z-20 hidden group-hover:block bg-white dark:bg-[#23272f] border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 shadow-lg text-xs text-gray-700 dark:text-gray-200 min-w-[220px] whitespace-normal">
-                    <span className="font-semibold text-blue-600 dark:text-blue-400">Security Score:</span>
-                    {"\n"}Calculated based on password strength, two-factor authentication, and email validity.
-                    <br />
-                    <span className="text-gray-500 dark:text-gray-400">
-                      Aim for 100% for maximum protection.
-                    </span>
-                  </span>
-                </span>
-              </div>
-              <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-3 relative overflow-hidden shadow-inner">
-                <div
-                  className={`h-3 rounded-full transition-all duration-500 ease-out ${securityScore < 40
-                    ? 'bg-red-500 animate-pulse'
-                    : securityScore < 70
-                      ? 'bg-yellow-500 animate-pulse-slow'
-                      : 'bg-green-500'
-                    } `}
-                  style={{ width: `${securityScore}% ` }}
-                  aria-valuenow={securityScore}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  role="progressbar"
-                />
-                {/* Animated marker */}
-                <span
-                  className="absolute top-1/2 -translate-y-1/2 left-0 transition-all duration-500"
-                  style={{ left: `calc(${securityScore}% - 8px)` }}
+    <main className={`relative min-h-screen w-full flex items-center justify-center overflow-hidden font-sans transition-colors duration-500 ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+
+      {/* 1. Background */}
+      <AdminBackground isDarkMode={isDarkMode} />
+
+      {/* 2. Main Layout - Split or Centered Card */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="relative z-10 w-full max-w-[480px] mx-4"
+      >
+        <div className={`relative overflow-hidden rounded-3xl backdrop-blur-2xl border shadow-2xl transition-all duration-500 ${isDarkMode ? 'bg-black/60 border-white/10 shadow-black/50' : 'bg-white/70 border-white/40 shadow-xl'}`}>
+
+          {/* Header Area */}
+          <div className="pt-12 pb-8 px-8 text-center relative border-b border-gray-200/10 dark:border-white/5">
+
+            <div className="flex justify-center mb-6">
+              <SecurityVisual score={securityScore} />
+            </div>
+
+            <h1 className={`text-4xl font-black tracking-tighter mb-2 ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+              ADMIN_GATE
+            </h1>
+            <p className={`text-xs font-mono uppercase tracking-widest opacity-60`}>
+              Restricted Access Protocol
+            </p>
+
+            {/* Lockout Warning */}
+            <AnimatePresence>
+              {isLockedOut && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-xs font-mono text-red-500 dark:text-red-400"
                 >
-                  <svg className="w-4 h-4 text-blue-500 dark:text-blue-300 drop-shadow" fill="currentColor" viewBox="0 0 20 20">
-                    <circle cx="10" cy="10" r="8" />
-                  </svg>
-                </span>
-              </div>
-              <span
-                className={`text-xs font-bold ${securityScore < 40
-                  ? 'text-red-500'
-                  : securityScore < 70
-                    ? 'text-yellow-500'
-                    : 'text-green-500'
-                  } animate-fade-in `}
-                aria-live="polite"
-              >
-                {securityScore}%
-              </span>
-            </div>
-            {/* Security Score Description */}
-            <div className="mt-1 text-[11px] text-gray-400 dark:text-gray-500 flex items-center justify-center gap-1 whitespace-nowrap">
-              <span>
-                {securityScore < 40
-                  ? "Weak: Improve your password and enable 2FA"
-                  : securityScore < 70
-                    ? "Moderate: Consider enabling all security features"
-                    : "Strong: Your account is well protected"}
-              </span>
-              {securityScore === 100 && (
-                <span className="ml-1 px-2 py-0.5 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-[10px] font-semibold animate-bounce">
-                  Perfect!
-                </span>
+                  SYSTEM LOCKED. RETRY LATER.
+                </motion.div>
               )}
-            </div>
-          </div>
-          {/* Live Security Audit Info */}
-          {typeof securityState.lastSecurityAudit === 'string' && (
-            <div className="mt-2 flex items-center justify-center gap-1 text-[11px] text-gray-400 dark:text-gray-500 animate-fade-in-slow whitespace-nowrap">
-              <svg className="w-3.5 h-3.5 text-blue-400 dark:text-blue-300" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l2 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>
-                Last security audit: <span className="font-medium">{securityState.lastSecurityAudit}</span>
-              </span>
-            </div>
-          )}
-        </div>
+            </AnimatePresence>
 
-        {/* Enhanced Form */}
-        <form ref={formRef} className="mt-8 space-y-6" onSubmit={handleFormSubmit} onKeyDown={handleKeyDown}>
-          <div className="space-y-4">
-            {/* Email Field */}
-            <div>
-              <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Email Address
-              </label>
-              <div className="relative">
-                <input
-                  ref={emailRef}
-                  id="email-address"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  className={`appearance-none relative block w-full px-4 py-3 border rounded-lg placeholder-gray-500 dark: placeholder-gray-400 text-gray-900 dark: text-white focus: outline-none focus: ring-2 focus: ring-offset-2 transition-all duration-200 sm: text-sm bg-white dark: bg-[#2c353f] ${validationState.emailValid ? 'border-green-500 focus:ring-green-500' :
-                    formData.email ? 'border-red-500 focus:ring-red-500' :
-                      'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
-                    } `}
-                  placeholder="admin@company.com"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  disabled={isLockedOut}
-                />
-                {validationState.emailValid && (
-                  <CheckCircleIcon className="absolute right-3 top-1/2 transform-translate-y-1/2 h-5 w-5 text-green-500" />
-                )}
-              </div>
-            </div>
-
-            {/* Password Field */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  ref={passwordRef}
-                  id="password"
-                  name="password"
-                  type={securityState.showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  required
-                  className={`appearance-none relative block w-full px-4 py-3 pr-12 border rounded-lg placeholder-gray-500 dark: placeholder-gray-400 text-gray-900 dark: text-white focus: outline-none focus: ring-2 focus: ring-offset-2 transition-all duration-200 sm: text-sm bg-white dark: bg-[#2c353f] ${validationState.passwordValid ? 'border-green-500 focus:ring-green-500' :
-                    formData.password ? 'border-red-500 focus:ring-red-500' :
-                      'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
-                    } `}
-                  placeholder="Enter your password"
-                  value={formData.password}
-                  onChange={(e) => handleInputChange('password', e.target.value)}
-                  disabled={isLockedOut}
-                />
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 transform-translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                  onClick={togglePasswordVisibility}
-                  disabled={isLockedOut}
+            {/* Error Message */}
+            <AnimatePresence>
+              {securityState.error && !isLockedOut && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-sm text-red-600 dark:text-red-400 flex items-center justify-center gap-2"
+                  role="alert"
                 >
-                  {securityState.showPassword ? (
-                    <EyeSlashIcon className="h-5 w-5" />
-                  ) : (
-                    <EyeIcon className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
-
-              {/* Advanced Password Strength & Feedback */}
-              {formData.password && (
-                <div className="mt-2 space-y-1">
-                  <div className="flex items-center space-x-2">
-                    {/* Animated Progress Bar with Tooltip */}
-                    <div className="flex-1 relative group">
-                      <div className="bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-                        <div
-                          className={`
-                        h-2 rounded-full transition-all duration-500
-                        ${securityState.passwordStrength < 40
-                              ? 'bg-red-500'
-                              : securityState.passwordStrength < 70
-                                ? 'bg-yellow-500'
-                                : 'bg-green-500'
-                            }
-                        ${securityState.passwordStrength === 100 ? 'shadow-lg shadow-green-400/40' : ''}
-                        `}
-                          style={{
-                            width: `${securityState.passwordStrength}% `,
-                            transitionTimingFunction: 'cubic-bezier(0.4,0,0.2,1)'
-                          }}
-                        />
-                      </div>
-                      {/* Tooltip on hover for details */}
-                      <div className="absolute left-1/2 -translate-x-1/2 top-7 z-10 hidden group-hover:block bg-white dark:bg-[#23272f] border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 shadow-lg text-xs text-gray-700 dark:text-gray-200 whitespace-pre-line min-w-[180px]">
-                        {securityState.passwordStrength < 40 && (
-                          <>
-                            <span className="font-semibold text-red-500">Weak:</span>
-                            {"\n"}Use a longer password with uppercase, lowercase, numbers, and symbols.
-                          </>
-                        )}
-                        {securityState.passwordStrength >= 40 && securityState.passwordStrength < 70 && (
-                          <>
-                            <span className="font-semibold text-yellow-500">Medium:</span>
-                            {"\n"}Add more unique characters and avoid common words.
-                          </>
-                        )}
-                        {securityState.passwordStrength >= 70 && (
-                          <>
-                            <span className="font-semibold text-green-500">Strong:</span>
-                            {"\n"}Your password is strong. Avoid reusing it elsewhere.
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    {/* Animated Strength Label with Icon */}
-                    <span
-                      className={`
-                    text-xs font-semibold flex items-center gap-1
-                    ${securityState.passwordStrength < 40
-                          ? 'text-red-600 dark:text-red-400'
-                          : securityState.passwordStrength < 70
-                            ? 'text-yellow-600 dark:text-yellow-400'
-                            : 'text-green-600 dark:text-green-400'
-                        }
-                    transition-colors duration-300
-                    `}
-                    >
-                      {securityState.passwordStrength < 40 && (
-                        <>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          Weak
-                        </>
-                      )}
-                      {securityState.passwordStrength >= 40 && securityState.passwordStrength < 70 && (
-                        <>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l2 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          Medium
-                        </>
-                      )}
-                      {securityState.passwordStrength >= 70 && (
-                        <>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          Strong
-                        </>
-                      )}
-                    </span>
-                  </div>
-                  {/* Password Requirements Checklist */}
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {[
-                      { label: '8+ chars', valid: formData.password.length >= 8 },
-                      { label: 'Uppercase', valid: /[A-Z]/.test(formData.password) },
-                      { label: 'Lowercase', valid: /[a-z]/.test(formData.password) },
-                      { label: 'Number', valid: /\d/.test(formData.password) },
-                      { label: 'Symbol', valid: /[^A-Za-z0-9]/.test(formData.password) }
-                    ].map((req, idx) => (
-                      <span
-                        key={req.label}
-                        className={`
-      inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium
-                          ${req.valid
-                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-700'
-                            : 'bg-gray-100 dark:bg-gray-800 text-gray-400 border border-gray-200 dark:border-gray-700'
-                          }
-      transition-all duration-200
-        `}
-                      >
-                        {req.valid ? (
-                          <svg className="w-3 h-3 mr-1 text-green-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                        ) : (
-                          <svg className="w-3 h-3 mr-1 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        )}
-                        {req.label}
-                      </span>
-                    ))}
-                  </div>
-                  {/* Password Breach Check (if available) */}
-                  {securityState.passwordBreachChecked && (
-                    <div className="flex items-center gap-1 mt-1 text-xs">
-                      {securityState.passwordBreached ? (
-                        <>
-                          <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                          <span className="text-red-600 dark:text-red-400 font-semibold">
-                            This password has appeared in data breaches!
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                          <span className="text-green-600 dark:text-green-400 font-semibold">
-                            No known breaches detected.
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
+                  <ShieldCheckIcon className="w-4 h-4" />
+                  {securityState.error}
+                </motion.div>
               )}
-            </div>
-
-
+            </AnimatePresence>
           </div>
 
-          {/* Two-Factor Authentication */}
-          {securityState.showTwoFactor && (
-            <div>
-              <label htmlFor="two-factor" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Two-Factor Code
-              </label>
+          {/* Login Form */}
+          <form onSubmit={handleSubmit} ref={formRef} className="p-8 space-y-8" noValidate>
+
+            {/* Email Input */}
+            <div className="relative group">
               <input
-                ref={twoFactorRef}
-                id="two-factor"
-                name="twoFactorCode"
-                type="text"
-                maxLength={TWO_FACTOR_LENGTH}
-                className={`appearance-none relative block w-full px-4 py-3 border rounded-lg placeholder-gray-500 dark: placeholder-gray-400 text-gray-900 dark: text-white focus: outline-none focus: ring-2 focus: ring-offset-2 transition-all duration-200 sm: text-sm bg-white dark: bg-[#2c353f] ${validationState.twoFactorValid ? 'border-green-500 focus:ring-green-500' :
-                  formData.twoFactorCode ? 'border-red-500 focus:ring-red-500' :
-                    'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
-                  } `}
-                placeholder="000000"
-                value={formData.twoFactorCode}
-                onChange={(e) => handleInputChange('twoFactorCode', e.target.value.replace(/\D/g, ''))}
+                ref={emailRef}
+                id="email"
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                onFocus={() => setFocusedInput('email')}
+                onBlur={() => setFocusedInput(null)}
                 disabled={isLockedOut}
+                className={inputClass(validationState.emailValid, !!formData.email, isDarkMode)}
+                placeholder="ADMIN IDENTITY"
+                aria-required="true"
+                aria-invalid={!validationState.emailValid && !!formData.email}
               />
-            </div>
-          )}
-
-          {/* Remember Me */}
-          <div className="flex items-center">
-            <input
-              id="remember-me"
-              name="rememberMe"
-              type="checkbox"
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              checked={formData.rememberMe}
-              onChange={(e) => handleInputChange('rememberMe', e.target.checked)}
-              disabled={isLockedOut}
-            />
-            <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-              Remember this device for 30 days
-            </label>
-          </div>
-
-          {/* Error Display */}
-          {securityState.error && (
-            <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-4">
-              <div className="flex">
-                <ExclamationTriangleIcon className="h-5 w-5 text-red-400" />
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
-                    Authentication Error
-                  </h3>
-                  <div className="mt-2 text-sm text-red-700 dark:text-red-300">
-                    {securityState.error}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Lockout Warning */}
-          {isLockedOut && (
-            <div className="rounded-md bg-yellow-50 dark:bg-yellow-900/20 p-4">
-              <div className="flex">
-                <ExclamationTriangleIcon className="h-5 w-5 text-yellow-400" />
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                    Account Temporarily Locked
-                  </h3>
-                  <div className="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
-                    Too many failed attempts. Please try again in {lockoutRemaining} minutes.
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className="space-y-3">
-            {/* Primary Login Button */}
-            <button
-              type="submit"
-              disabled={securityState.isLoading || isLockedOut || !validationState.formValid}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
-              aria-label="Admin Login"
-            >
-              {securityState.isLoading ? (
-                <div className="flex items-center space-x-2">
-                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
-                  <span>Authenticating...</span>
-                </div>
-              ) : (
-                <span>Sign In</span>
+              <label
+                htmlFor="email"
+                className={`absolute left-4 top-3 transition-all duration-300 pointer-events-none text-xs font-bold uppercase tracking-widest ${focusedInput === 'email' || formData.email
+                  ? '-top-3 left-0 text-[10px] opacity-70'
+                  : 'opacity-60'
+                  } ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}
+              >
+                Identifier
+              </label>
+              {validationState.emailValid && (
+                <CheckCircleIcon className="absolute right-4 top-3 w-5 h-5 text-green-500/80" />
               )}
-            </button>
+            </div>
 
-
-
-            {/* Advanced Biometric Login Button */}
-            {securityState.biometricSupported && (
+            {/* Password Input */}
+            <div className="relative group">
+              <input
+                ref={passwordRef}
+                id="password"
+                type={securityState.showPassword ? 'text' : 'password'}
+                name="password"
+                value={formData.password}
+                onChange={(e) => handleInputChange('password', e.target.value)}
+                onFocus={() => setFocusedInput('password')}
+                onBlur={() => setFocusedInput(null)}
+                disabled={isLockedOut}
+                className={inputClass(validationState.passwordValid, !!formData.password, isDarkMode)}
+                placeholder="PASSPHRASE"
+                aria-required="true"
+              />
+              <label
+                htmlFor="password"
+                className={`absolute left-4 top-3 transition-all duration-300 pointer-events-none text-xs font-bold uppercase tracking-widest ${focusedInput === 'password' || formData.password
+                  ? '-top-3 left-0 text-[10px] opacity-70'
+                  : 'opacity-60'
+                  } ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}
+              >
+                Cipher
+              </label>
               <button
                 type="button"
-                ref={biometricRef}
-                onClick={handleBiometricLogin}
-                disabled={
-                  securityState.isLoading ||
-                  isLockedOut ||
-                  !securityState.isBiometricAvailable
-                }
-                aria-label={
-                  securityState.isBiometricAvailable
-                    ? "Sign in with biometric authentication"
-                    : "Biometric authentication unavailable"
-                }
-                className={`
-              w-full flex justify-center items-center py-3 px-4 border
-              border-gray-300 dark: border-gray-600 text-sm font-medium rounded-lg
-              text-gray-700 dark: text-gray-300 bg-white dark: bg-[#2c353f]
-              hover: bg-gray-50 dark: hover: bg-[#3a4551]
-              focus: outline-none focus: ring-2 focus: ring-offset-2 focus: ring-blue-500
-              disabled: opacity-50 disabled: cursor-not-allowed
-              transition-all duration-200 relative shadow-md
-              group
-                        `}
-                tabIndex={0}
-                onKeyDown={e => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    if (
-                      !securityState.isLoading &&
-                      !isLockedOut &&
-                      securityState.isBiometricAvailable
-                    ) {
-                      handleBiometricLogin();
-                    }
-                  }
-                }}
+                onClick={() => setSecurityState(prev => ({ ...prev, showPassword: !prev.showPassword }))}
+                className="absolute right-4 top-3 text-gray-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg"
+                aria-label={securityState.showPassword ? "Hide password" : "Show password"}
               >
-                <span className="flex items-center space-x-2">
-                  {/* Animated biometric icon */}
-                  <span className="relative flex items-center">
-                    <svg
-                      className={`w-6 h-6 transition-transform duration-300 ${securityState.isBiometricAvailable
-                        ? "text-blue-600 dark:text-blue-400 group-hover:scale-110"
-                        : "text-gray-400 dark:text-gray-600"
-                        } `}
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={1.5}
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M12 11.5v2.5m0 0v2m0-2h2m-2 0h-2m8-2.5a8 8 0 11-16 0 8 8 0 0116 0zm-8-4a4 4 0 014 4"
-                      />
-                    </svg>
-                    {/* Pulse animation if available */}
-                    {securityState.isBiometricAvailable && (
-                      <span className="absolute-right-2-top-2 flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                      </span>
-                    )}
-                  </span>
-                  <span>
-                    {securityState.isBiometricAvailable
-                      ? "Sign in with Biometric"
-                      : "Biometric Unavailable"}
-                  </span>
-                </span>
-                {/* Tooltip for biometric info */}
-                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-20 hidden group-hover:block bg-white dark:bg-[#23272f] border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 shadow-lg text-xs text-gray-700 dark:text-gray-200 min-w-[220px]">
-                  {securityState.isBiometricAvailable ? (
-                    <>
-                      <span className="font-semibold text-blue-600 dark:text-blue-400">Biometric Ready:</span>
-                      {"\n"}Use your device's fingerprint, Face ID, or Windows Hello for instant login.
-                      <br />
-                      <span className="text-gray-500 dark:text-gray-400">
-                        Your biometric data never leaves your device.
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="font-semibold text-red-500">Not Available:</span>
-                      {"\n"}Biometric authentication is not supported or enabled on this device.
-                    </>
-                  )}
-                </div>
+                {securityState.showPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
               </button>
-            )}
+            </div>
 
-            {/* Two-Factor Toggle */}
-            <button
-              type="button"
-              onClick={toggleTwoFactor}
-              className="w-full text-sm text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors duration-200"
-              aria-label={securityState.showTwoFactor ? 'Hide Two-Factor Authentication' : 'Enable Two-Factor Authentication'}
-            >
-              {securityState.showTwoFactor ? 'Hide Two-Factor' : 'Enable Two-Factor Authentication'}
-            </button>
-          </div>
-        </form>
+            {/* 2FA Section (Conditional) */}
+            <AnimatePresence>
+              {(securityState.showTwoFactor || securityState.passwordStrength > 60) && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="relative group overflow-hidden"
+                >
+                  <input
+                    id="2fa"
+                    type="text"
+                    maxLength={6}
+                    value={formData.twoFactorCode}
+                    onChange={(e) => handleInputChange('twoFactorCode', e.target.value.replace(/\D/g, ''))}
+                    onFocus={() => setFocusedInput('2fa')}
+                    onBlur={() => setFocusedInput(null)}
+                    className={inputClass(VALIDATION_PATTERNS.twoFactor.test(formData.twoFactorCode), !!formData.twoFactorCode, isDarkMode)}
+                    placeholder="000000"
+                  />
+                  <label
+                    htmlFor="2fa"
+                    className={`absolute left-4 top-3 transition-all duration-300 pointer-events-none text-xs font-bold uppercase tracking-widest ${focusedInput === '2fa' || formData.twoFactorCode
+                      ? '-top-3 left-0 text-[10px] opacity-70'
+                      : 'opacity-40'
+                      } ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}
+                  >
+                    Auth Code
+                  </label>
+                  <KeyIcon className="absolute right-4 top-3 w-5 h-5 text-gray-400" />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-        {/* Security Tips */}
-        < div className="mt-6" >
-          <button
-            type="button"
-            onClick={toggleSecurityTips}
-            className="w-full text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-200"
-            aria-label={securityState.showSecurityTips ? 'Hide Security Tips' : 'Show Security Tips'}
-          >
-            {securityState.showSecurityTips ? 'Hide Security Tips' : 'Show Security Tips'}
-          </button>
-
-          {
-            securityState.showSecurityTips && (
-              <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
-                  Security Best Practices:
-                </h4>
-                <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-                  <li>• Use a strong, unique password</li>
-                  <li>• Enable two-factor authentication</li>
-                  <li>• Never share your credentials</li>
-                  <li>• Log out from shared devices</li>
-                  <li>• Report suspicious activity immediately</li>
-                </ul>
-              </div>
-            )
-          }
-        </div >
-
-        {/* Advanced Security Footer */}
-        < div className="text-center mt-8" >
-          <div className="flex flex-col items-center gap-2">
-            <div className="flex items-center justify-center gap-1.5">
-              <svg
-                className="w-4 h-4 text-blue-500 dark:text-blue-300"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                viewBox="0 0 24 24"
-                aria-hidden="true"
+            {/* Actions */}
+            <div className="pt-4 space-y-4">
+              <button
+                type="submit"
+                disabled={securityState.isLoading || isLockedOut}
+                className={`
+                                relative w-full py-4 rounded-xl font-bold uppercase tracking-wider text-sm
+                                transition-all duration-300 overflow-hidden group
+                                ${isDarkMode
+                    ? 'bg-white text-black hover:bg-gray-200'
+                    : 'bg-black text-white hover:bg-gray-800'
+                  }
+                                disabled:opacity-50 disabled:cursor-not-allowed
+                                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900
+                            `}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 3v2m6.364 1.636l-1.414 1.414M21 12h-2m-1.636 6.364l-1.414-1.414M12 21v-2m-6.364-1.636l1.414-1.414M3 12h2m1.636-6.364l1.414 1.414M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                />
-              </svg>
-              <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                Protected by <span className="font-semibold text-blue-600 dark:text-blue-300">enterprise-grade security</span>
-              </span>
-              <span className="inline-flex items-center ml-1 px-1.5 py-0.5 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-[10px] font-semibold tracking-wide">
-                AES-256
-              </span>
-              <span className="inline-flex items-center ml-1 px-1.5 py-0.5 rounded bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-[10px] font-semibold tracking-wide">
-                2FA
-              </span>
-              <span className="inline-flex items-center ml-1 px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-[10px] font-semibold tracking-wide">
-                Biometric
-              </span>
-            </div>
-            <div className="flex flex-wrap justify-center gap-1 mt-1">
-              <span className="text-[10px] text-gray-400 dark:text-gray-500">
-                <span className="font-medium">Session Monitoring</span>
-              </span>
-              <span className="text-[10px] text-gray-400 dark:text-gray-500">|</span>
-              <span className="text-[10px] text-gray-400 dark:text-gray-500">
-                <span className="font-medium">Brute-force Protection</span>
-              </span>
-              <span className="text-[10px] text-gray-400 dark:text-gray-500">|</span>
-              <span className="text-[10px] text-gray-400 dark:text-gray-500">
-                <span className="font-medium">End-to-End Encryption</span>
-              </span>
-            </div>
-            {typeof securityState.lastSecurityAudit === 'string' && (
-              <div className="mt-1">
-                <span className="text-[10px] text-gray-400 dark:text-gray-500">
-                  Last security audit: <span className="font-medium">{securityState.lastSecurityAudit}</span>
+                <span className="relative z-10 flex items-center justify-center gap-3">
+                  {securityState.isLoading ? 'Authenticating...' : 'Initialize Session'}
                 </span>
-              </div>
-            )}
+                {/* Hover Shine */}
+                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              </button>
+
+              {/* Biometric Option */}
+              {securityState.biometricSupported && (
+                <button
+                  type="button"
+                  onClick={handleBiometricLogin}
+                  className={`w-full py-3 flex items-center justify-center gap-2 text-xs font-mono uppercase tracking-widest opacity-60 hover:opacity-100 transition-opacity ${isDarkMode ? 'text-white' : 'text-black'} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg`}
+                >
+                  <FingerPrintIcon className="w-4 h-4" />
+                  <span>Biometric Handshake</span>
+                </button>
+              )}
+            </div>
+          </form>
+
+          {/* Footer Info */}
+          <div className="bg-black/5 dark:bg-white/5 p-4 flex justify-between items-center text-[10px] font-mono uppercase tracking-wider opacity-60">
+            <button onClick={() => navigate('/')} className="hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded">
+              &larr; Return to Surface
+            </button>
+            <span className="flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+              Secure Connection: TLS 1.3
+            </span>
           </div>
-          {
-            remainingAttempts < MAX_ATTEMPTS && (
-              <div className="mt-2 flex items-center justify-center gap-1.5">
-                <svg
-                  className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 8v4l2 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <p className="text-xs text-orange-600 dark:text-orange-400">
-                  <span className="font-semibold">{remainingAttempts}</span> login attempt{remainingAttempts !== 1 && 's'} remaining
-                </p>
-                {remainingAttempts === 1 && (
-                  <span className="ml-2 px-2 py-0.5 rounded bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-[10px] font-semibold animate-pulse">
-                    Last Attempt!
-                  </span>
-                )}
-              </div>
-            )
-          }
-          {
-            isLockedOut && (
-              <div className="mt-2 flex items-center justify-center gap-1.5">
-                <svg
-                  className="w-3.5 h-3.5 text-red-500 dark:text-red-400"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <p className="text-xs text-red-600 dark:text-red-400 font-semibold">
-                  Account temporarily locked for security. Please try again later.
-                </p>
-              </div>
-            )
-          }
-        </div >
-      </div >
-    </div >
+        </div>
+      </motion.div>
+    </main>
   );
 };
 
-export default AdminLogin; 
+export default AdminLogin;

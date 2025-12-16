@@ -75,12 +75,13 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(true);
     setError(null);
     try {
+      const token = credentialResponse.credential || credentialResponse.access_token;
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/auth/google`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ token: credentialResponse.credential })
+        body: JSON.stringify({ token })
       });
 
       const data = await response.json();

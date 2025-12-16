@@ -28,9 +28,9 @@ exports.createPoll = async (req, res) => {
     if (isNaN(start) || isNaN(end)) {
       return res.status(400).json({ error: 'Invalid date format' });
     }
-    if (start < now) {
-      return res.status(400).json({ error: 'Start date/time cannot be in the past' });
-    }
+    // if (start < now) {
+    //   return res.status(400).json({ error: 'Start date/time cannot be in the past' });
+    // }
     if (end <= start) {
       return res.status(400).json({ error: 'End date/time must be after start date/time' });
     }
@@ -413,9 +413,9 @@ exports.updatePoll = async (req, res) => {
       return res.status(400).json({ error: 'Invalid date format' });
     }
     // Only allow moving start date to the future if poll hasn't started yet
-    if (start < now && now < new Date(poll.startDate)) {
-      return res.status(400).json({ error: 'Start date/time cannot be in the past' });
-    }
+    // if (start < now && now < new Date(poll.startDate)) {
+    //   return res.status(400).json({ error: 'Start date/time cannot be in the past' });
+    // }
     if (end <= start) {
       return res.status(400).json({ error: 'End date/time must be after start date/time' });
     }

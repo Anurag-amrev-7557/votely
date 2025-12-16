@@ -531,7 +531,7 @@ const EnhancedResultsDisplay = ({
           className="mb-8"
         >
           <div className="bg-white dark:bg-gray-800 rounded-xl p-2 shadow-lg border border-gray-200 dark:border-gray-700">
-            <div className="flex space-x-1">
+            <div className="flex space-x-1" role="tablist" aria-label="Results View Options">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 return (
@@ -542,6 +542,10 @@ const EnhancedResultsDisplay = ({
                       ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 shadow-sm'
                       : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
                       }`}
+                    role="tab"
+                    aria-selected={activeTab === tab.id}
+                    aria-controls={`panel-${tab.id}`}
+                    id={`tab-${tab.id}`}
                   >
                     <Icon className="w-4 h-4" />
                     {tab.label}
@@ -716,7 +720,7 @@ const EnhancedResultsDisplay = ({
                     Votes by Option
                   </h3>
                   <div className="h-80">
-                    <Bar data={barChartData} options={chartOptions} />
+                    <Bar data={barChartData} options={chartOptions} aria-label="Bar chart showing total votes by option" role="img" />
                   </div>
                 </div>
 
@@ -727,7 +731,7 @@ const EnhancedResultsDisplay = ({
                     Vote Distribution
                   </h3>
                   <div className="h-80">
-                    <Pie data={pieChartData} options={chartOptions} />
+                    <Pie data={pieChartData} options={chartOptions} aria-label="Pie chart showing vote distribution" role="img" />
                   </div>
                 </div>
               </div>
@@ -742,7 +746,7 @@ const EnhancedResultsDisplay = ({
                     Voting Trends
                   </h3>
                   <div className="h-80">
-                    <Line data={votingTrendsData} options={chartOptions} />
+                    <Line data={votingTrendsData} options={chartOptions} aria-label="Line chart showing voting trends over time" role="img" />
                   </div>
                 </div>
 

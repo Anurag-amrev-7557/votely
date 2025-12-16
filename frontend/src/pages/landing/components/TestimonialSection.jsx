@@ -60,9 +60,9 @@ const TESTIMONIALS = [
 // --- COMPONENTS ---
 
 const VerifiedBadge = ({ hash }) => (
-    <div className="inline-flex items-center gap-2 px-2 py-1 rounded-md bg-white border border-gray-200 dark:bg-zinc-800 dark:border-zinc-700/50">
+    <div className="inline-flex items-center gap-2 px-2 py-1 rounded-md bg-white border border-gray-300 dark:bg-zinc-800 dark:border-zinc-700/50">
         <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-        <span className="text-[10px] font-mono text-gray-500 dark:text-zinc-500 uppercase tracking-wider">
+        <span className="text-[10px] font-mono text-gray-700 dark:text-zinc-500 uppercase tracking-wider">
             Verified: {hash}
         </span>
     </div>
@@ -85,7 +85,7 @@ const TestimonialCard = ({ quote, author, role, org, hash, span, delay }) => {
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.7, delay, ease: [0.21, 0.47, 0.32, 0.98] }}
             onMouseMove={handleMouseMove}
-            className={`group relative flex flex-col justify-between p-8 md:p-12 overflow-hidden bg-gray-50 dark:bg-zinc-900/50 border border-transparent dark:border-zinc-800/50 hover:border-gray-200 dark:hover:border-zinc-700 transition-all duration-700 rounded-3xl ${span}`}
+            className={`group relative h-full flex flex-col justify-between p-8 md:p-12 overflow-hidden bg-gray-50 dark:bg-zinc-900/50 border border-transparent dark:border-zinc-800/50 hover:border-gray-300 dark:hover:border-zinc-700 transition-all duration-700 rounded-3xl ${span}`}
         >
             {/* Subtle Noise Texture */}
             <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none"
@@ -110,26 +110,26 @@ const TestimonialCard = ({ quote, author, role, org, hash, span, delay }) => {
                 {/* Header: Verified Hash */}
                 <div className="flex justify-between items-start">
                     <VerifiedBadge hash={hash} />
-                    <Quote className="w-5 h-5 text-gray-300 dark:text-zinc-700" />
+                    <Quote className="w-5 h-5 text-gray-400 dark:text-zinc-700" />
                 </div>
 
                 {/* Main Content */}
                 <div>
-                    <h3 className="text-2xl md:text-3xl font-medium tracking-tight text-gray-900 dark:text-white leading-tight mb-8">
+                    <h3 className="text-xl md:text-3xl font-medium tracking-tight text-gray-900 dark:text-white leading-tight mb-8">
                         "{quote}"
                     </h3>
                 </div>
 
                 {/* Footer: Identity */}
-                <div className="flex items-center gap-4 border-t border-gray-200/50 dark:border-zinc-800 pt-6">
-                    <div className="w-10 h-10 rounded-full bg-white dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 flex items-center justify-center text-gray-900 dark:text-white font-bold">
+                <div className="flex items-center gap-4 border-t border-gray-300/50 dark:border-zinc-800 pt-6">
+                    <div className="w-10 h-10 rounded-full bg-white dark:bg-zinc-800 border border-gray-300 dark:border-zinc-700 flex items-center justify-center text-gray-900 dark:text-white font-bold">
                         {author.charAt(0)}
                     </div>
                     <div>
                         <div className="text-sm font-bold text-gray-900 dark:text-white">{author}</div>
-                        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-zinc-500 font-mono uppercase tracking-wide">
+                        <div className="flex items-center gap-2 text-xs text-gray-700 dark:text-zinc-500 font-mono uppercase tracking-wide">
                             <span>{role}</span>
-                            <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-zinc-700" />
+                            <span className="w-1 h-1 rounded-full bg-gray-400 dark:bg-zinc-700" />
                             <span>{org}</span>
                         </div>
                     </div>
@@ -151,19 +151,19 @@ const TestimonialSection = () => {
                     transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
                 >
                     <div className="flex items-center gap-3 mb-8">
-                        <span className="h-px w-12 bg-gray-300 dark:bg-zinc-700"></span>
-                        <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500 dark:text-zinc-500">
+                        <span className="h-px w-12 bg-gray-400 dark:bg-zinc-700"></span>
+                        <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gray-700 dark:text-zinc-500">
                             Community Consensus
                         </h2>
                     </div>
 
-                    <h1 className="text-7xl md:text-[10rem] font-bold tracking-tighter text-gray-900 dark:text-white leading-[0.8] mb-12 -ml-1 md:-ml-2">
-                        Trusted by <br /> <span className="text-gray-400 dark:text-zinc-600">builders.</span>
+                    <h1 className="text-5xl md:text-[10rem] font-bold tracking-tighter text-gray-900 dark:text-white leading-[0.8] mb-12 -ml-1 md:-ml-2">
+                        Trusted by <br /> <span className="text-gray-600 dark:text-zinc-600">builders.</span>
                     </h1>
 
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
                         <div className="md:col-span-5 md:col-start-8">
-                            <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-400 leading-relaxed tracking-tight text-balance">
+                            <p className="text-xl md:text-2xl text-gray-700 dark:text-gray-400 leading-relaxed tracking-tight text-balance">
                                 Join thousands of organizations verifying their decisions on the immutable ledger. <span className="text-gray-900 dark:text-white font-medium">Real voices. Real impact.</span>
                             </p>
                         </div>
@@ -171,23 +171,25 @@ const TestimonialSection = () => {
                 </motion.div>
             </div>
 
-            {/* Grid */}
-            <div className="max-w-8xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+            {/* Grid / Mobile Carousel */}
+            <div className="max-w-8xl mx-auto flex md:grid overflow-x-auto md:overflow-visible snap-x snap-mandatory md:grid-cols-3 gap-4 md:gap-6 pb-8 md:pb-0 px-4 md:px-0 -mx-4 md:mx-0 no-scrollbar" role="list">
                 {TESTIMONIALS.map((t) => (
-                    <TestimonialCard key={t.id} {...t} />
+                    <div key={t.id} className={`flex-shrink-0 min-w-full md:min-w-0 md:w-auto snap-center ${t.span}`} role="listitem">
+                        <TestimonialCard {...t} span="" /> {/* Pass empty span to card, handle layout in wrapper if needed, or let card be flexible */}
+                    </div>
                 ))}
             </div>
 
             {/* Professional Footer */}
-            <div className="max-w-8xl mx-auto mt-8 border-t border-gray-100 dark:border-zinc-900 pt-12">
+            <div className="max-w-8xl mx-auto mt-8 border-t border-gray-300 dark:border-zinc-900 pt-12">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-8">
                     <div className="flex items-center gap-4">
                         <div className="flex space-x-1">
                             {[...Array(3)].map((_, i) => (
-                                <div key={i} className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-zinc-800"></div>
+                                <div key={i} className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-zinc-800"></div>
                             ))}
                         </div>
-                        <p className="text-sm text-gray-400 font-mono tracking-wider uppercase">
+                        <p className="text-sm text-gray-600 font-mono tracking-wider uppercase">
                             Global Verification Nodes Active
                         </p>
                     </div>

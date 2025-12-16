@@ -10,6 +10,7 @@ import { Toaster } from 'react-hot-toast'
 import Navbar from './components/layout/navbar/Navbar'
 import Footer from './components/layout/Footer/Footer'
 import ProfilePage from './pages/profile/ProfilePage'
+import { GoogleOAuthProvider } from '@react-oauth/google'
 
 // Lazy load components with prefetching and chunk naming for better debugging
 const LandingPage = lazy(() => import(/* webpackChunkName: "LandingPage" */'./pages/landing/LandingPage'))
@@ -325,18 +326,21 @@ const ToasterConfig = memo(() => {
 const Layout = memo(({ children }) => {
   const location = useLocation();
   const isLanding = location.pathname === '/';
+  const isAvailablePolls = location.pathname === '/polls';
+  const isVotingPage = location.pathname.startsWith('/vote/');
+  const shouldRemovePadding = isLanding || isAvailablePolls || isVotingPage;
 
   return (
-    <div className={`flex flex-col min-h-screen bg-gray-50 dark:bg-black transition-colors duration-200 ${isLanding ? '' : 'pt-[68px]'}`}>
+    <div className={`relative flex flex-col min-h-screen bg-gray-50 dark:bg-black transition-colors duration-200 ${shouldRemovePadding ? '' : 'pt-[68px]'}`}>
       <a href="#main-content" className="sr-only focus:not-sr-only absolute z-50 left-2 top-2 bg-blue-600 text-white px-4 py-2 rounded transition">Skip to main content</a>
       <ToasterConfig />
-      <Navbar />
+      {!isVotingPage && <Navbar />}
       <main id="main-content" tabIndex={-1} className="flex-grow outline-none">
         <Suspense fallback={<LoadingSpinner />}>
           {children}
         </Suspense>
       </main>
-      <Footer />
+      {!isVotingPage && <Footer />}
     </div>
   );
 })
@@ -835,15 +839,17 @@ const App = () => {
       >
         <ThemeProvider>
           <AuthProvider>
-            <AdminAuthProvider>
-              <Suspense fallback={<LoadingSpinner />}>
-                <RouteChangeHandler />
-                <Layout>
-                  {renderRoutes()}
-                </Layout>
-              </Suspense>
-              <ToasterConfig />
-            </AdminAuthProvider>
+            <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+              <AdminAuthProvider>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <RouteChangeHandler />
+                  <Layout>
+                    {renderRoutes()}
+                  </Layout>
+                </Suspense>
+                <ToasterConfig />
+              </AdminAuthProvider>
+            </GoogleOAuthProvider>
           </AuthProvider>
         </ThemeProvider>
       </Router>

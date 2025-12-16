@@ -1,133 +1,252 @@
 import React from 'react';
 import toast from 'react-hot-toast';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, useIsPresent, useMotionTemplate, useMotionValue, AnimatePresence } from 'framer-motion';
 import {
-  CheckCircle2,
-  XCircle,
+  Check,
+  X,
   AlertTriangle,
   Info,
   Loader2,
   Terminal,
-  X
+  ShieldCheck,
+  Zap,
+  ChevronDown,
 } from 'lucide-react';
 
-// Modern, minimalist color palette with refined gradients
+// --- Premium Design System Tokens ---
 const TOAST_VARIANTS = {
   success: {
-    icon: CheckCircle2,
-    primary: '#10b981', // emerald-500
-    secondary: '#d1fae5', // emerald-100
-    gradient: 'from-emerald-500/10 to-emerald-500/5',
+    icon: Check,
+    gradient: 'from-emerald-500 to-teal-500',
+    shadow: 'shadow-emerald-500/20',
+    bg: 'bg-emerald-500/10',
+    text: 'text-emerald-500',
     border: 'border-emerald-500/20',
-    iconColor: 'text-emerald-500',
   },
   error: {
-    icon: XCircle,
-    primary: '#ef4444', // red-500
-    secondary: '#fee2e2', // red-100
-    gradient: 'from-red-500/10 to-red-500/5',
-    border: 'border-red-500/20',
-    iconColor: 'text-red-500',
+    icon: X,
+    gradient: 'from-rose-500 to-red-600',
+    shadow: 'shadow-rose-500/20',
+    bg: 'bg-rose-500/10',
+    text: 'text-rose-500',
+    border: 'border-rose-500/20',
   },
   warning: {
     icon: AlertTriangle,
-    primary: '#f59e0b', // amber-500
-    secondary: '#fef3c7', // amber-100
-    gradient: 'from-amber-500/10 to-amber-500/5',
+    gradient: 'from-amber-400 to-orange-500',
+    shadow: 'shadow-amber-500/20',
+    bg: 'bg-amber-500/10',
+    text: 'text-amber-500',
     border: 'border-amber-500/20',
-    iconColor: 'text-amber-500',
   },
   info: {
     icon: Info,
-    primary: '#3b82f6', // blue-500
-    secondary: '#dbeafe', // blue-100
-    gradient: 'from-blue-500/10 to-blue-500/5',
+    gradient: 'from-blue-500 to-indigo-600',
+    shadow: 'shadow-blue-500/20',
+    bg: 'bg-blue-500/10',
+    text: 'text-blue-500',
     border: 'border-blue-500/20',
-    iconColor: 'text-blue-500',
   },
   loading: {
     icon: Loader2,
-    primary: '#8b5cf6', // violet-500
-    secondary: '#ede9fe', // violet-100
-    gradient: 'from-violet-500/10 to-violet-500/5',
+    gradient: 'from-violet-500 to-purple-600',
+    shadow: 'shadow-violet-500/20',
+    bg: 'bg-violet-500/10',
+    text: 'text-violet-500',
     border: 'border-violet-500/20',
-    iconColor: 'text-violet-500',
   },
   custom: {
     icon: Terminal,
-    primary: '#6366f1', // indigo-500
-    secondary: '#e0e7ff', // indigo-100
-    gradient: 'from-indigo-500/10 to-indigo-500/5',
-    border: 'border-indigo-500/20',
-    iconColor: 'text-indigo-500',
+    gradient: 'from-gray-700 to-gray-900 dark:from-gray-200 dark:to-gray-400',
+    shadow: 'shadow-gray-500/20',
+    bg: 'bg-gray-500/10',
+    text: 'text-gray-900 dark:text-white',
+    border: 'border-gray-500/20',
+  },
+  // Special variant for Security/Admin actions
+  security: {
+    icon: ShieldCheck,
+    gradient: 'from-slate-700 to-black dark:from-white dark:to-slate-200',
+    shadow: 'shadow-black/20 dark:shadow-white/20',
+    bg: 'bg-black/5 dark:bg-white/10',
+    text: 'text-slate-900 dark:text-white',
+    border: 'border-slate-900/10 dark:border-white/20',
   }
 };
 
 /**
- * Modern Toast Component using Framer Motion
+ * Premium "Glass Stack" Toast Component
+ * Incorporates:
+ * - Ultra-smooth Framer Motion springs
+ * - Glassmorphism (Backdrop blur)
+ * - Animated gradient progress bar
+ * - Dynamic Icon container
+ * - Shine effects
  */
-const ModernToast = ({ t, type, title, subtitle, icon }) => {
+const ModernToast = ({ t, type, title, subtitle, icon, duration, action, details }) => {
   const variant = TOAST_VARIANTS[type] || TOAST_VARIANTS.custom;
   const Icon = icon || variant.icon;
+  const [isExpanded, setIsExpanded] = React.useState(false);
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  // Handle unique "loading" spin
+  const isSpinning = type === 'loading';
+
+  function handleMouseMove({ currentTarget, clientX, clientY }) {
+    const { left, top } = currentTarget.getBoundingClientRect();
+    mouseX.set(clientX - left);
+    mouseY.set(clientY - top);
+  }
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-      transition={{
-        type: "spring",
-        stiffness: 500,
-        damping: 30,
-        mass: 1
+      initial={{ opacity: 0, y: -20, scale: 0.9, filter: 'blur(10px)' }}
+      animate={{
+        opacity: t.visible ? 1 : 0,
+        y: t.visible ? 0 : -20,
+        scale: t.visible ? 1 : 0.9,
+        filter: t.visible ? 'blur(0px)' : 'blur(10px)'
       }}
+      exit={{ opacity: 0, scale: 0.9, filter: 'blur(10px)' }}
+      transition={{ type: "spring", stiffness: 400, damping: 30, mass: 1 }}
+      onMouseMove={handleMouseMove}
+      style={{ pointerEvents: 'auto' }}
       className={`
-        relative w-full max-w-sm overflow-hidden rounded-2xl 
-        bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl 
-        border ${variant.border} shadow-[0_8px_30px_rgb(0,0,0,0.12)]
-        dark:shadow-[0_8px_30px_rgb(0,0,0,0.3)]
-        p-4 pointer-events-auto flex items-start gap-3
-        ring-1 ring-black/5 dark:ring-white/10
+        relative overflow-hidden w-full max-w-[26rem] rounded-[1.25rem]
+        bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-2xl
+        border border-gray-200/50 dark:border-white/10
+        shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)]
+        ring-1 ring-black/5 dark:ring-white/5
+        ring-1 ring-black/5 dark:ring-white/5
+        group
       `}
-      role="alert"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
     >
-      {/* Decorative gradient background */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${variant.gradient} opacity-50`} />
+      {/* Dynamic Spotlight Effect */}
+      <motion.div
+        className="pointer-events-none absolute -inset-px opacity-0 group-hover:opacity-100 transition duration-300"
+        style={{
+          background: useMotionTemplate`
+              radial-gradient(
+                600px circle at ${mouseX}px ${mouseY}px,
+                rgba(255, 255, 255, 0.1),
+                transparent 80%
+              )
+            `,
+        }}
+      />
 
-      {/* Icon Section */}
-      <div className={`relative flex-shrink-0 mt-0.5 ${variant.iconColor}`}>
-        <Icon
-          className={`w-5 h-5 ${type === 'loading' ? 'animate-spin' : ''}`}
-          strokeWidth={2.5}
+      {/* Progress Bar */}
+      {type !== 'loading' && duration !== Infinity && (
+        <motion.div
+          initial={{ width: '100%' }}
+          animate={{ width: t.visible ? '0%' : '100%' }}
+          transition={{ duration: duration ? duration / 1000 : 4, ease: 'linear' }}
+          className={`absolute bottom-0 left-0 h-[3px] bg-gradient-to-r ${variant.gradient} opacity-50`}
         />
+      )}
+
+      <div className="p-4 flex items-start gap-4 z-10 relative">
+
+        {/* Icon Container */}
+        <div className={`
+            relative flex-shrink-0 w-10 h-10 rounded-[1rem] flex items-center justify-center
+            ${variant.bg} ${variant.border} border
+            shadow-sm group-hover:scale-105 transition-transform duration-300
+          `}>
+          <Icon
+            className={`w-5 h-5 ${variant.text} ${isSpinning ? 'animate-spin' : ''}`}
+            strokeWidth={2.5}
+          />
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0 pt-0.5">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-[0.9rem] font-bold text-gray-900 dark:text-gray-100 leading-5 tracking-tight">
+              {title}
+            </h3>
+            <span className="text-[10px] uppercase tracking-wider font-mono text-gray-400 dark:text-gray-600 flex-shrink-0">
+              Now
+            </span>
+          </div>
+
+          {title && subtitle && <div className="h-1" />}
+
+          {subtitle && (
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 leading-relaxed">
+              {subtitle}
+            </p>
+          )}
+
+          {/* Action Buttons & Details Toggle */}
+          {(action || details) && (
+            <div className="mt-3 flex items-center gap-2">
+              {action && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    action.onClick();
+                    if (action.dismiss !== false) toast.dismiss(t.id);
+                  }}
+                  className={`
+                      px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors
+                      bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20
+                      text-gray-900 dark:text-white
+                      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900 dark:focus-visible:ring-white
+                    `}
+                >
+                  {action.label}
+                </button>
+              )}
+
+              {details && (
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+                >
+                  {isExpanded ? 'Hide' : 'View'} Details
+                  <motion.div animate={{ rotate: isExpanded ? 180 : 0 }}>
+                    <ChevronDown className="w-3 h-3" />
+                  </motion.div>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Close Button */}
+        <button
+          onClick={() => toast.dismiss(t.id)}
+          className="flex-shrink-0 -mr-1 -mt-1 p-2 rounded-xl
+                     text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300
+                     hover:bg-gray-100 dark:hover:bg-white/5
+                     transition-all duration-200 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400"
+          aria-label="Dismiss notification"
+        >
+          <X className="w-4 h-4" strokeWidth={2.5} aria-hidden="true" />
+        </button>
       </div>
 
-      {/* Content Section */}
-      <div className="relative flex-1 min-w-0">
-        <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-tight">
-          {title}
-        </h3>
-        {subtitle && (
-          <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
-            {subtitle}
-          </p>
+      {/* Expanded Details Section */}
+      <AnimatePresence>
+        {isExpanded && details && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="px-4 pb-4"
+          >
+            <div className="p-3 rounded-lg bg-gray-50 dark:bg-black/40 border border-gray-100 dark:border-white/5 text-[11px] font-mono text-gray-600 dark:text-gray-400 break-all overflow-x-auto">
+              {typeof details === 'string' ? details : JSON.stringify(details, null, 2)}
+            </div>
+          </motion.div>
         )}
-      </div>
-
-      {/* Dismiss Button */}
-      <button
-        onClick={() => toast.dismiss(t.id)}
-        className="relative flex-shrink-0 -mr-1 -mt-1 p-1.5 rounded-full 
-                   text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 
-                   hover:bg-slate-100 dark:hover:bg-slate-800 
-                   transition-colors duration-200"
-        aria-label="Dismiss notification"
-      >
-        <X className="w-4 h-4" />
-      </button>
-
-      {/* Progress Bar (optional, can be added if needed, kept minimal for now) */}
+      </AnimatePresence>
     </motion.div>
   );
 };
@@ -144,30 +263,44 @@ const toastAdapter = (type, title, subtitleOrOptions = '', options = {}) => {
     finalOptions = options;
   }
 
+  // Set default duration if not provided
+  const duration = finalOptions.duration || (type === 'error' ? 8000 : 4000); // Longer for errors
+
   return toast.custom((t) => (
     <ModernToast
       t={t}
       type={type}
       title={title}
       subtitle={subtitle}
+      duration={duration}
       {...finalOptions}
     />
   ), {
-    duration: finalOptions.duration || 4000,
+    duration: duration,
     position: finalOptions.position || 'top-right',
+    id: finalOptions.id,
+    // Override potential global styles from App.jsx
+    style: {
+      background: 'transparent',
+      padding: 0,
+      boxShadow: 'none',
+      border: 'none',
+      minWidth: 'auto',
+      pointerEvents: 'none', // Let the component handle pointer events
+    },
     ...finalOptions,
   });
 };
 
-// Exported tailored functions
 export const showSuccessToast = (title, subtitle, options) => toastAdapter('success', title, subtitle, options);
 export const showErrorToast = (title, subtitle, options) => toastAdapter('error', title, subtitle, options);
 export const showWarningToast = (title, subtitle, options) => toastAdapter('warning', title, subtitle, options);
 export const showInfoToast = (title, subtitle, options) => toastAdapter('info', title, subtitle, options);
 export const showLoadingToast = (title, subtitle, options) => toastAdapter('loading', title, subtitle, options);
 export const showCustomToast = (title, subtitle, options) => toastAdapter('custom', title, subtitle, options);
+export const showSecurityToast = (title, subtitle, options) => toastAdapter('security', title, subtitle, options);
 
-// Legacy compatibility shim for `showNotification`
+// Legacy compatibility shim
 export const showNotification = (
   messageOrConfig,
   type = 'success',
@@ -202,7 +335,6 @@ export const showNotification = (
     }
   }
 
-  // Map simplified types to functions
   const map = {
     success: showSuccessToast,
     error: showErrorToast,
@@ -210,12 +342,32 @@ export const showNotification = (
     info: showInfoToast,
     loading: showLoadingToast,
     custom: showCustomToast,
+    security: showSecurityToast,
   };
 
   const fn = map[toastType.toLowerCase()] || showSuccessToast;
   return fn(title, subtitle, options);
 };
 
+// Wrapped toast object to enforce the new UI
+const toastProxy = {
+  ...toast,
+  success: (message, options) => showSuccessToast(message, options?.subtitle, options),
+  error: (message, options) => showErrorToast(message, options?.subtitle, options),
+  warning: (message, options) => showWarningToast(message, options?.subtitle, options),
+  info: (message, options) => showInfoToast(message, options?.subtitle, options),
+  loading: (message, options) => showLoadingToast(message, options?.subtitle, options),
+  custom: (message, options) => {
+    if (typeof message === 'function' || React.isValidElement(message)) {
+      return toast.custom(message, options);
+    }
+    return showCustomToast(message, options?.subtitle, options);
+  },
+  dismiss: toast.dismiss,
+  remove: toast.remove,
+  promise: toast.promise,
+};
+
 export const dismissToast = (toastId) => toast.dismiss(toastId);
 export const dismissAllToasts = () => toast.dismiss();
-export { toast };
+export { toastProxy as toast };

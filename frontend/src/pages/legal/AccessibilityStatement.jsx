@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
-import { 
-  ShieldCheckIcon, 
-  Cog6ToothIcon, 
+import {
+  ShieldCheckIcon,
+  Cog6ToothIcon,
   InformationCircleIcon,
   EyeSlashIcon,
   DocumentArrowDownIcon,
@@ -36,7 +36,7 @@ export default function AccessibilityStatement() {
             </span>
             <h1 className="text-3xl md:text-4xl font-extrabold text-blue-700 dark:text-blue-400 tracking-tight flex items-center gap-2">
               Accessibility Statement
-              <span className="inline-block align-middle ml-2 px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-xs font-semibold text-blue-600 dark:text-blue-200 shadow-sm animate-fade-in">
+              <span className="inline-block align-middle ml-2 px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-xs font-semibold text-blue-700 dark:text-blue-200 shadow-sm animate-fade-in">
                 Updated
               </span>
             </h1>
@@ -85,7 +85,7 @@ export default function AccessibilityStatement() {
                   }}
                 >
                   <span className="relative flex items-center">
-                    <Icon className="w-5 h-5 group-hover:scale-125 group-hover:text-blue-600 dark:group-hover:text-blue-200 transition-transform duration-200 drop-shadow-sm" aria-hidden="true" />
+                    <Icon className="w-5 h-5 group-hover:scale-125 group-hover:text-blue-700 dark:group-hover:text-blue-200 transition-transform duration-200 drop-shadow-sm" aria-hidden="true" />
                     <span className="sr-only">{label} section</span>
                   </span>
                   <span className="hidden sm:inline">{label}</span>
@@ -119,16 +119,16 @@ export default function AccessibilityStatement() {
             </p>
             <ul className="list-disc pl-6 space-y-1">
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">WCAG 2.1 AA Compliance:</span> Our platform meets or exceeds Web Content Accessibility Guidelines 2.1 Level AA standards.
+                <span className="font-medium text-blue-700 dark:text-blue-300">WCAG 2.1 AA Compliance:</span> Our platform meets or exceeds Web Content Accessibility Guidelines 2.1 Level AA standards.
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Section 508 Compliance:</span> We comply with Section 508 of the Rehabilitation Act for federal accessibility requirements.
+                <span className="font-medium text-blue-700 dark:text-blue-300">Section 508 Compliance:</span> We comply with Section 508 of the Rehabilitation Act for federal accessibility requirements.
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Universal Design:</span> Our platform is designed to be usable by people with diverse abilities and needs.
+                <span className="font-medium text-blue-700 dark:text-blue-300">Universal Design:</span> Our platform is designed to be usable by people with diverse abilities and needs.
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Continuous Improvement:</span> We regularly test, evaluate, and improve our accessibility features based on user feedback.
+                <span className="font-medium text-blue-700 dark:text-blue-300">Continuous Improvement:</span> We regularly test, evaluate, and improve our accessibility features based on user feedback.
               </li>
             </ul>
             <div className="mt-3 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
@@ -156,25 +156,25 @@ export default function AccessibilityStatement() {
             </p>
             <ul className="list-disc pl-6 space-y-2">
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Inclusive Design:</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">Inclusive Design:</span>
                 <span className="ml-1 text-gray-700 dark:text-gray-300">
                   We follow universal design principles, ensuring our platform works for users with diverse abilities, including those with visual, auditory, motor, and cognitive disabilities.
                 </span>
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">User-Centered Development:</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">User-Centered Development:</span>
                 <span className="ml-1 text-gray-700 dark:text-gray-300">
                   We involve users with disabilities in our design and testing processes to ensure our solutions meet real-world needs.
                 </span>
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Continuous Testing:</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">Continuous Testing:</span>
                 <span className="ml-1 text-gray-700 dark:text-gray-300">
                   We regularly test our platform with assistive technologies and conduct accessibility audits to maintain high standards.
                 </span>
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Training & Awareness:</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">Training & Awareness:</span>
                 <span className="ml-1 text-gray-700 dark:text-gray-300">
                   Our development team receives regular training on accessibility best practices and standards.
                 </span>
@@ -199,7 +199,7 @@ export default function AccessibilityStatement() {
               Votely adheres to internationally recognized accessibility standards and guidelines to ensure our platform is accessible to users with diverse abilities.
             </p>
           </div>
-          
+
           <div className="space-y-4">
             <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
               <h3 className="text-lg font-semibold text-green-700 dark:text-green-300 mb-2 flex items-center gap-2">
@@ -262,7 +262,7 @@ export default function AccessibilityStatement() {
               Votely includes a comprehensive range of accessibility features designed to support users with diverse abilities and needs.
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
@@ -343,27 +343,27 @@ export default function AccessibilityStatement() {
           </div>
           <ul className="list-disc pl-6 text-gray-700 dark:text-gray-300 space-y-2">
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Screen Readers:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Screen Readers:</span>
               <span className="ml-1">JAWS, NVDA, VoiceOver (macOS/iOS), TalkBack (Android), Narrator (Windows)</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Voice Recognition:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Voice Recognition:</span>
               <span className="ml-1">Dragon NaturallySpeaking, Windows Speech Recognition, Voice Control (macOS)</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Switch Devices:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Switch Devices:</span>
               <span className="ml-1">Compatible with various switch access devices and software</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Magnification Software:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Magnification Software:</span>
               <span className="ml-1">ZoomText, Windows Magnifier, macOS Zoom</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Browser Compatibility:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Browser Compatibility:</span>
               <span className="ml-1">Chrome, Firefox, Safari, Edge with accessibility features enabled</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Mobile Accessibility:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Mobile Accessibility:</span>
               <span className="ml-1">iOS and Android accessibility features fully supported</span>
             </li>
           </ul>
@@ -382,42 +382,42 @@ export default function AccessibilityStatement() {
           </div>
           <ul className="list-disc pl-6 text-gray-700 dark:text-gray-300 space-y-2">
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Accessibility Issues:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Accessibility Issues:</span>
               <span className="ml-1">Report any accessibility barriers you encounter while using our platform.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Feature Requests:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Feature Requests:</span>
               <span className="ml-1">Suggest accessibility features or improvements that would benefit you.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Testing Participation:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Testing Participation:</span>
               <span className="ml-1">Volunteer to participate in accessibility testing and user research.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Documentation:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Documentation:</span>
               <span className="ml-1">Request accessible documentation or alternative formats.</span>
             </li>
           </ul>
-          
+
           <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
             <h3 className="text-lg font-semibold text-blue-700 dark:text-blue-300 mb-2">
               How to Provide Feedback
             </h3>
             <div className="grid md:grid-cols-2 gap-4 text-sm">
               <div>
-                <h4 className="font-medium text-blue-600 dark:text-blue-300 mb-1">Email</h4>
+                <h4 className="font-medium text-blue-700 dark:text-blue-300 mb-1">Email</h4>
                 <p className="text-blue-700 dark:text-blue-300">accessibility@votely.com</p>
               </div>
               <div>
-                <h4 className="font-medium text-blue-600 dark:text-blue-300 mb-1">Support Form</h4>
+                <h4 className="font-medium text-blue-700 dark:text-blue-300 mb-1">Support Form</h4>
                 <p className="text-blue-700 dark:text-blue-300">Accessible contact form on our website</p>
               </div>
               <div>
-                <h4 className="font-medium text-blue-600 dark:text-blue-300 mb-1">Phone</h4>
+                <h4 className="font-medium text-blue-700 dark:text-blue-300 mb-1">Phone</h4>
                 <p className="text-blue-700 dark:text-blue-300">1-800-VOTELY (accessible phone support)</p>
               </div>
               <div>
-                <h4 className="font-medium text-blue-600 dark:text-blue-300 mb-1">Response Time</h4>
+                <h4 className="font-medium text-blue-700 dark:text-blue-300 mb-1">Response Time</h4>
                 <p className="text-blue-700 dark:text-blue-300">We aim to respond within 2 business days</p>
               </div>
             </div>
@@ -437,23 +437,23 @@ export default function AccessibilityStatement() {
           </div>
           <ul className="list-disc pl-6 text-gray-700 dark:text-gray-300 space-y-2">
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Regular Audits:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Regular Audits:</span>
               <span className="ml-1">We conduct quarterly accessibility audits using automated tools and manual testing.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">User Testing:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">User Testing:</span>
               <span className="ml-1">We regularly test our platform with users who have disabilities to identify and address accessibility issues.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Training:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Training:</span>
               <span className="ml-1">Our development team receives ongoing training on accessibility standards and best practices.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Standards Updates:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Standards Updates:</span>
               <span className="ml-1">We monitor updates to accessibility standards and guidelines to ensure continued compliance.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Technology Advances:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Technology Advances:</span>
               <span className="ml-1">We stay current with advances in assistive technology and incorporate new accessibility features as they become available.</span>
             </li>
           </ul>
@@ -471,19 +471,19 @@ export default function AccessibilityStatement() {
             </p>
             <ul className="list-disc pl-6 space-y-1">
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Accessibility Team:</span>
-                <span className="ml-1">Email us at <a href="mailto:accessibility@votely.com" className="text-blue-600 dark:text-blue-400 underline">accessibility@votely.com</a> for accessibility-specific questions and feedback.</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">Accessibility Team:</span>
+                <span className="ml-1">Email us at <a href="mailto:accessibility@votely.com" className="text-blue-700 dark:text-blue-400 underline">accessibility@votely.com</a> for accessibility-specific questions and feedback.</span>
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">General Support:</span>
-                <span className="ml-1">For general technical support, contact <a href="mailto:support@votely.com" className="text-blue-600 dark:text-blue-400 underline">support@votely.com</a>.</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">General Support:</span>
+                <span className="ml-1">For general technical support, contact <a href="mailto:support@votely.com" className="text-blue-700 dark:text-blue-400 underline">support@votely.com</a>.</span>
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Phone Support:</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">Phone Support:</span>
                 <span className="ml-1">Call 1-800-VOTELY for accessible phone support during business hours.</span>
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Documentation:</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">Documentation:</span>
                 <span className="ml-1">Request accessible documentation or alternative formats for any materials.</span>
               </li>
             </ul>
@@ -498,27 +498,27 @@ export default function AccessibilityStatement() {
 
         <footer className="mt-10 flex flex-col items-center text-xs text-gray-500 dark:text-gray-400 space-y-1">
           <div>
-            &copy; {new Date().getFullYear()} <span className="font-semibold text-blue-600 dark:text-blue-300">Votely</span>. All rights reserved.
+            &copy; {new Date().getFullYear()} <span className="font-semibold text-blue-700 dark:text-blue-300">Votely</span>. All rights reserved.
           </div>
           <div>
             <span>
               <a
                 href="/terms"
-                className="underline hover:text-blue-600 dark:hover:text-blue-400 transition"
+                className="underline hover:text-blue-700 dark:hover:text-blue-400 transition"
               >
                 Terms of Service
               </a>
               <span className="mx-1">|</span>
               <a
                 href="/privacy"
-                className="underline hover:text-blue-600 dark:hover:text-blue-400 transition"
+                className="underline hover:text-blue-700 dark:hover:text-blue-400 transition"
               >
                 Privacy Policy
               </a>
               <span className="mx-1">|</span>
               <a
                 href="/accessibility"
-                className="underline hover:text-blue-600 dark:hover:text-blue-400 transition"
+                className="underline hover:text-blue-700 dark:hover:text-blue-400 transition"
               >
                 Accessibility Statement
               </a>

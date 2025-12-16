@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useTheme } from '../../../context/ThemeContext';
-import { Eye, Code, Cpu, Scan, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { Eye, Code, Cpu, Scan, CheckCircle2 } from 'lucide-react';
+import { useInViewPause } from '../../../hooks/useInViewPause';
 
 // --- SHARED UI COMPONENT (The "Subject") ---
 // This component renders twice: once for the look, once for the code.
@@ -25,7 +26,7 @@ const AccessibilityDemoUI = ({ mode = 'visual' }) => {
             <div className="relative z-10 flex flex-col gap-6">
 
                 {/* Header Area */}
-                <div className="flex items-center justify-between border-b pb-4 border-gray-100 dark:border-zinc-800/50">
+                <div className="flex items-center justify-between border-b pb-4 border-gray-300 dark:border-zinc-800/50">
                     <div className="flex items-center gap-3">
                         {isSemantic ? (
                             <div className="text-xs border border-green-500 px-2 py-1 rounded bg-green-900/20">
@@ -57,7 +58,7 @@ const AccessibilityDemoUI = ({ mode = 'visual' }) => {
                                 <p className="mt-2 text-[10px] text-green-600">CONTRAST: 21.05 (AAA)</p>
                             </div>
                         ) : (
-                            <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                            <p className="text-gray-800 dark:text-gray-200 leading-relaxed">
                                 Your voice is encrypted and permanently recorded on the immutable ledger.
                             </p>
                         )}
@@ -120,9 +121,11 @@ const AccessibilitySection = () => {
         setIsHovering(false);
     };
 
-    // Auto-scan animation when not hovering
+    const [containerRef, isPaused] = useInViewPause({ threshold: 0.1 });
+
+    // Auto-scan animation when not hovering and not paused
     useEffect(() => {
-        if (isHovering) return;
+        if (isHovering || isPaused) return;
 
         const startTime = Date.now();
         const animate = () => {
@@ -145,11 +148,15 @@ const AccessibilitySection = () => {
         };
         const id = requestAnimationFrame(animate);
         return () => cancelAnimationFrame(id);
-    }, [isHovering, mouseX, mouseY]);
+    }, [isHovering, mouseX, mouseY, isPaused]);
 
 
     return (
         <section
+            ref={(node) => {
+                sectionRef.current = node;
+                if (containerRef) containerRef.current = node;
+            }}
             id="accessibility"
             className="relative w-full py-16 bg-zinc-950 overflow-hidden cursor-crosshair selection:bg-green-500/30"
         >
@@ -240,17 +247,17 @@ const AccessibilitySection = () => {
                 </div>
 
                 {/* Metric Strip */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-24 border-t border-zinc-900 pt-12">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-24 border-t border-zinc-900 pt-12" role="list">
                     {[
                         { label: "ARIA Coverage", value: "100%", icon: CheckCircle2 },
                         { label: "Keyboard Nav", value: "NATIVE", icon: Cpu },
                         { label: "Color Contrast", value: "AAA", icon: Eye },
                         { label: "Semantics", value: "VALID", icon: Code },
                     ].map((metric, i) => (
-                        <div key={i} className="flex flex-col items-center md:items-start p-4 hover:bg-zinc-900/50 rounded-xl transition-colors group">
-                            <metric.icon className="w-6 h-6 text-zinc-600 group-hover:text-white transition-colors mb-3" />
+                        <div key={i} className="flex flex-col items-center md:items-start p-4 hover:bg-zinc-900/50 rounded-xl transition-colors group" role="listitem">
+                            <metric.icon className="w-6 h-6 text-zinc-400 group-hover:text-white transition-colors mb-3" />
                             <div className="text-3xl font-black text-white mb-1 group-hover:scale-105 transition-transform origin-left">{metric.value}</div>
-                            <div className="text-xs font-mono text-zinc-500 uppercase tracking-wider">{metric.label}</div>
+                            <div className="text-xs font-mono text-zinc-400 uppercase tracking-wider">{metric.label}</div>
                         </div>
                     ))}
                 </div>

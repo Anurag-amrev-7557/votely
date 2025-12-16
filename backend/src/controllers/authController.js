@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const axios = require('axios');
 
 const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
@@ -238,13 +239,37 @@ const googleAuth = async (req, res) => {
     try {
         const { token } = req.body;
 
-        // Verify Google Token
-        const ticket = await client.verifyIdToken({
-            idToken: token,
-            audience: process.env.GOOGLE_CLIENT_ID,
-        });
+        let name, email, picture, googleId;
 
-        const { name, email, picture, sub: googleId } = ticket.getPayload();
+        // Strategy A: Try as Access Token (UserInfo Endpoint)
+        try {
+            const userInfoResponse = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            const data = userInfoResponse.data;
+            name = data.name;
+            email = data.email;
+            picture = data.picture;
+            googleId = data.sub;
+
+        } catch (accessTokenError) {
+            // Strategy B: Try as ID Token (JWT)
+            try {
+                const ticket = await client.verifyIdToken({
+                    idToken: token,
+                    audience: process.env.GOOGLE_CLIENT_ID,
+                });
+                const payload = ticket.getPayload();
+                name = payload.name;
+                email = payload.email;
+                picture = payload.picture;
+                googleId = payload.sub;
+            } catch (idTokenError) {
+                console.error('Token validation failed (both Access and ID token):', accessTokenError.message, idTokenError.message);
+                return res.status(400).json({ error: 'Invalid Google Token' });
+            }
+        }
 
         // Restrict to IIT BBS domain
         if (!email.toLowerCase().endsWith('@iitbbs.ac.in')) {
@@ -253,8 +278,6 @@ const googleAuth = async (req, res) => {
 
         // Check if user exists by Google ID first (Primary lookup)
         let user = await User.findOne({ googleId });
-
-
 
         if (user) {
             // User found by Google ID

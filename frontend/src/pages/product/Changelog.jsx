@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion';
-import { 
-  SparklesIcon, 
-  BugIcon, 
-  WrenchScrewdriverIcon, 
+import {
+  SparklesIcon,
+  BugIcon,
+  WrenchScrewdriverIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
   PlusIcon,
@@ -236,9 +236,9 @@ export default function Changelog() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto"
+              className="text-xl md:text-2xl text-gray-700 dark:text-gray-300 mb-8 max-w-3xl mx-auto"
             >
-              Stay up to date with the latest features, improvements, and fixes in Votely. 
+              Stay up to date with the latest features, improvements, and fixes in Votely.
               We're constantly working to make your voting experience better.
             </motion.p>
 
@@ -276,7 +276,7 @@ export default function Changelog() {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900 dark:text-white">Major</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Breaking changes, new features</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-400">Breaking changes, new features</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -285,7 +285,7 @@ export default function Changelog() {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900 dark:text-white">Minor</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">New features, improvements</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-400">New features, improvements</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -294,7 +294,7 @@ export default function Changelog() {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900 dark:text-white">Patch</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Bug fixes, security updates</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-400">Bug fixes, security updates</p>
                 </div>
               </div>
             </div>
@@ -334,28 +334,28 @@ export default function Changelog() {
                           <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
                             v{version.version}
                           </h3>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {new Date(version.date).toLocaleDateString('en-US', { 
-                              year: 'numeric', 
-                              month: 'long', 
-                              day: 'numeric' 
+                          <p className="text-sm text-gray-700 dark:text-gray-400">
+                            {new Date(version.date).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
                             })}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         {getTypeIcon(version.type)}
-                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-400">
                           {version.type}
                         </span>
                       </div>
                     </div>
-                    
+
                     <div className="mt-4">
                       <h4 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                         {version.title}
                       </h4>
-                      <p className="text-gray-600 dark:text-gray-300">
+                      <p className="text-gray-700 dark:text-gray-300">
                         {version.description}
                       </p>
                     </div>
@@ -464,7 +464,7 @@ export default function Changelog() {
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6">
               Stay Updated
             </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
+            <p className="text-xl text-gray-700 dark:text-gray-300 mb-8">
               Never miss an update. Subscribe to our changelog feed or follow us on social media.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

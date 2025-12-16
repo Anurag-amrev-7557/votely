@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { 
+import {
   StarIcon,
   RocketLaunchIcon,
   ArrowRightIcon,
@@ -18,7 +18,7 @@ import {
   ClockIcon
 } from '../../components/ui/icons';
 
-import { 
+import {
   AcademicCapIcon,
   BuildingOfficeIcon,
   CurrencyDollarIcon,
@@ -227,8 +227,8 @@ export default function Partners() {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-              whileHover={{ 
-                scale: 1.05, 
+              whileHover={{
+                scale: 1.05,
                 y: -2,
                 rotate: [0, 2, -2, 0]
               }}
@@ -270,7 +270,7 @@ export default function Partners() {
               >
                 Votely
               </motion.span>
-              <motion.span 
+              <motion.span
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5 }}
@@ -296,13 +296,13 @@ export default function Partners() {
                 Join our{' '}
                 <motion.span
                   className="inline-flex mb-4 items-center gap-1 px-3 py-2 bg-gradient-to-r from-blue-100 to-blue-200 dark:from-blue-900/40 dark:to-blue-800/40 text-blue-700 dark:text-blue-300 rounded-xl font-semibold shadow-sm border border-blue-200 dark:border-blue-700/50"
-                  whileHover={{ 
-                    scale: 1.08, 
+                  whileHover={{
+                    scale: 1.08,
                     y: -3,
                     rotate: [-2, 2]
                   }}
                   whileTap={{ scale: 0.95 }}
-                  transition={{ 
+                  transition={{
                     duration: 0.3,
                     type: "spring",
                     stiffness: 300
@@ -314,13 +314,13 @@ export default function Partners() {
                 {' '}of partners and help organizations worldwide implement{' '}
                 <motion.span
                   className="inline-flex items-center gap-1 px-3 py-2 bg-gradient-to-r from-green-100 to-green-200 dark:from-green-900/40 dark:to-green-800/40 text-green-700 dark:text-green-300 rounded-xl font-semibold shadow-sm border border-green-200 dark:border-green-700/50"
-                  whileHover={{ 
-                    scale: 1.08, 
+                  whileHover={{
+                    scale: 1.08,
                     y: -3,
                     rotate: [2, -2]
                   }}
                   whileTap={{ scale: 0.95 }}
-                  transition={{ 
+                  transition={{
                     duration: 0.3,
                     type: "spring",
                     stiffness: 300
@@ -332,13 +332,13 @@ export default function Partners() {
                 ,{' '}
                 <motion.span
                   className="inline-flex items-center gap-1 px-3 py-2 bg-gradient-to-r from-purple-100 to-purple-200 dark:from-purple-900/40 dark:to-purple-800/40 text-purple-700 dark:text-purple-300 rounded-xl font-semibold shadow-sm border border-purple-200 dark:border-purple-700/50"
-                  whileHover={{ 
-                    scale: 1.08, 
+                  whileHover={{
+                    scale: 1.08,
                     y: -3,
                     rotate: [-1, 1]
                   }}
                   whileTap={{ scale: 0.95 }}
-                  transition={{ 
+                  transition={{
                     duration: 0.3,
                     type: "spring",
                     stiffness: 300
@@ -390,10 +390,11 @@ export default function Partners() {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8" role="list">
             {partnershipBenefits.map((benefit, index) => (
               <motion.div
                 key={benefit.title}
+                role="listitem"
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: index * 0.1 }}
@@ -433,10 +434,11 @@ export default function Partners() {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 gap-8" role="list">
             {partnerTiers.map((tier, index) => (
               <motion.div
                 key={tier.name}
+                role="listitem"
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: index * 0.1 }}
@@ -448,7 +450,7 @@ export default function Partners() {
                     <tier.icon className="w-6 h-6 text-white" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">
                       {tier.name}
                     </h3>
                     <p className="text-gray-600 dark:text-gray-300">
@@ -506,10 +508,11 @@ export default function Partners() {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8" role="list">
             {currentPartners.map((partner, index) => (
               <motion.div
                 key={partner.name}
+                role="listitem"
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: index * 0.1 }}
@@ -524,12 +527,11 @@ export default function Partners() {
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
                   {partner.name}
                 </h3>
-                <p className={`text-sm font-medium mb-2 ${
-                  partner.tier === 'Platinum' ? 'text-purple-600 dark:text-purple-400' :
+                <p className={`text-sm font-medium mb-2 ${partner.tier === 'Platinum' ? 'text-purple-600 dark:text-purple-400' :
                   partner.tier === 'Gold' ? 'text-yellow-600 dark:text-yellow-400' :
-                  partner.tier === 'Silver' ? 'text-gray-600 dark:text-gray-400' :
-                  'text-amber-600 dark:text-amber-400'
-                }`}>
+                    partner.tier === 'Silver' ? 'text-gray-600 dark:text-gray-400' :
+                      'text-amber-600 dark:text-amber-400'
+                  }`}>
                   {partner.tier} Partner
                 </p>
                 <p className="text-gray-600 dark:text-gray-300 text-sm mb-3">
@@ -667,11 +669,11 @@ export default function Partners() {
               Join our global network of partners and help organizations implement secure voting solutions.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="inline-flex items-center gap-3 px-8 py-4 bg-white text-blue-600 font-semibold rounded-xl hover:bg-gray-100 transition-all duration-300 transform hover:scale-105">
+              <button className="inline-flex items-center gap-3 px-8 py-4 bg-white text-blue-700 font-semibold rounded-xl hover:bg-gray-100 transition-all duration-300 transform hover:scale-105">
                 <UserGroupIcon className="w-5 h-5" />
                 Apply Now
               </button>
-              <button className="inline-flex items-center gap-3 px-8 py-4 bg-transparent text-white font-semibold rounded-xl border-2 border-white hover:bg-white hover:text-blue-600 transition-all duration-300 transform hover:scale-105">
+              <button className="inline-flex items-center gap-3 px-8 py-4 bg-transparent text-white font-semibold rounded-xl border-2 border-white hover:bg-white hover:text-blue-700 transition-all duration-300 transform hover:scale-105">
                 <BookOpenIcon className="w-5 h-5" />
                 Partner Resources
               </button>

@@ -127,7 +127,11 @@ export default defineConfig({
       '@context': resolve(__dirname, 'src/context'),
       '@assets': resolve(__dirname, 'src/assets'),
       '@utils': resolve(__dirname, 'src/utils'),
+      // Fix duplicate React issue - ensure single React instance
+      'react': resolve(__dirname, 'node_modules/react'),
+      'react-dom': resolve(__dirname, 'node_modules/react-dom'),
     },
+    dedupe: ['react', 'react-dom'],
   },
   css: {
     postcss: './postcss.config.js',
@@ -150,26 +154,20 @@ export default defineConfig({
     cssCodeSplit: true,
     rollupOptions: {
       output: {
-        // Optimized manual chunks strategy
-        manualChunks: (id) => {
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
-              return 'react-vendor';
-            }
-            if (id.includes('framer-motion') || id.includes('@headlessui') || id.includes('@heroicons') || id.includes('lucide-react')) {
-              return 'ui-vendor';
-            }
-            if (id.includes('axios') || id.includes('date-fns') || id.includes('lodash')) {
-              return 'utils-vendor';
-            }
-            // Group remaining small dependencies into a common vendor chunk
-            return 'vendor';
-          }
+        // Simplified manual chunks strategy to prevent React loading race conditions
+        manualChunks: {
+          // React must be in its own chunk that loads first
+          'react-vendor': ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'],
+          // Router depends on React, so it's separate
+          'router-vendor': ['react-router-dom'],
+          // UI libraries
+          'ui-vendor': ['framer-motion', '@headlessui/react', 'lucide-react'],
+          // Utilities
+          'utils-vendor': ['axios', 'date-fns', 'lodash'],
         },
         chunkFileNames: 'assets/js/[name]-[hash].js',
         entryFileNames: 'assets/js/[name]-[hash].js',
         assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
-        experimentalMinChunkSize: 10000,
       },
     },
     terserOptions: {
@@ -194,14 +192,23 @@ export default defineConfig({
     include: [
       'react',
       'react-dom',
+      'react-dom/client',
+      'react/jsx-runtime',
+      'react/jsx-dev-runtime',
       'react-router-dom',
       '@headlessui/react',
       '@heroicons/react',
       'axios',
       'date-fns',
       'framer-motion',
+      'react-hot-toast',
+      'react-error-boundary',
+      '@react-three/fiber',
+      '@react-three/drei',
+      'three',
     ],
     exclude: ['@vitejs/plugin-react'],
+    force: true,
     esbuildOptions: {
       target: 'esnext',
       supported: {
@@ -212,9 +219,6 @@ export default defineConfig({
   },
   cacheDir: '.vite_cache',
   esbuild: {
-    jsxInject: undefined,
-    jsxFactory: 'React.createElement',
-    jsxFragment: 'React.Fragment',
     target: 'esnext',
     supported: {
       'top-level-await': true

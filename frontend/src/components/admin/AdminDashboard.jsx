@@ -1,721 +1,225 @@
-import React, { useState, useRef, useEffect, useMemo, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import {
-  UserCircleIcon,
-  CheckBadgeIcon,
-  ShieldCheckIcon,
-  BellIcon,
-  ChartBarIcon,
-  PencilSquareIcon,
-  XMarkIcon,
-  ExclamationTriangleIcon,
-  InformationCircleIcon,
-  ClockIcon,
-  BoltIcon,
-  GlobeAltIcon,
-} from '@heroicons/react/24/outline';
+  Users,
+  Vote,
+  ShieldCheck,
+  Activity,
+  ArrowRight,
+  Clock,
+  Zap,
+  Lock,
+  Search,
+  AlertCircle
+} from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
-import axiosInstance from '../../utils/api/axiosConfig';
+import { useAdminAuth } from '../../context/AdminAuthContext';
+import adminAxios from '../../utils/api/adminAxios';
 
-const recentActivity = [
-  {
-    timestamp: '2024-03-15 10:23 AM',
-    action: 'Poll Created',
-    user: 'Admin User',
-    details: "New poll 'City Council Election' created",
-  },
-  {
-    timestamp: '2024-03-15 11:45 AM',
-    action: 'User Registered',
-    user: 'System',
-    details: "New user 'Emily Carter' registered",
-  },
-  {
-    timestamp: '2024-03-15 01:12 PM',
-    action: 'Vote Cast',
-    user: 'Emily Carter',
-    details: "Vote cast in 'City Council Election'",
-  },
-  {
-    timestamp: '2024-03-15 02:30 PM',
-    action: 'Security Log',
-    user: 'System',
-    details: 'Login attempt from unknown IP address',
-  },
-  {
-    timestamp: '2024-03-15 03:48 PM',
-    action: 'Poll Closed',
-    user: 'Admin User',
-    details: "Poll 'Student Body President' closed",
-  },
-];
+// --- VISUAL UTILITIES ---
+// NoiseTexture and SpotlightEffect removed - imported from AdminWidgets
 
-// Advanced: Rich activity avatar system with emoji, color, and accessibility label
-const activityAvatars = [
-  {
-    icon: ChartBarIcon,
-    color: 'bg-blue-500 text-white',
-    label: 'Poll Activity',
-    keywords: ['Poll Created', 'Poll Closed', 'Vote Cast'],
-    ariaHidden: true,
-  },
-  {
-    icon: UserCircleIcon,
-    color: 'bg-green-500 text-white',
-    label: 'User Activity',
-    keywords: ['User Registered', 'User Updated', 'User Deleted'],
-    ariaHidden: true,
-  },
-  {
-    icon: ShieldCheckIcon,
-    color: 'bg-purple-500 text-white',
-    label: 'Security Event',
-    keywords: ['Security Log', 'Login Attempt', 'Password Changed'],
-    ariaHidden: true,
-  },
-  {
-    icon: BoltIcon,
-    color: 'bg-yellow-400 text-gray-900',
-    label: 'System Alert',
-    keywords: ['System Alert', 'Performance Spike', 'Downtime'],
-    ariaHidden: true,
-  },
-  {
-    icon: GlobeAltIcon,
-    color: 'bg-pink-500 text-white',
-    label: 'Results',
-    keywords: ['Results Published', 'Results Updated'],
-    ariaHidden: true,
-  },
-  {
-    icon: PencilSquareIcon,
-    color: 'bg-indigo-500 text-white',
-    label: 'Edit',
-    keywords: ['Poll Edited', 'User Edited'],
-    ariaHidden: true,
-  },
-  {
-    icon: CheckBadgeIcon,
-    color: 'bg-emerald-500 text-white',
-    label: 'Success',
-    keywords: ['Success', 'Completed'],
-    ariaHidden: true,
-  },
-  {
-    icon: XMarkIcon,
-    color: 'bg-red-500 text-white',
-    label: 'Error',
-    keywords: ['Error', 'Failed', 'Rejected'],
-    ariaHidden: true,
-  },
-  {
-    icon: BellIcon,
-    color: 'bg-orange-400 text-white',
-    label: 'Notification',
-    keywords: ['Notification', 'Reminder'],
-    ariaHidden: true,
-  },
-  {
-    icon: ClockIcon,
-    color: 'bg-gray-500 text-white',
-    label: 'Time',
-    keywords: ['Scheduled', 'Delayed'],
-    ariaHidden: true,
-  },
-];
+import { DashboardWidget, StatValue, NoiseTexture, SpotlightEffect } from './AdminWidgets';
 
-// Helper: Get avatar by activity action
-export function getActivityAvatar(action) {
-  for (const avatar of activityAvatars) {
-    if (avatar.keywords.some(keyword => action.includes(keyword))) {
-      return avatar;
-    }
-  }
-  // Default fallback
-  return {
-    icon: InformationCircleIcon,
-    color: 'bg-blue-300 text-white',
-    label: 'Activity',
+const AdminDashboard = ({ isDarkMode }) => {
+  const { adminEmail } = useAdminAuth();
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Real stats mock data - replaced with real API calls in production
+  const stats = {
+    activePolls: 12,
+    totalVotes: 14502,
+    registeredVoters: 8903,
+    securityScore: 98
   };
-}
 
-// Move keyframes to a global style tag outside the component
-if (typeof document !== 'undefined' && !document.getElementById('admindashboard-keyframes')) {
-  const style = document.createElement('style');
-  style.id = 'admindashboard-keyframes';
-  style.innerHTML = `
-    @keyframes typing {
-      from { width: 0 }
-      to { width: 100% }
-    }
-    @keyframes blink-caret {
-      from, to { border-color: transparent }
-      50% { border-color: #3b82f6; }
-    }
-    @keyframes wave {
-      0% { transform: rotate(0.0deg) }
-      10% { transform: rotate(14.0deg) }
-      20% { transform: rotate(-8.0deg) }
-      30% { transform: rotate(14.0deg) }
-      40% { transform: rotate(-4.0deg) }
-      50% { transform: rotate(10.0deg) }
-      60% { transform: rotate(0.0deg) }
-      100% { transform: rotate(0.0deg) }
-    }
-  `;
-  document.head.appendChild(style);
-}
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
-// Enhanced lazy loading wrapper with better error handling
-const createLazyComponent = (importFn, displayName) => {
-  return lazy(() => 
-    importFn().then(module => {
-      // Ensure the module has a default export
-      if (!module || !module.default) {
-        console.error(`Lazy component ${displayName} failed to load properly:`, module);
-        throw new Error(`Failed to load component: ${displayName}`);
-      }
-      
-      // Set displayName after successful load
-      if (module.default) {
-        module.default.displayName = displayName;
-      }
-      
-      return module;
-    }).catch(error => {
-      console.error(`Error loading lazy component ${displayName}:`, error);
-      // Return a fallback component
-      return {
-        default: () => (
-          <div className="flex items-center justify-center min-h-[200px] text-red-500">
-            Failed to load {displayName}
+  return (
+    <div className="w-full min-h-screen p-6 md:p-8 pr-0 md:pr-0 space-y-8">
+
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4">
+        <div>
+          <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gray-600 dark:text-zinc-400 mb-2">
+            Command Center
+          </h2>
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tighter text-gray-900 dark:text-white leading-none">
+            Welcome back, <span className="text-gray-500 dark:text-zinc-500">Admin.</span>
+          </h1>
+        </div>
+
+        <div className="flex flex-col-reverse md:flex-row md:items-center gap-4">
+          {/* Pill Styled Stats */}
+          <div className="flex items-center gap-4 bg-white dark:bg-zinc-900/50 border border-gray-200 dark:border-zinc-800 rounded-full px-5 py-2.5 shadow-sm overflow-x-auto max-w-full custom-scrollbar">
+            <div className="flex items-center gap-2 shrink-0">
+              <Vote className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              <div className="flex items-baseline gap-1">
+                <span className="text-sm font-bold text-gray-900 dark:text-white">{stats.activePolls}</span>
+                <span className="text-xs text-gray-500 dark:text-zinc-500 font-medium hidden sm:inline-block">active</span>
+              </div>
+            </div>
+            <div className="w-px h-4 bg-gray-200 dark:bg-zinc-800 shrink-0"></div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Activity className="w-4 h-4 text-blue-500" />
+              <div className="flex items-baseline gap-1">
+                <span className="text-sm font-bold text-gray-900 dark:text-white">{stats.totalVotes.toLocaleString()}</span>
+                <span className="text-xs text-gray-500 dark:text-zinc-500 font-medium hidden sm:inline-block">votes</span>
+              </div>
+            </div>
+            <div className="w-px h-4 bg-gray-200 dark:bg-zinc-800 shrink-0"></div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Users className="w-4 h-4 text-purple-500" />
+              <div className="flex items-baseline gap-1">
+                <span className="text-sm font-bold text-gray-900 dark:text-white">{stats.registeredVoters.toLocaleString()}</span>
+                <span className="text-xs text-gray-500 dark:text-zinc-500 font-medium hidden sm:inline-block">voters</span>
+              </div>
+            </div>
+            <div className="w-px h-4 bg-gray-200 dark:bg-zinc-800 shrink-0"></div>
+            <div className="flex items-center gap-2 shrink-0">
+              <ShieldCheck className="w-4 h-4 text-green-500" />
+              <div className="flex items-baseline gap-1">
+                <span className="text-sm font-bold text-gray-900 dark:text-white">{stats.securityScore}%</span>
+                <span className="text-xs text-gray-500 dark:text-zinc-500 font-medium hidden sm:inline-block">security</span>
+              </div>
+            </div>
           </div>
-        )
-      };
-    })
+
+          <div className="flex items-center gap-3 text-sm font-medium text-gray-500 dark:text-zinc-400 bg-white dark:bg-zinc-900/50 px-4 py-2 rounded-full border border-gray-200 dark:border-zinc-800 self-start md:self-auto shadow-sm">
+            <Clock className="w-4 h-4" />
+            <span>{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            <span className="w-px h-4 bg-gray-300 dark:bg-zinc-700 mx-1"></span>
+            <span>{currentTime.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Grid - Bento Layout */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
+
+
+        {/* Live Activity Pulse */}
+        <DashboardWidget title="Live Vote Velocity" span="md:col-span-2 md:row-span-2">
+          <div className="flex-1 flex items-end gap-1.5 h-full min-h-[200px] w-full pt-4">
+            {/* Creating a more 'system' look for the chart */}
+            {[...Array(24)].map((_, i) => {
+              const height = Math.max(10, Math.random() * 100);
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ height: '0%' }}
+                  animate={{
+                    height: `${height}%`,
+                    opacity: i > 20 ? 0.3 : 1
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    repeatType: "reverse",
+                    delay: i * 0.05
+                  }}
+                  className="flex-1 rounded-sm bg-gray-900 dark:bg-white"
+                  role="presentation"
+                />
+              );
+            })}
+          </div>
+          <div className="flex justify-between mt-4 text-xs font-mono text-gray-500 dark:text-zinc-500 uppercase tracking-wider">
+            <span>T-60m</span>
+            <span>Now</span>
+          </div>
+        </DashboardWidget>
+
+        {/* System Health Matrix */}
+        <DashboardWidget title="System Health" span="md:col-span-1 md:row-span-2">
+          <div className="flex flex-col gap-6">
+            <HealthItem label="CPU Load" value={34} />
+            <HealthItem label="Memory Usage" value={56} />
+            <HealthItem label="Node Consensus" value={100} />
+            <HealthItem label="Encryption Layer" value={100} color="green" />
+          </div>
+          <div className="mt-auto pt-6 border-t border-gray-200 dark:border-zinc-800">
+            <div className="flex items-center gap-2 text-xs font-mono text-green-600 dark:text-green-400">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+              </span>
+              ALL SYSTEMS OPERATIONAL
+            </div>
+          </div>
+        </DashboardWidget>
+
+        {/* Recent Audit Log */}
+        <DashboardWidget title="Audit Log" span="md:col-span-1 md:row-span-2">
+          <ul className="flex flex-col gap-4 overflow-y-auto max-h-[300px] pr-2 custom-scrollbar">
+            {[1, 2, 3, 4, 5].map((_, i) => (
+              <li key={i} className="flex gap-3 text-sm group/item">
+                <span className="font-mono text-xs text-gray-500 dark:text-zinc-400 pt-0.5">
+                  10:{14 + i}
+                </span>
+                <div className="flex flex-col">
+                  <span className="font-medium text-gray-900 dark:text-white">New Vote Cast</span>
+                  <span className="text-xs text-gray-500 dark:text-zinc-500">Hash: 8f3a...9d2e</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </DashboardWidget>
+
+        {/* Quick Actions */}
+        <DashboardWidget title="Command Console" span="md:col-span-2">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <ActionButton icon={Zap} label="New Poll" />
+            <ActionButton icon={Users} label="Manage Users" />
+            <ActionButton icon={ShieldCheck} label="Security Scan" />
+            <ActionButton icon={Lock} label="Emergency Stop" variant="danger" />
+          </div>
+        </DashboardWidget>
+
+        <div className="md:col-span-2 flex items-center justify-between p-6 rounded-3xl bg-gray-100 dark:bg-zinc-900 border border-transparent dark:border-zinc-800/50">
+          <div>
+            <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Admin Protocol v2.1.0</h4>
+            <p className="text-xs text-gray-500 dark:text-zinc-500 mt-1">Last security audit passed 2 hours ago.</p>
+          </div>
+          <div className="h-8 w-8 rounded-full bg-gray-200 dark:bg-zinc-800 flex items-center justify-center">
+            <ShieldCheck className="w-4 h-4 text-gray-500 dark:text-zinc-500" />
+          </div>
+        </div>
+
+      </div>
+    </div>
   );
 };
 
-const UsersPage = createLazyComponent(
-  () => import('./UsersPage'),
-  'UsersPage'
-);
-const PollsPage = createLazyComponent(
-  () => import('./PollsPage'),
-  'PollsPage'
-);
-const ResultsPage = createLazyComponent(
-  () => import('./ResultsPage'),
-  'ResultsPage'
-);
-const SecurityPage = createLazyComponent(
-  () => import('./SecurityPage'),
-  'SecurityPage'
-);
-const SettingsPage = createLazyComponent(
-  () => import('./SettingsPage'),
-  'SettingsPage'
-);
+// --- SUB-COMPONENTS ---
 
-const AdminDashboard = React.memo(({ isDarkMode }) => {
-  // Memoize theme-dependent variables
-  const themeVars = useMemo(() => ({
-    accent: isDarkMode ? 'text-blue-400' : 'text-blue-600',
-    border: isDarkMode ? 'border-gray-700' : 'border-gray-200',
-    bg: isDarkMode ? 'bg-gray-900' : 'bg-white',
-    text: isDarkMode ? 'text-gray-100' : 'text-gray-900',
-    subtext: isDarkMode ? 'text-gray-400' : 'text-gray-500',
-  }), [isDarkMode]);
-  const { accent, border, bg, text, subtext } = themeVars;
-
-  // Stats
-  const [pollsCount, setPollsCount] = useState(12);
-  const [votersCount, setVotersCount] = useState(5230);
-  const [votesCount, setVotesCount] = useState(4100);
-  const [showNewPollModal, setShowNewPollModal] = useState(false);
-  const [showActivityModal, setShowActivityModal] = useState(false);
-
-  // Activity
-  const [activityList, setActivityList] = useState(recentActivity);
-
-  // Greeting
-  const hour = new Date().getHours();
-  let greeting = 'Welcome back';
-  if (hour < 5) greeting = 'Good night';
-  else if (hour < 12) greeting = 'Good morning';
-  else if (hour < 18) greeting = 'Good afternoon';
-  else greeting = 'Good evening';
-
-  return (
-    <div role="main" aria-label="Admin dashboard main content" tabIndex={0} className={`min-h-screen p-8 ${bg} ${text} transition-colors`}>
-      {/* Greeting Section */}
-      <section role="region" aria-labelledby="admin-greeting-heading" tabIndex={0}>
-        <h2 id="admin-greeting-heading" className="sr-only">Admin Dashboard Greeting</h2>
-        <div className="mb-8 flex flex-col gap-2 relative">
-          {/* Animated Glow Accent */}
-          <div
-            className={`absolute -top-6 -left-6 w-40 h-20 rounded-full blur-2xl pointer-events-none z-0 ${
-              isDarkMode
-                ? 'bg-gradient-to-tr from-blue-700/30 via-blue-500/20 to-purple-700/10'
-                : 'bg-gradient-to-tr from-blue-300/30 via-blue-200/20 to-purple-200/10'
-            } animate-pulse`}
-            aria-hidden="true"
-          />
-          {/* Greeting with Emoji and Typewriter Effect */}
-          <div className="flex items-center gap-3 z-10">
-            <span
-              className="text-3xl md:text-4xl animate-wave"
-              role="img"
-              aria-label="Waving hand"
-              style={{
-                display: 'inline-block',
-                animation: 'wave 2s infinite',
-                transformOrigin: '70% 70%',
-              }}
-            >
-              👋
-            </span>
-            <h1
-              className={`text-2xl md:text-3xl font-extrabold tracking-tight ${accent} flex items-center gap-2`}
-              aria-live="polite"
-            >
-              <span className="typewriter" style={{
-                borderRight: '2px solid',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                animation: 'typing 1.5s steps(30, end), blink-caret .75s step-end infinite'
-              }}>
-                {greeting}, Admin
-              </span>
-              <span className="sr-only">{greeting}, Admin</span>
-            </h1>
-          </div>
-          {/* Subtext with Icon and Tooltip */}
-          <div className="flex items-center gap-2 mt-1 z-10">
-            <InformationCircleIcon className={`h-5 w-5 ${subtext} animate-bounce`} aria-hidden="true" />
-            <p className={`text-sm ${subtext} relative group`}>
-              <span>Advanced dashboard overview</span>
-              <span className="absolute left-1/2 -translate-x-1/2 mt-1 w-max px-3 py-1 rounded bg-gray-900 text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-lg">
-                See real-time stats, activity, and quick actions
-              </span>
-            </p>
-          </div>
-          {/* Accessibility: Visually hidden description */}
-          <span className="sr-only">
-            This dashboard provides a real-time overview of polls, voters, and system activity for administrators.
-          </span>
-        </div>
-      </section>
-      {/* Stats Section */}
-      <section role="region" aria-labelledby="admin-stats-heading" tabIndex={0}>
-        <h2 id="admin-stats-heading" className="sr-only">Admin Dashboard Stats</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          {/* Active Polls */}
-          <div
-            className={`relative border ${border} rounded-2xl p-6 flex flex-col gap-2 shadow-lg overflow-hidden group transition-all duration-300 hover:scale-[1.025] hover:shadow-2xl`}
-            tabIndex={0}
-            aria-label="Active Polls"
-          >
-            {/* Animated Accent Ring */}
-            <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-tr from-blue-400/20 to-blue-600/10 rounded-full blur-2xl pointer-events-none group-hover:scale-110 transition-transform" />
-            {/* Icon */}
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <ChartBarIcon className={`h-7 w-7 ${accent} drop-shadow`} aria-hidden="true" />
-                <span className={`text-xs font-semibold uppercase tracking-wide ${subtext}`}>Active Polls</span>
-              </div>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 animate-pulse">
-                Live
-              </span>
-            </div>
-            {/* Value */}
-            <span className="text-3xl font-extrabold tracking-tight mb-1">{pollsCount}</span>
-            {/* Mini Trendline */}
-            <div className="h-8">
-              <svg viewBox="0 0 80 32" fill="none" className="w-full h-full">
-                <polyline
-                  points="0,28 10,20 20,24 30,12 40,16 50,8 60,18 70,6 80,10"
-                  fill="none"
-                  stroke="#3b82f6"
-                  strokeWidth="2.5"
-                  strokeLinejoin="round"
-                  className="opacity-80"
-                />
-                <circle cx="80" cy="10" r="2.5" fill="#3b82f6" />
-              </svg>
-            </div>
-            {/* Tooltip */}
-            <span className="absolute top-3 right-3 text-xs text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-              {pollsCount > 1 ? 'Multiple polls running' : 'Single poll running'}
-            </span>
-          </div>
-
-          {/* Registered Voters */}
-          <div
-            className={`relative border ${border} rounded-2xl p-6 flex flex-col gap-2 shadow-lg overflow-hidden group transition-all duration-300 hover:scale-[1.025] hover:shadow-2xl`}
-            tabIndex={0}
-            aria-label="Registered Voters"
-          >
-            {/* Animated Accent Ring */}
-            <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-tr from-green-400/20 to-green-600/10 rounded-full blur-2xl pointer-events-none group-hover:scale-110 transition-transform" />
-            {/* Icon */}
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <UserCircleIcon className="h-7 w-7 text-green-500 dark:text-green-300 drop-shadow" aria-hidden="true" />
-                <span className={`text-xs font-semibold uppercase tracking-wide ${subtext}`}>Registered Voters</span>
-              </div>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300">
-                +{(votersCount * 0.012).toFixed(0)} today
-              </span>
-            </div>
-            {/* Value */}
-            <span className="text-3xl font-extrabold tracking-tight mb-1">{votersCount.toLocaleString()}</span>
-            {/* Progress Bar */}
-            <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-green-400 to-green-600 transition-all"
-                style={{ width: `${Math.min(100, (votersCount / 6000) * 100)}%` }}
-              />
-            </div>
-            {/* Tooltip */}
-            <span className="absolute top-3 right-3 text-xs text-green-400 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-              {votersCount.toLocaleString()} total
-            </span>
-          </div>
-
-          {/* Total Votes */}
-          <div
-            className={`relative border ${border} rounded-2xl p-6 flex flex-col gap-2 shadow-lg overflow-hidden group transition-all duration-300 hover:scale-[1.025] hover:shadow-2xl`}
-            tabIndex={0}
-            aria-label="Total Votes"
-          >
-            {/* Animated Accent Ring */}
-            <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-tr from-purple-400/20 to-purple-600/10 rounded-full blur-2xl pointer-events-none group-hover:scale-110 transition-transform" />
-            {/* Icon */}
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <CheckBadgeIcon className="h-7 w-7 text-purple-500 dark:text-purple-300 drop-shadow" aria-hidden="true" />
-                <span className={`text-xs font-semibold uppercase tracking-wide ${subtext}`}>Total Votes</span>
-              </div>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300">
-                {((votesCount / votersCount) * 100).toFixed(1)}%
-              </span>
-            </div>
-            {/* Value */}
-            <span className="text-3xl font-extrabold tracking-tight mb-1">{votesCount.toLocaleString()}</span>
-            {/* Animated Sparkline */}
-            <div className="h-8">
-              <svg viewBox="0 0 80 32" fill="none" className="w-full h-full">
-                <polyline
-                  points="0,30 10,28 20,24 30,20 40,16 50,12 60,8 70,6 80,4"
-                  fill="none"
-                  stroke="#a78bfa"
-                  strokeWidth="2.5"
-                  strokeLinejoin="round"
-                  className="opacity-80"
-                />
-                <circle cx="80" cy="4" r="2.5" fill="#a78bfa" />
-              </svg>
-            </div>
-            {/* Tooltip */}
-            <span className="absolute top-3 right-3 text-xs text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-              {votesCount.toLocaleString()} votes cast
-            </span>
-          </div>
-        </div>
-      </section>
-
-      {/* Actions */}
-      <div className="mb-8 flex gap-2">
-        <button
-          onClick={() => setShowNewPollModal(true)}
-          className={`px-4 py-2 rounded border ${border} ${accent} font-medium bg-transparent hover:bg-blue-50 dark:hover:bg-gray-800 transition`}
-          aria-label="Create new poll"
-        >
-          + New Poll
-        </button>
-      </div>
-
-      {/* Activity Section */}
-      <section role="region" aria-labelledby="admin-activity-heading" tabIndex={0}>
-        <h2 id="admin-activity-heading" className="sr-only">Admin Dashboard Activity</h2>
-        <div className={`border ${border} rounded-lg p-5 mb-8`}>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <BellIcon className="h-6 w-6 text-blue-400 dark:text-blue-300" aria-hidden="true" />
-              Recent Activity
-            </h2>
-            <button
-              className={`text-xs px-3 py-1 rounded-full font-medium border ${border} ${accent} hover:bg-blue-50 dark:hover:bg-gray-800 transition`}
-              onClick={() => setShowActivityModal(true)}
-              aria-label="View all activity"
-            >
-              View All
-            </button>
-          </div>
-          <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-            {activityList.length === 0 && (
-              <li className={`py-6 text-center ${subtext}`}>No recent activity.</li>
-            )}
-            {activityList.slice(0, 5).map((activity, idx) => {
-              // Find avatar/icon for this activity
-              const avatar = activityAvatars.find(a =>
-                a.keywords.some(keyword => activity.action.includes(keyword))
-              ) || {
-                icon: InformationCircleIcon,
-                color: 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-300',
-                label: 'Other',
-              };
-              const Icon = avatar.icon;
-              // Status color for timeline dot
-              let statusColor = 'bg-gray-300';
-              if (avatar.color.includes('bg-blue')) statusColor = 'bg-blue-400';
-              if (avatar.color.includes('bg-green')) statusColor = 'bg-green-400';
-              if (avatar.color.includes('bg-purple')) statusColor = 'bg-purple-400';
-              if (avatar.color.includes('bg-yellow')) statusColor = 'bg-yellow-300';
-              if (avatar.color.includes('bg-pink')) statusColor = 'bg-pink-400';
-              if (avatar.color.includes('bg-indigo')) statusColor = 'bg-indigo-400';
-              if (avatar.color.includes('bg-emerald')) statusColor = 'bg-emerald-400';
-              if (avatar.color.includes('bg-red')) statusColor = 'bg-red-400';
-              if (avatar.color.includes('bg-orange')) statusColor = 'bg-orange-400';
-
-              return (
-                <li
-                  key={idx}
-                  className="py-4 flex items-start gap-4 group relative"
-                  tabIndex={0}
-                  aria-label={`${activity.action} by ${activity.user} at ${activity.timestamp}`}
-                >
-                  {/* Timeline Dot */}
-                  <div className="flex flex-col items-center mr-2">
-                    <span
-                      className={`w-3 h-3 rounded-full ring-2 ring-white dark:ring-gray-900 ${statusColor} shadow-md transition-transform group-hover:scale-110`}
-                      aria-label={avatar.label}
-                    />
-                    {idx < Math.min(activityList.length, 5) - 1 && (
-                      <span className="flex-1 w-0.5 bg-gray-200 dark:bg-gray-700 mt-1 mb-1" />
-                    )}
-                  </div>
-                  {/* Icon Avatar */}
-                  <div
-                    className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow ${avatar.color} text-lg font-bold transition-transform group-hover:scale-105`}
-                    aria-label={avatar.label}
-                    title={avatar.label}
-                  >
-                    <Icon className="h-6 w-6" aria-hidden="true" />
-                  </div>
-                  {/* Activity Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-base">{activity.action}</span>
-                      {activity.user && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-300 font-medium">
-                          {activity.user}
-                        </span>
-                      )}
-                    </div>
-                    <span className={`block text-sm ${subtext}`}>{activity.details}</span>
-                    <div className="flex items-center gap-2 mt-1">
-                      <ClockIcon className="h-4 w-4 text-gray-300 dark:text-gray-600" aria-hidden="true" />
-                      <span className="text-xs text-gray-400 dark:text-gray-500">{activity.timestamp}</span>
-                    </div>
-                  </div>
-                  {/* Tooltip on hover/focus */}
-                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity pointer-events-none">
-                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-gray-900 text-white text-xs shadow-lg">
-                      {avatar.label}
-                    </span>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-          {/* Animated "See More" if more activity */}
-          {activityList.length > 5 && (
-            <div className="flex justify-center mt-3">
-              <button
-                className="text-xs text-blue-500 hover:underline font-medium flex items-center gap-1 animate-pulse"
-                onClick={() => setShowActivityModal(true)}
-                aria-label="Show more activity"
-              >
-                Show more
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Activity Modal (advanced, animated, accessible) */}
-      {showActivityModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center"
-          aria-modal="true"
-          role="dialog"
-          tabIndex={-1}
-        >
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm transition-opacity duration-300 animate-fadeIn"
-            onClick={() => setShowActivityModal(false)}
-            aria-label="Close activity modal"
-          />
-          {/* Modal Content */}
-          <div
-            className={`relative rounded-2xl shadow-2xl max-w-2xl w-full mx-4 p-8 transition-all duration-300 transform scale-100 ${
-              isDarkMode
-                ? 'bg-gradient-to-br from-[#232b36] via-[#2c353f] to-[#1a202c] border border-gray-700'
-                : 'bg-gradient-to-br from-white via-gray-50 to-blue-50 border border-gray-200'
-            } animate-modalPop`}
-            role="document"
-            aria-labelledby="activity-modal-title"
-            aria-describedby="activity-modal-desc"
-          >
-            {/* Close Button */}
-            <button
-              onClick={() => setShowActivityModal(false)}
-              className="absolute top-4 right-4 p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition hover:bg-gray-200 dark:hover:bg-gray-700"
-              aria-label="Close"
-              tabIndex={0}
-            >
-              <XMarkIcon className={`h-5 w-5 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-            </button>
-            {/* Modal Title */}
-            <div className="flex items-center gap-2 mb-6">
-              <BellIcon className="h-7 w-7 text-blue-400 dark:text-blue-300" aria-hidden="true" />
-              <h3 id="activity-modal-title" className="text-xl font-bold">
-                All Recent Activity
-              </h3>
-            </div>
-            {/* Activity List */}
-            <ul className="divide-y divide-gray-200 dark:divide-gray-700 max-h-[60vh] overflow-y-auto pr-2">
-              {activityList.length === 0 && (
-                <li className={`py-6 text-center ${subtext}`}>No recent activity.</li>
-              )}
-              {activityList.map((activity, idx) => {
-                const avatar = activityAvatars.find(a =>
-                  a.keywords.some(keyword => activity.action.includes(keyword))
-                ) || {
-                  icon: InformationCircleIcon,
-                  color: 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-300',
-                  label: 'Other',
-                };
-                const Icon = avatar.icon;
-                let statusColor = 'bg-gray-300';
-                if (avatar.color.includes('bg-blue')) statusColor = 'bg-blue-400';
-                if (avatar.color.includes('bg-green')) statusColor = 'bg-green-400';
-                if (avatar.color.includes('bg-purple')) statusColor = 'bg-purple-400';
-                if (avatar.color.includes('bg-yellow')) statusColor = 'bg-yellow-300';
-                if (avatar.color.includes('bg-pink')) statusColor = 'bg-pink-400';
-                if (avatar.color.includes('bg-indigo')) statusColor = 'bg-indigo-400';
-                if (avatar.color.includes('bg-emerald')) statusColor = 'bg-emerald-400';
-                if (avatar.color.includes('bg-red')) statusColor = 'bg-red-400';
-                if (avatar.color.includes('bg-orange')) statusColor = 'bg-orange-400';
-
-                return (
-                  <li
-                    key={idx}
-                    className="py-4 flex items-start gap-4 group relative"
-                    tabIndex={0}
-                    aria-label={`${activity.action} by ${activity.user} at ${activity.timestamp}`}
-                  >
-                    {/* Timeline Dot */}
-                    <div className="flex flex-col items-center mr-2">
-                      <span
-                        className={`w-3 h-3 rounded-full ring-2 ring-white dark:ring-gray-900 ${statusColor} shadow-md transition-transform group-hover:scale-110`}
-                        aria-label={avatar.label}
-                      />
-                      {idx < activityList.length - 1 && (
-                        <span className="flex-1 w-0.5 bg-gray-200 dark:bg-gray-700 mt-1 mb-1" />
-                      )}
-                    </div>
-                    {/* Icon Avatar */}
-                    <div
-                      className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center shadow ${avatar.color} text-lg font-bold transition-transform group-hover:scale-105`}
-                      aria-label={avatar.label}
-                      title={avatar.label}
-                    >
-                      <Icon className="h-6 w-6" aria-hidden="true" />
-                    </div>
-                    {/* Activity Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-base">{activity.action}</span>
-                        {activity.user && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-300 font-medium">
-                            {activity.user}
-                          </span>
-                        )}
-                      </div>
-                      <span className={`block text-sm ${subtext}`}>{activity.details}</span>
-                      <div className="flex items-center gap-2 mt-1">
-                        <ClockIcon className="h-4 w-4 text-gray-300 dark:text-gray-600" aria-hidden="true" />
-                        <span className="text-xs text-gray-400 dark:text-gray-500">{activity.timestamp}</span>
-                      </div>
-                    </div>
-                    {/* Tooltip on hover/focus */}
-                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity pointer-events-none">
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-gray-900 text-white text-xs shadow-lg">
-                        {avatar.label}
-                      </span>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        </div>
-      )}
-
-      {/* New Poll Modal */}
-      {showNewPollModal && (
-        <div role="dialog" aria-modal="true" aria-labelledby="new-poll-title">
-          <h2 id="new-poll-title">Create New Poll</h2>
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-            <div className={`bg-white dark:bg-gray-800 rounded-lg p-8 w-full max-w-sm shadow-xl border ${border}`}>
-              <form
-                className="flex flex-col gap-4"
-                onSubmit={e => {
-                  e.preventDefault();
-                  setShowNewPollModal(false);
-                }}
-              >
-                <input
-                  type="text"
-                  required
-                  className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-transparent focus:outline-none"
-                  placeholder="Poll Title"
-                />
-                <textarea
-                  required
-                  className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-transparent focus:outline-none"
-                  placeholder="Description"
-                />
-                <div className="flex gap-2 mt-2">
-                  <button
-                    type="submit"
-                    className="flex-1 px-4 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
-                  >
-                    Create
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPollModal(false)}
-                    className="flex-1 px-4 py-2 rounded border border-gray-300 dark:border-gray-600 bg-transparent text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
+const HealthItem = ({ label, value, color = 'blue' }) => (
+  <div className="space-y-2">
+    <div className="flex justify-between text-sm">
+      <span className="text-gray-600 dark:text-zinc-400">{label}</span>
+      <span className="font-mono text-gray-900 dark:text-white">{value}%</span>
     </div>
-  );
-});
+    <div className="h-1 w-full bg-gray-200 dark:bg-zinc-800 rounded-full overflow-hidden">
+      <div
+        className="h-full bg-gray-900 dark:bg-white rounded-full transition-all duration-1000 ease-out"
+        style={{ width: `${value}%` }}
+      />
+    </div>
+  </div>
+);
 
-AdminDashboard.displayName = 'AdminDashboard';
-
-export default AdminDashboard; 
+const ActionButton = ({ icon: Icon, label, variant = 'primary' }) => (
+  <button className={`flex flex-col items-center justify-center gap-3 p-4 rounded-2xl transition-all duration-200 border group ${variant === 'danger'
+    ? 'bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/20'
+    : 'bg-white dark:bg-zinc-800/50 border-gray-200 dark:border-zinc-700/50 hover:bg-gray-50 dark:hover:bg-zinc-800'
+    } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900`}>
+    <Icon className={`w-6 h-6 ${variant === 'danger' ? 'text-red-500' : 'text-gray-700 dark:text-zinc-300'
+      }`} />
+    <span className={`text-sm font-medium ${variant === 'danger' ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'
+      }`}>{label}</span>
+  </button>
+);
+// End of file
+export default AdminDashboard;

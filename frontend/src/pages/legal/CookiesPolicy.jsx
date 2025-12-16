@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
-import { 
-  ShieldCheckIcon, 
-  Cog6ToothIcon, 
+import {
+  ShieldCheckIcon,
+  Cog6ToothIcon,
   InformationCircleIcon,
   EyeSlashIcon,
   DocumentArrowDownIcon,
@@ -34,7 +34,7 @@ export default function CookiesPolicy() {
             </span>
             <h1 className="text-3xl md:text-4xl font-extrabold text-blue-700 dark:text-blue-400 tracking-tight flex items-center gap-2">
               Cookies Policy
-              <span className="inline-block align-middle ml-2 px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-xs font-semibold text-blue-600 dark:text-blue-200 shadow-sm animate-fade-in">
+              <span className="inline-block align-middle ml-2 px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-xs font-semibold text-blue-700 dark:text-blue-200 shadow-sm animate-fade-in">
                 Updated
               </span>
             </h1>
@@ -83,7 +83,7 @@ export default function CookiesPolicy() {
                   }}
                 >
                   <span className="relative flex items-center">
-                    <Icon className="w-5 h-5 group-hover:scale-125 group-hover:text-blue-600 dark:group-hover:text-blue-200 transition-transform duration-200 drop-shadow-sm" aria-hidden="true" />
+                    <Icon className="w-5 h-5 group-hover:scale-125 group-hover:text-blue-700 dark:group-hover:text-blue-200 transition-transform duration-200 drop-shadow-sm" aria-hidden="true" />
                     <span className="sr-only">{label} section</span>
                   </span>
                   <span className="hidden sm:inline">{label}</span>
@@ -117,16 +117,16 @@ export default function CookiesPolicy() {
             </p>
             <ul className="list-disc pl-6 space-y-1">
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Essential Cookies:</span> Required for basic platform functionality, security, and accessibility features.
+                <span className="font-medium text-blue-700 dark:text-blue-300">Essential Cookies:</span> Required for basic platform functionality, security, and accessibility features.
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Performance Cookies:</span> Help us improve our services and ensure optimal performance for all users.
+                <span className="font-medium text-blue-700 dark:text-blue-300">Performance Cookies:</span> Help us improve our services and ensure optimal performance for all users.
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">No Tracking:</span> We do not use cookies for advertising, profiling, or tracking your activity across other websites.
+                <span className="font-medium text-blue-700 dark:text-blue-300">No Tracking:</span> We do not use cookies for advertising, profiling, or tracking your activity across other websites.
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">User Control:</span> You can manage your cookie preferences at any time through your browser settings or our platform.
+                <span className="font-medium text-blue-700 dark:text-blue-300">User Control:</span> You can manage your cookie preferences at any time through your browser settings or our platform.
               </li>
             </ul>
             <div className="mt-3 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
@@ -154,25 +154,25 @@ export default function CookiesPolicy() {
             </p>
             <ul className="list-disc pl-6 space-y-2">
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Session Cookies:</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">Session Cookies:</span>
                 <span className="ml-1 text-gray-700 dark:text-gray-300">
                   Temporary cookies that are deleted when you close your browser. They help maintain your session and security.
                 </span>
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Persistent Cookies:</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">Persistent Cookies:</span>
                 <span className="ml-1 text-gray-700 dark:text-gray-300">
                   Cookies that remain on your device for a set period. They remember your preferences and settings.
                 </span>
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">First-Party Cookies:</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">First-Party Cookies:</span>
                 <span className="ml-1 text-gray-700 dark:text-gray-300">
                   Cookies set by Votely directly to provide our core services and functionality.
                 </span>
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Third-Party Cookies:</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">Third-Party Cookies:</span>
                 <span className="ml-1 text-gray-700 dark:text-gray-300">
                   Cookies set by external services we use for security, analytics, and accessibility features.
                 </span>
@@ -198,7 +198,7 @@ export default function CookiesPolicy() {
               We use different types of cookies for specific purposes. Each type serves a particular function to ensure our platform works effectively and securely.
             </p>
           </div>
-          
+
           <div className="space-y-4">
             <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
               <h3 className="text-lg font-semibold text-green-700 dark:text-green-300 mb-2 flex items-center gap-2">
@@ -264,19 +264,19 @@ export default function CookiesPolicy() {
           </div>
           <ul className="list-disc pl-6 text-gray-700 dark:text-gray-300 space-y-2">
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Security Services:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Security Services:</span>
               <span className="ml-1">Services that help protect against fraud, DDoS attacks, and security threats.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Analytics Services:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Analytics Services:</span>
               <span className="ml-1">Anonymized analytics to help us understand platform usage and improve performance.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Accessibility Tools:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Accessibility Tools:</span>
               <span className="ml-1">Services that enhance accessibility features and compliance with WCAG guidelines.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Content Delivery:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Content Delivery:</span>
               <span className="ml-1">CDN services that improve loading speeds and global accessibility.</span>
             </li>
           </ul>
@@ -300,42 +300,42 @@ export default function CookiesPolicy() {
           </div>
           <ul className="list-disc pl-6 text-gray-700 dark:text-gray-300 space-y-2">
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Browser Settings:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Browser Settings:</span>
               <span className="ml-1">Most browsers allow you to control cookies through their settings. You can block, delete, or manage cookies for specific websites.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Platform Settings:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Platform Settings:</span>
               <span className="ml-1">Access your cookie preferences through your Votely account settings and privacy controls.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Cookie Consent:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Cookie Consent:</span>
               <span className="ml-1">When you first visit our platform, you'll see a cookie consent banner where you can choose your preferences.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Opt-Out Options:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Opt-Out Options:</span>
               <span className="ml-1">You can opt out of non-essential cookies while maintaining core platform functionality.</span>
             </li>
           </ul>
-          
+
           <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
             <h3 className="text-lg font-semibold text-blue-700 dark:text-blue-300 mb-2">
               How to Manage Cookies
             </h3>
             <div className="grid md:grid-cols-2 gap-4 text-sm">
               <div>
-                <h4 className="font-medium text-blue-600 dark:text-blue-300 mb-1">Chrome</h4>
+                <h4 className="font-medium text-blue-700 dark:text-blue-300 mb-1">Chrome</h4>
                 <p className="text-blue-700 dark:text-blue-300">Settings → Privacy and security → Cookies and other site data</p>
               </div>
               <div>
-                <h4 className="font-medium text-blue-600 dark:text-blue-300 mb-1">Firefox</h4>
+                <h4 className="font-medium text-blue-700 dark:text-blue-300 mb-1">Firefox</h4>
                 <p className="text-blue-700 dark:text-blue-300">Options → Privacy & Security → Cookies and Site Data</p>
               </div>
               <div>
-                <h4 className="font-medium text-blue-600 dark:text-blue-300 mb-1">Safari</h4>
+                <h4 className="font-medium text-blue-700 dark:text-blue-300 mb-1">Safari</h4>
                 <p className="text-blue-700 dark:text-blue-300">Preferences → Privacy → Manage Website Data</p>
               </div>
               <div>
-                <h4 className="font-medium text-blue-600 dark:text-blue-300 mb-1">Edge</h4>
+                <h4 className="font-medium text-blue-700 dark:text-blue-300 mb-1">Edge</h4>
                 <p className="text-blue-700 dark:text-blue-300">Settings → Cookies and site permissions → Cookies and site data</p>
               </div>
             </div>
@@ -355,23 +355,23 @@ export default function CookiesPolicy() {
           </div>
           <ul className="list-disc pl-6 text-gray-700 dark:text-gray-300 space-y-2">
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Session Cookies:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Session Cookies:</span>
               <span className="ml-1">Deleted when you close your browser or after a period of inactivity.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Authentication Cookies:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Authentication Cookies:</span>
               <span className="ml-1">Typically expire after 30 days or when you log out.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Preference Cookies:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Preference Cookies:</span>
               <span className="ml-1">Retained for up to 1 year or until you change your preferences.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Analytics Cookies:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Analytics Cookies:</span>
               <span className="ml-1">Retained for up to 2 years for service improvement purposes.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Security Cookies:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Security Cookies:</span>
               <span className="ml-1">Retained for the duration of your session plus a short security buffer period.</span>
             </li>
           </ul>
@@ -390,19 +390,19 @@ export default function CookiesPolicy() {
           </div>
           <ul className="list-disc pl-6 text-gray-700 dark:text-gray-300 space-y-2">
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Notification:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Notification:</span>
               <span className="ml-1">We will notify you of significant changes through our platform or email.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Review:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Review:</span>
               <span className="ml-1">We encourage you to review this policy periodically to stay informed.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Consent:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Consent:</span>
               <span className="ml-1">Continued use of our platform after changes constitutes acceptance of the updated policy.</span>
             </li>
             <li>
-              <span className="font-medium text-blue-600 dark:text-blue-300">Effective Date:</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">Effective Date:</span>
               <span className="ml-1">The effective date at the top of this policy indicates when it was last updated.</span>
             </li>
           </ul>
@@ -420,15 +420,15 @@ export default function CookiesPolicy() {
             </p>
             <ul className="list-disc pl-6 space-y-1">
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">General Support:</span>
-                <span className="ml-1">Email us at <a href="mailto:support@votely.com" className="text-blue-600 dark:text-blue-400 underline">support@votely.com</a> for technical issues or general inquiries.</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">General Support:</span>
+                <span className="ml-1">Email us at <a href="mailto:support@votely.com" className="text-blue-700 dark:text-blue-400 underline">support@votely.com</a> for technical issues or general inquiries.</span>
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Privacy Questions:</span>
-                <span className="ml-1">For privacy-specific questions about cookies, contact <a href="mailto:privacy@votely.com" className="text-blue-600 dark:text-blue-400 underline">privacy@votely.com</a>.</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">Privacy Questions:</span>
+                <span className="ml-1">For privacy-specific questions about cookies, contact <a href="mailto:privacy@votely.com" className="text-blue-700 dark:text-blue-400 underline">privacy@votely.com</a>.</span>
               </li>
               <li>
-                <span className="font-medium text-blue-600 dark:text-blue-300">Technical Support:</span>
+                <span className="font-medium text-blue-700 dark:text-blue-300">Technical Support:</span>
                 <span className="ml-1">If you're having trouble with cookie settings or platform functionality, our technical team can help.</span>
               </li>
             </ul>
@@ -443,27 +443,27 @@ export default function CookiesPolicy() {
 
         <footer className="mt-10 flex flex-col items-center text-xs text-gray-500 dark:text-gray-400 space-y-1">
           <div>
-            &copy; {new Date().getFullYear()} <span className="font-semibold text-blue-600 dark:text-blue-300">Votely</span>. All rights reserved.
+            &copy; {new Date().getFullYear()} <span className="font-semibold text-blue-700 dark:text-blue-300">Votely</span>. All rights reserved.
           </div>
           <div>
             <span>
               <a
                 href="/terms"
-                className="underline hover:text-blue-600 dark:hover:text-blue-400 transition"
+                className="underline hover:text-blue-700 dark:hover:text-blue-400 transition"
               >
                 Terms of Service
               </a>
               <span className="mx-1">|</span>
               <a
                 href="/privacy"
-                className="underline hover:text-blue-600 dark:hover:text-blue-400 transition"
+                className="underline hover:text-blue-700 dark:hover:text-blue-400 transition"
               >
                 Privacy Policy
               </a>
               <span className="mx-1">|</span>
               <a
                 href="/cookies"
-                className="underline hover:text-blue-600 dark:hover:text-blue-400 transition"
+                className="underline hover:text-blue-700 dark:hover:text-blue-400 transition"
               >
                 Cookies Policy
               </a>

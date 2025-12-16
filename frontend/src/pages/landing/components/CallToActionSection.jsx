@@ -3,12 +3,15 @@ import React, { useMemo } from 'react';
 import { useTheme } from '../../../context/ThemeContext';
 import CTABackground from './CTABackground';
 
-const CallToActionSection = ({ isVisible }) => {
+import { useInViewPause } from '../../../hooks/useInViewPause';
+
+const CallToActionSection = () => {
     const { isDarkMode } = useTheme();
     const sectionBg = useMemo(() => isDarkMode ? 'dark:bg-gray-900' : 'from-blue-50 to-indigo-50', [isDarkMode]);
+    const [containerRef, isPaused] = useInViewPause({ threshold: 0.1 });
 
     return (
-        <section className="relative rounded-2xl overflow-hidden transition-all duration-500 will-change-[background-color,color,box-shadow,filter]" aria-labelledby="cta-main-heading" role="region" tabIndex={0}>
+        <section ref={containerRef} className="relative rounded-2xl overflow-hidden transition-all duration-500 will-change-[background-color,color,box-shadow,filter]" aria-labelledby="cta-main-heading" role="region" tabIndex={0}>
             {/* Visually hidden heading for accessibility */}
             <h2 id="cta-main-heading" className="sr-only">Get Started with Votely</h2>
             {/* Background gradient */}
@@ -16,7 +19,7 @@ const CallToActionSection = ({ isVisible }) => {
 
             {/* Advanced Decorative Elements with Animated SVGs, Gradients, and Parallax */}
             {/* Advanced Decorative Elements with Animated SVGs, Gradients, and Parallax */}
-            <CTABackground isVisible={isVisible} />
+            <CTABackground isVisible={!isPaused} />
 
             <div className="max-w-[1800px] mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24">
                 <div className="flex flex-col items-center text-center max-w-8xl mx-auto">

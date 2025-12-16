@@ -11,6 +11,7 @@ const { body, param, validationResult } = require('express-validator');
 function handleValidationErrors(req, res, next) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    console.error("Validation Errors:", errors.array());
     return res.status(400).json({ errors: errors.array() });
   }
   next();
@@ -30,6 +31,12 @@ router.post(
     body('options.*.description').optional().isString(),
     body('options.*.party').optional().isString(),
     body('options.*.image').optional().isString(),
+    body('options.*.sop').optional().isString(),
+    body('options.*.motto').optional().isString(),
+    body('options.*.website').optional().isString(),
+    body('options.*.socialMedia').optional().isObject(),
+    body('options.*.additionalPhotos').optional().isArray(),
+    body('options.*.links').optional().isArray(),
     // Add more validations as needed
   ],
   handleValidationErrors,

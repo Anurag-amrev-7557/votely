@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { motion, useScroll, useTransform, useMotionTemplate, useMotionValue } from 'framer-motion';
+import { motion, useTransform, useMotionTemplate, useMotionValue } from 'framer-motion';
 import { useTheme } from '../../../context/ThemeContext';
 import { ShieldCheck, Accessibility, Sparkles, ArrowRight, Lock, Eye, Zap, Fingerprint } from 'lucide-react';
 
@@ -7,14 +7,24 @@ import { ShieldCheck, Accessibility, Sparkles, ArrowRight, Lock, Eye, Zap, Finge
 const FEATURES = [
   {
     id: 'security',
-    title: "Cryptographic Integrity.",
+    title: (
+      <>
+        <span className="md:hidden">Integrity.</span>
+        <span className="hidden md:inline">Cryptographic Integrity.</span>
+      </>
+    ),
     description: "AES-256 encryption. TLS 1.3 transmission. Zero-knowledge proofs. Your vote is mathematically secure.",
     icon: ShieldCheck,
     span: "md:col-span-2",
   },
   {
     id: 'accessibility',
-    title: "Universally Inclusive.",
+    title: (
+      <>
+        <span className="md:hidden">Inclusive.</span>
+        <span className="hidden md:inline">Universally Inclusive.</span>
+      </>
+    ),
     description: "WCAG 2.2 compliant. Screen reader optimized. High contrast modes.",
     icon: Accessibility,
     span: "md:col-span-1",
@@ -54,7 +64,7 @@ const BentoCard = ({ title, description, icon: Icon, span, index }) => {
       viewport={{ once: true, margin: "-100px" }}
       transition={{ duration: 0.7, delay: index * 0.1, ease: [0.21, 0.47, 0.32, 0.98] }}
       onMouseMove={handleMouseMove}
-      className={`group relative flex flex-col justify-between p-8 md:p-12 overflow-hidden bg-gray-50 dark:bg-zinc-900/50 border border-transparent dark:border-zinc-800/50 hover:border-gray-200 dark:hover:border-zinc-700 transition-all duration-700 rounded-3xl ${span}`}
+      className={`group relative flex flex-col justify-between p-4 md:p-12 overflow-hidden bg-gray-50 dark:bg-zinc-900/50 border border-transparent dark:border-zinc-800/50 hover:border-gray-300 dark:hover:border-zinc-700 transition-all duration-700 rounded-3xl aspect-square md:aspect-auto ${span}`}
     >
       {/* Subtle Noise Texture */}
       <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none"
@@ -65,26 +75,24 @@ const BentoCard = ({ title, description, icon: Icon, span, index }) => {
       <motion.div
         className="pointer-events-none absolute -inset-px rounded-3xl opacity-0 transition duration-500 group-hover:opacity-100"
         style={{
-          background: useMotionTemplate`
-            radial-gradient(
-              650px circle at ${mouseX}px ${mouseY}px,
-              rgba(14, 165, 233, 0.08),
-              transparent 80%
-            )
-          `,
+          background: useMotionTemplate`radial-gradient(
+            650px circle at ${mouseX}px ${mouseY}px,
+            rgba(14, 165, 233, 0.08),
+            transparent 80%
+          )`,
         }}
       />
 
-      <div className="relative z-10 flex flex-col h-full justify-between gap-12">
-        <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-white dark:bg-zinc-800 shadow-sm border border-gray-100 dark:border-zinc-700/50 group-hover:scale-110 transition-transform duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275)">
-          <Icon className="w-5 h-5 text-gray-900 dark:text-white" strokeWidth={1.5} />
+      <div className="relative z-10 flex flex-col h-full justify-between gap-4 md:gap-12">
+        <div className="w-14 h-14 md:w-12 md:h-12 rounded-2xl flex items-center justify-center bg-white dark:bg-zinc-800 shadow-sm border border-gray-300 dark:border-zinc-700/50 group-hover:scale-110 transition-transform duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275)">
+          <Icon className="w-6 h-6 md:w-5 md:h-5 text-gray-900 dark:text-white" strokeWidth={1.5} />
         </div>
 
         <div>
-          <h3 className="text-3xl md:text-4xl font-bold tracking-tighter text-gray-900 dark:text-white mb-4 leading-[0.9]">
+          <h3 className="text-xl md:text-4xl font-bold tracking-tighter text-gray-900 dark:text-white mb-2 md:mb-4 leading-[0.9]">
             {title}
           </h3>
-          <p className="text-lg text-gray-500 dark:text-gray-400 leading-relaxed max-w-sm text-balance">
+          <p className="block text-sm md:text-lg text-gray-700 dark:text-gray-400 leading-relaxed max-w-sm text-balance">
             {description}
           </p>
         </div>
@@ -95,30 +103,30 @@ const BentoCard = ({ title, description, icon: Icon, span, index }) => {
 
 const FeaturesSection = () => {
   return (
-    <section className="relative w-full py-32 px-4 md:px-16 bg-white dark:bg-black overflow-hidden selection:bg-gray-200 dark:selection:bg-zinc-800">
+    <section className="relative w-full py-16 md:py-32 px-4 md:px-16 bg-white dark:bg-black overflow-hidden selection:bg-gray-200 dark:selection:bg-zinc-800">
 
       {/* Massive Header */}
-      <div className="max-w-8xl mx-auto mb-32">
+      <div className="max-w-8xl mx-auto mb-16 md:mb-32">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
         >
-          <div className="flex items-center gap-3 mb-8">
-            <span className="h-px w-12 bg-gray-300 dark:bg-zinc-700"></span>
-            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500 dark:text-zinc-500">
+          <div className="flex items-center gap-3 mb-6 md:mb-8">
+            <span className="h-px w-8 md:w-12 bg-gray-400 dark:bg-zinc-700"></span>
+            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gray-700 dark:text-zinc-500">
               System Architecture
             </h2>
           </div>
 
-          <h1 className="text-7xl md:text-[10rem] font-bold tracking-tighter text-gray-900 dark:text-white leading-[0.8] mb-12 -ml-1 md:-ml-2">
-            Vote with <br /> <span className="text-gray-400 dark:text-zinc-600">confidence.</span>
+          <h1 className="text-4xl md:text-[10rem] font-bold tracking-tighter text-gray-900 dark:text-white leading-[0.9] md:leading-[0.8] mb-8 md:mb-12 -ml-1 md:-ml-2">
+            Vote with <br className="hidden md:block" /> <span className="text-gray-600 dark:text-zinc-600">confidence.</span>
           </h1>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
             <div className="md:col-span-5 md:col-start-8">
-              <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-400 leading-relaxed tracking-tight text-balance">
+              <p className="text-lg md:text-2xl text-gray-700 dark:text-gray-400 leading-relaxed tracking-tight text-balance">
                 A minimalist fortress for democracy. We stripped away the noise to focus on what matters: <span className="text-gray-900 dark:text-white font-medium">Integrity, Accessibility,</span> and <span className="text-gray-900 dark:text-white font-medium">Speed.</span>
               </p>
             </div>
@@ -127,22 +135,24 @@ const FeaturesSection = () => {
       </div>
 
       {/* Bento Grid */}
-      <div className="max-w-8xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+      <div className="max-w-8xl mx-auto grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6" role="list">
         {FEATURES.map((feature, idx) => (
-          <BentoCard key={feature.id} {...feature} index={idx} />
+          <div key={feature.id} role="listitem" className={feature.span}>
+            <BentoCard {...feature} index={idx} />
+          </div>
         ))}
       </div>
 
       {/* Professional Footer */}
-      <div className="max-w-8xl mx-auto mt-8 border-t border-gray-100 dark:border-zinc-900 pt-12">
+      <div className="max-w-8xl mx-auto mt-8 border-t border-gray-300 dark:border-zinc-900 pt-8 md:pt-12">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
           <div className="flex items-center gap-4">
             <div className="flex space-x-1">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-zinc-800"></div>
+                <div key={i} className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-zinc-800"></div>
               ))}
             </div>
-            <p className="text-sm text-gray-400 font-mono tracking-wider uppercase">
+            <p className="text-sm text-gray-600 font-mono tracking-wider uppercase">
               Secure Voting Infrastructure V2.0
             </p>
           </div>
@@ -162,4 +172,4 @@ const FeaturesSection = () => {
 };
 
 FeaturesSection.displayName = 'FeaturesSection';
-export default FeaturesSection; 
+export default FeaturesSection;

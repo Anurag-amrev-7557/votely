@@ -1,244 +1,229 @@
 {
-  "hash": "5adf57c0",
-  "configHash": "1b3cf659",
-  "lockfileHash": "662beecc",
-  "browserHash": "faf0a216",
+  "hash": "801999f5",
+  "configHash": "b3140184",
+  "lockfileHash": "5a917406",
+  "browserHash": "ae03373f",
   "optimized": {
     "react": {
       "src": "../../node_modules/react/index.js",
       "file": "react.js",
-      "fileHash": "1ff2c567",
+      "fileHash": "a355f515",
       "needsInterop": true
     },
     "react-dom": {
       "src": "../../node_modules/react-dom/index.js",
       "file": "react-dom.js",
-      "fileHash": "ca4d1cda",
-      "needsInterop": true
-    },
-    "react-router-dom": {
-      "src": "../../node_modules/react-router-dom/dist/index.js",
-      "file": "react-router-dom.js",
-      "fileHash": "5e39945d",
-      "needsInterop": false
-    },
-    "@headlessui/react": {
-      "src": "../../node_modules/@headlessui/react/dist/headlessui.esm.js",
-      "file": "@headlessui_react.js",
-      "fileHash": "cbebb9e1",
-      "needsInterop": false
-    },
-    "@heroicons/react": {
-      "src": "../../node_modules/@heroicons/react/index.esm.js",
-      "file": "@heroicons_react.js",
-      "fileHash": "777c51be",
-      "needsInterop": false
-    },
-    "axios": {
-      "src": "../../node_modules/axios/index.js",
-      "file": "axios.js",
-      "fileHash": "5344153d",
-      "needsInterop": false
-    },
-    "date-fns": {
-      "src": "../../node_modules/date-fns/index.js",
-      "file": "date-fns.js",
-      "fileHash": "f75ad1b3",
-      "needsInterop": false
-    },
-    "framer-motion": {
-      "src": "../../node_modules/framer-motion/dist/es/index.mjs",
-      "file": "framer-motion.js",
-      "fileHash": "fe068d9e",
-      "needsInterop": false
-    },
-    "react/jsx-dev-runtime": {
-      "src": "../../node_modules/react/jsx-dev-runtime.js",
-      "file": "react_jsx-dev-runtime.js",
-      "fileHash": "6727d276",
-      "needsInterop": true
-    },
-    "react/jsx-runtime": {
-      "src": "../../node_modules/react/jsx-runtime.js",
-      "file": "react_jsx-runtime.js",
-      "fileHash": "84424464",
+      "fileHash": "6ad6e406",
       "needsInterop": true
     },
     "react-dom/client": {
       "src": "../../node_modules/react-dom/client.js",
       "file": "react-dom_client.js",
-      "fileHash": "8365398c",
+      "fileHash": "2addd548",
       "needsInterop": true
     },
-    "react-error-boundary": {
-      "src": "../../node_modules/react-error-boundary/dist/react-error-boundary.development.js",
-      "file": "react-error-boundary.js",
-      "fileHash": "4917fc5f",
+    "react/jsx-runtime": {
+      "src": "../../node_modules/react/jsx-runtime.js",
+      "file": "react_jsx-runtime.js",
+      "fileHash": "e9bf6bb4",
+      "needsInterop": true
+    },
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "2412de95",
+      "needsInterop": true
+    },
+    "react-router-dom": {
+      "src": "../../node_modules/react-router-dom/dist/index.js",
+      "file": "react-router-dom.js",
+      "fileHash": "fd5469f2",
       "needsInterop": false
     },
-    "@react-oauth/google": {
-      "src": "../../node_modules/@react-oauth/google/dist/index.esm.js",
-      "file": "@react-oauth_google.js",
-      "fileHash": "8871d812",
+    "@headlessui/react": {
+      "src": "../../node_modules/@headlessui/react/dist/headlessui.esm.js",
+      "file": "@headlessui_react.js",
+      "fileHash": "4b5fba68",
+      "needsInterop": false
+    },
+    "@heroicons/react": {
+      "src": "../../node_modules/@heroicons/react/index.esm.js",
+      "file": "@heroicons_react.js",
+      "fileHash": "f5f85333",
+      "needsInterop": false
+    },
+    "axios": {
+      "src": "../../node_modules/axios/index.js",
+      "file": "axios.js",
+      "fileHash": "a25eba52",
+      "needsInterop": false
+    },
+    "date-fns": {
+      "src": "../../node_modules/date-fns/index.js",
+      "file": "date-fns.js",
+      "fileHash": "5a9f8e32",
+      "needsInterop": false
+    },
+    "framer-motion": {
+      "src": "../../node_modules/framer-motion/dist/es/index.mjs",
+      "file": "framer-motion.js",
+      "fileHash": "e9579a52",
       "needsInterop": false
     },
     "react-hot-toast": {
       "src": "../../node_modules/react-hot-toast/dist/index.mjs",
       "file": "react-hot-toast.js",
-      "fileHash": "bf587785",
+      "fileHash": "8f56fb96",
       "needsInterop": false
     },
-    "@heroicons/react/24/outline": {
-      "src": "../../node_modules/@heroicons/react/24/outline/esm/index.js",
-      "file": "@heroicons_react_24_outline.js",
-      "fileHash": "8af74e4d",
-      "needsInterop": false
-    },
-    "prop-types": {
-      "src": "../../node_modules/prop-types/index.js",
-      "file": "prop-types.js",
-      "fileHash": "19829514",
-      "needsInterop": true
-    },
-    "lodash/throttle": {
-      "src": "../../node_modules/lodash/throttle.js",
-      "file": "lodash_throttle.js",
-      "fileHash": "af551d28",
-      "needsInterop": true
-    },
-    "socket.io-client": {
-      "src": "../../node_modules/socket.io-client/build/esm/index.js",
-      "file": "socket__io-client.js",
-      "fileHash": "a727e14d",
-      "needsInterop": false
-    },
-    "react-transition-group": {
-      "src": "../../node_modules/react-transition-group/esm/index.js",
-      "file": "react-transition-group.js",
-      "fileHash": "321e75e7",
-      "needsInterop": false
-    },
-    "qrcode.react": {
-      "src": "../../node_modules/qrcode.react/lib/esm/index.js",
-      "file": "qrcode__react.js",
-      "fileHash": "6b70d50f",
-      "needsInterop": false
-    },
-    "react-chartjs-2": {
-      "src": "../../node_modules/react-chartjs-2/dist/index.js",
-      "file": "react-chartjs-2.js",
-      "fileHash": "875968b2",
-      "needsInterop": false
-    },
-    "chart.js": {
-      "src": "../../node_modules/chart.js/dist/chart.js",
-      "file": "chart__js.js",
-      "fileHash": "68f940a7",
-      "needsInterop": false
-    },
-    "date-fns/format": {
-      "src": "../../node_modules/date-fns/format.js",
-      "file": "date-fns_format.js",
-      "fileHash": "01abaf24",
-      "needsInterop": false
-    },
-    "react-icons/fa6": {
-      "src": "../../node_modules/react-icons/fa6/index.mjs",
-      "file": "react-icons_fa6.js",
-      "fileHash": "c97076e0",
-      "needsInterop": false
-    },
-    "react-countup": {
-      "src": "../../node_modules/react-countup/build/index.js",
-      "file": "react-countup.js",
-      "fileHash": "bdc8058c",
-      "needsInterop": true
-    },
-    "lucide-react": {
-      "src": "../../node_modules/lucide-react/dist/esm/lucide-react.js",
-      "file": "lucide-react.js",
-      "fileHash": "521e6503",
-      "needsInterop": false
-    },
-    "lodash/debounce": {
-      "src": "../../node_modules/lodash/debounce.js",
-      "file": "lodash_debounce.js",
-      "fileHash": "f53af317",
-      "needsInterop": true
-    },
-    "react-csv": {
-      "src": "../../node_modules/react-csv/src/index.js",
-      "file": "react-csv.js",
-      "fileHash": "f177c820",
-      "needsInterop": false
-    },
-    "react-modal": {
-      "src": "../../node_modules/react-modal/lib/index.js",
-      "file": "react-modal.js",
-      "fileHash": "a94fa712",
-      "needsInterop": true
-    },
-    "@simplewebauthn/browser": {
-      "src": "../../node_modules/@simplewebauthn/browser/esm/index.js",
-      "file": "@simplewebauthn_browser.js",
-      "fileHash": "ac8efdaf",
-      "needsInterop": false
-    },
-    "lenis": {
-      "src": "../../node_modules/lenis/dist/lenis.mjs",
-      "file": "lenis.js",
-      "fileHash": "3a848837",
-      "needsInterop": false
-    },
-    "gsap": {
-      "src": "../../node_modules/gsap/index.js",
-      "file": "gsap.js",
-      "fileHash": "96816d51",
-      "needsInterop": false
-    },
-    "gsap/ScrollTrigger": {
-      "src": "../../node_modules/gsap/ScrollTrigger.js",
-      "file": "gsap_ScrollTrigger.js",
-      "fileHash": "7684c4b1",
-      "needsInterop": false
-    },
-    "split-type": {
-      "src": "../../node_modules/split-type/dist/index.js",
-      "file": "split-type.js",
-      "fileHash": "6f19f220",
+    "react-error-boundary": {
+      "src": "../../node_modules/react-error-boundary/dist/react-error-boundary.development.js",
+      "file": "react-error-boundary.js",
+      "fileHash": "9bb37afc",
       "needsInterop": false
     },
     "@react-three/fiber": {
       "src": "../../node_modules/@react-three/fiber/dist/react-three-fiber.esm.js",
       "file": "@react-three_fiber.js",
-      "fileHash": "40adbee9",
+      "fileHash": "e288ea7e",
       "needsInterop": false
     },
     "@react-three/drei": {
       "src": "../../node_modules/@react-three/drei/index.js",
       "file": "@react-three_drei.js",
-      "fileHash": "4778ebc9",
+      "fileHash": "a1bb539c",
       "needsInterop": false
     },
     "three": {
       "src": "../../node_modules/three/build/three.module.js",
       "file": "three.js",
-      "fileHash": "a0da30a7",
+      "fileHash": "b1c9118d",
+      "needsInterop": false
+    },
+    "@dnd-kit/core": {
+      "src": "../../node_modules/@dnd-kit/core/dist/core.esm.js",
+      "file": "@dnd-kit_core.js",
+      "fileHash": "aad69d65",
+      "needsInterop": false
+    },
+    "@dnd-kit/sortable": {
+      "src": "../../node_modules/@dnd-kit/sortable/dist/sortable.esm.js",
+      "file": "@dnd-kit_sortable.js",
+      "fileHash": "bc1ae865",
+      "needsInterop": false
+    },
+    "@dnd-kit/utilities": {
+      "src": "../../node_modules/@dnd-kit/utilities/dist/utilities.esm.js",
+      "file": "@dnd-kit_utilities.js",
+      "fileHash": "336e4c0f",
+      "needsInterop": false
+    },
+    "@heroicons/react/24/outline": {
+      "src": "../../node_modules/@heroicons/react/24/outline/esm/index.js",
+      "file": "@heroicons_react_24_outline.js",
+      "fileHash": "1f28dfc5",
+      "needsInterop": false
+    },
+    "@react-oauth/google": {
+      "src": "../../node_modules/@react-oauth/google/dist/index.esm.js",
+      "file": "@react-oauth_google.js",
+      "fileHash": "44d409cc",
+      "needsInterop": false
+    },
+    "@simplewebauthn/browser": {
+      "src": "../../node_modules/@simplewebauthn/browser/esm/index.js",
+      "file": "@simplewebauthn_browser.js",
+      "fileHash": "33fd69d7",
+      "needsInterop": false
+    },
+    "chart.js": {
+      "src": "../../node_modules/chart.js/dist/chart.js",
+      "file": "chart__js.js",
+      "fileHash": "9aa38ad7",
+      "needsInterop": false
+    },
+    "date-fns/format": {
+      "src": "../../node_modules/date-fns/format.js",
+      "file": "date-fns_format.js",
+      "fileHash": "67fb666d",
+      "needsInterop": false
+    },
+    "lodash/debounce": {
+      "src": "../../node_modules/lodash/debounce.js",
+      "file": "lodash_debounce.js",
+      "fileHash": "0a932e86",
+      "needsInterop": true
+    },
+    "lucide-react": {
+      "src": "../../node_modules/lucide-react/dist/esm/lucide-react.js",
+      "file": "lucide-react.js",
+      "fileHash": "db5390c6",
+      "needsInterop": false
+    },
+    "maath/random/dist/maath-random.esm": {
+      "src": "../../node_modules/maath/random/dist/maath-random.esm.js",
+      "file": "maath_random_dist_maath-random__esm.js",
+      "fileHash": "781518a5",
+      "needsInterop": false
+    },
+    "prop-types": {
+      "src": "../../node_modules/prop-types/index.js",
+      "file": "prop-types.js",
+      "fileHash": "0d63f74c",
+      "needsInterop": true
+    },
+    "qrcode.react": {
+      "src": "../../node_modules/qrcode.react/lib/esm/index.js",
+      "file": "qrcode__react.js",
+      "fileHash": "a018ccca",
+      "needsInterop": false
+    },
+    "react-chartjs-2": {
+      "src": "../../node_modules/react-chartjs-2/dist/index.js",
+      "file": "react-chartjs-2.js",
+      "fileHash": "c2c43161",
+      "needsInterop": false
+    },
+    "react-csv": {
+      "src": "../../node_modules/react-csv/src/index.js",
+      "file": "react-csv.js",
+      "fileHash": "db67ce2f",
+      "needsInterop": false
+    },
+    "react-icons/fa6": {
+      "src": "../../node_modules/react-icons/fa6/index.mjs",
+      "file": "react-icons_fa6.js",
+      "fileHash": "1a493dd2",
+      "needsInterop": false
+    },
+    "react-transition-group": {
+      "src": "../../node_modules/react-transition-group/esm/index.js",
+      "file": "react-transition-group.js",
+      "fileHash": "46fd60c5",
+      "needsInterop": false
+    },
+    "socket.io-client": {
+      "src": "../../node_modules/socket.io-client/build/esm/index.js",
+      "file": "socket__io-client.js",
+      "fileHash": "c673825e",
       "needsInterop": false
     }
   },
   "chunks": {
-    "hls-4J6QWHAP": {
-      "file": "hls-4J6QWHAP.js"
+    "hls-N7DM37RO": {
+      "file": "hls-N7DM37RO.js"
     },
-    "vision_bundle-TGXP6ZPZ": {
-      "file": "vision_bundle-TGXP6ZPZ.js"
+    "vision_bundle-CSEDTL2H": {
+      "file": "vision_bundle-CSEDTL2H.js"
     },
-    "chunk-EPNWNHHC": {
-      "file": "chunk-EPNWNHHC.js"
+    "chunk-6JCGGT34": {
+      "file": "chunk-6JCGGT34.js"
     },
-    "chunk-O4A6HC3X": {
-      "file": "chunk-O4A6HC3X.js"
+    "chunk-B3QZMW6P": {
+      "file": "chunk-B3QZMW6P.js"
+    },
+    "chunk-4JKRQAGF": {
+      "file": "chunk-4JKRQAGF.js"
     },
     "chunk-LDTTIGPV": {
       "file": "chunk-LDTTIGPV.js"
@@ -249,29 +234,32 @@
     "chunk-HQ6ZTAWL": {
       "file": "chunk-HQ6ZTAWL.js"
     },
-    "chunk-QGVADFPC": {
-      "file": "chunk-QGVADFPC.js"
+    "chunk-J2IKH2O7": {
+      "file": "chunk-J2IKH2O7.js"
     },
-    "chunk-VTA5WIPN": {
-      "file": "chunk-VTA5WIPN.js"
+    "chunk-2JCQ4X46": {
+      "file": "chunk-2JCQ4X46.js"
     },
-    "chunk-IMGNWYTL": {
-      "file": "chunk-IMGNWYTL.js"
+    "chunk-Z64NPTN6": {
+      "file": "chunk-Z64NPTN6.js"
     },
-    "chunk-SKKUB47Z": {
-      "file": "chunk-SKKUB47Z.js"
+    "chunk-SDCT7FOW": {
+      "file": "chunk-SDCT7FOW.js"
     },
-    "chunk-FYAW7PXC": {
-      "file": "chunk-FYAW7PXC.js"
+    "chunk-UCNSDCM3": {
+      "file": "chunk-UCNSDCM3.js"
     },
-    "chunk-BBDXWS37": {
-      "file": "chunk-BBDXWS37.js"
+    "chunk-L7IFVMJ4": {
+      "file": "chunk-L7IFVMJ4.js"
     },
-    "chunk-2PIBWAMS": {
-      "file": "chunk-2PIBWAMS.js"
+    "chunk-TGFGTOM7": {
+      "file": "chunk-TGFGTOM7.js"
     },
-    "chunk-V4OQ3NZ2": {
-      "file": "chunk-V4OQ3NZ2.js"
+    "chunk-4X3XUJ2M": {
+      "file": "chunk-4X3XUJ2M.js"
+    },
+    "chunk-G3PMV62Z": {
+      "file": "chunk-G3PMV62Z.js"
     }
   }
 }

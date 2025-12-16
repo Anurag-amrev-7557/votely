@@ -56,9 +56,9 @@ const ShareButtons = ({ url, title }) => {
           Facebook
         </a>
       </div>
-      <div className="mt-2 flex flex-col items-center">
-        {QRCode ? <QRCode value={url} size={96} /> : <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 flex items-center justify-center rounded border border-gray-300 dark:border-gray-600 text-xs text-gray-400">QR</div>}
-        <span className="text-xs text-gray-500 mt-1">Scan to open on mobile</span>
+      <div className="mt-2 flex flex-col items-center" role="img" aria-label="QR Code to scan this poll on mobile">
+        {QRCode ? <QRCode value={url} size={96} /> : <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 flex items-center justify-center rounded border border-gray-300 dark:border-gray-600 text-xs text-gray-500">QR</div>}
+        <span className="text-xs text-gray-600 dark:text-gray-400 mt-1">Scan to open on mobile</span>
       </div>
     </div>
   );

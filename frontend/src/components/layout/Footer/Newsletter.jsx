@@ -175,8 +175,8 @@ const Newsletter = () => {
                         className={`
                             peer w-full px-4 py-2.5 sm:py-3 rounded-lg border border-gray-200 dark:border-gray-700
                             bg-white dark:bg-gray-800 text-gray-900 dark:text-white
-                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                            transition-all duration-200 group-hover:border-blue-300 dark:group-hover:border-blue-700
+                            focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent
+                            transition-all duration-200 group-hover:border-blue-400 dark:group-hover:border-blue-600
                             shadow-sm focus:shadow-md
                             will-change-[box-shadow,border-color]
                         `}
@@ -185,11 +185,11 @@ const Newsletter = () => {
                     <label
                         htmlFor="newsletter-email"
                         className={`
-                            absolute left-4 top-2.5 sm:top-3 text-gray-400 dark:text-gray-500
+                            absolute left-4 top-2.5 sm:top-3 text-gray-500 dark:text-gray-400
                             text-sm pointer-events-none transition-all duration-200
                             peer-placeholder-shown:top-2.5 peer-placeholder-shown:text-base
-                            peer-placeholder-shown:text-gray-400 peer-focus:-top-3 peer-focus:text-xs
-                            peer-focus:text-blue-600 dark:peer-focus:text-blue-400
+                            peer-placeholder-shown:text-gray-500 peer-focus:-top-3 peer-focus:text-xs
+                            peer-focus:text-blue-700 dark:peer-focus:text-blue-300
                             bg-white dark:bg-gray-800 px-1 rounded
                         `}
                         aria-hidden="true"

@@ -13,19 +13,19 @@ const Timer = ({ timeLimit, onExpire, showProgress = true, size = 'default' }) =
     const mins = Math.floor(timeLeft / 60);
     const secs = timeLeft % 60;
     const formattedTime = `${mins}:${secs.toString().padStart(2, '0')}`;
-    
+
     // Enhanced color logic with more granular states
-    let colorClass = 'text-blue-600 dark:text-blue-400';
+    let colorClass = 'text-blue-700 dark:text-blue-300';
     let urgencyLevel = 'normal';
-    
+
     if (timeLeft <= 10) {
-      colorClass = 'text-red-600 dark:text-red-400';
+      colorClass = 'text-red-700 dark:text-red-300';
       urgencyLevel = 'critical';
     } else if (timeLeft <= 30) {
-      colorClass = 'text-orange-600 dark:text-orange-400';
+      colorClass = 'text-orange-700 dark:text-orange-300';
       urgencyLevel = 'warning';
     } else if (timeLeft <= 60) {
-      colorClass = 'text-yellow-600 dark:text-yellow-400';
+      colorClass = 'text-yellow-700 dark:text-yellow-300';
       urgencyLevel = 'caution';
     }
 
@@ -78,23 +78,23 @@ const Timer = ({ timeLimit, onExpire, showProgress = true, size = 'default' }) =
   };
 
   return (
-    <motion.div 
+    <motion.div
       className={`flex items-center ${sizeClasses[size]} font-semibold ${timerData.colorClass} transition-all duration-300`}
       role="timer"
       aria-live="polite"
       aria-label={`Time remaining: ${timerData.formattedTime}`}
       initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ 
-        opacity: 1, 
+      animate={{
+        opacity: 1,
         scale: 1,
         ...(timerData.isCritical && { scale: [1, 1.05, 1] })
       }}
-      transition={{ 
+      transition={{
         duration: 0.3,
-        ...(timerData.isCritical && { 
-          repeat: Infinity, 
+        ...(timerData.isCritical && {
+          repeat: Infinity,
           repeatType: "reverse",
-          duration: 0.5 
+          duration: 0.5
         })
       }}
     >
@@ -153,7 +153,7 @@ const Timer = ({ timeLimit, onExpire, showProgress = true, size = 'default' }) =
       {/* Critical Time Warning */}
       {timerData.isCritical && (
         <motion.div
-          className="ml-2 px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs rounded-full"
+          className="ml-2 px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 text-xs rounded-full"
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}

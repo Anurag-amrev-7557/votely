@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { motion } from 'framer-motion';
-import toast from 'react-hot-toast';
+import { toast } from '../../utils/toastUtils';
 
 const MagicLinkVerifyPage = () => {
     const [searchParams] = useSearchParams();
@@ -41,6 +41,8 @@ const MagicLinkVerifyPage = () => {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="max-w-md w-full bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg text-center"
+                role="status"
+                aria-live="polite"
             >
                 {status === 'verifying' && (
                     <div className="flex flex-col items-center">
@@ -65,7 +67,7 @@ const MagicLinkVerifyPage = () => {
                         <p className="text-gray-500 dark:text-gray-400 mt-2">The link may have expired or is invalid.</p>
                         <button
                             onClick={() => navigate('/login')}
-                            className="mt-6 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            className="mt-6 px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-colors"
                         >
                             Back to Login
                         </button>

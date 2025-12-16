@@ -10,7 +10,7 @@ const useNominations = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.post('/api/nominations/apply', data);
+            const response = await axios.post('/nominations/apply', data);
             toast.success('Nomination submitted successfully!');
             return response.data;
         } catch (err) {
@@ -26,7 +26,7 @@ const useNominations = () => {
     const getMyNominations = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await axios.get('/api/nominations/my');
+            const response = await axios.get('/nominations/my');
             return response.data.nominations;
         } catch (err) {
             setError(err.message);
@@ -39,7 +39,7 @@ const useNominations = () => {
     const getPollNominations = useCallback(async (pollId) => {
         setLoading(true);
         try {
-            const response = await axios.get(`/api/nominations/poll/${pollId}`);
+            const response = await axios.get(`/nominations/poll/${pollId}`);
             return response.data.nominations;
         } catch (err) {
             setError(err.message);
@@ -52,7 +52,7 @@ const useNominations = () => {
     const updateNominationStatus = useCallback(async (nominationId, status, comments) => {
         setLoading(true);
         try {
-            const response = await axios.put(`/api/nominations/${nominationId}/status`, { status, adminComments: comments });
+            const response = await axios.put(`/nominations/${nominationId}/status`, { status, adminComments: comments });
             toast.success(`Nomination ${status} successfully`);
             return response.data.nomination;
         } catch (err) {

@@ -106,6 +106,9 @@ const EnhancedVoteConfirmation = ({
           onCancel();
         }
       }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirmation-modal-title"
     >
       <motion.div
         className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 w-full max-w-6xl mx-auto relative overflow-hidden max-h-[90vh]"
@@ -213,6 +216,7 @@ const EnhancedVoteConfirmation = ({
               </motion.div>
 
               <motion.h2
+                id="confirmation-modal-title"
                 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 dark:from-white dark:via-blue-200 dark:to-purple-200 bg-clip-text text-transparent mb-2"
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}

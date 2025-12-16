@@ -86,7 +86,7 @@ const corsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'X-Admin-Context'],
 };
 
 // Apply CORS middleware
@@ -100,7 +100,8 @@ app.use(helmet({
 }));
 
 // Middleware
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 
 // Serve static files (uploaded images)
@@ -108,7 +109,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Health check route
 app.get('/', (req, res) => {
-  res.send('API is running (Mock Auth Mode)...');
+  res.send('API is running');
 });
 
 // Debug route to test if server is responding

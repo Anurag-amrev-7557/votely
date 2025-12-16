@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
+import {
   DocumentTextIcon,
   CalendarIcon,
   UserIcon,
@@ -120,7 +120,7 @@ const categories = [
 ];
 
 const tags = [
-  "Digital Voting", "Democracy", "Technology", "Security", "Development", 
+  "Digital Voting", "Democracy", "Technology", "Security", "Development",
   "Best Practices", "Enterprise", "Scaling", "Psychology", "User Behavior",
   "API", "Design Patterns", "Compliance", "Regulations", "Analytics"
 ];
@@ -133,8 +133,8 @@ export default function Blog() {
   const filteredPosts = blogPosts.filter(post => {
     const matchesCategory = selectedCategory === 'All' || post.category === selectedCategory;
     const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         post.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+      post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesCategory && matchesSearch;
   });
 
@@ -172,7 +172,7 @@ export default function Blog() {
               delay: 3
             }}
           />
-          
+
           {/* Secondary decorative elements */}
           <motion.div
             className="absolute top-1/4 left-1/4 w-32 h-32 bg-gradient-to-br from-cyan-400/20 to-blue-400/20 dark:from-cyan-500/20 dark:to-blue-500/20 rounded-full blur-2xl"
@@ -202,7 +202,7 @@ export default function Blog() {
               delay: 2
             }}
           />
-          
+
           {/* Floating particles */}
           <motion.div
             className="absolute top-20 left-1/2 w-2 h-2 bg-blue-400/40 dark:bg-blue-500/40 rounded-full"
@@ -259,8 +259,8 @@ export default function Blog() {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-              whileHover={{ 
-                scale: 1.05, 
+              whileHover={{
+                scale: 1.05,
                 y: -2,
                 rotate: [0, 2]
               }}
@@ -302,7 +302,7 @@ export default function Blog() {
               >
                 Votely
               </motion.span>
-              <motion.span 
+              <motion.span
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5 }}
@@ -311,7 +311,7 @@ export default function Blog() {
                 Blog
                 <motion.div
                   className="absolute -top-2 -right-2 w-3 h-3 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full shadow-lg"
-                  animate={{ 
+                  animate={{
                     scale: [1, 1.5, 1],
                     rotate: [0, 180, 360]
                   }}
@@ -324,11 +324,11 @@ export default function Blog() {
                   />
                 </motion.div>
               </motion.span>
-              
+
               {/* Floating decorative elements */}
               <motion.div
                 className="absolute -top-4 -left-4 w-2 h-2 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full opacity-60"
-                animate={{ 
+                animate={{
                   scale: [1, 1.8, 0.8, 1],
                   opacity: [0.6, 0.2, 0.8, 0.6],
                   rotate: [0, 180, 360, 0]
@@ -337,7 +337,7 @@ export default function Blog() {
               />
               <motion.div
                 className="absolute -bottom-2 -right-6 w-1.5 h-1.5 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full opacity-50"
-                animate={{ 
+                animate={{
                   scale: [0.8, 1.5, 0.6, 0.8],
                   opacity: [0.5, 0.1, 0.7, 0.5],
                   y: [0, -10, 0]
@@ -357,13 +357,13 @@ export default function Blog() {
                 Dive into{' '}
                 <motion.span
                   className="inline-flex mb-3 items-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-100 via-indigo-100 to-blue-200 dark:from-blue-900/40 dark:via-indigo-900/40 dark:to-blue-800/40 text-blue-700 dark:text-blue-300 rounded-2xl font-bold shadow-lg border border-blue-200/60 dark:border-blue-700/60 hover:shadow-xl transition-all duration-300"
-                  whileHover={{ 
-                    scale: 1.1, 
+                  whileHover={{
+                    scale: 1.1,
                     y: -5,
                     rotate: [-3, 3]
                   }}
                   whileTap={{ scale: 0.95 }}
-                  transition={{ 
+                  transition={{
                     duration: 0.4,
                     type: "spring",
                     stiffness: 400
@@ -385,13 +385,13 @@ export default function Blog() {
                 , unlock{' '}
                 <motion.span
                   className="inline-flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-100 via-pink-100 to-purple-200 dark:from-purple-900/40 dark:via-pink-900/40 dark:to-purple-800/40 text-purple-700 dark:text-purple-300 rounded-2xl font-bold shadow-lg border border-purple-200/60 dark:border-purple-700/60 hover:shadow-xl transition-all duration-300"
-                  whileHover={{ 
-                    scale: 1.1, 
+                  whileHover={{
+                    scale: 1.1,
                     y: -5,
                     rotate: [3, -3]
                   }}
                   whileTap={{ scale: 0.95 }}
-                  transition={{ 
+                  transition={{
                     duration: 0.4,
                     type: "spring",
                     stiffness: 400
@@ -413,13 +413,13 @@ export default function Blog() {
                 , and stay ahead with cutting-edge{' '}
                 <motion.span
                   className="inline-flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-green-100 via-emerald-100 to-green-200 dark:from-green-900/40 dark:via-emerald-900/40 dark:to-green-800/40 text-green-700 dark:text-green-300 rounded-2xl font-bold shadow-lg border border-green-200/60 dark:border-green-700/60 hover:shadow-xl transition-all duration-300"
-                  whileHover={{ 
-                    scale: 1.1, 
+                  whileHover={{
+                    scale: 1.1,
                     y: -5,
                     rotate: [-2, 2]
                   }}
                   whileTap={{ scale: 0.95 }}
-                  transition={{ 
+                  transition={{
                     duration: 0.4,
                     type: "spring",
                     stiffness: 400
@@ -502,14 +502,14 @@ export default function Blog() {
                 delay: 2
               }}
             />
-            
+
             {/* Enhanced Badge */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-              whileHover={{ 
-                scale: 1.05, 
+              whileHover={{
+                scale: 1.05,
                 y: -3,
                 rotate: [0, 2]
               }}
@@ -551,7 +551,7 @@ export default function Blog() {
               >
                 Featured
               </motion.span>
-              <motion.span 
+              <motion.span
                 initial={{ opacity: 0, x: 30 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5 }}
@@ -560,7 +560,7 @@ export default function Blog() {
                 Article
                 <motion.div
                   className="absolute -top-1 -right-1 w-2 h-2 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full shadow-md"
-                  animate={{ 
+                  animate={{
                     scale: [1, 1.8, 1],
                     rotate: [0, 180, 360]
                   }}
@@ -573,11 +573,11 @@ export default function Blog() {
                   />
                 </motion.div>
               </motion.span>
-              
+
               {/* Floating decorative elements */}
               <motion.div
                 className="absolute -top-3 -left-3 w-1.5 h-1.5 bg-gradient-to-r from-amber-400 to-orange-400 rounded-full opacity-60"
-                animate={{ 
+                animate={{
                   scale: [1, 1.6, 0.7, 1],
                   opacity: [0.6, 0.2, 0.8, 0.6],
                   rotate: [0, 180, 360, 0]
@@ -586,7 +586,7 @@ export default function Blog() {
               />
               <motion.div
                 className="absolute -bottom-1 -right-4 w-1 h-1 bg-gradient-to-r from-orange-400 to-yellow-400 rounded-full opacity-50"
-                animate={{ 
+                animate={{
                   scale: [0.8, 1.4, 0.5, 0.8],
                   opacity: [0.5, 0.1, 0.7, 0.5],
                   y: [0, -8, 0]
@@ -606,13 +606,13 @@ export default function Blog() {
                 Our latest{' '}
                 <motion.span
                   className="inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-100 via-indigo-100 to-blue-200 dark:from-blue-900/40 dark:via-indigo-900/40 dark:to-blue-800/40 text-blue-700 dark:text-blue-300 rounded-xl font-semibold shadow-md border border-blue-200/60 dark:border-blue-700/60 hover:shadow-lg transition-all duration-300"
-                  whileHover={{ 
-                    scale: 1.08, 
+                  whileHover={{
+                    scale: 1.08,
                     y: -3,
                     rotate: [-2, 2]
                   }}
                   whileTap={{ scale: 0.95 }}
-                  transition={{ 
+                  transition={{
                     duration: 0.3,
                     type: "spring",
                     stiffness: 400
@@ -629,14 +629,14 @@ export default function Blog() {
                 {' '}and stories from the world of digital democracy
               </div>
             </motion.div>
-            </motion.div>
+          </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            whileHover={{ 
+            whileHover={{
               y: -8,
               scale: 1.02
             }}
@@ -644,11 +644,11 @@ export default function Blog() {
           >
             {/* Enhanced gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            
+
             {/* Floating decorative elements */}
             <motion.div
               className="absolute top-4 right-4 w-2 h-2 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full opacity-60"
-              animate={{ 
+              animate={{
                 scale: [1, 1.5, 0.8, 1],
                 opacity: [0.6, 0.2, 0.8, 0.6],
                 rotate: [0, 180, 360, 0]
@@ -657,7 +657,7 @@ export default function Blog() {
             />
             <motion.div
               className="absolute bottom-6 left-6 w-1.5 h-1.5 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full opacity-50"
-              animate={{ 
+              animate={{
                 scale: [0.8, 1.3, 0.6, 0.8],
                 opacity: [0.5, 0.1, 0.7, 0.5],
                 y: [0, -8, 0]
@@ -676,7 +676,7 @@ export default function Blog() {
                 />
                 {/* Image overlay gradient */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                
+
                 {/* Featured badge */}
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
@@ -687,7 +687,7 @@ export default function Blog() {
                   FEATURED
                 </motion.div>
               </div>
-              
+
               <div className="md:w-1/2 p-8 relative">
                 <div className="flex items-center gap-3 mb-6">
                   <motion.span
@@ -704,29 +704,29 @@ export default function Blog() {
                     {featuredPost.readTime}
                   </motion.div>
                 </div>
-                
-                <motion.h3 
+
+                <motion.h3
                   className="text-3xl font-bold text-gray-900 dark:text-white mb-6 leading-tight"
                   whileHover={{ x: 5 }}
                   transition={{ duration: 0.3 }}
                 >
                   {featuredPost.title}
                 </motion.h3>
-                
-                <motion.p 
+
+                <motion.p
                   className="text-lg text-gray-600 dark:text-gray-300 mb-8 leading-relaxed"
                   whileHover={{ x: 3 }}
                   transition={{ duration: 0.3, delay: 0.1 }}
                 >
                   {featuredPost.excerpt}
                 </motion.p>
-                
+
                 <div className="flex items-center justify-between mb-8">
-                  <motion.div 
+                  <motion.div
                     className="flex items-center gap-4"
                     whileHover={{ scale: 1.02 }}
                   >
-                    <motion.div 
+                    <motion.div
                       className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg"
                       whileHover={{ scale: 1.1, rotate: 360 }}
                       transition={{ duration: 0.6 }}
@@ -737,26 +737,26 @@ export default function Blog() {
                       <p className="font-semibold text-gray-900 dark:text-white text-lg">
                         {featuredPost.author}
                       </p>
-                      <motion.p 
+                      <motion.p
                         className="text-sm text-gray-500 dark:text-gray-400"
                         whileHover={{ color: "#3B82F6" }}
                         transition={{ duration: 0.3 }}
                       >
-                        {new Date(featuredPost.date).toLocaleDateString('en-US', { 
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric' 
+                        {new Date(featuredPost.date).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
                         })}
                       </motion.p>
                     </div>
                   </motion.div>
                 </div>
-                
+
                 <div className="flex items-center gap-4">
-                  <motion.button 
+                  <motion.button
                     className="group/btn relative inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white font-bold rounded-2xl hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl"
-                    whileHover={{ 
-                      scale: 1.05, 
+                    whileHover={{
+                      scale: 1.05,
                       y: -3
                     }}
                     whileTap={{ scale: 0.95 }}
@@ -774,18 +774,16 @@ export default function Blog() {
                       transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                     />
                   </motion.button>
-                  
-                  <motion.button 
+
+                  <motion.button
                     className="inline-flex items-center gap-2 px-6 py-4 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-300 border border-gray-200 dark:border-gray-600"
-                    whileHover={{ 
-                      scale: 1.05, 
+                    whileHover={{
+                      scale: 1.05,
                       y: -2,
                       backgroundColor: "#E5E7EB"
                     }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <ShareIcon className="w-5 h-5" />
-                    <span className="font-medium">Share</span>
                   </motion.button>
                 </div>
               </div>
@@ -795,7 +793,7 @@ export default function Blog() {
       </section>
 
       {/* Enhanced Filters Section */}
-      <motion.section 
+      <motion.section
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
@@ -847,7 +845,7 @@ export default function Blog() {
 
         <div className="max-w-8xl mx-auto relative z-10">
           {/* Enhanced Header Section */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.8, type: "spring", stiffness: 100 }}
@@ -887,8 +885,8 @@ export default function Blog() {
               initial={{ opacity: 0, scale: 0.8 }}
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-              whileHover={{ 
-                scale: 1.05, 
+              whileHover={{
+                scale: 1.05,
                 y: -3,
                 rotate: [0, 2]
               }}
@@ -930,7 +928,7 @@ export default function Blog() {
               >
                 Discover Our
               </motion.span>
-              <motion.span 
+              <motion.span
                 initial={{ opacity: 0, x: 30 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5 }}
@@ -939,14 +937,14 @@ export default function Blog() {
                 Articles
                 <motion.div
                   className="absolute -top-1 -right-1 w-2 h-2 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full shadow-md"
-                  animate={{ 
+                  animate={{
                     scale: [1, 1.8, 1],
                     opacity: [0.5, 1, 0.5]
                   }}
-                  transition={{ 
-                    duration: 2, 
-                    repeat: Infinity, 
-                    ease: "easeInOut" 
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
                   }}
                 />
               </motion.span>
@@ -969,21 +967,21 @@ export default function Blog() {
               </motion.span>
               <motion.div
                 className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-emerald-400/50 via-teal-400/50 to-cyan-400/50 rounded-full blur-sm"
-                animate={{ 
+                animate={{
                   scaleX: [0.5, 1, 0.5],
                   opacity: [0.3, 0.7, 0.3]
                 }}
-                transition={{ 
-                  duration: 3, 
-                  repeat: Infinity, 
-                  ease: "easeInOut" 
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut"
                 }}
               />
             </motion.div>
           </motion.div>
 
           {/* Main Filters Container */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             className="flex flex-col lg:flex-row items-start lg:items-center justify-center gap-8"
@@ -991,7 +989,7 @@ export default function Blog() {
             transition={{ duration: 0.4, ease: "easeInOut", delay: 0.2 }}
           >
             {/* Left Side - Filters */}
-            <motion.div 
+            <motion.div
               className="flex flex-col sm:flex-row items-start sm:items-center gap-6 w-full lg:w-auto"
               layout
               transition={{ duration: 0.4, ease: "easeInOut" }}
@@ -1004,7 +1002,7 @@ export default function Blog() {
                 layout
                 transition={{ duration: 0.4, ease: "easeInOut" }}
               >
-                <TagIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <TagIcon className="w-5 h-5 text-blue-700 dark:text-blue-400" />
                 <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Filters</span>
                 <motion.div
                   animate={{ rotate: showFilters ? 180 : 0 }}
@@ -1013,11 +1011,11 @@ export default function Blog() {
                   <ChevronDownIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                 </motion.div>
               </motion.button>
-              
+
               {/* Category Pills Container */}
               <AnimatePresence mode="wait">
                 {showFilters && (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, height: 0, scale: 0.8 }}
                     animate={{ opacity: 1, height: "auto", scale: 1 }}
                     exit={{ opacity: 0, height: 0, scale: 0.8 }}
@@ -1033,24 +1031,22 @@ export default function Blog() {
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: index * 0.05, type: "spring", stiffness: 400, damping: 25 }}
                         onClick={() => setSelectedCategory(category.name)}
-                        whileHover={{ 
-                          scale: 1.02, 
+                        whileHover={{
+                          scale: 1.02,
                           y: -2
                         }}
                         whileTap={{ scale: 0.98 }}
-                        className={`group relative px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                          selectedCategory === category.name
-                            ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-md'
-                            : 'bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border border-gray-200/60 dark:border-gray-700/60 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/80'
-                        }`}
+                        className={`group relative px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${selectedCategory === category.name
+                          ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-md'
+                          : 'bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 border border-gray-200/60 dark:border-gray-700/60 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/80'
+                          }`}
                       >
                         <span className="flex items-center gap-2">
-                          {category.name} 
-                          <span className={`px-1.5 py-0.5 rounded-md text-xs font-medium ${
-                            selectedCategory === category.name 
-                              ? 'bg-white/20 dark:bg-gray-900/20 text-white dark:text-gray-900' 
-                              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-                          }`}>
+                          {category.name}
+                          <span className={`px-1.5 py-0.5 rounded-md text-xs font-medium ${selectedCategory === category.name
+                            ? 'bg-white/20 dark:bg-gray-900/20 text-white dark:text-gray-900'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                            }`}>
                             {category.count}
                           </span>
                         </span>
@@ -1060,8 +1056,8 @@ export default function Blog() {
                 )}
               </AnimatePresence>
             </motion.div>
-            
-            <motion.div 
+
+            <motion.div
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               className="flex items-center gap-3 px-4 py-2 bg-white/80 dark:bg-gray-800/80 rounded-xl border border-gray-200/60 dark:border-gray-700/60 backdrop-blur-sm shadow-md"
@@ -1072,10 +1068,10 @@ export default function Blog() {
                 animate={{ scale: [1, 1.1, 1] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
               >
-                <DocumentTextIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <DocumentTextIcon className="w-5 h-5 text-blue-700 dark:text-blue-400" />
               </motion.div>
               <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                <span className="text-blue-600 dark:text-blue-400 font-bold">{filteredPosts.length}</span> articles found
+                <span className="text-blue-700 dark:text-blue-400 font-bold">{filteredPosts.length}</span> articles found
               </span>
             </motion.div>
           </motion.div>
@@ -1085,10 +1081,11 @@ export default function Blog() {
       {/* Blog Posts Grid */}
       <section className="py-20 px-4 sm:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8" role="list">
             {filteredPosts.map((post, index) => (
-              <motion.div
+              <motion.article
                 key={post.id}
+                role="listitem"
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: index * 0.1 }}
@@ -1107,15 +1104,15 @@ export default function Blog() {
                     </span>
                   </div>
                 </div>
-                
+
                 <div className="p-6">
                   <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-3">
                     <span className="flex items-center gap-1">
                       <CalendarIcon className="w-4 h-4" />
-                      {new Date(post.date).toLocaleDateString('en-US', { 
-                        year: 'numeric', 
-                        month: 'short', 
-                        day: 'numeric' 
+                      {new Date(post.date).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
                       })}
                     </span>
                     <span className="flex items-center gap-1">
@@ -1123,15 +1120,15 @@ export default function Blog() {
                       {post.readTime}
                     </span>
                   </div>
-                  
+
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 line-clamp-2">
                     {post.title}
                   </h3>
-                  
+
                   <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-3">
                     {post.excerpt}
                   </p>
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
@@ -1141,17 +1138,17 @@ export default function Blog() {
                         {post.author}
                       </span>
                     </div>
-                    
+
                     <button className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm">
                       Read
                       <ArrowRightIcon className="w-3 h-3" />
                     </button>
                   </div>
                 </div>
-              </motion.div>
+              </motion.article>
             ))}
           </div>
-          
+
           {filteredPosts.length === 0 && (
             <motion.div
               initial={{ opacity: 0, y: 30 }}
@@ -1172,7 +1169,7 @@ export default function Blog() {
       </section>
 
       {/* Join the Community Section */}
-      <motion.section 
+      <motion.section
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
@@ -1250,8 +1247,8 @@ export default function Blog() {
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-              whileHover={{ 
-                scale: 1.05, 
+              whileHover={{
+                scale: 1.05,
                 y: -3,
                 rotate: [0, 2]
               }}
@@ -1279,7 +1276,7 @@ export default function Blog() {
             </motion.div>
 
             {/* Enhanced Main Heading with Interactive Elements */}
-            <motion.h2 
+            <motion.h2
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
@@ -1293,7 +1290,7 @@ export default function Blog() {
               >
                 Join the
               </motion.span>
-              <motion.span 
+              <motion.span
                 initial={{ opacity: 0, x: 30 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.6 }}
@@ -1302,21 +1299,21 @@ export default function Blog() {
                 Votely Community
                 <motion.div
                   className="absolute -top-1 -right-1 w-2 h-2 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full shadow-md"
-                  animate={{ 
+                  animate={{
                     scale: [1, 1.8, 1],
                     opacity: [0.5, 1, 0.5]
                   }}
-                  transition={{ 
-                    duration: 2, 
-                    repeat: Infinity, 
-                    ease: "easeInOut" 
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
                   }}
                 />
               </motion.span>
             </motion.h2>
-            
+
             {/* Enhanced Description with Animated Elements */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 15 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7 }}
@@ -1334,8 +1331,8 @@ export default function Blog() {
                 initial={{ opacity: 0, scale: 0.8 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.9, type: "spring", stiffness: 300 }}
-                whileHover={{ 
-                  scale: 1.1, 
+                whileHover={{
+                  scale: 1.1,
                   y: -2,
                   rotate: [-1, 1]
                 }}
@@ -1367,7 +1364,7 @@ export default function Blog() {
           </motion.div>
 
           {/* Community Cards Grid */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
@@ -1385,35 +1382,35 @@ export default function Blog() {
               {/* Animated background gradient */}
               <motion.div
                 className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                animate={{ 
+                animate={{
                   rotate: [0, 360],
                   scale: [1, 1.1, 1]
                 }}
-                transition={{ 
-                  duration: 20, 
-                  repeat: Infinity, 
-                  ease: "linear" 
+                transition={{
+                  duration: 20,
+                  repeat: Infinity,
+                  ease: "linear"
                 }}
               />
-              
+
               <div className="relative z-10">
-                <motion.div 
+                <motion.div
                   className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg"
                   whileHover={{ rotate: [0, 10, -10, 0] }}
                   transition={{ duration: 0.6 }}
                 >
                   <ChatBubbleLeftRightIcon className="w-8 h-8 text-white" />
                 </motion.div>
-                
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">
                   Discord Community
                 </h3>
-                
+
                 <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
                   Join 15,000+ developers and voting enthusiasts in our active Discord server. Get help, share ideas, and stay updated.
                 </p>
-                
-                <motion.button 
+
+                <motion.button
                   className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -1436,35 +1433,35 @@ export default function Blog() {
               {/* Animated background gradient */}
               <motion.div
                 className="absolute inset-0 bg-gradient-to-br from-green-500/5 via-emerald-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                animate={{ 
+                animate={{
                   rotate: [0, -360],
                   scale: [1, 1.1, 1]
                 }}
-                transition={{ 
-                  duration: 25, 
-                  repeat: Infinity, 
-                  ease: "linear" 
+                transition={{
+                  duration: 25,
+                  repeat: Infinity,
+                  ease: "linear"
                 }}
               />
-              
+
               <div className="relative z-10">
-                <motion.div 
+                <motion.div
                   className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg"
                   whileHover={{ rotate: [0, -10, 10, 0] }}
                   transition={{ duration: 0.6 }}
                 >
                   <BookOpenIcon className="w-8 h-8 text-white" />
                 </motion.div>
-                
+
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
                   Documentation Hub
                 </h3>
-                
+
                 <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
                   Explore comprehensive guides, API references, and best practices to build secure voting solutions.
                 </p>
-                
-                <motion.button 
+
+                <motion.button
                   className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-lg hover:shadow-xl"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -1487,35 +1484,35 @@ export default function Blog() {
               {/* Animated background gradient */}
               <motion.div
                 className="absolute inset-0 bg-gradient-to-br from-gray-500/5 via-slate-500/5 to-zinc-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                animate={{ 
+                animate={{
                   rotate: [0, 360],
                   scale: [1, 1.1, 1]
                 }}
-                transition={{ 
-                  duration: 30, 
-                  repeat: Infinity, 
-                  ease: "linear" 
+                transition={{
+                  duration: 30,
+                  repeat: Infinity,
+                  ease: "linear"
                 }}
               />
-              
+
               <div className="relative z-10">
-                <motion.div 
+                <motion.div
                   className="w-16 h-16 bg-gradient-to-br from-gray-600 to-slate-700 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg"
                   whileHover={{ rotate: [0, 15, -15, 0] }}
                   transition={{ duration: 0.6 }}
                 >
                   <CodeBracketIcon className="w-8 h-8 text-white" />
                 </motion.div>
-                
+
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 group-hover:text-gray-600 dark:group-hover:text-gray-400 transition-colors">
                   Open Source
                 </h3>
-                
+
                 <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
                   Contribute to our open-source projects, report issues, and help improve voting technology for everyone.
                 </p>
-                
-                <motion.button 
+
+                <motion.button
                   className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-gray-600 to-slate-700 text-white font-semibold rounded-xl hover:from-gray-700 hover:to-slate-800 transition-all duration-300 shadow-lg hover:shadow-xl"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -1528,13 +1525,13 @@ export default function Blog() {
           </motion.div>
 
           {/* Bottom CTA */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.0 }}
             className="text-center mt-12"
           >
-            <motion.div 
+            <motion.div
               className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-2xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}

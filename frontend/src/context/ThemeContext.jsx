@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback, useMemo, useSyncExternalStore, useRef, useLayoutEffect } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, useSyncExternalStore, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 
 const ThemeContext = createContext();

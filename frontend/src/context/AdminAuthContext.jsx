@@ -52,8 +52,8 @@ export const AdminAuthProvider = ({ children }) => {
     if (tokenTimestamp) {
       sessionExpired = now - tokenTimestamp > SESSION_TIMEOUT;
       sessionValid = !sessionExpired;
-      // Derived from user role in AuthContext
-      elevatedPrivileges = email && user && user.role === 'admin';
+      // Decoupled: If session is valid and email exists, assume privileges (since token was issued to admin)
+      elevatedPrivileges = sessionValid && !!email;
     }
 
     setAdminData({
@@ -70,26 +70,35 @@ export const AdminAuthProvider = ({ children }) => {
   useEffect(() => {
     const adminToken = localStorage.getItem('adminToken');
     const adminEmail = localStorage.getItem('adminEmail');
+    const sessionStart = localStorage.getItem('adminSessionStart');
+
     let tokenTimestamp = null;
-    if (adminToken) {
+    if (sessionStart) {
+      tokenTimestamp = parseInt(sessionStart, 10);
+    } else if (adminToken && adminToken.startsWith('admin-token-')) {
+      // Legacy fallback
       const parts = adminToken.split('-');
-      tokenTimestamp = parseInt(parts[2], 10);
+      if (parts.length === 3) tokenTimestamp = parseInt(parts[2], 10);
     }
-    updateAdminData(tokenTimestamp, adminEmail);
-    setIsAdmin(!!adminToken && tokenTimestamp && Date.now() - tokenTimestamp < SESSION_TIMEOUT);
+
+    updateAdminData(tokenTimestamp || Date.now(), adminEmail);
+    // If we have a token and valid session start, restore session
+    // Note: If sessionStart is missing but token exists (migrating), we might want to reset session
+    // for security.
+    if (adminToken && tokenTimestamp && (Date.now() - tokenTimestamp < SESSION_TIMEOUT)) {
+      setIsAdmin(true);
+      if (!sessionStart) {
+        // Migrate legacy to new format if possible, or just accept if valid
+        localStorage.setItem('adminSessionStart', tokenTimestamp.toString());
+      }
+    } else {
+      setIsAdmin(false);
+    }
     setIsLoading(false);
     setAdminEmail(adminEmail);
   }, []); // Only run on mount
 
-  // Sync with main AuthContext
-  useEffect(() => {
-    if (user && ADMIN_ROLES.includes(user.role)) {
-      // Allow access if user has correct role
-    } else if (user && !ADMIN_ROLES.includes(user.role)) {
-      // Revoke if user logged in but not admin
-      if (isAdmin) logout();
-    }
-  }, [user]);
+
 
   // Effect: Auto-logout on inactivity
   useEffect(() => {
@@ -118,11 +127,16 @@ export const AdminAuthProvider = ({ children }) => {
       return;
     }
     const adminToken = localStorage.getItem('adminToken');
+    const sessionStart = localStorage.getItem('adminSessionStart');
     let tokenTimestamp = null;
-    if (adminToken) {
+
+    if (sessionStart) {
+      tokenTimestamp = parseInt(sessionStart, 10);
+    } else if (adminToken && adminToken.startsWith('admin-token-')) {
       const parts = adminToken.split('-');
-      tokenTimestamp = parseInt(parts[2], 10);
+      if (parts.length === 3) tokenTimestamp = parseInt(parts[2], 10);
     }
+
     if (!tokenTimestamp) return;
     const expiryTime = tokenTimestamp + SESSION_TIMEOUT;
     const warningTime = expiryTime - SESSION_WARNING_THRESHOLD;
@@ -152,10 +166,16 @@ export const AdminAuthProvider = ({ children }) => {
       // Note: Comparing trim() just in case
       if (currentUser && currentUser.email.trim() === email.trim()) {
         if (ADMIN_ROLES.includes(currentUser.role)) {
-          const token = 'admin-token-' + Date.now();
+          // DECOUPLED: Use the token from the user object if available (real JWT)
+          // `explicitUser` from AdminLogin will have the .token property
+          const token = currentUser.token || 'admin-token-' + Date.now();
+          const sessionStart = Date.now();
+
           localStorage.setItem('adminToken', token);
           localStorage.setItem('adminEmail', email);
-          updateAdminData(Date.now(), email);
+          localStorage.setItem('adminSessionStart', sessionStart.toString());
+
+          updateAdminData(sessionStart, email);
           setIsAdmin(true);
           logAttempt(true, 'Role Verification Success');
           return { success: true };
@@ -220,15 +240,24 @@ export const AdminAuthProvider = ({ children }) => {
       let isTokenValid = false;
 
       if (adminToken) {
-        const parts = adminToken.split('-');
-        if (parts.length === 3 && !isNaN(parseInt(parts[2], 10))) {
-          tokenTimestamp = parseInt(parts[2], 10);
-
-          // Enhance: Check if token is not expired (e.g., 2 hours validity)
-          const now = Date.now();
-          const maxSessionDuration = 2 * 60 * 60 * 1000; // 2 hours in ms
-          if (now - tokenTimestamp < maxSessionDuration) {
+        const sessionStart = localStorage.getItem('adminSessionStart');
+        if (sessionStart) {
+          tokenTimestamp = parseInt(sessionStart, 10);
+          isTokenValid = true; // Assume valid if locally present (backend will reject if invalid JWT)
+        } else if (adminToken.startsWith('admin-token-')) {
+          const parts = adminToken.split('-');
+          if (parts.length === 3 && !isNaN(parseInt(parts[2], 10))) {
+            tokenTimestamp = parseInt(parts[2], 10);
             isTokenValid = true;
+          }
+        }
+
+        // Check local timeout
+        if (tokenTimestamp) {
+          const now = Date.now();
+          const maxSessionDuration = 2 * 60 * 60 * 1000; // 2 hours hard limit
+          if (now - tokenTimestamp > maxSessionDuration) {
+            isTokenValid = false;
           }
         }
       }
@@ -296,9 +325,18 @@ export const AdminAuthProvider = ({ children }) => {
     const adminToken = localStorage.getItem('adminToken');
     const adminEmail = localStorage.getItem('adminEmail');
     if (adminToken && adminEmail) {
-      const newToken = 'admin-token-' + Date.now();
-      localStorage.setItem('adminToken', newToken);
-      updateAdminData(Date.now(), adminEmail);
+      // If using real JWT, we can't just "refresh" it client side without API
+      // But we can reset the session monitoring timer
+      const newSessionStart = Date.now();
+      localStorage.setItem('adminSessionStart', newSessionStart.toString());
+
+      // If legacy token, update it too
+      if (adminToken.startsWith('admin-token-')) {
+        const newToken = 'admin-token-' + newSessionStart;
+        localStorage.setItem('adminToken', newToken);
+      }
+
+      updateAdminData(newSessionStart, adminEmail);
       setShowSessionWarning(false);
       // Optionally, show a notification or log the refresh
       // e.g., toast('Session refreshed successfully');
