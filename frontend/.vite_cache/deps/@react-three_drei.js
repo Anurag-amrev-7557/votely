@@ -2,6 +2,9 @@ import {
   Events
 } from "./chunk-MYHIP5LU.js";
 import {
+  require_prop_types
+} from "./chunk-J2IKH2O7.js";
+import {
   _classCallCheck,
   _isNativeReflectConstruct,
   _objectSpread2,
@@ -12,9 +15,6 @@ import {
   lerp,
   misc
 } from "./chunk-2JCQ4X46.js";
-import {
-  require_prop_types
-} from "./chunk-J2IKH2O7.js";
 import {
   addAfterEffect,
   addEffect,
@@ -227,8 +227,8 @@ import {
 import {
   require_client
 } from "./chunk-UCNSDCM3.js";
-import "./chunk-TGFGTOM7.js";
 import "./chunk-L7IFVMJ4.js";
+import "./chunk-TGFGTOM7.js";
 import {
   require_react
 } from "./chunk-4X3XUJ2M.js";

@@ -39,7 +39,26 @@ if (!process.env.VERCEL) {
 const app = express();
 
 // --- SOCKET.IO SETUP ---
-const server = http.createServer(app);
+let server;
+const fs = require('fs');
+
+const certPath = path.join(__dirname, '../certs/server.crt');
+const keyPath = path.join(__dirname, '../certs/server.key');
+
+if (process.env.USE_HTTPS === 'true' && fs.existsSync(certPath) && fs.existsSync(keyPath)) {
+  console.log('Starting server in HTTPS mode with TLS 1.3 enforcement');
+  const https = require('https');
+  const httpsOptions = {
+    key: fs.readFileSync(keyPath),
+    cert: fs.readFileSync(certPath),
+    minVersion: 'TLSv1.3' // Enforce TLS 1.3
+  };
+  server = https.createServer(httpsOptions, app);
+} else {
+  console.log('Starting server in HTTP mode');
+  server = http.createServer(app);
+}
+
 const io = new Server(server, {
   cors: {
     origin: function (origin, callback) {
@@ -99,9 +118,33 @@ app.use(helmet({
   crossOriginResourcePolicy: false
 }));
 
+// Rate limiting
+const rateLimit = require('express-rate-limit');
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  message: 'Too many requests from this IP, please try again after 15 minutes'
+});
+// Apply rate limiting to all requests
+app.use(limiter);
+
+// Data Sanitization against NoSQL query injection
+const mongoSanitize = require('express-mongo-sanitize');
+app.use(mongoSanitize());
+
+// Data Sanitization against XSS
+const xss = require('xss-clean');
+app.use(xss());
+
+// Prevent HTTP Parameter Pollution
+const hpp = require('hpp');
+app.use(hpp());
+
 // Middleware
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: '10mb' })); // Reduced limit for security, was 50mb
+app.use(express.urlencoded({ extended: true, limit: '10mb' })); // Reduced limit
 app.use(cookieParser());
 
 // Serve static files (uploaded images)

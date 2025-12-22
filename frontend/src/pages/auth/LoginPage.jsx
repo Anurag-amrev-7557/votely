@@ -181,8 +181,8 @@ const LoginPage = () => {
                 <label
                   htmlFor="email"
                   className={`absolute left-4 transition-all duration-300 pointer-events-none ${focusedInput === 'email' || formData.email
-                      ? `-top-2.5 text-xs px-2 rounded font-semibold ${isDarkMode ? 'bg-zinc-900/90 text-white' : 'bg-white/90 text-black'}`
-                      : `top-3.5 font-medium ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`
+                    ? `-top-2.5 text-xs px-2 rounded font-semibold ${isDarkMode ? 'bg-zinc-900/90 text-white' : 'bg-white/90 text-black'}`
+                    : `top-3.5 font-medium ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`
                     }`}
                 >
                   <span className="flex items-center gap-2">
@@ -282,8 +282,8 @@ const LoginPage = () => {
               Return Home
             </button>
             <div className={`flex items-center gap-2 text-xs font-medium ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`} aria-label="Security Status: Secure Connection">
-              <Fingerprint className="w-3 h-3" aria-hidden="true" />
-              <span>Secure Connection </span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Secure Connection: TLS 1.3</span>
             </div>
           </div>
         </div>

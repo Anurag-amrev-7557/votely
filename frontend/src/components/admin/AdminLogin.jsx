@@ -15,14 +15,15 @@ import * as random from 'maath/random/dist/maath-random.esm';
 // --- Visual Components ---
 
 // 3D Background - Darker, more "Admin/Security" feel (Deep Violet/Gold accents)
-const AdminParticleField = ({ isDarkMode }) => {
+// 3D Background - From Login Page
+const AdminParticleField = ({ color }) => {
   const ref = useRef();
-  const [sphere] = useState(() => random.inSphere(new Float32Array(6000), { radius: 1.8 })); // Denser field
+  const [sphere] = useState(() => random.inSphere(new Float32Array(5000), { radius: 1.5 }));
 
   useFrame((state, delta) => {
     if (ref.current) {
-      ref.current.rotation.x -= delta / 15;
-      ref.current.rotation.y -= delta / 20;
+      ref.current.rotation.x -= delta / 10;
+      ref.current.rotation.y -= delta / 15;
     }
   });
 
@@ -31,11 +32,10 @@ const AdminParticleField = ({ isDarkMode }) => {
       <Points ref={ref} positions={sphere} stride={3} frustumCulled={false}>
         <PointMaterial
           transparent
-          color={isDarkMode ? '#ffd700' : '#4f46e5'} // Gold in dark mode, Indigo in light
-          size={0.003}
+          color={color}
+          size={0.005}
           sizeAttenuation={true}
           depthWrite={false}
-          opacity={isDarkMode ? 0.4 : 0.6}
         />
       </Points>
     </group>
@@ -43,60 +43,110 @@ const AdminParticleField = ({ isDarkMode }) => {
 };
 
 const AdminBackground = ({ isDarkMode }) => {
-  const bgColor = isDarkMode ? '#050505' : '#f8fafc'; // Deep black vs off-white
+  const particleColor = isDarkMode ? '#ffffff' : '#111827';
+  const bgColor = isDarkMode ? '#000000' : '#ffffff';
 
   return (
     <div className="absolute inset-0 z-0 overflow-hidden transition-colors duration-500" style={{ backgroundColor: bgColor }} aria-hidden="true">
       <Canvas camera={{ position: [0, 0, 1] }}>
-        <AdminParticleField isDarkMode={isDarkMode} />
+        <AdminParticleField color={particleColor} />
       </Canvas>
-      {/* Vignette & Gradients */}
-      <div className={`absolute inset-0 bg-gradient-to-t ${isDarkMode ? 'from-black via-transparent to-black/80' : 'from-slate-100 via-transparent to-white/80'} pointer-events-none transition-colors duration-500`} />
-      <div className={`absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,transparent_0%,rgba(0,0,0,0.4)_100%)] pointer-events-none`} />
+      <div className={`absolute inset-0 bg-gradient-to-t ${isDarkMode ? 'from-black via-transparent to-black' : 'from-white via-transparent to-white'} opacity-80 pointer-events-none transition-colors duration-500`} />
+      <div className={`absolute inset-0 bg-gradient-to-r ${isDarkMode ? 'from-black/50 via-transparent to-black/50' : 'from-white/50 via-transparent to-white/50'} pointer-events-none transition-colors duration-500`} />
     </div>
   );
 };
 
 // Abstract Semantic Visual for Security Score
 const SecurityVisual = ({ score }) => {
-  // Normalize score to 0-1
   const normalized = score / 100;
+  // Dynamic color based on score
+  const getColor = (s) => {
+    if (s < 40) return '#ef4444'; // red-500
+    if (s < 70) return '#f59e0b'; // amber-500
+    return '#10b981'; // emerald-500
+  };
+  const color = getColor(score);
 
   return (
-    <div className="relative w-16 h-16 flex items-center justify-center" role="img" aria-label={`Security Score: ${score}%`}>
-      {/* Outer Glow Ring */}
+    <div className="relative w-24 h-24 flex items-center justify-center p-2" role="img" aria-label={`Security Score: ${score}%`}>
+      {/* Background/Glow Container */}
       <motion.div
         animate={{
-          opacity: [0.5, 0.8, 0.5],
-          scale: [1, 1.05, 1],
-          borderColor: score < 40 ? '#ef4444' : score < 70 ? '#eab308' : '#22c55e'
+          boxShadow: `0 0 ${20 + normalized * 20}px ${color}30`,
         }}
-        transition={{ duration: 3, repeat: Infinity }}
-        className="absolute inset-0 rounded-full border-2 border-transparent"
-        style={{
-          boxShadow: `0 0 ${normalized * 20}px ${score < 40 ? '#ef4444' : score < 70 ? '#eab308' : '#22c55e'}40`
-        }}
+        transition={{ duration: 0.5 }}
+        className="absolute inset-2 rounded-full bg-white/5 dark:bg-black/40 backdrop-blur-md"
       />
 
-      {/* Progress Circle SVG */}
-      <svg className="w-full h-full -rotate-90">
-        <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="2" fill="none" className="text-gray-200 dark:text-gray-800" />
-        <motion.circle
-          cx="32" cy="32" r="28"
+      {/* Decorative Rotating Dashed Ring */}
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        className="absolute inset-0 rounded-full border border-dashed border-gray-300/50 dark:border-zinc-700/50"
+      />
+
+      {/* Counter-Rotating Ring */}
+      <motion.div
+        animate={{ rotate: -360 }}
+        transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+        className="absolute inset-1 rounded-full border border-dotted border-gray-300/30 dark:border-zinc-700/30"
+      />
+
+      {/* Progress SVG */}
+      <svg className="w-full h-full -rotate-90 relative z-10 drop-shadow-sm">
+        {/* Track */}
+        <circle
+          cx="50%"
+          cy="50%"
+          r="32"
           stroke="currentColor"
-          strokeWidth="2"
+          strokeWidth="3"
+          fill="none"
+          className="text-gray-200/50 dark:text-zinc-800/80"
+        />
+        {/* Indicator */}
+        <motion.circle
+          cx="50%"
+          cy="50%"
+          r="32"
+          stroke={color}
+          strokeWidth="3"
           fill="none"
           strokeLinecap="round"
-          className={`${score < 40 ? 'text-red-500' : score < 70 ? 'text-yellow-500' : 'text-green-500'} transition-colors duration-500`}
           initial={{ pathLength: 0 }}
-          animate={{ pathLength: normalized }}
-          transition={{ duration: 1, ease: "easeOut" }}
-          style={{ strokeDasharray: 176, strokeDashoffset: 0 }} // 2 * PI * 28 ≈ 176
+          animate={{ pathLength: normalized, stroke: color }}
+          transition={{ duration: 0.8, ease: "circOut" }}
+          style={{ strokeDasharray: 2 * Math.PI * 32 }}
         />
       </svg>
 
-      {/* Inner Icon */}
-      <ShieldCheckIcon className={`w-6 h-6 ${score < 40 ? 'text-red-500' : score < 70 ? 'text-yellow-500' : 'text-green-500'} transition-colors duration-500`} />
+      {/* Center Icon */}
+      <div className="absolute inset-0 flex items-center justify-center z-20">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={score >= 90 ? 'secure' : 'shield'}
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.5, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          >
+            {score >= 90 ? (
+              <CheckCircleIcon className="w-8 h-8 text-emerald-500" />
+            ) : (
+              <ShieldCheckIcon
+                className="w-8 h-8 transition-colors duration-300"
+                style={{ color }}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Score Badge */}
+      <div className="absolute -bottom-2 px-2 py-0.5 rounded-full bg-white dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 shadow-sm text-[10px] font-bold font-mono tracking-tighter" style={{ color }}>
+        {score}%
+      </div>
     </div>
   );
 };
@@ -483,7 +533,13 @@ const AdminLogin = () => {
       {/* 1. Background */}
       <AdminBackground isDarkMode={isDarkMode} />
 
-      {/* 2. Main Layout - Split or Centered Card */}
+      {/* 2. Interactive Blob/Glow - Monochrome (Decorative) */}
+      <div
+        aria-hidden="true"
+        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-[120px] pointer-events-none animate-pulse-slow z-0 transition-colors duration-500 ${isDarkMode ? 'bg-zinc-800/20' : 'bg-gray-200/50'}`}
+      />
+
+      {/* 3. Main Layout - Split or Centered Card */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -542,6 +598,18 @@ const AdminLogin = () => {
 
             {/* Email Input */}
             <div className="relative group">
+              <label
+                htmlFor="email"
+                className={`absolute left-4 transition-all duration-300 pointer-events-none ${focusedInput === 'email' || formData.email
+                  ? `-top-2.5 text-xs px-2 rounded font-semibold ${isDarkMode ? 'bg-zinc-900/90 text-white' : 'bg-white/90 text-black'}`
+                  : `top-3.5 font-medium ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`
+                  }`}
+              >
+                <span className="flex items-center gap-2">
+                  <ShieldCheckIcon className="w-3 h-3" aria-hidden="true" />
+                  Identifier
+                </span>
+              </label>
               <input
                 ref={emailRef}
                 id="email"
@@ -552,27 +620,37 @@ const AdminLogin = () => {
                 onFocus={() => setFocusedInput('email')}
                 onBlur={() => setFocusedInput(null)}
                 disabled={isLockedOut}
-                className={inputClass(validationState.emailValid, !!formData.email, isDarkMode)}
+                className={`w-full border rounded-xl px-4 py-3.5 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 transition-all duration-300 placeholder-transparent
+                                ${isDarkMode
+                    ? 'bg-zinc-950/50 border-white/10 text-white focus:border-white focus:ring-white/50 focus-visible:ring-white focus-visible:ring-offset-zinc-900'
+                    : 'bg-white/50 border-black/10 text-zinc-900 focus:border-black focus:ring-black/50 focus-visible:ring-black focus-visible:ring-offset-white'
+                  }`}
                 placeholder="ADMIN IDENTITY"
                 aria-required="true"
                 aria-invalid={!validationState.emailValid && !!formData.email}
               />
-              <label
-                htmlFor="email"
-                className={`absolute left-4 top-3 transition-all duration-300 pointer-events-none text-xs font-bold uppercase tracking-widest ${focusedInput === 'email' || formData.email
-                  ? '-top-3 left-0 text-[10px] opacity-70'
-                  : 'opacity-60'
-                  } ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}
-              >
-                Identifier
-              </label>
+              {/* Animated Border Line */}
+              <div aria-hidden="true" className={`absolute bottom-0 left-0 h-[1px] bg-gradient-to-r from-transparent via-zinc-500 to-transparent transition-all duration-500 ${focusedInput === 'email' ? 'w-full opacity-100' : 'w-0 opacity-0'}`} />
+
               {validationState.emailValid && (
-                <CheckCircleIcon className="absolute right-4 top-3 w-5 h-5 text-green-500/80" />
+                <CheckCircleIcon className="absolute right-4 top-3.5 w-5 h-5 text-green-500/80 pointer-events-none" />
               )}
             </div>
 
             {/* Password Input */}
             <div className="relative group">
+              <label
+                htmlFor="password"
+                className={`absolute left-4 transition-all duration-300 pointer-events-none ${focusedInput === 'password' || formData.password
+                  ? `-top-2.5 text-xs px-2 rounded font-semibold ${isDarkMode ? 'bg-zinc-900/90 text-white' : 'bg-white/90 text-black'}`
+                  : `top-3.5 font-medium ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`
+                  }`}
+              >
+                <span className="flex items-center gap-2">
+                  <KeyIcon className="w-3 h-3" aria-hidden="true" />
+                  Cipher
+                </span>
+              </label>
               <input
                 ref={passwordRef}
                 id="password"
@@ -583,23 +661,21 @@ const AdminLogin = () => {
                 onFocus={() => setFocusedInput('password')}
                 onBlur={() => setFocusedInput(null)}
                 disabled={isLockedOut}
-                className={inputClass(validationState.passwordValid, !!formData.password, isDarkMode)}
+                className={`w-full border rounded-xl px-4 py-3.5 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 transition-all duration-300 placeholder-transparent
+                                ${isDarkMode
+                    ? 'bg-zinc-950/50 border-white/10 text-white focus:border-white focus:ring-white/50 focus-visible:ring-white focus-visible:ring-offset-zinc-900'
+                    : 'bg-white/50 border-black/10 text-zinc-900 focus:border-black focus:ring-black/50 focus-visible:ring-black focus-visible:ring-offset-white'
+                  }`}
                 placeholder="PASSPHRASE"
                 aria-required="true"
               />
-              <label
-                htmlFor="password"
-                className={`absolute left-4 top-3 transition-all duration-300 pointer-events-none text-xs font-bold uppercase tracking-widest ${focusedInput === 'password' || formData.password
-                  ? '-top-3 left-0 text-[10px] opacity-70'
-                  : 'opacity-60'
-                  } ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}
-              >
-                Cipher
-              </label>
+              {/* Animated Border Line */}
+              <div aria-hidden="true" className={`absolute bottom-0 left-0 h-[1px] bg-gradient-to-r from-transparent via-zinc-500 to-transparent transition-all duration-500 ${focusedInput === 'password' ? 'w-full opacity-100' : 'w-0 opacity-0'}`} />
+
               <button
                 type="button"
                 onClick={() => setSecurityState(prev => ({ ...prev, showPassword: !prev.showPassword }))}
-                className="absolute right-4 top-3 text-gray-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg"
+                className="absolute right-4 top-3.5 text-gray-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg"
                 aria-label={securityState.showPassword ? "Hide password" : "Show password"}
               >
                 {securityState.showPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
@@ -613,8 +689,20 @@ const AdminLogin = () => {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="relative group overflow-hidden"
+                  className="relative group overflow-visible"
                 >
+                  <label
+                    htmlFor="2fa"
+                    className={`absolute left-4 transition-all duration-300 pointer-events-none ${focusedInput === '2fa' || formData.twoFactorCode
+                      ? `-top-2.5 text-xs px-2 rounded font-semibold ${isDarkMode ? 'bg-zinc-900/90 text-white' : 'bg-white/90 text-black'}`
+                      : `top-3.5 font-medium ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`
+                      }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <KeyIcon className="w-3 h-3" />
+                      Auth Code
+                    </span>
+                  </label>
                   <input
                     id="2fa"
                     type="text"
@@ -623,19 +711,15 @@ const AdminLogin = () => {
                     onChange={(e) => handleInputChange('twoFactorCode', e.target.value.replace(/\D/g, ''))}
                     onFocus={() => setFocusedInput('2fa')}
                     onBlur={() => setFocusedInput(null)}
-                    className={inputClass(VALIDATION_PATTERNS.twoFactor.test(formData.twoFactorCode), !!formData.twoFactorCode, isDarkMode)}
+                    className={`w-full border rounded-xl px-4 py-3.5 outline-none focus-visible:ring-2 focus-visible:ring-offset-2 transition-all duration-300 placeholder-transparent
+                                ${isDarkMode
+                        ? 'bg-zinc-950/50 border-white/10 text-white focus:border-white focus:ring-white/50 focus-visible:ring-white focus-visible:ring-offset-zinc-900'
+                        : 'bg-white/50 border-black/10 text-zinc-900 focus:border-black focus:ring-black/50 focus-visible:ring-black focus-visible:ring-offset-white'
+                      }`}
                     placeholder="000000"
                   />
-                  <label
-                    htmlFor="2fa"
-                    className={`absolute left-4 top-3 transition-all duration-300 pointer-events-none text-xs font-bold uppercase tracking-widest ${focusedInput === '2fa' || formData.twoFactorCode
-                      ? '-top-3 left-0 text-[10px] opacity-70'
-                      : 'opacity-40'
-                      } ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}
-                  >
-                    Auth Code
-                  </label>
-                  <KeyIcon className="absolute right-4 top-3 w-5 h-5 text-gray-400" />
+                  {/* Animated Border Line */}
+                  <div aria-hidden="true" className={`absolute bottom-0 left-0 h-[1px] bg-gradient-to-r from-transparent via-zinc-500 to-transparent transition-all duration-500 ${focusedInput === '2fa' ? 'w-full opacity-100' : 'w-0 opacity-0'}`} />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -678,14 +762,17 @@ const AdminLogin = () => {
           </form>
 
           {/* Footer Info */}
-          <div className="bg-black/5 dark:bg-white/5 p-4 flex justify-between items-center text-[10px] font-mono uppercase tracking-wider opacity-60">
-            <button onClick={() => navigate('/')} className="hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded">
+          <div className={`px-8 py-4 backdrop-blur-md flex justify-between items-center ${isDarkMode ? 'bg-white/5' : 'bg-black/5'}`}>
+            <button
+              onClick={() => navigate('/')}
+              className={`text-xs flex items-center gap-1 group transition-colors focus-visible:outline-none focus-visible:underline ${isDarkMode ? 'text-zinc-300 hover:text-white' : 'text-zinc-700 hover:text-black'}`}
+            >
               &larr; Return to Surface
             </button>
-            <span className="flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-              Secure Connection: TLS 1.3
-            </span>
+            <div className={`flex items-center gap-2 text-xs font-medium ${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`} aria-label="Security Status: Secure Connection">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Secure Connection: TLS 1.3</span>
+            </div>
           </div>
         </div>
       </motion.div>
