@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTheme } from '../../../context/ThemeContext';
+import React, { useState, useMemo, useCallback } from 'react';
+
 import { categories, faqs } from '../data/faqData'; // Import data
 
 // --- Extracted Components ---
@@ -9,8 +9,8 @@ const CategoryButton = React.memo(({ category, isActive, onClick }) => (
     <button
         onClick={() => onClick(category.id)}
         className={`inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-300 ${isActive
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+            ? 'bg-blue-600 text-white'
+            : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
         aria-pressed={isActive}
     >
@@ -31,7 +31,7 @@ const FaqItem = React.memo(({ faq, index, isExpanded, onToggle }) => (
             </p>
             <div className={`text-gray-600 dark:text-gray-300 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256">
-                    <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"></path>
+                    <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z" />
                 </svg>
             </div>
         </button>
@@ -180,7 +180,7 @@ const EmptyState = React.memo(({ onReset }) => (
             >
                 Contact Support
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
-                    <path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"></path>
+                    <path d="M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z" />
                 </svg>
             </motion.button>
         </motion.div>
@@ -189,9 +189,7 @@ const EmptyState = React.memo(({ onReset }) => (
 
 // --- Main Component ---
 
-const FaqSection = ({ isVisible }) => {
-    const { isDarkMode } = useTheme();
-    const sectionBg = useMemo(() => isDarkMode ? 'dark:bg-gray-900' : 'bg-white', [isDarkMode]);
+const FaqSection = () => {
     const [activeCategory, setActiveCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [expandedFaqs, setExpandedFaqs] = useState(new Set());
@@ -226,7 +224,7 @@ const FaqSection = ({ isVisible }) => {
     }, []);
 
     return (
-        <section className={`faq-section ${sectionBg}`} aria-labelledby="faq-main-heading" role="region" tabIndex={0}>
+        <section className="faq-section bg-white dark:bg-gray-900" aria-labelledby="faq-main-heading" role="region" tabIndex={0} style={{ contentVisibility: 'auto' }}>
             <h2 id="faq-main-heading" className="sr-only">Frequently Asked Questions</h2>
             <div className="flex flex-col gap-8 px-4 py-12">
                 <motion.div
@@ -299,7 +297,7 @@ const FaqSection = ({ isVisible }) => {
                                 }}
                                 aria-label="Search FAQs"
                                 autoComplete="off"
-                                spellCheck={true}
+                                spellCheck
                                 className="peer w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 text-sm sm:text-base transition-all duration-200 shadow-sm focus:shadow-lg"
                             />
                             {/* Animated search icon */}

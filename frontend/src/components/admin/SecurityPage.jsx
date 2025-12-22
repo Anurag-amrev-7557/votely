@@ -20,13 +20,16 @@ import {
   ShieldCheck,
   Eye,
   EyeOff,
-  MapPin
+  MapPin,
+  Laptop,
+  Terminal
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import adminAxios from '../../utils/api/adminAxios';
 import { startRegistration } from '@simplewebauthn/browser';
 import { toast } from '../../utils/toastUtils';
 import { useAuth } from '../../context/AuthContext';
+import { formatDistanceToNow } from 'date-fns';
 
 // --- VISUAL UTILITIES ---
 const NoiseTexture = () => (
@@ -123,33 +126,37 @@ const SecurityShieldIllustration = ({ score }) => {
   );
 };
 
+// --- UTILS ---
+
+const getIconForActivity = (type) => {
+  switch (type) {
+    case 'Login': return Key;
+    case 'Profile_Update': return RefreshCw;
+    case 'Account_Deleted': return LogOut;
+    case '2FA_Enabled': return ShieldCheck;
+    case '2FA_Disabled': return AlertTriangle;
+    case 'Password_Changed': return Lock;
+    default: return Activity;
+  }
+};
+
+const getBrowserIcon = (userAgent) => {
+  if (!userAgent) return Globe;
+  const ua = userAgent.toLowerCase();
+  if (ua.includes('chrome')) return Chrome;
+  if (ua.includes('firefox')) return Globe; // Could import Firefox icon if available
+  if (ua.includes('safari')) return Globe;
+  if (ua.includes('edge')) return Globe;
+  return Globe;
+};
+
 // --- DATA ---
-const dummyActivity = [
-  { type: 'login', desc: 'Logged in', time: '2024-06-01 10:23', device: 'Chrome on Mac', ip: '192.168.1.2', location: 'New York, USA', icon: Key },
-  { type: '2fa', desc: 'Enabled 2FA', time: '2024-05-30 09:10', device: 'Chrome on Mac', ip: '192.168.1.2', location: 'New York, USA', icon: ShieldCheck },
-  { type: 'password', desc: 'Changed password', time: '2024-05-20 14:45', device: 'Safari on iPhone', ip: '192.168.1.3', location: 'San Francisco, USA', icon: Lock },
-  { type: 'login', desc: 'Logged in', time: '2024-05-18 08:00', device: 'Firefox on Windows', ip: '192.168.1.4', location: 'London, UK', icon: Key },
-  { type: '2fa', desc: 'Disabled 2FA', time: '2024-05-15 12:30', device: 'Edge on Windows', ip: '192.168.1.5', location: 'Berlin, DE', icon: AlertTriangle },
-  { type: 'password', desc: 'Changed password', time: '2024-05-10 14:45', device: 'Safari on iPhone', ip: '192.168.1.3', location: 'San Francisco, USA', icon: Lock },
-];
-
-const dummySessions = [
-  { id: 1, device: 'Chrome on Mac', browser: 'chrome', os: 'mac', ip: '192.168.1.2', location: 'New York, USA', lastActive: '2 min ago', current: true },
-  { id: 2, device: 'Safari on iPhone', browser: 'safari', os: 'ios', ip: '192.168.1.3', location: 'San Francisco, USA', lastActive: '1 day ago', current: false },
-];
-
-const backupCodes = ['8F3D-2A1B', '9C7E-4B2F', '1A2B-3C4D', '5E6F-7G8H', '2J3K-4L5M'];
 
 const passwordRequirements = [
   { label: 'At least 8 characters', test: pwd => pwd.length >= 8 },
   { label: 'At least one uppercase letter', test: pwd => /[A-Z]/.test(pwd) },
   { label: 'At least one number', test: pwd => /[0-9]/.test(pwd) },
   { label: 'At least one special character', test: pwd => /[^A-Za-z0-9]/.test(pwd) },
-];
-
-const initialTips = [
-  { id: 1, type: 'warning', icon: AlertCircle, text: 'Your password is over 90 days old. Consider changing it.', action: 'Change Password' },
-  { id: 2, type: 'info', icon: CheckCircle, text: 'No unusual login activity detected.', action: null },
 ];
 
 /* Optimized BentoCard with cached bounds to prevent layout thrashing */
@@ -183,7 +190,7 @@ const BentoCard = ({ children, className = '', glowColor = 'blue' }) => {
       onMouseEnter={handleMouseEnter}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className={`group relative overflow-hidden bg-gray-50 dark:bg-zinc-900/50 border border-gray-200 dark:border-zinc-800/50 hover:border-gray-300 dark:hover:border-zinc-700 transition-all duration-500 rounded-3xl p-6 ${className}`}
+      className={`group relative overflow-hidden bg-gray-50 dark:bg-zinc-900/50 border border-gray-200 dark:border-zinc-800/50 hover:border-gray-300 dark:hover:border-zinc-700 transition-all duration-500 rounded-2xl p-6 ${className}`}
     >
       <NoiseTexture />
       <SpotlightEffect mouseX={mouseX} mouseY={mouseY} />
@@ -204,21 +211,51 @@ const SecurityPage = () => {
   const [search, setSearch] = useState('');
   const [password, setPassword] = useState('');
   const [pwdStrength, setPwdStrength] = useState(0);
-  const [is2FAEnabled, setIs2FAEnabled] = useState(true);
+  const [is2FAEnabled, setIs2FAEnabled] = useState(user?.twoFactorEnabled || false);
   const [showBackupCodes, setShowBackupCodes] = useState(false);
   const [activityType, setActivityType] = useState('all');
   const [showPasswordInput, setShowPasswordInput] = useState(false);
   const [showDisable2FAConfirm, setShowDisable2FAConfirm] = useState(false);
   const [activityPage, setActivityPage] = useState(1);
-  const [tips, setTips] = useState(initialTips);
   const [loading, setLoading] = useState(true);
+
+  // Real Data State
+  const [securityData, setSecurityData] = useState({
+    activeSessions: [],
+    recentActivity: []
+  });
 
   const ACTIVITY_PAGE_SIZE = 5;
 
+  // Fetch Real Data
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 800);
-    return () => clearTimeout(timer);
+    const fetchSecurityData = async () => {
+      try {
+        setLoading(true);
+        const { data } = await adminAxios.get('/profile/security-dashboard');
+        if (data.success) {
+          setSecurityData({
+            activeSessions: data.activeSessions,
+            recentActivity: data.recentActivity
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch security dashboard data", error);
+        // Fallback empty or toast error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSecurityData();
   }, []);
+
+  // Update stats on user change
+  useEffect(() => {
+    if (user) {
+      setIs2FAEnabled(user.twoFactorEnabled);
+    }
+  }, [user]);
 
   const checkStrength = (pwd) => {
     let score = 0;
@@ -230,12 +267,12 @@ const SecurityPage = () => {
   };
 
   const pwdReqs = passwordRequirements.map(req => ({ ...req, met: req.test(password) }));
-  const securityScore = (is2FAEnabled ? 50 : 0) + (pwdStrength * 10) + 30;
+  const securityScore = (is2FAEnabled ? 50 : 0) + (pwdStrength * 10) + 30; // Still client-calculated for now based on actions
 
-  const filteredActivity = dummyActivity.filter(a =>
+  const filteredActivity = securityData.recentActivity.filter(a =>
     (activityType === 'all' || a.type === activityType) &&
-    (a.desc.toLowerCase().includes(search.toLowerCase()) ||
-      a.device.toLowerCase().includes(search.toLowerCase()))
+    (a.desc?.toLowerCase().includes(search.toLowerCase()) ||
+      a.device?.toLowerCase().includes(search.toLowerCase()))
   );
 
   const pagedActivity = filteredActivity.slice((activityPage - 1) * ACTIVITY_PAGE_SIZE, activityPage * ACTIVITY_PAGE_SIZE);
@@ -266,10 +303,22 @@ const SecurityPage = () => {
   };
 
 
+  const handleChangePassword = async () => {
+    try {
+      // This assumes the API endpoint exists as per plan
+      // await adminAxios.post('/profile/change-password', { currentPassword: ..., newPassword: password });
+      // For now just emulate success as previously implemented logic in `profileController` covers it but modal needs current password
+      toast.success('Password update simulated (requires current password logic)');
+      setShowPwdModal(false);
+      setPwdStrength(0);
+      setPassword('');
+    } catch (err) {
+      toast.error('Failed to update password');
+    }
+  }
 
   return (
-    <div className="min-h-screen w-full p-6 md:p-8 space-y-8 pb-24 animate-fade-in font-sans">
-      {/* Header */}
+    <div className="min-h-screen w-full py-4 px-3 pr-1 space-y-8 pb-24 animate-fade-in font-sans">
       {/* Header */}
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
@@ -283,10 +332,10 @@ const SecurityPage = () => {
       </header>
 
       {/* Bento Grid Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-[minmax(180px,auto)]">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 auto-rows-[minmax(180px,auto)]">
 
         {/* 1. Security Score Hero (Large) */}
-        <BentoCard className="md:col-span-4 md:row-span-2 flex flex-col items-center justify-center relative bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-zinc-800/50 dark:to-zinc-900/50">
+        <BentoCard className="md:col-span-4 h-[calc(100vh-36rem)] md:row-span-2 flex flex-col items-center justify-center relative bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-zinc-800/50 dark:to-zinc-900/50">
           <div className="absolute top-4 left-4 flex items-center gap-2">
             <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             <span className="text-sm font-bold uppercase tracking-wider text-blue-900 dark:text-blue-200">Safety Score</span>
@@ -313,7 +362,7 @@ const SecurityPage = () => {
         </BentoCard>
 
         {/* 2. Biometric Auth */}
-        <BentoCard className="md:col-span-4 md:row-span-1">
+        <BentoCard className="md:col-span-4 md:row-span-1 h-[calc(100vh-48rem)]">
           <div className="flex justify-between items-start mb-4">
             <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-2xl">
               <Fingerprint className="w-6 h-6 text-purple-600 dark:text-purple-400" />
@@ -337,7 +386,7 @@ const SecurityPage = () => {
         </BentoCard>
 
         {/* 3. 2FA Status */}
-        <BentoCard className="md:col-span-4 md:row-span-1">
+        <BentoCard className="md:col-span-4 md:row-span-1 h-[calc(100vh-48rem)]">
           <div className="flex justify-between items-start mb-4">
             <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-2xl">
               <Smartphone className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
@@ -371,7 +420,7 @@ const SecurityPage = () => {
         </BentoCard>
 
         {/* 4. Password Management */}
-        <BentoCard className="md:col-span-8 md:row-span-1 overflow-visible">
+        <BentoCard className="md:col-span-8 md:row-span-1 overflow-visible h-[calc(100vh-51rem)]">
           <div className="flex items-center gap-4 h-full">
             <div className="hidden md:flex flex-col items-center justify-center w-24 h-24 rounded-full bg-orange-100 dark:bg-orange-900/20 flex-shrink-0 relative overflow-hidden">
               <Key className="w-10 h-10 text-orange-500 dark:text-orange-400 relative z-10" />
@@ -380,9 +429,9 @@ const SecurityPage = () => {
             <div className="flex-1">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white">Password & Authentication</h3>
               <div className="flex items-center gap-2 mt-1 text-sm text-gray-500 dark:text-zinc-400">
-                <span className="flex items-center gap-1"><RefreshCw className="w-3 h-3" /> Updated 24 days ago</span>
+                <span className="flex items-center gap-1"><RefreshCw className="w-3 h-3" /> Updated recently</span>
                 <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-zinc-600" />
-                <span className="text-emerald-600 dark:text-emerald-400 font-medium">Strong</span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-medium">{pwdStrength > 3 ? 'Strong' : 'Medium'}</span>
               </div>
               <div className="flex gap-3 mt-4">
                 <button onClick={() => setShowPwdModal(true)} className="px-5 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-black rounded-xl text-sm font-bold tracking-wide hover:shadow-lg transition-transform hover:-translate-y-0.5 border-none">
@@ -396,54 +445,64 @@ const SecurityPage = () => {
             {/* Visual Password Strength Pattern */}
             <div className="hidden lg:flex gap-1">
               {[1, 2, 3, 4, 5].map(i => (
-                <div key={i} className={`w-2 h-8 rounded-full ${i <= 4 ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-zinc-700'}`} />
+                <div key={i} className={`w-2 h-8 rounded-full ${i <= pwdStrength + 1 ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-zinc-700'}`} />
               ))}
             </div>
           </div>
         </BentoCard>
 
-        {/* 5. Active Sessions (Map placeholder) */}
-        <BentoCard className="md:col-span-6 md:row-span-2">
+        {/* 5. Active Sessions (Real Data) */}
+        <BentoCard className="md:col-span-6 md:row-span-2 h-[calc(100vh-40.5rem)] overflow-y-auto">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white">Active Sessions</h3>
               <span className="px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold">
-                {dummySessions.length} active
+                {securityData.activeSessions.length} active
               </span>
             </div>
+            {/* 
             <button className="text-xs font-semibold text-red-600 hover:text-red-700 flex items-center gap-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded px-2 py-1">
               <LogOut className="w-3 h-3" /> Revoke All
             </button>
+            */}
           </div>
 
           <div className="space-y-3">
-            {dummySessions.map(session => (
-              <button key={session.id} className="w-full text-left group/session flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-zinc-800/80 border border-gray-100 dark:border-zinc-700/50 hover:border-gray-300 dark:hover:border-zinc-600 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                onClick={() => { setSelectedSession(session); setShowRevokeModal(true); }}>
-                <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-zinc-900 flex items-center justify-center text-xl">
-                  {session.browser === 'chrome' ? <Chrome className="w-5 h-5 text-gray-900 dark:text-white" /> : <Globe className="w-5 h-5 text-gray-500" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm truncate">{session.device}</h4>
-                    {session.current && <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded-full">Current</span>}
+            {securityData.activeSessions.length === 0 ? (
+              <div className="text-center py-8 text-gray-500 text-sm">No active sessions detected.</div>
+            ) : (
+              securityData.activeSessions.map((session, idx) => {
+                const BrowserIcon = getBrowserIcon(session.device);
+                return (
+                  <div key={session.id || idx} className="w-full text-left group/session flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-zinc-800/80 border border-gray-100 dark:border-zinc-700/50 hover:border-gray-300 dark:hover:border-zinc-600 transition-all">
+                    <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-zinc-900 flex items-center justify-center text-xl">
+                      <BrowserIcon className="w-5 h-5 text-gray-900 dark:text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold text-gray-900 dark:text-white text-sm truncate" title={session.device}>{session.device || 'Unknown Device'}</h4>
+                        {/* Current session detection would go here if we had session ID */}
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-zinc-400 mt-0.5">
+                        <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {session.location || 'Unknown'}</span>
+                        <span>•</span>
+                        <span>{session.ip || '0.0.0.0'}</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs font-medium text-gray-900 dark:text-white">
+                        {session.lastActive ? formatDistanceToNow(new Date(session.lastActive), { addSuffix: true }) : 'Just now'}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-zinc-400 mt-0.5">
-                    <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {session.location}</span>
-                    <span>•</span>
-                    <span>{session.ip}</span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-xs font-medium text-gray-900 dark:text-white">{session.lastActive}</div>
-                </div>
-              </button>
-            ))}
+                )
+              })
+            )}
           </div>
         </BentoCard>
 
-        {/* 6. Activity Log */}
-        <BentoCard className="md:col-span-6 md:row-span-2 flex flex-col">
+        {/* 6. Activity Log (Real Data) */}
+        <BentoCard className="md:col-span-6 md:row-span-2 flex flex-col h-[calc(100vh-40.5rem)] overflow-y-auto">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white">Recent Activity</h3>
             <div className="flex items-center gap-2">
@@ -451,7 +510,7 @@ const SecurityPage = () => {
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search details..."
+                  placeholder="Search..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   className="w-32 bg-gray-100 dark:bg-zinc-800 border-none rounded-lg py-1.5 pl-8 pr-3 text-xs focus:ring-1 focus:ring-blue-500 transition-all text-gray-900 dark:text-white"
@@ -463,9 +522,8 @@ const SecurityPage = () => {
                 className="bg-gray-100 dark:bg-zinc-800 border-none rounded-lg py-1.5 px-3 text-xs focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white"
               >
                 <option value="all">All</option>
-                <option value="login">Login</option>
-                <option value="2fa">2FA</option>
-                <option value="password">Security</option>
+                <option value="Login">Login</option>
+                <option value="Profile_Update">Profile</option>
               </select>
             </div>
           </div>
@@ -475,25 +533,34 @@ const SecurityPage = () => {
             <div className="absolute left-6 top-0 bottom-0 w-px bg-gray-200 dark:bg-zinc-800" />
 
             <div className="space-y-6 h-full overflow-y-auto pr-2 custom-scrollbar">
-              {pagedActivity.map((item, idx) => {
-                const Icon = item.icon;
-                return (
-                  <div key={idx} className="relative flex items-start gap-4 pl-2 group/item">
-                    <div className="absolute left-6 top-2 w-2 h-2 -ml-1 rounded-full bg-white dark:bg-zinc-900 border-2 border-blue-500 z-10 transition-transform group-hover/item:scale-125" />
-                    <div className="mt-0.5 p-2 rounded-lg bg-gray-50 dark:bg-zinc-800/50 border border-gray-100 dark:border-zinc-700/50 text-gray-600 dark:text-zinc-400 transition-colors group-hover/item:bg-blue-50 dark:group-hover/item:bg-blue-900/10">
-                      <Icon className="w-4 h-4" />
+              {loading ? (
+                <div className="flex flex-col items-center justify-center h-48 space-y-4">
+                  <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                  <p className="text-xs text-gray-500">Loading activity...</p>
+                </div>
+              ) : pagedActivity.length === 0 ? (
+                <div className="text-center py-8 text-gray-500 text-sm">No recent activity found.</div>
+              ) : (
+                pagedActivity.map((item, idx) => {
+                  const Icon = getIconForActivity(item.type);
+                  return (
+                    <div key={idx} className="relative flex items-start gap-4 pl-2 group/item">
+                      <div className="absolute left-6 top-2 w-2 h-2 -ml-1 rounded-full bg-white dark:bg-zinc-900 border-2 border-blue-500 z-10 transition-transform group-hover/item:scale-125" />
+                      <div className="mt-0.5 p-2 rounded-lg bg-gray-50 dark:bg-zinc-800/50 border border-gray-100 dark:border-zinc-700/50 text-gray-600 dark:text-zinc-400 transition-colors group-hover/item:bg-blue-50 dark:group-hover/item:bg-blue-900/10">
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400 transition-colors">{item.desc}</p>
+                        <p className="text-xs text-gray-600 dark:text-zinc-400 mt-0.5 flex items-center gap-2">
+                          <span>{item.time ? formatDistanceToNow(new Date(item.time), { addSuffix: true }) : 'Recently'}</span>
+                          <span className="w-0.5 h-0.5 rounded-full bg-gray-400" />
+                          <span>{item.ip || 'Unknown IP'}</span>
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 dark:text-white group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400 transition-colors">{item.desc}</p>
-                      <p className="text-xs text-gray-600 dark:text-zinc-400 mt-0.5 flex items-center gap-2">
-                        <span>{item.time}</span>
-                        <span className="w-0.5 h-0.5 rounded-full bg-gray-400" />
-                        <span>{item.location}</span>
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </div>
         </BentoCard>
@@ -532,7 +599,7 @@ const SecurityPage = () => {
                 </div>
                 <div className="pt-2 flex gap-3">
                   <button onClick={() => setShowPwdModal(false)} className="flex-1 py-2.5 rounded-xl bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 font-semibold text-sm hover:bg-gray-200 dark:hover:bg-zinc-700 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500">Cancel</button>
-                  <button className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white font-semibold text-sm hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">Update</button>
+                  <button onClick={handleChangePassword} className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white font-semibold text-sm hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">Update</button>
                 </div>
               </div>
             </motion.div>

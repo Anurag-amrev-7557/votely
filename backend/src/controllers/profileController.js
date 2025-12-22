@@ -170,13 +170,13 @@ exports.getProfile = async (req, res) => {
 exports.updateProfile = async (req, res) => {
   try {
     const { name, bio, socialLinks, preferences } = req.body;
-    
+
     const updateData = {};
-    
+
     // Update basic info
     if (name) updateData.name = name;
     if (bio !== undefined) updateData.bio = bio;
-    
+
     // Update social links
     if (socialLinks) {
       updateData.socialLinks = {
@@ -186,7 +186,7 @@ exports.updateProfile = async (req, res) => {
         website: socialLinks.website || ''
       };
     }
-    
+
     // Update preferences
     if (preferences) {
       updateData.preferences = {
@@ -243,7 +243,7 @@ exports.uploadProfilePhoto = async (req, res) => {
     console.log('Request user:', req.user);
     console.log('Request file:', req.file);
     console.log('Request body:', req.body);
-    
+
     if (!req.file) {
       console.log('No file uploaded');
       return res.status(400).json({
@@ -277,7 +277,7 @@ exports.uploadProfilePhoto = async (req, res) => {
     const photoUrl = `/uploads/profile-photos/${req.file.filename}`;
     user.profilePhoto = photoUrl;
     await user.save();
-    
+
     console.log('Updated user profile photo:', photoUrl);
 
     // Create activity record
@@ -297,7 +297,7 @@ exports.uploadProfilePhoto = async (req, res) => {
       profilePhoto: photoUrl,
       profileCompletion
     };
-    
+
     console.log('Sending response:', response);
     res.status(200).json(response);
   } catch (error) {
@@ -428,7 +428,7 @@ exports.updateActivityStats = async (req, res) => {
 exports.getActivityHistory = async (req, res) => {
   try {
     const { page = 1, limit = 10, type, dateRange } = req.query;
-    
+
     const result = await Activity.getUserActivity(req.user.id, {
       page: parseInt(page),
       limit: parseInt(limit),
@@ -443,9 +443,15 @@ exports.getActivityHistory = async (req, res) => {
       desc: activity.description,
       date: activity.timestamp.toISOString().split('T')[0],
       time: activity.timestamp.toTimeString().split(' ')[0].substring(0, 5),
+      fullDate: activity.timestamp,
       category: activity.category,
       impact: activity.impact,
-      pollId: activity.metadata.pollId || null
+      pollId: activity.metadata.pollId || null,
+      // Pass metadata for Security Page (ip, location, device)
+      ip: activity.metadata?.ip || 'Unknown',
+      location: activity.metadata?.location || 'Unknown',
+      device: activity.metadata?.userAgent || 'Unknown Device',
+      iconType: activity.type // To map icons in frontend
     }));
 
     res.status(200).json({
@@ -459,6 +465,62 @@ exports.getActivityHistory = async (req, res) => {
       message: 'Error fetching activity history',
       error: error.message
     });
+  }
+};
+
+// Get Security Dashboard Data (Aggregated)
+exports.getSecurityDashboard = async (req, res) => {
+  try {
+    // 1. Fetch recent activity (Last 50 items to analyze for sessions)
+    const recentActivity = await Activity.find({ user: req.user.id })
+      .sort({ timestamp: -1 })
+      .limit(50)
+      .lean();
+
+    // 2. Derive "Active Sessions" from recent 'Login' events
+    // Since we don't store session tokens in DB, we'll show unique devices logged in recently
+    const sessionsMap = new Map();
+
+    recentActivity.forEach(act => {
+      if (act.type === 'Login') {
+        const device = act.metadata?.userAgent || 'Unknown Device';
+        // Simple parser for user agent to get "Chrome on Mac" style string could be added here or frontend
+        // For now, use the full string or a simplified version
+
+        if (!sessionsMap.has(device)) {
+          sessionsMap.set(device, {
+            id: act._id,
+            device: device, // Client can parse this
+            ip: act.metadata?.ip || 'Unknown',
+            location: act.metadata?.location || 'Unknown',
+            lastActive: act.timestamp,
+            current: false // We'll mark current in frontend if it matches current browser
+          });
+        }
+      }
+    });
+
+    const activeSessions = Array.from(sessionsMap.values());
+
+    // 3. Format Activity Log for Display
+    const securityLog = recentActivity.map(act => ({
+      id: act._id,
+      type: act.type, // Login, 2FA, Password
+      desc: act.description,
+      time: act.timestamp,
+      ip: act.metadata?.ip,
+      location: act.metadata?.location,
+      device: act.metadata?.userAgent
+    }));
+
+    res.json({
+      success: true,
+      activeSessions,
+      recentActivity: securityLog
+    });
+
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching security dashboard data', error: error.message });
   }
 };
 

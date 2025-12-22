@@ -77,7 +77,6 @@ const VotingPage = () => {
 
         setPoll(pollData);
 
-        // Redirects logic
         if (pollData.userVote && !location.search.includes('showResults=1')) {
           toast.success('You have already voted. Showing results.');
           navigate(`/vote/${pollId}?showResults=1`, { replace: true });
@@ -122,24 +121,56 @@ const VotingPage = () => {
   }, [location.search, pollId]);
 
   // Handle Option Selection
-  const handleOptionChange = useCallback((optionText) => {
+  const handleOptionChange = useCallback((option, positionId = null) => {
     if (!poll) return;
+    const isElection = poll.type === 'election';
     const settings = poll.settings || {};
     const allowMultiple = settings.allowMultipleVotes;
     const maxVotes = settings.maxVotesPerVoter || 1;
 
-    if (allowMultiple) {
-      if (selectedOptions.includes(optionText)) {
-        setSelectedOptions(prev => prev.filter(o => o !== optionText));
+    if (isElection) {
+      if (!positionId) return;
+      const candidateId = option._id;
+
+      const position = poll.positions.find(p => p._id === positionId);
+      if (!position) return;
+
+      const positionCandidateIds = position.candidates.map(c => c._id);
+      const currentSelectedForPos = selectedOptions.filter(id => positionCandidateIds.includes(id));
+      const maxVotesPos = position.maxVotes || 1;
+
+      if (selectedOptions.includes(candidateId)) {
+        setSelectedOptions(prev => prev.filter(id => id !== candidateId));
       } else {
-        if (selectedOptions.length < maxVotes) {
-          setSelectedOptions(prev => [...prev, optionText]);
+        if (currentSelectedForPos.length < maxVotesPos) {
+          setSelectedOptions(prev => [...prev, candidateId]);
         } else {
-          toast.error(`Max options reached (${maxVotes})`);
+          if (maxVotesPos === 1) {
+            // Swap selection if single vote
+            setSelectedOptions(prev => [...prev.filter(id => !positionCandidateIds.includes(id)), candidateId]);
+          } else {
+            toast.error(`You can only select ${maxVotesPos} candidate${maxVotesPos > 1 ? 's' : ''} for this position.`);
+          }
         }
       }
+
     } else {
-      setSelectedOptions([optionText]);
+      // Standard Poll Logic
+      const optionText = option.text || option;
+
+      if (allowMultiple) {
+        if (selectedOptions.includes(optionText)) {
+          setSelectedOptions(prev => prev.filter(o => o !== optionText));
+        } else {
+          if (selectedOptions.length < maxVotes) {
+            setSelectedOptions(prev => [...prev, optionText]);
+          } else {
+            toast.error(`Max options reached (${maxVotes})`);
+          }
+        }
+      } else {
+        setSelectedOptions([optionText]);
+      }
     }
   }, [poll, selectedOptions]);
 
@@ -202,9 +233,6 @@ const VotingPage = () => {
   const displayedOptions = useMemo(() => {
     if (!poll || !poll.options) return [];
     if (poll.settings?.randomizeCandidateOrder) {
-      // Need a consistently randomized order for the user session, but for now simple sort
-      // In a real app we'd seed this. 
-      // The original logic re-randomized on render? No, useMemo fixes that.
       return [...poll.options].sort(() => Math.random() - 0.5);
     }
     return poll.options;
@@ -231,7 +259,7 @@ const VotingPage = () => {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black p-4">
-        <div className="max-w-md w-full bg-white dark:bg-zinc-900 p-8 rounded-3xl border border-gray-200 dark:border-zinc-800 text-center shadow-xl">
+        <div className="w-full bg-white dark:bg-zinc-900 p-8 rounded-3xl border border-gray-200 dark:border-zinc-800 text-center shadow-xl">
           <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
             <span className="text-3xl">⚠️</span>
           </div>
@@ -260,7 +288,6 @@ const VotingPage = () => {
 
   // 4. Already Voted (Static View Mode) - If somehow we missed the redirect
   if (poll?.userVote && !showVoteConfirmation) {
-    // Should have redirected, but safe fallback
     return null;
   }
 
@@ -270,7 +297,7 @@ const VotingPage = () => {
 
       {/* Header / Nav (Simple) */}
       <div className="sticky top-0 z-30 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-200 dark:border-white/10">
-        <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="mx-auto px-4 h-16 flex items-center justify-between">
           <button
             onClick={() => setShowExitConfirmation(true)}
             className="flex items-center gap-2 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors"
@@ -318,7 +345,9 @@ const VotingPage = () => {
             )}
             <div className="hidden sm:block w-px h-4 bg-gray-300 dark:bg-zinc-700" />
             <div>
-              {poll?.options?.length} Candidates
+              {poll?.type === 'election'
+                ? (poll.positions?.reduce((acc, pos) => acc + (pos.candidates?.length || 0), 0) || 0)
+                : (poll?.options?.length || 0)} Candidates
             </div>
             <div className="hidden sm:block w-px h-4 bg-gray-300 dark:bg-zinc-700" />
             <div>
@@ -328,24 +357,58 @@ const VotingPage = () => {
         </motion.div>
 
         {/* Detailed Candidate Grid */}
-        <div
-          className="grid grid-cols-2 gap-6 mb-24 mx-auto"
-          role={poll?.settings?.allowMultipleVotes ? 'group' : 'radiogroup'}
-          aria-label="Poll Options"
-        >
-          <AnimatePresence>
-            {displayedOptions.map((option, idx) => (
-              <CandidateDetailView
-                key={option.id || idx}
-                index={idx}
-                option={option}
-                isSelected={selectedOptions.includes(option.text)}
-                onSelect={handleOptionChange}
-                disabled={isSubmitting || !user}
-              />
+        {poll?.type === 'election' ? (
+          <div className="space-y-16 mb-24 mx-auto">
+            {poll.positions.map(pos => (
+              <div key={pos._id} className="animate-fade-in-up">
+                <div className="mb-6 border-b border-gray-200 dark:border-zinc-800 pb-4">
+                  <h3 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white flex items-center gap-3">
+                    <span className="w-2 h-8 bg-blue-500 rounded-full"></span>
+                    {pos.title}
+                  </h3>
+                  <div className="flex justify-between items-end">
+                    <p className="text-gray-500 dark:text-gray-400 text-lg">{pos.description}</p>
+                    <span className="text-xs font-bold uppercase tracking-wider bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-300 px-3 py-1 rounded-full">
+                      Vote for {pos.maxVotes}
+                    </span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6" role="group">
+                  {pos.candidates.map((cand, idx) => (
+                    <CandidateDetailView
+                      key={cand._id || idx}
+                      index={idx}
+                      option={{ ...cand, text: cand.name || cand.text }} // Map name to text explicitly
+                      isSelected={selectedOptions.includes(cand._id)}
+                      onSelect={(opt) => handleOptionChange(cand, pos._id)} // Pass original cand object (with _id)
+                      disabled={isSubmitting || !user}
+                    />
+                  ))}
+                </div>
+              </div>
             ))}
-          </AnimatePresence>
-        </div>
+          </div>
+        ) : (
+          <div
+            className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-24 mx-auto"
+            role={poll?.settings?.allowMultipleVotes ? 'group' : 'radiogroup'}
+            aria-label="Poll Options"
+          >
+            <AnimatePresence>
+              {displayedOptions.map((option, idx) => (
+                <CandidateDetailView
+                  key={option.id || idx}
+                  index={idx}
+                  option={option}
+                  isSelected={selectedOptions.includes(option.text)}
+                  onSelect={handleOptionChange}
+                  disabled={isSubmitting || !user}
+                />
+              ))}
+            </AnimatePresence>
+          </div>
+        )
+        }
 
         {/* Floating Action Bar */}
         <motion.div
@@ -354,7 +417,7 @@ const VotingPage = () => {
           transition={{ delay: 0.5 }}
           className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 dark:bg-black/90 backdrop-blur-lg border-t border-gray-200 dark:border-zinc-800 z-40"
         >
-          <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-sm font-medium text-gray-500 dark:text-gray-400">
               {selectedOptions.length === 0
                 ? "Your vote is ready to be cast."
@@ -385,10 +448,10 @@ const VotingPage = () => {
           </div>
         </motion.div>
 
-      </div>
+      </div >
 
       {/* Confirmation Modal */}
-      <AnimatePresence>
+      < AnimatePresence >
         {showVoteConfirmation && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div
@@ -398,7 +461,7 @@ const VotingPage = () => {
             />
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="relative w-full max-w-lg bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl overflow-hidden"
+              className="relative w-full bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl overflow-hidden"
             >
               <EnhancedVoteConfirmation
                 poll={poll}
@@ -410,10 +473,10 @@ const VotingPage = () => {
             </motion.div>
           </div>
         )}
-      </AnimatePresence>
+      </AnimatePresence >
 
       {/* Exit Confirmation Modal */}
-      <AnimatePresence>
+      < AnimatePresence >
         {showExitConfirmation && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div
@@ -423,7 +486,7 @@ const VotingPage = () => {
             />
             <motion.div
               initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-2xl border border-gray-200 dark:border-zinc-800 text-center"
+              className="relative w-full bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-2xl border border-gray-200 dark:border-zinc-800 text-center"
             >
               <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto mb-4">
                 <ArrowLeft className="w-8 h-8" />
@@ -451,8 +514,8 @@ const VotingPage = () => {
             </motion.div>
           </div>
         )}
-      </AnimatePresence>
-    </div>
+      </AnimatePresence >
+    </div >
   );
 };
 

@@ -142,6 +142,8 @@ const PollsPage = () => {
     title: '',
     description: '',
     category: '',
+    type: 'poll', // 'poll' or 'election'
+    positions: [], // For elections
     startDate: '',
     endDate: '',
     resultDate: '',
@@ -172,6 +174,7 @@ const PollsPage = () => {
   });
 
   // Candidate editing state
+  const [activePositionIndex, setActivePositionIndex] = useState(null);
   const [editingCandidateId, setEditingCandidateId] = useState(null);
 
   // Collapsible sections state for candidate form
@@ -273,6 +276,8 @@ const PollsPage = () => {
       title: '',
       description: '',
       category: '',
+      type: 'poll',
+      positions: [],
       startDate: '',
       endDate: '',
       resultDate: '',
@@ -293,6 +298,9 @@ const PollsPage = () => {
 
   const handleEditPoll = (poll) => {
     const normalizedPoll = { ...poll, id: poll._id || poll.id };
+
+
+
     setSelectedPoll(normalizedPoll);
     setIsEditing(true);
     setCurrentStep(0);
@@ -313,6 +321,16 @@ const PollsPage = () => {
     };
 
     setPollForm({
+      type: poll.type || 'poll',
+      positions: poll.type === 'election' ? (poll.positions || []).map(pos => ({
+        ...pos,
+        id: pos._id || Math.random().toString(), // Ensure ID for UI key
+        candidates: (pos.candidates || []).map((c, i) => ({
+          ...c,
+          id: c._id || `${pos._id}_${i}`,
+          name: c.text // Map text to name for UI
+        }))
+      })) : [],
       title: poll.title || '',
       description: poll.description || '',
       category: poll.category || '',
@@ -320,7 +338,7 @@ const PollsPage = () => {
       endDate: formatDateForInput(poll.endDate),
       resultDate: formatDateForInput(poll.resultDate),
       totalVotes: poll.totalVotes || 0,
-      candidates: candidates,
+      candidates: poll.type === 'election' ? [] : candidates,
       settings: {
         allowMultipleVotes: poll.settings?.allowMultipleVotes || false,
         showResultsBeforeEnd: poll.settings?.showResultsBeforeEnd || false,
@@ -593,6 +611,36 @@ const PollsPage = () => {
     setPollForm(prev => ({ ...prev, [name]: value }));
   };
 
+  const updatePosition = (index, field, value) => {
+    setPollForm(prev => {
+      const newPositions = [...prev.positions];
+      newPositions[index] = { ...newPositions[index], [field]: value };
+      return { ...prev, positions: newPositions };
+    });
+  };
+
+  const addPosition = () => {
+    setPollForm(prev => ({
+      ...prev,
+      positions: [
+        ...prev.positions,
+        {
+          title: '',
+          description: '',
+          maxVotes: 1,
+          candidates: []
+        }
+      ]
+    }));
+  };
+
+  const removePosition = (index) => {
+    setPollForm(prev => ({
+      ...prev,
+      positions: prev.positions.filter((_, i) => i !== index)
+    }));
+  };
+
   const handleSettingsChange = (setting) => {
     setPollForm(prev => ({
       ...prev,
@@ -678,25 +726,49 @@ const PollsPage = () => {
       return;
     }
 
-    if (editingCandidateId !== null) {
-      // Update existing candidate
-      setPollForm(prev => ({
-        ...prev,
-        candidates: prev.candidates.map(c =>
-          c.id === editingCandidateId ? { ...candidateForm, id: editingCandidateId } : c
-        )
-      }));
-      toast.success('Candidate updated');
+    const newCandidate = { ...candidateForm, id: editingCandidateId || Date.now() };
+
+    if (pollForm.type === 'election') {
+      if (activePositionIndex === null) {
+        toast.error('Please select a position to add the candidate to.');
+        return;
+      }
+      setPollForm(prev => {
+        const newPositions = [...prev.positions];
+        const position = { ...newPositions[activePositionIndex] };
+
+        if (editingCandidateId) {
+          position.candidates = position.candidates.map(c => c.id === editingCandidateId ? newCandidate : c);
+        } else {
+          position.candidates = [...position.candidates, newCandidate];
+        }
+        newPositions[activePositionIndex] = position;
+        return { ...prev, positions: newPositions };
+      });
+      toast.success(editingCandidateId ? 'Candidate updated' : 'Candidate added to position');
     } else {
-      // Add new candidate
-      const newCandidate = { ...candidateForm, id: Date.now() };
-      setPollForm(prev => ({ ...prev, candidates: [...prev.candidates, newCandidate] }));
-      toast.success('Candidate added');
+      if (editingCandidateId !== null) {
+        // Update existing candidate
+        setPollForm(prev => ({
+          ...prev,
+          candidates: prev.candidates.map(c =>
+            c.id === editingCandidateId ? { ...candidateForm, id: editingCandidateId } : c
+          )
+        }));
+        toast.success('Candidate updated');
+      } else {
+        // Add new candidate
+        setPollForm(prev => ({ ...prev, candidates: [...prev.candidates, newCandidate] }));
+        toast.success('Candidate added');
+      }
     }
     resetCandidateForm();
   };
 
-  const editCandidate = (candidate) => {
+  const editCandidate = (candidate, positionIndex = null) => {
+    if (positionIndex !== null) {
+      setActivePositionIndex(positionIndex);
+    }
     setCandidateForm({
       name: candidate.name || '',
       party: candidate.party || '',
@@ -714,8 +786,18 @@ const PollsPage = () => {
     document.getElementById('candidate-form-section')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const removeCandidate = (id) => {
-    setPollForm(prev => ({ ...prev, candidates: prev.candidates.filter(c => c.id !== id) }));
+  const removeCandidate = (id, positionIndex = null) => {
+    if (positionIndex !== null) {
+      setPollForm(prev => {
+        const newPositions = [...prev.positions];
+        const position = { ...newPositions[positionIndex] };
+        position.candidates = position.candidates.filter(c => c.id !== id);
+        newPositions[positionIndex] = position;
+        return { ...prev, positions: newPositions };
+      });
+    } else {
+      setPollForm(prev => ({ ...prev, candidates: prev.candidates.filter(c => c.id !== id) }));
+    }
     // If we were editing this candidate, reset form
     if (editingCandidateId === id) {
       resetCandidateForm();
@@ -752,10 +834,21 @@ const PollsPage = () => {
     if (!pollForm.title || pollForm.title.trim().length < 3) { toast.error('Title is required (min 3 chars)'); return; }
     if (!pollForm.startDate || !pollForm.endDate) { toast.error('Start and End dates are required'); return; }
     if (new Date(pollForm.endDate) <= new Date(pollForm.startDate)) { toast.error('End date must be after start date'); return; }
-    if (pollForm.candidates.length < 2) { toast.error('At least 2 candidates are required'); return; }
     if (!pollForm.category) { toast.error('Category is required'); return; }
 
-    const options = pollForm.candidates.map(c => ({
+    // Type Validation
+    // Type Validation
+    if (pollForm.type === 'election') {
+      if (!pollForm.positions || pollForm.positions.length < 1) { toast.error('Election Mode: At least 1 position is required'); return; }
+      for (const pos of pollForm.positions) {
+        if (!pos.title) { toast.error('All positions must have a title'); return; }
+        if (pos.candidates.length < 2) { toast.error(`Position "${pos.title}" needs at least 2 candidates`); return; }
+      }
+    } else {
+      if (pollForm.candidates.length < 2) { toast.error(`Standard Poll: At least 2 candidates are required (Currently: ${pollForm.candidates.length})`); return; }
+    }
+
+    const mapCandidates = (candidates) => candidates.map(c => ({
       text: c.name,
       description: c.description,
       party: c.party,
@@ -768,8 +861,18 @@ const PollsPage = () => {
       links: c.links
     }));
 
-    const payload = { ...pollForm, options };
-    delete payload.candidates;
+    const payload = { ...pollForm };
+
+    if (pollForm.type === 'election') {
+      payload.positions = pollForm.positions.map(pos => ({
+        ...pos,
+        candidates: mapCandidates(pos.candidates)
+      }));
+      delete payload.candidates;
+    } else {
+      payload.options = mapCandidates(pollForm.candidates);
+      delete payload.candidates;
+    }
 
     // Strict sanitation for new polls
     if (!isEditing) {
@@ -783,6 +886,8 @@ const PollsPage = () => {
     }
 
     try {
+      console.log('Submitting poll payload:', payload); // Debug logging
+
       if (isEditing && selectedPoll) {
         const updatePayload = { ...payload, version: selectedPoll.__v };
         await adminAxios.put(`/polls/${selectedPoll.id}`, updatePayload);
@@ -797,9 +902,10 @@ const PollsPage = () => {
       setShowModal(false);
     } catch (error) {
       console.error('Error saving poll:', error);
-      const errorMsg = error.response?.data?.error ||
-        (error.response?.data?.errors ? error.response.data.errors.map(e => e.msg).join(', ') : 'Failed to save poll');
-      toast.error(errorMsg);
+      const errorData = error.response?.data;
+      const errorMsg = errorData?.error || errorData?.details ||
+        (errorData?.errors ? errorData.errors.map(e => e.msg).join(', ') : 'Failed to save poll');
+      toast.error(`Server Error: ${errorMsg}`);
     }
   };
 
@@ -812,7 +918,7 @@ const PollsPage = () => {
   const hasMore = paginatedPolls.length < filteredPolls.length;
 
   return (
-    <div className="w-full min-h-screen p-6 md:p-8 pr-0 md:pr-0 space-y-8 animate-fade-in pb-24">
+    <div className="w-full min-h-screen py-4 px-3 pr-1  space-y-8 animate-fade-in pb-24">
       {/* Header Section - Matches AdminDashboard */}
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-4" role="banner">
         <div>
@@ -1078,6 +1184,26 @@ const PollsPage = () => {
                             ]}
                           />
                         </div>
+
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Poll Type</label>
+                          <div className="flex p-1 bg-gray-100 dark:bg-zinc-900 rounded-xl">
+                            <button
+                              type="button"
+                              onClick={() => setPollForm({ ...pollForm, type: 'poll' })}
+                              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${pollForm.type === 'poll' ? 'bg-white dark:bg-zinc-800 shadow-sm text-gray-900 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
+                            >
+                              Standard Poll
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setPollForm({ ...pollForm, type: 'election' })}
+                              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${pollForm.type === 'election' ? 'bg-white dark:bg-zinc-800 shadow-sm text-gray-900 dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
+                            >
+                              Election
+                            </button>
+                          </div>
+                        </div>
                       </div>
                       <div>
                         <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1.5">Description</label>
@@ -1133,368 +1259,440 @@ const PollsPage = () => {
                       )}
                     </div>
 
-                    {/* Add/Edit Candidate Form */}
-                    <div id="candidate-form-section" className="bg-gray-50 dark:bg-zinc-900 p-6 rounded-2xl border border-gray-200 dark:border-zinc-800 space-y-4">
-                      {/* Basic Info - Always Visible */}
+                    {/* Election Position Manager */}
+                    {pollForm.type === 'election' && (
                       <div className="space-y-4">
-                        <div className="flex items-start gap-4">
-                          {/* Photo Drop Zone */}
-                          <div className="shrink-0">
-                            <div
-                              onDrop={handlePhotoDrop}
-                              onDragOver={handlePhotoDragOver}
-                              onDragLeave={handlePhotoDragLeave}
-                              className={`relative w-28 h-36 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center overflow-hidden cursor-pointer transition-all ${isDraggingPhoto
-                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                : candidateForm.image
-                                  ? 'border-transparent'
-                                  : 'border-gray-300 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800 hover:border-gray-400 dark:hover:border-zinc-600'
-                                }`}
-                              onClick={() => document.getElementById('photo-file-input')?.click()}
-                            >
-                              {candidateForm.image ? (
-                                <>
-                                  <img src={candidateForm.image} alt="Preview" className="w-full h-full object-cover" />
-                                  <button
-                                    type="button"
-                                    onClick={(e) => { e.stopPropagation(); clearPhoto(); }}
-                                    className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 hover:opacity-100 transition-opacity"
-                                  >
-                                    <XCircle className="w-3 h-3" />
-                                  </button>
-                                </>
-                              ) : (
-                                <>
-                                  <Image className={`w-6 h-6 ${isDraggingPhoto ? 'text-blue-500' : 'text-gray-400'}`} />
-                                  <span className={`text-[10px] mt-1 ${isDraggingPhoto ? 'text-blue-500' : 'text-gray-400'}`}>
-                                    {isDraggingPhoto ? 'Drop here' : 'Drop or click'}
-                                  </span>
-                                </>
-                              )}
-                            </div>
-                            <input
-                              id="photo-file-input"
-                              type="file"
-                              accept="image/*"
-                              onChange={handlePhotoFileChange}
-                              className="hidden"
-                            />
-                          </div>
-                          <div className="flex-1 space-y-2">
-                            <input
-                              name="name"
-                              value={candidateForm.name}
-                              onChange={handleCandidateFormChange}
-                              placeholder="Candidate Name *"
-                              className="w-full px-4 py-3 rounded-xl bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 focus:ring-1 focus:ring-gray-900 dark:focus:ring-white outline-none transition-all dark:text-white text-sm"
-                            />
-                            <input
-                              name="party"
-                              value={candidateForm.party}
-                              onChange={handleCandidateFormChange}
-                              placeholder="Party / Affiliation"
-                              className="w-full px-4 py-3 rounded-xl bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 focus:ring-1 focus:ring-gray-900 dark:focus:ring-white outline-none transition-all dark:text-white text-sm"
-                            />
-                            <input
-                              name="image"
-                              type="text"
-                              value={typeof candidateForm.image === 'string' && !candidateForm.image.startsWith('data:') ? candidateForm.image : ''}
-                              onChange={handleCandidateFormChange}
-                              placeholder="Or paste image URL..."
-                              className="w-full px-4 py-2 rounded-lg bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 focus:ring-1 focus:ring-gray-900 dark:focus:ring-white outline-none transition-all dark:text-white text-xs"
-                            />
-                          </div>
-                        </div>
-                        <textarea
-                          name="description"
-                          value={candidateForm.description}
-                          onChange={handleCandidateFormChange}
-                          placeholder="Short bio / tagline"
-                          rows={2}
-                          className="w-full px-4 py-3 rounded-xl bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 focus:ring-1 focus:ring-gray-900 dark:focus:ring-white outline-none transition-all dark:text-white resize-none text-sm"
-                        />
-                      </div>
-
-                      {/* Section: Public Profile (Collapsible) */}
-                      <div className="border-t border-gray-200 dark:border-zinc-800 pt-4">
-                        <button
-                          type="button"
-                          onClick={() => toggleSection('profile')}
-                          className="flex items-center justify-between w-full text-left group"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Quote className="w-4 h-4 text-gray-400" />
-                            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Public Profile</span>
-                          </div>
-                          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${expandedSections.profile ? 'rotate-180' : ''}`} />
-                        </button>
-                        <AnimatePresence>
-                          {expandedSections.profile && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: 'auto', opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.2 }}
-                              className="overflow-hidden"
-                            >
-                              <div className="space-y-3 pt-4">
+                        {pollForm.positions.map((pos, pIdx) => (
+                          <div key={pIdx} className={`bg-gray-50 dark:bg-zinc-900 rounded-xl p-4 border transition-all ${activePositionIndex === pIdx ? 'border-blue-500 ring-1 ring-blue-500' : 'border-gray-200 dark:border-zinc-800'}`}>
+                            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 mb-3">
+                              <div className="md:col-span-6">
                                 <input
-                                  name="motto"
-                                  value={candidateForm.motto}
-                                  onChange={handleCandidateFormChange}
-                                  placeholder="Motto / Slogan"
-                                  className="w-full px-4 py-3 rounded-xl bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 focus:ring-1 focus:ring-gray-900 dark:focus:ring-white outline-none transition-all dark:text-white text-sm"
-                                />
-                                <textarea
-                                  name="sop"
-                                  value={candidateForm.sop}
-                                  onChange={handleCandidateFormChange}
-                                  placeholder="Statement of Purpose / Manifesto..."
-                                  rows={4}
-                                  className="w-full px-4 py-3 rounded-xl bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 focus:ring-1 focus:ring-gray-900 dark:focus:ring-white outline-none transition-all dark:text-white resize-none text-sm"
+                                  placeholder="Position Title (e.g. President)"
+                                  value={pos.title}
+                                  onChange={e => updatePosition(pIdx, 'title', e.target.value)}
+                                  className="w-full px-3 py-2 rounded-lg bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 focus:ring-1 focus:ring-gray-900 dark:focus:ring-white outline-none transition-all dark:text-white text-sm"
                                 />
                               </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-
-                      {/* Section: Links & Socials (Collapsible) */}
-                      <div className="border-t border-gray-200 dark:border-zinc-800 pt-4">
-                        <button
-                          type="button"
-                          onClick={() => toggleSection('socials')}
-                          className="flex items-center justify-between w-full text-left group"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Globe className="w-4 h-4 text-gray-400" />
-                            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Links & Socials</span>
+                              <div className="md:col-span-4">
+                                <input
+                                  placeholder="Description (Optional)"
+                                  value={pos.description}
+                                  onChange={e => updatePosition(pIdx, 'description', e.target.value)}
+                                  className="w-full px-3 py-2 rounded-lg bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 focus:ring-1 focus:ring-gray-900 dark:focus:ring-white outline-none transition-all dark:text-white text-sm"
+                                />
+                              </div>
+                              <div className="md:col-span-2">
+                                <input
+                                  type="number"
+                                  placeholder="Max Votes"
+                                  min="1"
+                                  value={pos.maxVotes}
+                                  onChange={e => updatePosition(pIdx, 'maxVotes', parseInt(e.target.value))}
+                                  className="w-full px-3 py-2 rounded-lg bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 focus:ring-1 focus:ring-gray-900 dark:focus:ring-white outline-none transition-all dark:text-white text-sm"
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-2 pl-2 border-l-2 border-gray-200 dark:border-zinc-800">
+                              <p className="text-xs font-bold text-gray-500 uppercase">Candidates</p>
+                              {pos.candidates.map(c => (
+                                <div key={c.id} className="flex items-center gap-2 bg-white dark:bg-zinc-800 p-2 rounded-lg border border-gray-100 dark:border-zinc-700">
+                                  <div className="w-6 h-6 rounded-full bg-gray-100 dark:bg-zinc-700 flex items-center justify-center font-bold text-xs dark:text-white">{c.name[0]}</div>
+                                  <span className="text-sm font-medium flex-1 dark:text-white">{c.name}</span>
+                                  <button onClick={() => editCandidate(c, pIdx)} className="text-xs text-blue-500 hover:text-blue-600">Edit</button>
+                                  <button onClick={() => removeCandidate(c.id, pIdx)} className="text-xs text-red-500 hover:text-red-600">Remove</button>
+                                </div>
+                              ))}
+                              <button
+                                onClick={() => { setActivePositionIndex(pIdx); resetCandidateForm(); document.getElementById('candidate-form-section')?.scrollIntoView({ behavior: 'smooth' }); }}
+                                className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                              >
+                                <Plus className="w-3 h-3" /> Add Candidate
+                              </button>
+                            </div>
+                            <div className="mt-3 flex justify-end">
+                              <button onClick={() => removePosition(pIdx)} className="text-xs text-red-500 hover:text-red-700">Delete Position</button>
+                            </div>
                           </div>
-                          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${expandedSections.socials ? 'rotate-180' : ''}`} />
+                        ))}
+                        <button onClick={addPosition} className="w-full py-3 bg-white dark:bg-zinc-900 border-2 border-dashed border-gray-300 dark:border-zinc-700 rounded-xl text-gray-500 font-medium hover:border-gray-400 dark:hover:border-zinc-600 transition-colors">
+                          + Add Position
                         </button>
-                        <AnimatePresence>
-                          {expandedSections.socials && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: 'auto', opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.2 }}
-                              className="overflow-hidden"
-                            >
-                              <div className="space-y-3 pt-4">
-                                <div className="flex items-center gap-2">
-                                  <Globe className="w-4 h-4 text-gray-400 shrink-0" />
-                                  <input
-                                    name="website"
-                                    value={candidateForm.website}
-                                    onChange={handleCandidateFormChange}
-                                    placeholder="Website URL"
-                                    className="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 focus:ring-1 focus:ring-gray-900 dark:focus:ring-white outline-none transition-all dark:text-white text-sm"
-                                  />
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                  <div className="flex items-center gap-2">
-                                    <Twitter className="w-4 h-4 text-gray-400 shrink-0" />
-                                    <input
-                                      name="socialMedia.twitter"
-                                      value={candidateForm.socialMedia.twitter}
-                                      onChange={handleCandidateFormChange}
-                                      placeholder="@twitter"
-                                      className="w-full px-3 py-2.5 rounded-lg bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 focus:ring-1 focus:ring-gray-900 dark:focus:ring-white outline-none transition-all dark:text-white text-sm"
-                                    />
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <Instagram className="w-4 h-4 text-gray-400 shrink-0" />
-                                    <input
-                                      name="socialMedia.instagram"
-                                      value={candidateForm.socialMedia.instagram}
-                                      onChange={handleCandidateFormChange}
-                                      placeholder="@instagram"
-                                      className="w-full px-3 py-2.5 rounded-lg bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 focus:ring-1 focus:ring-gray-900 dark:focus:ring-white outline-none transition-all dark:text-white text-sm"
-                                    />
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <Facebook className="w-4 h-4 text-gray-400 shrink-0" />
-                                    <input
-                                      name="socialMedia.facebook"
-                                      value={candidateForm.socialMedia.facebook}
-                                      onChange={handleCandidateFormChange}
-                                      placeholder="facebook.com/..."
-                                      className="w-full px-3 py-2.5 rounded-lg bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 focus:ring-1 focus:ring-gray-900 dark:focus:ring-white outline-none transition-all dark:text-white text-sm"
-                                    />
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <Linkedin className="w-4 h-4 text-gray-400 shrink-0" />
-                                    <input
-                                      name="socialMedia.linkedin"
-                                      value={candidateForm.socialMedia.linkedin}
-                                      onChange={handleCandidateFormChange}
-                                      placeholder="linkedin.com/in/..."
-                                      className="w-full px-3 py-2.5 rounded-lg bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 focus:ring-1 focus:ring-gray-900 dark:focus:ring-white outline-none transition-all dark:text-white text-sm"
-                                    />
-                                  </div>
-                                </div>
+                      </div>
+                    )}
 
-                                {/* Custom Links */}
-                                <div className="pt-2">
-                                  <p className="text-xs font-semibold text-gray-500 mb-2">Custom Links</p>
-                                  <div className="space-y-2">
-                                    {candidateForm.links.map((link, index) => (
-                                      <div key={index} className="flex items-center gap-2">
-                                        <input
-                                          value={link.label}
-                                          onChange={(e) => handleLinkChange(index, 'label', e.target.value)}
-                                          placeholder="Label"
-                                          className="w-1/3 px-3 py-2 rounded-lg bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-sm dark:text-white outline-none"
-                                        />
-                                        <input
-                                          value={link.url}
-                                          onChange={(e) => handleLinkChange(index, 'url', e.target.value)}
-                                          placeholder="URL"
-                                          className="flex-1 px-3 py-2 rounded-lg bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-sm dark:text-white outline-none"
-                                        />
-                                        {candidateForm.links.length > 1 && (
-                                          <button type="button" onClick={() => removeLinkRow(index)} className="p-1.5 text-gray-400 hover:text-red-500">
-                                            <XCircle className="w-4 h-4" />
-                                          </button>
-                                        )}
-                                      </div>
-                                    ))}
+                    {/* Add/Edit Candidate Form */}
+                    {(pollForm.type !== 'election' || activePositionIndex !== null) && (
+                      <div id="candidate-form-section" className="bg-gray-50 dark:bg-zinc-900 p-6 rounded-2xl border border-gray-200 dark:border-zinc-800 space-y-4">
+                        {pollForm.type === 'election' && (
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
+                              Adding to: {pollForm.positions[activePositionIndex]?.title || 'Unknown Position'}
+                            </span>
+                            <button onClick={() => setActivePositionIndex(null)} className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 underline">Close Form</button>
+                          </div>
+                        )}
+                        {/* Basic Info - Always Visible */}
+                        <div className="space-y-4">
+                          <div className="flex items-start gap-4">
+                            {/* Photo Drop Zone */}
+                            <div className="shrink-0">
+                              <div
+                                onDrop={handlePhotoDrop}
+                                onDragOver={handlePhotoDragOver}
+                                onDragLeave={handlePhotoDragLeave}
+                                className={`relative w-28 h-36 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center overflow-hidden cursor-pointer transition-all ${isDraggingPhoto
+                                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                  : candidateForm.image
+                                    ? 'border-transparent'
+                                    : 'border-gray-300 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800 hover:border-gray-400 dark:hover:border-zinc-600'
+                                  }`}
+                                onClick={() => document.getElementById('photo-file-input')?.click()}
+                              >
+                                {candidateForm.image ? (
+                                  <>
+                                    <img src={candidateForm.image} alt="Preview" className="w-full h-full object-cover" />
                                     <button
                                       type="button"
-                                      onClick={addLinkRow}
-                                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                                      onClick={(e) => { e.stopPropagation(); clearPhoto(); }}
+                                      className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 hover:opacity-100 transition-opacity"
                                     >
-                                      <Plus className="w-3 h-3" /> Add Link
+                                      <XCircle className="w-3 h-3" />
                                     </button>
-                                  </div>
-                                </div>
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-
-                      {/* Section: Media Gallery (Collapsible) */}
-                      <div className="border-t border-gray-200 dark:border-zinc-800 pt-4">
-                        <button
-                          type="button"
-                          onClick={() => toggleSection('media')}
-                          className="flex items-center justify-between w-full text-left group"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Image className="w-4 h-4 text-gray-400" />
-                            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Additional Photos</span>
-                          </div>
-                          <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${expandedSections.media ? 'rotate-180' : ''}`} />
-                        </button>
-                        <AnimatePresence>
-                          {expandedSections.media && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: 'auto', opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.2 }}
-                              className="overflow-hidden"
-                            >
-                              <div className="pt-4 space-y-3">
-                                <div className="flex gap-2">
-                                  <input
-                                    id="additional-photo-input"
-                                    type="text"
-                                    placeholder="Add photo URL..."
-                                    className="flex-1 px-4 py-2.5 rounded-lg bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-sm dark:text-white outline-none"
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                        addAdditionalPhoto(e.target.value);
-                                        e.target.value = '';
-                                      }
-                                    }}
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const input = document.getElementById('additional-photo-input');
-                                      addAdditionalPhoto(input.value);
-                                      input.value = '';
-                                    }}
-                                    className="px-4 py-2 bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-300 dark:hover:bg-zinc-600"
-                                  >
-                                    Add
-                                  </button>
-                                </div>
-                                {candidateForm.additionalPhotos.length > 0 && (
-                                  <div className="flex flex-wrap gap-2">
-                                    {candidateForm.additionalPhotos.map((url, index) => (
-                                      <div key={index} className="relative group">
-                                        <img src={url} alt={`Additional ${index + 1}`} className="w-16 h-16 rounded-lg object-cover border border-gray-200 dark:border-zinc-700" />
-                                        <button
-                                          type="button"
-                                          onClick={() => removeAdditionalPhoto(index)}
-                                          className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                                        >
-                                          <XCircle className="w-3.5 h-3.5" />
-                                        </button>
-                                      </div>
-                                    ))}
-                                  </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Image className={`w-6 h-6 ${isDraggingPhoto ? 'text-blue-500' : 'text-gray-400'}`} />
+                                    <span className={`text-[10px] mt-1 ${isDraggingPhoto ? 'text-blue-500' : 'text-gray-400'}`}>
+                                      {isDraggingPhoto ? 'Drop here' : 'Drop or click'}
+                                    </span>
+                                  </>
                                 )}
                               </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-
-                      {/* Add/Update Button */}
-                      <button
-                        type="button"
-                        onClick={addCandidate}
-                        className={`w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${editingCandidateId
-                          ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                          : 'bg-gray-900 dark:bg-white text-white dark:text-black hover:opacity-90'
-                          }`}
-                      >
-                        {editingCandidateId ? (
-                          <>
-                            <CheckCircle className="w-4 h-4" /> Update Candidate
-                          </>
-                        ) : (
-                          <>
-                            <Plus className="w-4 h-4" /> Add Candidate
-                          </>
-                        )}
-                      </button>
-                    </div>
-
-                    {/* Added Candidates - Sortable List */}
-                    <div className="space-y-3">
-                      <h4 className="text-sm font-bold uppercase tracking-wider text-gray-500">
-                        Added Candidates ({pollForm.candidates.length})
-                      </h4>
-                      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                        <SortableContext items={pollForm.candidates.map(c => c.id)} strategy={verticalListSortingStrategy}>
-                          <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
-                            {pollForm.candidates.map((candidate, index) => (
-                              <SortableCandidateItem
-                                key={candidate.id}
-                                candidate={candidate}
-                                index={index}
-                                onEdit={editCandidate}
-                                onRemove={removeCandidate}
-                                isEditing={editingCandidateId === candidate.id}
+                              <input
+                                id="photo-file-input"
+                                type="file"
+                                accept="image/*"
+                                onChange={handlePhotoFileChange}
+                                className="hidden"
                               />
-                            ))}
+                            </div>
+                            <div className="flex-1 space-y-2">
+                              <input
+                                name="name"
+                                value={candidateForm.name}
+                                onChange={handleCandidateFormChange}
+                                placeholder="Candidate Name *"
+                                className="w-full px-4 py-3 rounded-xl bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 focus:ring-1 focus:ring-gray-900 dark:focus:ring-white outline-none transition-all dark:text-white text-sm"
+                              />
+                              <input
+                                name="party"
+                                value={candidateForm.party}
+                                onChange={handleCandidateFormChange}
+                                placeholder="Party / Affiliation"
+                                className="w-full px-4 py-3 rounded-xl bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 focus:ring-1 focus:ring-gray-900 dark:focus:ring-white outline-none transition-all dark:text-white text-sm"
+                              />
+                              <input
+                                name="image"
+                                type="text"
+                                value={typeof candidateForm.image === 'string' && !candidateForm.image.startsWith('data:') ? candidateForm.image : ''}
+                                onChange={handleCandidateFormChange}
+                                placeholder="Or paste image URL..."
+                                className="w-full px-4 py-2 rounded-lg bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 focus:ring-1 focus:ring-gray-900 dark:focus:ring-white outline-none transition-all dark:text-white text-xs"
+                              />
+                            </div>
                           </div>
-                        </SortableContext>
-                      </DndContext>
-                      {pollForm.candidates.length === 0 && (
-                        <div className="text-center py-8 border-2 border-dashed border-gray-200 dark:border-zinc-800 rounded-2xl">
-                          <Users className="w-8 h-8 text-gray-300 dark:text-zinc-700 mx-auto mb-2" />
-                          <p className="text-sm text-gray-500">No candidates added yet. Add at least 2.</p>
+                          <textarea
+                            name="description"
+                            value={candidateForm.description}
+                            onChange={handleCandidateFormChange}
+                            placeholder="Short bio / tagline"
+                            rows={2}
+                            className="w-full px-4 py-3 rounded-xl bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 focus:ring-1 focus:ring-gray-900 dark:focus:ring-white outline-none transition-all dark:text-white resize-none text-sm"
+                          />
                         </div>
-                      )}
-                    </div>
+
+                        {/* Section: Public Profile (Collapsible) */}
+                        <div className="border-t border-gray-200 dark:border-zinc-800 pt-4">
+                          <button
+                            type="button"
+                            onClick={() => toggleSection('profile')}
+                            className="flex items-center justify-between w-full text-left group"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Quote className="w-4 h-4 text-gray-400" />
+                              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Public Profile</span>
+                            </div>
+                            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${expandedSections.profile ? 'rotate-180' : ''}`} />
+                          </button>
+                          <AnimatePresence>
+                            {expandedSections.profile && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="overflow-hidden"
+                              >
+                                <div className="space-y-3 pt-4">
+                                  <input
+                                    name="motto"
+                                    value={candidateForm.motto}
+                                    onChange={handleCandidateFormChange}
+                                    placeholder="Motto / Slogan"
+                                    className="w-full px-4 py-3 rounded-xl bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 focus:ring-1 focus:ring-gray-900 dark:focus:ring-white outline-none transition-all dark:text-white text-sm"
+                                  />
+                                  <textarea
+                                    name="sop"
+                                    value={candidateForm.sop}
+                                    onChange={handleCandidateFormChange}
+                                    placeholder="Statement of Purpose / Manifesto..."
+                                    rows={4}
+                                    className="w-full px-4 py-3 rounded-xl bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 focus:ring-1 focus:ring-gray-900 dark:focus:ring-white outline-none transition-all dark:text-white resize-none text-sm"
+                                  />
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+
+                        {/* Section: Links & Socials (Collapsible) */}
+                        <div className="border-t border-gray-200 dark:border-zinc-800 pt-4">
+                          <button
+                            type="button"
+                            onClick={() => toggleSection('socials')}
+                            className="flex items-center justify-between w-full text-left group"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Globe className="w-4 h-4 text-gray-400" />
+                              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Links & Socials</span>
+                            </div>
+                            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${expandedSections.socials ? 'rotate-180' : ''}`} />
+                          </button>
+                          <AnimatePresence>
+                            {expandedSections.socials && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="overflow-hidden"
+                              >
+                                <div className="space-y-3 pt-4">
+                                  <div className="flex items-center gap-2">
+                                    <Globe className="w-4 h-4 text-gray-400 shrink-0" />
+                                    <input
+                                      name="website"
+                                      value={candidateForm.website}
+                                      onChange={handleCandidateFormChange}
+                                      placeholder="Website URL"
+                                      className="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 focus:ring-1 focus:ring-gray-900 dark:focus:ring-white outline-none transition-all dark:text-white text-sm"
+                                    />
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-3">
+                                    <div className="flex items-center gap-2">
+                                      <Twitter className="w-4 h-4 text-gray-400 shrink-0" />
+                                      <input
+                                        name="socialMedia.twitter"
+                                        value={candidateForm.socialMedia.twitter}
+                                        onChange={handleCandidateFormChange}
+                                        placeholder="@twitter"
+                                        className="w-full px-3 py-2.5 rounded-lg bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 focus:ring-1 focus:ring-gray-900 dark:focus:ring-white outline-none transition-all dark:text-white text-sm"
+                                      />
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Instagram className="w-4 h-4 text-gray-400 shrink-0" />
+                                      <input
+                                        name="socialMedia.instagram"
+                                        value={candidateForm.socialMedia.instagram}
+                                        onChange={handleCandidateFormChange}
+                                        placeholder="@instagram"
+                                        className="w-full px-3 py-2.5 rounded-lg bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 focus:ring-1 focus:ring-gray-900 dark:focus:ring-white outline-none transition-all dark:text-white text-sm"
+                                      />
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Facebook className="w-4 h-4 text-gray-400 shrink-0" />
+                                      <input
+                                        name="socialMedia.facebook"
+                                        value={candidateForm.socialMedia.facebook}
+                                        onChange={handleCandidateFormChange}
+                                        placeholder="facebook.com/..."
+                                        className="w-full px-3 py-2.5 rounded-lg bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 focus:ring-1 focus:ring-gray-900 dark:focus:ring-white outline-none transition-all dark:text-white text-sm"
+                                      />
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Linkedin className="w-4 h-4 text-gray-400 shrink-0" />
+                                      <input
+                                        name="socialMedia.linkedin"
+                                        value={candidateForm.socialMedia.linkedin}
+                                        onChange={handleCandidateFormChange}
+                                        placeholder="linkedin.com/in/..."
+                                        className="w-full px-3 py-2.5 rounded-lg bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 focus:ring-1 focus:ring-gray-900 dark:focus:ring-white outline-none transition-all dark:text-white text-sm"
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* Custom Links */}
+                                  <div className="pt-2">
+                                    <p className="text-xs font-semibold text-gray-500 mb-2">Custom Links</p>
+                                    <div className="space-y-2">
+                                      {candidateForm.links.map((link, index) => (
+                                        <div key={index} className="flex items-center gap-2">
+                                          <input
+                                            value={link.label}
+                                            onChange={(e) => handleLinkChange(index, 'label', e.target.value)}
+                                            placeholder="Label"
+                                            className="w-1/3 px-3 py-2 rounded-lg bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-sm dark:text-white outline-none"
+                                          />
+                                          <input
+                                            value={link.url}
+                                            onChange={(e) => handleLinkChange(index, 'url', e.target.value)}
+                                            placeholder="URL"
+                                            className="flex-1 px-3 py-2 rounded-lg bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-sm dark:text-white outline-none"
+                                          />
+                                          {candidateForm.links.length > 1 && (
+                                            <button type="button" onClick={() => removeLinkRow(index)} className="p-1.5 text-gray-400 hover:text-red-500">
+                                              <XCircle className="w-4 h-4" />
+                                            </button>
+                                          )}
+                                        </div>
+                                      ))}
+                                      <button
+                                        type="button"
+                                        onClick={addLinkRow}
+                                        className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                                      >
+                                        <Plus className="w-3 h-3" /> Add Link
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+
+                        {/* Section: Media Gallery (Collapsible) */}
+                        <div className="border-t border-gray-200 dark:border-zinc-800 pt-4">
+                          <button
+                            type="button"
+                            onClick={() => toggleSection('media')}
+                            className="flex items-center justify-between w-full text-left group"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Image className="w-4 h-4 text-gray-400" />
+                              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Additional Photos</span>
+                            </div>
+                            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${expandedSections.media ? 'rotate-180' : ''}`} />
+                          </button>
+                          <AnimatePresence>
+                            {expandedSections.media && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="overflow-hidden"
+                              >
+                                <div className="pt-4 space-y-3">
+                                  <div className="flex gap-2">
+                                    <input
+                                      id="additional-photo-input"
+                                      type="text"
+                                      placeholder="Add photo URL..."
+                                      className="flex-1 px-4 py-2.5 rounded-lg bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-sm dark:text-white outline-none"
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                          e.preventDefault();
+                                          addAdditionalPhoto(e.target.value);
+                                          e.target.value = '';
+                                        }
+                                      }}
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const input = document.getElementById('additional-photo-input');
+                                        addAdditionalPhoto(input.value);
+                                        input.value = '';
+                                      }}
+                                      className="px-4 py-2 bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-300 dark:hover:bg-zinc-600"
+                                    >
+                                      Add
+                                    </button>
+                                  </div>
+                                  {candidateForm.additionalPhotos.length > 0 && (
+                                    <div className="flex flex-wrap gap-2">
+                                      {candidateForm.additionalPhotos.map((url, index) => (
+                                        <div key={index} className="relative group">
+                                          <img src={url} alt={`Additional ${index + 1}`} className="w-16 h-16 rounded-lg object-cover border border-gray-200 dark:border-zinc-700" />
+                                          <button
+                                            type="button"
+                                            onClick={() => removeAdditionalPhoto(index)}
+                                            className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                          >
+                                            <XCircle className="w-3.5 h-3.5" />
+                                          </button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+
+                        {/* Add/Update Button */}
+                        <button
+                          type="button"
+                          onClick={addCandidate}
+                          className={`w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${editingCandidateId
+                            ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                            : 'bg-gray-900 dark:bg-white text-white dark:text-black hover:opacity-90'
+                            }`}
+                        >
+                          {editingCandidateId ? (
+                            <>
+                              <CheckCircle className="w-4 h-4" /> Update Candidate
+                            </>
+                          ) : (
+                            <>
+                              <Plus className="w-4 h-4" /> Add Candidate
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
+
+                    {pollForm.type !== 'election' && (
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-bold uppercase tracking-wider text-gray-500">
+                          Added Candidates ({pollForm.candidates.length})
+                        </h4>
+                        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                          <SortableContext items={pollForm.candidates.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                            <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
+                              {pollForm.candidates.map((candidate, index) => (
+                                <SortableCandidateItem
+                                  key={candidate.id}
+                                  candidate={candidate}
+                                  index={index}
+                                  onEdit={editCandidate}
+                                  onRemove={removeCandidate}
+                                  isEditing={editingCandidateId === candidate.id}
+                                />
+                              ))}
+                            </div>
+                          </SortableContext>
+                        </DndContext>
+                        {pollForm.candidates.length === 0 && (
+                          <div className="text-center py-8 border-2 border-dashed border-gray-200 dark:border-zinc-800 rounded-2xl">
+                            <Users className="w-8 h-8 text-gray-300 dark:text-zinc-700 mx-auto mb-2" />
+                            <p className="text-sm text-gray-500">No candidates added yet. Add at least 2.</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1540,6 +1738,8 @@ const PollsPage = () => {
                         )
                       })}
                     </div>
+
+
                   </div>
                 )}
 
@@ -1629,7 +1829,14 @@ const PollsPage = () => {
                         if (new Date(pollForm.endDate) <= new Date(pollForm.startDate)) { toast.error('End date must be after start date'); return; }
                       }
                       if (currentStep === 1) {
-                        if (pollForm.candidates.length < 2) { toast.error('At least 2 candidates are required'); return; }
+                        if (pollForm.type === 'election') {
+                          if (!pollForm.positions || pollForm.positions.length < 1) { toast.error('Election Mode: At least 1 position is required'); return; }
+                          for (const pos of pollForm.positions) {
+                            if (pos.candidates.length < 2) { toast.error(`Position "${pos.title}" needs at least 2 candidates`); return; }
+                          }
+                        } else {
+                          if (pollForm.candidates.length < 2) { toast.error('Standard Poll: At least 2 candidates are required'); return; }
+                        }
                       }
                       setCurrentStep(c => c + 1);
                     }}
@@ -1650,10 +1857,10 @@ const PollsPage = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div >
 
         {/* Right Column: Visualization */}
-        <div className="hidden lg:block lg:w-1/2 h-full relative bg-gray-50 dark:bg-[#111] overflow-hidden border-l border-gray-100 dark:border-zinc-800">
+        < div className="hidden lg:block lg:w-1/2 h-full relative bg-gray-50 dark:bg-[#111] overflow-hidden border-l border-gray-100 dark:border-zinc-800" >
           <div className="absolute top-4 right-4 z-50">
             <button onClick={() => setShowModal(false)} className="p-3 bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-gray-900 dark:text-white rounded-full transition-colors backdrop-blur-md">
               <XCircle className="w-6 h-6" />
@@ -1692,17 +1899,17 @@ const PollsPage = () => {
               </p>
             </div>
           </div>
-        </div>
-      </AnimatedModal>
+        </div >
+      </AnimatedModal >
 
       {/* Enhanced Audit Modal */}
-      <AnimatedModal
+      < AnimatedModal
         isOpen={showAuditModal}
         onClose={() => setShowAuditModal(false)}
         className="w-[95vw] h-[95vh] overflow-hidden rounded-3xl bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-zinc-800 outline-none shadow-2xl flex flex-col"
       >
         {/* Header */}
-        <div className="shrink-0 p-6 border-b border-gray-100 dark:border-zinc-800 bg-gradient-to-r from-gray-50 to-white dark:from-zinc-900 dark:to-[#0a0a0a]">
+        < div className="shrink-0 p-6 border-b border-gray-100 dark:border-zinc-800 bg-gradient-to-r from-gray-50 to-white dark:from-zinc-900 dark:to-[#0a0a0a]" >
           <div className="flex items-start justify-between mb-4">
             <div>
               <div className="flex items-center gap-3 mb-1">
@@ -1728,59 +1935,61 @@ const PollsPage = () => {
           </div>
 
           {/* Stats Cards */}
-          {!auditLoading && auditLogs.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-              <div className="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800">
-                <div className="flex items-center gap-2 text-gray-500 dark:text-zinc-400 mb-1">
-                  <Activity className="w-3.5 h-3.5" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider">Total Events</span>
+          {
+            !auditLoading && auditLogs.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <div className="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800">
+                  <div className="flex items-center gap-2 text-gray-500 dark:text-zinc-400 mb-1">
+                    <Activity className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Total Events</span>
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white font-mono">
+                    {auditLogs.length}
+                  </p>
                 </div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white font-mono">
-                  {auditLogs.length}
-                </p>
-              </div>
-              <div className="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800">
-                <div className="flex items-center gap-2 text-gray-500 dark:text-zinc-400 mb-1">
-                  <Users className="w-3.5 h-3.5" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider">Unique Users</span>
+                <div className="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800">
+                  <div className="flex items-center gap-2 text-gray-500 dark:text-zinc-400 mb-1">
+                    <Users className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Unique Users</span>
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white font-mono">
+                    {new Set(auditLogs.map(l => l.user?._id || l.user?.email).filter(Boolean)).size}
+                  </p>
                 </div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white font-mono">
-                  {new Set(auditLogs.map(l => l.user?._id || l.user?.email).filter(Boolean)).size}
-                </p>
-              </div>
-              <div className="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800">
-                <div className="flex items-center gap-2 text-green-600 dark:text-green-400 mb-1">
-                  <CheckCircle className="w-3.5 h-3.5" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider">Votes Cast</span>
+                <div className="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800">
+                  <div className="flex items-center gap-2 text-green-600 dark:text-green-400 mb-1">
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Votes Cast</span>
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white font-mono">
+                    {auditLogs.filter(l => l.type === 'Voted').length}
+                  </p>
                 </div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white font-mono">
-                  {auditLogs.filter(l => l.type === 'Voted').length}
-                </p>
-              </div>
-              <div className="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800">
-                <div className="flex items-center gap-2 text-red-500 dark:text-red-400 mb-1">
-                  <AlertCircle className="w-3.5 h-3.5" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider">High Impact</span>
+                <div className="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800">
+                  <div className="flex items-center gap-2 text-red-500 dark:text-red-400 mb-1">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">High Impact</span>
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white font-mono">
+                    {auditLogs.filter(l => l.impact === 'high').length}
+                  </p>
                 </div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white font-mono">
-                  {auditLogs.filter(l => l.impact === 'high').length}
-                </p>
-              </div>
-              <div className="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800">
-                <div className="flex items-center gap-2 text-gray-500 dark:text-zinc-400 mb-1">
-                  <Clock className="w-3.5 h-3.5" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider">Last Activity</span>
+                <div className="p-3 rounded-xl bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800">
+                  <div className="flex items-center gap-2 text-gray-500 dark:text-zinc-400 mb-1">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Last Activity</span>
+                  </div>
+                  <p className="text-lg font-bold text-gray-900 dark:text-white">
+                    {auditLogs[0] ? formatRelativeTime(auditLogs[0].timestamp) : 'N/A'}
+                  </p>
                 </div>
-                <p className="text-lg font-bold text-gray-900 dark:text-white">
-                  {auditLogs[0] ? formatRelativeTime(auditLogs[0].timestamp) : 'N/A'}
-                </p>
               </div>
-            </div>
-          )}
-        </div>
+            )
+          }
+        </div >
 
         {/* Toolbar */}
-        <div className="shrink-0 p-4 border-b border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/50">
+        < div className="shrink-0 p-4 border-b border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/50" >
           <div className="flex flex-wrap items-center gap-3">
             {/* Search */}
             <div className="relative flex-1 min-w-[250px]">
@@ -1852,267 +2061,270 @@ const PollsPage = () => {
           </div>
 
           {/* Filter Summary */}
-          {(auditSearch || auditTypeFilter !== 'all' || auditDateFilter !== 'all') && (
-            <div className="flex items-center gap-2 mt-3 text-xs text-gray-500 dark:text-zinc-400">
-              <span>Filters:</span>
-              {auditSearch && (
-                <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full">
-                  Search: "{auditSearch}"
-                </span>
-              )}
-              {auditTypeFilter !== 'all' && (
-                <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-full">
-                  Type: {auditTypeFilter}
-                </span>
-              )}
-              {auditDateFilter !== 'all' && (
-                <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
-                  Date: {auditDateFilter}
-                </span>
-              )}
-              <button
-                onClick={() => { setAuditSearch(''); setAuditTypeFilter('all'); setAuditDateFilter('all'); setAuditPage(1); }}
-                className="ml-auto text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-              >
-                Clear all
-              </button>
-            </div>
-          )}
-        </div>
+          {
+            (auditSearch || auditTypeFilter !== 'all' || auditDateFilter !== 'all') && (
+              <div className="flex items-center gap-2 mt-3 text-xs text-gray-500 dark:text-zinc-400">
+                <span>Filters:</span>
+                {auditSearch && (
+                  <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full">
+                    Search: "{auditSearch}"
+                  </span>
+                )}
+                {auditTypeFilter !== 'all' && (
+                  <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-full">
+                    Type: {auditTypeFilter}
+                  </span>
+                )}
+                {auditDateFilter !== 'all' && (
+                  <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
+                    Date: {auditDateFilter}
+                  </span>
+                )}
+                <button
+                  onClick={() => { setAuditSearch(''); setAuditTypeFilter('all'); setAuditDateFilter('all'); setAuditPage(1); }}
+                  className="ml-auto text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  Clear all
+                </button>
+              </div>
+            )
+          }
+        </div >
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-          {auditLoading ? (
-            <div className="flex flex-col items-center justify-center py-16">
-              <div className="relative">
-                <div className="animate-spin rounded-full h-12 w-12 border-2 border-gray-200 dark:border-zinc-700"></div>
-                <div className="absolute top-0 left-0 animate-spin rounded-full h-12 w-12 border-t-2 border-blue-500"></div>
+        < div className="flex-1 overflow-y-auto p-4 custom-scrollbar" >
+          {
+            auditLoading ? (
+              <div className="flex flex-col items-center justify-center py-16" >
+                <div className="relative">
+                  <div className="animate-spin rounded-full h-12 w-12 border-2 border-gray-200 dark:border-zinc-700"></div>
+                  <div className="absolute top-0 left-0 animate-spin rounded-full h-12 w-12 border-t-2 border-blue-500"></div>
+                </div>
+                <p className="text-sm text-gray-500 dark:text-zinc-400 mt-4">Loading audit trail...</p>
               </div>
-              <p className="text-sm text-gray-500 dark:text-zinc-400 mt-4">Loading audit trail...</p>
-            </div>
-          ) : (() => {
-            const filtered = getFilteredAuditLogs();
-            const totalPages = Math.ceil(filtered.length / AUDIT_PAGE_SIZE);
-            const paginatedLogs = filtered.slice((auditPage - 1) * AUDIT_PAGE_SIZE, auditPage * AUDIT_PAGE_SIZE);
+            ) : (() => {
+              const filtered = getFilteredAuditLogs();
+              const totalPages = Math.ceil(filtered.length / AUDIT_PAGE_SIZE);
+              const paginatedLogs = filtered.slice((auditPage - 1) * AUDIT_PAGE_SIZE, auditPage * AUDIT_PAGE_SIZE);
 
-            if (filtered.length === 0) {
-              return (
-                <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <div className="p-4 rounded-2xl bg-gray-100 dark:bg-zinc-800 mb-4">
-                    <ShieldCheck className="w-10 h-10 text-gray-400 dark:text-zinc-500" />
-                  </div>
-                  <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                    {auditLogs.length === 0 ? 'No Activity Yet' : 'No Matching Results'}
-                  </h4>
-                  <p className="text-sm text-gray-500 dark:text-zinc-400 max-w-xs">
-                    {auditLogs.length === 0
-                      ? 'This poll has no recorded audit events.'
-                      : 'Try adjusting your search or filters.'}
-                  </p>
-                </div>
-              );
-            }
-
-            return (
-              <>
-                {/* Table */}
-                <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-zinc-800">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="bg-gray-50 dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800">
-                        <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 w-10"></th>
-                        <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">User</th>
-                        <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">Type</th>
-                        <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">Action</th>
-                        <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">Impact</th>
-                        <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">Timestamp</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-zinc-800">
-                      {paginatedLogs.map((log, index) => {
-                        const logId = log._id || index;
-                        const isExpanded = auditExpandedIds.has(logId);
-
-                        return (
-                          <React.Fragment key={logId}>
-                            <motion.tr
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ duration: 0.2, delay: index * 0.02 }}
-                              onClick={() => toggleAuditExpanded(logId)}
-                              className={`cursor-pointer transition-colors ${isExpanded
-                                ? 'bg-blue-50/50 dark:bg-blue-900/10'
-                                : 'bg-white dark:bg-[#0a0a0a] hover:bg-gray-50 dark:hover:bg-zinc-900'
-                                }`}
-                            >
-                              {/* Expand Icon */}
-                              <td className="px-4 py-3">
-                                <div className="text-gray-400">
-                                  {isExpanded ? (
-                                    <ChevronUp className="w-4 h-4" />
-                                  ) : (
-                                    <ChevronDown className="w-4 h-4" />
-                                  )}
-                                </div>
-                              </td>
-
-                              {/* User */}
-                              <td className="px-4 py-3">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-[10px] font-bold text-white uppercase shrink-0">
-                                    {(log.user?.name || log.user?.email || 'U').charAt(0)}
-                                  </div>
-                                  <div className="min-w-0">
-                                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                      {log.user?.name || 'Unknown'}
-                                    </p>
-                                    <p className="text-[10px] text-gray-500 dark:text-zinc-500 truncate font-mono">
-                                      {log.user?.email || '—'}
-                                    </p>
-                                  </div>
-                                </div>
-                              </td>
-
-                              {/* Type */}
-                              <td className="px-4 py-3">
-                                <div className="flex items-center gap-2">
-                                  <div className={`shrink-0 w-7 h-7 rounded-lg flex items-center justify-center ${log.type === 'Voted' ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' :
-                                    log.type === 'Created' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' :
-                                      log.type === 'Commented' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400' :
-                                        log.type === 'Shared' ? 'bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400' :
-                                          'bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-400'
-                                    }`}>
-                                    {getAuditTypeIcon(log.type)}
-                                  </div>
-                                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    {log.type || '—'}
-                                  </span>
-                                </div>
-                              </td>
-
-                              {/* Action */}
-                              <td className="px-4 py-3">
-                                <p className="text-sm text-gray-800 dark:text-gray-200">
-                                  {log.action || log.type || '—'}
-                                </p>
-                                {log.option && (
-                                  <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
-                                    → {log.option}
-                                  </p>
-                                )}
-                              </td>
-
-                              {/* Impact */}
-                              <td className="px-4 py-3">
-                                <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${getImpactColor(log.impact)}`}>
-                                  {log.impact || 'medium'}
-                                </span>
-                              </td>
-
-                              {/* Timestamp */}
-                              <td className="px-4 py-3">
-                                <p className="text-sm text-gray-700 dark:text-gray-300">
-                                  {formatRelativeTime(log.timestamp)}
-                                </p>
-                                <p className="text-[10px] text-gray-400 dark:text-zinc-500 font-mono">
-                                  {new Date(log.timestamp).toLocaleString()}
-                                </p>
-                              </td>
-                            </motion.tr>
-
-                            {/* Expanded Details Row */}
-                            <AnimatePresence>
-                              {isExpanded && (
-                                <motion.tr
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}
-                                  exit={{ opacity: 0 }}
-                                  transition={{ duration: 0.15 }}
-                                >
-                                  <td colSpan={6} className="px-4 py-0 bg-gray-50/50 dark:bg-zinc-900/50">
-                                    <motion.div
-                                      initial={{ height: 0 }}
-                                      animate={{ height: 'auto' }}
-                                      exit={{ height: 0 }}
-                                      transition={{ duration: 0.2 }}
-                                      className="overflow-hidden"
-                                    >
-                                      <div className="py-4 px-2 grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        {log.description && (
-                                          <div className="col-span-2 md:col-span-4">
-                                            <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">Description</label>
-                                            <p className="text-sm text-gray-800 dark:text-gray-200 mt-1">{log.description}</p>
-                                          </div>
-                                        )}
-                                        {log.category && (
-                                          <div>
-                                            <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">Category</label>
-                                            <p className="text-sm text-gray-800 dark:text-gray-200 mt-1">{log.category}</p>
-                                          </div>
-                                        )}
-                                        {log.metadata?.pollTitle && (
-                                          <div>
-                                            <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">Poll</label>
-                                            <p className="text-sm text-gray-800 dark:text-gray-200 mt-1">{log.metadata.pollTitle}</p>
-                                          </div>
-                                        )}
-                                        {log.meta && Object.keys(log.meta).length > 0 && (
-                                          <div className="col-span-2 md:col-span-4">
-                                            <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">Metadata</label>
-                                            <pre className="text-xs text-gray-600 dark:text-gray-400 mt-1 bg-white dark:bg-zinc-800 p-2 rounded-lg overflow-x-auto font-mono border border-gray-100 dark:border-zinc-700">
-                                              {JSON.stringify(log.meta, null, 2)}
-                                            </pre>
-                                          </div>
-                                        )}
-                                        {!log.description && !log.category && !log.metadata?.pollTitle && (!log.meta || Object.keys(log.meta).length === 0) && (
-                                          <p className="text-sm text-gray-400 dark:text-zinc-500 col-span-2 md:col-span-4">No additional details available.</p>
-                                        )}
-                                      </div>
-                                    </motion.div>
-                                  </td>
-                                </motion.tr>
-                              )}
-                            </AnimatePresence>
-                          </React.Fragment>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 dark:border-zinc-800">
-                    <p className="text-sm text-gray-500 dark:text-zinc-400">
-                      Showing {((auditPage - 1) * AUDIT_PAGE_SIZE) + 1} – {Math.min(auditPage * AUDIT_PAGE_SIZE, filtered.length)} of {filtered.length} events
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setAuditPage(p => Math.max(1, p - 1))}
-                        disabled={auditPage === 1}
-                        className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        Previous
-                      </button>
-                      <span className="px-3 py-1.5 text-sm font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-zinc-700 rounded-lg">
-                        {auditPage} / {totalPages}
-                      </span>
-                      <button
-                        onClick={() => setAuditPage(p => Math.min(totalPages, p + 1))}
-                        disabled={auditPage === totalPages}
-                        className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        Next
-                      </button>
+              if (filtered.length === 0) {
+                return (
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="p-4 rounded-2xl bg-gray-100 dark:bg-zinc-800 mb-4">
+                      <ShieldCheck className="w-10 h-10 text-gray-400 dark:text-zinc-500" />
                     </div>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                      {auditLogs.length === 0 ? 'No Activity Yet' : 'No Matching Results'}
+                    </h4>
+                    <p className="text-sm text-gray-500 dark:text-zinc-400 max-w-xs">
+                      {auditLogs.length === 0
+                        ? 'This poll has no recorded audit events.'
+                        : 'Try adjusting your search or filters.'}
+                    </p>
                   </div>
-                )}
-              </>
-            );
-          })()}
-        </div>
-      </AnimatedModal>
-    </div>
+                );
+              }
+
+              return (
+                <>
+                  {/* Table */}
+                  <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-zinc-800">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="bg-gray-50 dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800">
+                          <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 w-10"></th>
+                          <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">User</th>
+                          <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">Type</th>
+                          <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">Action</th>
+                          <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">Impact</th>
+                          <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">Timestamp</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 dark:divide-zinc-800">
+                        {paginatedLogs.map((log, index) => {
+                          const logId = log._id || index;
+                          const isExpanded = auditExpandedIds.has(logId);
+
+                          return (
+                            <React.Fragment key={logId}>
+                              <motion.tr
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.2, delay: index * 0.02 }}
+                                onClick={() => toggleAuditExpanded(logId)}
+                                className={`cursor-pointer transition-colors ${isExpanded
+                                  ? 'bg-blue-50/50 dark:bg-blue-900/10'
+                                  : 'bg-white dark:bg-[#0a0a0a] hover:bg-gray-50 dark:hover:bg-zinc-900'
+                                  }`}
+                              >
+                                {/* Expand Icon */}
+                                <td className="px-4 py-3">
+                                  <div className="text-gray-400">
+                                    {isExpanded ? (
+                                      <ChevronUp className="w-4 h-4" />
+                                    ) : (
+                                      <ChevronDown className="w-4 h-4" />
+                                    )}
+                                  </div>
+                                </td>
+
+                                {/* User */}
+                                <td className="px-4 py-3">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-[10px] font-bold text-white uppercase shrink-0">
+                                      {(log.user?.name || log.user?.email || 'U').charAt(0)}
+                                    </div>
+                                    <div className="min-w-0">
+                                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                        {log.user?.name || 'Unknown'}
+                                      </p>
+                                      <p className="text-[10px] text-gray-500 dark:text-zinc-500 truncate font-mono">
+                                        {log.user?.email || '—'}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </td>
+
+                                {/* Type */}
+                                <td className="px-4 py-3">
+                                  <div className="flex items-center gap-2">
+                                    <div className={`shrink-0 w-7 h-7 rounded-lg flex items-center justify-center ${log.type === 'Voted' ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' :
+                                      log.type === 'Created' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' :
+                                        log.type === 'Commented' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400' :
+                                          log.type === 'Shared' ? 'bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400' :
+                                            'bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-400'
+                                      }`}>
+                                      {getAuditTypeIcon(log.type)}
+                                    </div>
+                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                      {log.type || '—'}
+                                    </span>
+                                  </div>
+                                </td>
+
+                                {/* Action */}
+                                <td className="px-4 py-3">
+                                  <p className="text-sm text-gray-800 dark:text-gray-200">
+                                    {log.action || log.type || '—'}
+                                  </p>
+                                  {log.option && (
+                                    <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5">
+                                      → {log.option}
+                                    </p>
+                                  )}
+                                </td>
+
+                                {/* Impact */}
+                                <td className="px-4 py-3">
+                                  <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${getImpactColor(log.impact)}`}>
+                                    {log.impact || 'medium'}
+                                  </span>
+                                </td>
+
+                                {/* Timestamp */}
+                                <td className="px-4 py-3">
+                                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                                    {formatRelativeTime(log.timestamp)}
+                                  </p>
+                                  <p className="text-[10px] text-gray-400 dark:text-zinc-500 font-mono">
+                                    {new Date(log.timestamp).toLocaleString()}
+                                  </p>
+                                </td>
+                              </motion.tr>
+
+                              {/* Expanded Details Row */}
+                              <AnimatePresence>
+                                {isExpanded && (
+                                  <motion.tr
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.15 }}
+                                  >
+                                    <td colSpan={6} className="px-4 py-0 bg-gray-50/50 dark:bg-zinc-900/50">
+                                      <motion.div
+                                        initial={{ height: 0 }}
+                                        animate={{ height: 'auto' }}
+                                        exit={{ height: 0 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="overflow-hidden"
+                                      >
+                                        <div className="py-4 px-2 grid grid-cols-2 md:grid-cols-4 gap-4">
+                                          {log.description && (
+                                            <div className="col-span-2 md:col-span-4">
+                                              <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">Description</label>
+                                              <p className="text-sm text-gray-800 dark:text-gray-200 mt-1">{log.description}</p>
+                                            </div>
+                                          )}
+                                          {log.category && (
+                                            <div>
+                                              <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">Category</label>
+                                              <p className="text-sm text-gray-800 dark:text-gray-200 mt-1">{log.category}</p>
+                                            </div>
+                                          )}
+                                          {log.metadata?.pollTitle && (
+                                            <div>
+                                              <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">Poll</label>
+                                              <p className="text-sm text-gray-800 dark:text-gray-200 mt-1">{log.metadata.pollTitle}</p>
+                                            </div>
+                                          )}
+                                          {log.meta && Object.keys(log.meta).length > 0 && (
+                                            <div className="col-span-2 md:col-span-4">
+                                              <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">Metadata</label>
+                                              <pre className="text-xs text-gray-600 dark:text-gray-400 mt-1 bg-white dark:bg-zinc-800 p-2 rounded-lg overflow-x-auto font-mono border border-gray-100 dark:border-zinc-700">
+                                                {JSON.stringify(log.meta, null, 2)}
+                                              </pre>
+                                            </div>
+                                          )}
+                                          {!log.description && !log.category && !log.metadata?.pollTitle && (!log.meta || Object.keys(log.meta).length === 0) && (
+                                            <p className="text-sm text-gray-400 dark:text-zinc-500 col-span-2 md:col-span-4">No additional details available.</p>
+                                          )}
+                                        </div>
+                                      </motion.div>
+                                    </td>
+                                  </motion.tr>
+                                )}
+                              </AnimatePresence>
+                            </React.Fragment>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 dark:border-zinc-800">
+                      <p className="text-sm text-gray-500 dark:text-zinc-400">
+                        Showing {((auditPage - 1) * AUDIT_PAGE_SIZE) + 1} – {Math.min(auditPage * AUDIT_PAGE_SIZE, filtered.length)} of {filtered.length} events
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setAuditPage(p => Math.max(1, p - 1))}
+                          disabled={auditPage === 1}
+                          className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          Previous
+                        </button>
+                        <span className="px-3 py-1.5 text-sm font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-zinc-700 rounded-lg">
+                          {auditPage} / {totalPages}
+                        </span>
+                        <button
+                          onClick={() => setAuditPage(p => Math.min(totalPages, p + 1))}
+                          disabled={auditPage === totalPages}
+                          className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+        </div >
+      </AnimatedModal >
+    </div >
   );
 };
 

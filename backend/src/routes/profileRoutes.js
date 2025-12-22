@@ -17,7 +17,8 @@ const {
   removeFavorite,
   getTwoFactorStatus,
   setTwoFactorStatus,
-  changePassword
+  changePassword,
+  getSecurityDashboard
 } = require('../controllers/profileController');
 
 // Enhanced: Input validation and sanitization
@@ -62,6 +63,9 @@ router.post('/activity-stats', updateActivityStats);
 
 // Enhanced: Get activity history (optionally support pagination/filtering)
 router.get('/activity', getActivityHistory);
+
+// Enhanced: Get Security Dashboard Data
+router.get('/security-dashboard', require('../controllers/profileController').getSecurityDashboard);
 
 // Enhanced: Delete user account (with password confirmation validation)
 router.delete(

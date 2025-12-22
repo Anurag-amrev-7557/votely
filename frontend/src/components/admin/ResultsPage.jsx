@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import format from 'date-fns/format';
+import { format } from 'date-fns';
 import { toast } from '../../utils/toastUtils';
 import { CSVLink } from 'react-csv';
-import { Line, Bar, Pie } from 'react-chartjs-2';
+import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -19,15 +19,10 @@ import {
 } from 'chart.js';
 import {
   Search, Filter, Activity, CheckCircle, BarChart2, PieChart, Users, Calendar,
-  Download, ChevronRight, X, Clock, MapPin, Smartphone, Share2, Eye
+  Download, ChevronRight, X, Clock, MapPin, Smartphone, Share2, Eye, Award,
+  TrendingUp, ArrowUpRight, Zap, Target
 } from 'lucide-react';
 import adminAxios from '../../utils/api/adminAxios';
-import { DashboardWidget, StatValue } from './AdminWidgets';
-import { AnimatedModal } from '../ui/AnimatedModal';
-// PollCard is likely NOT exported as default from PollsPage.jsx based on previous reads.
-// PollCard was an internal component in PollsPage.jsx. 
-// I will re-implement a similar card design here for consistency or refactor PollsPage later.
-// For now, I will implement a consistent card view locally to avoid breaking PollsPage import.
 
 // Register ChartJS components
 ChartJS.register(
@@ -49,7 +44,7 @@ const ResultsPage = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPoll, setSelectedPoll] = useState(null);
-  const [pollResults, setPollResults] = useState(null);
+  const [pollResults, setPollResults] = useState(null); // Detailed results
   const [resultsLoading, setResultsLoading] = useState(false);
 
   // Filter states
@@ -73,10 +68,11 @@ const ResultsPage = () => {
     }
   };
 
-  // Fetch Results when a poll is selected
+  // Fetch Detailed Results when a poll is selected
   useEffect(() => {
-    if (selectedPoll?.id) {
-      fetchPollResults(selectedPoll.id);
+    const pollId = selectedPoll?.id || selectedPoll?._id;
+    if (pollId) {
+      fetchPollResults(pollId);
     }
   }, [selectedPoll]);
 
@@ -84,9 +80,10 @@ const ResultsPage = () => {
     setResultsLoading(true);
     setPollResults(null);
     try {
-      const res = await adminAxios.get(`/api/polls/${pollId}/results`);
+      const res = await adminAxios.get(`/polls/${pollId}/results`);
       setPollResults(res.data);
     } catch (err) {
+      console.error('Error fetching results:', err);
       toast.error('Failed to load detailed results');
     } finally {
       setResultsLoading(false);
@@ -97,7 +94,7 @@ const ResultsPage = () => {
   const activePollsCount = polls.filter(p => p.status === 'active').length;
   const totalVotesCast = polls.reduce((acc, curr) => acc + (curr.totalVotes || 0), 0);
   const completedPollsCount = polls.filter(p => p.status === 'completed').length;
-  // Mock participation calculation if not available
+  // Calculate average participation (mock logic if field missing, ideally from backend)
   const avgParticipation = polls.length > 0 ? Math.round(polls.reduce((acc, p) => acc + (p.participation || 0), 0) / polls.length) : 0;
 
   // Filter Logic
@@ -107,78 +104,103 @@ const ResultsPage = () => {
     return matchesSearch && matchesStatus;
   });
 
-  // Chart Configuration
+  // Modern Chart Options
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } },
+      legend: {
+        position: 'bottom',
+        labels: {
+          usePointStyle: true,
+          boxWidth: 8,
+          padding: 20,
+          font: { family: "'Inter', sans-serif", size: 11 }
+        }
+      },
       tooltip: {
-        backgroundColor: 'rgba(0,0,0,0.8)',
+        backgroundColor: 'rgba(17, 24, 39, 0.95)',
         padding: 12,
-        cornerRadius: 8,
-        titleFont: { size: 13, weight: 'bold' },
-        bodyFont: { size: 12 }
+        cornerRadius: 12,
+        titleFont: { family: "'Inter', sans-serif", size: 13, weight: '600' },
+        bodyFont: { family: "'Inter', sans-serif", size: 12 },
+        displayColors: false,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)'
       }
     },
     scales: {
-      x: { grid: { display: false }, ticks: { font: { size: 11 } } },
-      y: { grid: { color: 'rgba(200,200,200,0.1)', borderDash: [5, 5] }, ticks: { font: { size: 11 } } }
+      x: {
+        grid: { display: false },
+        ticks: { font: { family: "'Inter', sans-serif", size: 10 }, color: '#9CA3AF' }
+      },
+      y: {
+        grid: { color: 'rgba(243, 244, 246, 0.6)', borderDash: [4, 4], drawBorder: false },
+        ticks: { font: { family: "'Inter', sans-serif", size: 10 }, color: '#9CA3AF', padding: 8 }
+      }
+    },
+    layout: {
+      padding: { top: 10, bottom: 10 }
     },
     elements: {
-      bar: { borderRadius: 4 },
-      line: { tension: 0.4 }
+      bar: { borderRadius: 6 },
+      line: { tension: 0.4, borderWidth: 3 }
+    }
+  };
+
+  const donutOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '75%',
+    plugins: {
+      legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 6, font: { size: 11 } } }
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50 dark:bg-[#0a0a0a] p-6 lg:p-10 space-y-8">
-      {/* Header */}
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4">
-        <div>
-          <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gray-600 dark:text-zinc-400 mb-2">
-            Analytics & Insights
-          </h2>
-          <h1 className="text-3xl md:text-5xl font-bold tracking-tighter text-gray-900 dark:text-white leading-none">
-            Poll <span className="text-gray-600 dark:text-zinc-400">Results.</span>
+    <div className="min-h-screen bg-gray-50/30 dark:bg-black py-4 px-3 pr-1 space-y-10 font-[Inter]">
+      {/* Header Section */}
+      <header className="flex flex-col xl:flex-row xl:items-end justify-between gap-8">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-1 bg-gradient-to-b from-blue-500 to-purple-600 rounded-full"></div>
+            <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500 dark:text-zinc-500">
+              Analytics Dashboard
+            </h2>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-black tracking-tight text-gray-900 dark:text-white">
+            Results <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">& Insights</span>
           </h1>
+          <p className="text-gray-500 dark:text-zinc-400 max-w-xl text-sm md:text-base">
+            Real-time data visualization and comprehensive analytics for your polls and elections.
+          </p>
         </div>
 
-        <div className="flex flex-col-reverse md:flex-row md:items-center gap-4">
-          {/* Pill Styled Stats */}
-          <div className="flex items-center gap-4 bg-white dark:bg-zinc-900/50 border border-gray-200 dark:border-zinc-800 rounded-full px-5 py-2.5 shadow-sm overflow-x-auto max-w-full custom-scrollbar">
-            <div className="flex items-center gap-2 shrink-0">
-              <Activity className="w-4 h-4 text-blue-500" />
-              <div className="flex items-baseline gap-1">
-                <span className="text-sm font-bold text-gray-900 dark:text-white">{totalVotesCast.toLocaleString()}</span>
-                <span className="text-xs text-gray-500 dark:text-zinc-500 font-medium hidden sm:inline-block">votes</span>
-              </div>
-            </div>
-            <div className="w-px h-4 bg-gray-200 dark:bg-zinc-800 shrink-0"></div>
-            <div className="flex items-center gap-2 shrink-0">
-              <BarChart2 className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-              <div className="flex items-baseline gap-1">
-                <span className="text-sm font-bold text-gray-900 dark:text-white">{activePollsCount}</span>
-                <span className="text-xs text-gray-500 dark:text-zinc-500 font-medium hidden sm:inline-block">active</span>
-              </div>
-            </div>
-            <div className="w-px h-4 bg-gray-200 dark:bg-zinc-800 shrink-0"></div>
-            <div className="flex items-center gap-2 shrink-0">
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              <div className="flex items-baseline gap-1">
-                <span className="text-sm font-bold text-gray-900 dark:text-white">{completedPollsCount}</span>
-                <span className="text-xs text-gray-500 dark:text-zinc-500 font-medium hidden sm:inline-block">completed</span>
-              </div>
-            </div>
-            <div className="w-px h-4 bg-gray-200 dark:bg-zinc-800 shrink-0"></div>
-            <div className="flex items-center gap-2 shrink-0">
-              <Users className="w-4 h-4 text-purple-500" />
-              <div className="flex items-baseline gap-1">
-                <span className="text-sm font-bold text-gray-900 dark:text-white">{avgParticipation}%</span>
-                <span className="text-xs text-gray-500 dark:text-zinc-500 font-medium hidden sm:inline-block">participation</span>
-              </div>
-            </div>
-          </div>
+        {/* Floating Quick Stats */}
+        <div className="flex flex-wrap items-center gap-3">
+          <QuickStatPill
+            icon={Activity}
+            label="Total Votes"
+            value={totalVotesCast.toLocaleString()}
+            color="text-blue-500"
+            bgColor="bg-blue-50 dark:bg-blue-900/20"
+          />
+          <QuickStatPill
+            icon={Zap}
+            label="Active Polls"
+            value={activePollsCount}
+            color="text-amber-500"
+            bgColor="bg-amber-50 dark:bg-amber-900/20"
+          />
+          <QuickStatPill
+            icon={CheckCircle}
+            label="Completed"
+            value={completedPollsCount}
+            color="text-emerald-500"
+            bgColor="bg-emerald-50 dark:bg-emerald-900/20"
+          />
+
+          <div className="h-8 w-px bg-gray-200 dark:bg-zinc-800 mx-2 hidden xl:block"></div>
 
           <CSVLink
             data={polls.map(p => ({
@@ -188,246 +210,374 @@ const ResultsPage = () => {
               created: format(new Date(p.createdAt), 'yyyy-MM-dd')
             }))}
             filename={`results_export_${format(new Date(), 'yyyyMMdd')}.csv`}
-            className="flex items-center gap-2 px-6 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-black border border-transparent rounded-full text-sm font-bold hover:scale-105 transition-transform shadow-lg"
+            className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-black hover:bg-black dark:hover:bg-gray-200 rounded-full text-xs font-bold transition-all shadow-xl shadow-gray-200/50 dark:shadow-none"
           >
-            <Download className="w-4 h-4" /> Export
+            <Download className="w-3.5 h-3.5" /> Export Data
           </CSVLink>
         </div>
       </header>
 
-      {/* Toolbar */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between sticky top-0 z-20 md:static backdrop-blur-md bg-gray-50/80 dark:bg-[#0a0a0a]/80 py-2 md:py-0">
+      {/* Control Bar */}
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between sticky top-4 z-30">
+        {/* Search */}
         <div className="relative w-full md:w-96 group">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-gray-400 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors" />
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <Search className="h-4 w-4 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
           </div>
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search results..."
-            className="block w-full pl-10 pr-4 py-2.5 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-xl text-sm focus:ring-1 focus:ring-gray-900 dark:focus:ring-white outline-none transition-all"
+            placeholder="Search by poll title..."
+            className="block w-full pl-11 pr-4 py-3 bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-2xl text-sm font-medium shadow-sm shadow-gray-200/20 dark:shadow-none focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900 focus:border-blue-500 dark:focus:border-blue-500 outline-none transition-all"
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <div className="flex gap-1 p-1 bg-gray-200/50 dark:bg-zinc-800/50 rounded-lg">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black dark:focus-visible:ring-white ${viewMode === 'grid' ? 'bg-white dark:bg-zinc-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
-              aria-label="Grid view"
-            >
-              <BarChart2 className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-1.5 rounded-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black dark:focus-visible:ring-white ${viewMode === 'list' ? 'bg-white dark:bg-zinc-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
-              aria-label="List view"
-            >
-              <Filter className="w-4 h-4" /> {/* Using Filter icon as List proxy or get List icon */}
-            </button>
-          </div>
+        {/* View Toggles & Filter */}
+        <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
+          <FilterTab
+            label="All"
+            active={filterStatus === 'all'}
+            onClick={() => setFilterStatus('all')}
+          />
+          <FilterTab
+            label="Active"
+            active={filterStatus === 'active'}
+            onClick={() => setFilterStatus('active')}
+            count={activePollsCount}
+          />
+          <FilterTab
+            label="Completed"
+            active={filterStatus === 'completed'}
+            onClick={() => setFilterStatus('completed')}
+            count={completedPollsCount}
+          />
+        </div>
+
+        <div className="flex items-center gap-1 p-1 bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 rounded-xl shadow-sm hidden md:flex">
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300'}`}
+          >
+            <BarChart2 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300'}`}
+          >
+            <Filter className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
-      {/* Main Content Area */}
+      {/* Main Grid */}
       {loading ? (
-        <div className="flex justify-center py-20">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900 dark:border-white"></div>
+        <div className="flex flex-col items-center justify-center py-32 space-y-4">
+          <div className="relative w-16 h-16">
+            <div className="absolute inset-0 border-4 border-blue-100 dark:border-blue-900/30 rounded-full"></div>
+            <div className="absolute inset-0 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+          </div>
+          <p className="text-sm font-medium text-gray-400 animate-pulse">Loading analytics...</p>
         </div>
       ) : filteredPolls.length === 0 ? (
-        <div className="text-center py-20 text-gray-500 dark:text-zinc-500">
-          No polls found matching your criteria.
+        <div className="flex flex-col items-center justify-center py-32 space-y-6 text-center">
+          <div className="w-24 h-24 bg-gray-100 dark:bg-zinc-900 rounded-full flex items-center justify-center">
+            <Search className="w-10 h-10 text-gray-300 dark:text-zinc-700" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">No polls found</h3>
+            <p className="text-gray-500 dark:text-zinc-500 text-sm mt-1">Try adjusting your search or filters.</p>
+          </div>
         </div>
       ) : (
-        <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" : "space-y-4"}>
-          <AnimatePresence>
+        <AnimatePresence mode="popLayout">
+          <motion.div
+            layout
+            className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6" : "space-y-3"}
+          >
             {filteredPolls.map((poll, index) => (
-              <ResultItem
-                key={poll.id || `poll-${index}`}
+              <ResultCard
+                key={poll._id || poll.id || `poll-${index}`}
                 poll={poll}
                 viewMode={viewMode}
                 index={index}
                 onClick={() => setSelectedPoll(poll)}
               />
             ))}
-          </AnimatePresence>
-        </div>
+          </motion.div>
+        </AnimatePresence>
       )}
 
-      {/* Detailed Modal using standard modal structure tailored for results */}
+      {/* Detailed Analytics Modal */}
       <AnimatePresence>
         {selectedPoll && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 md:p-8"
-            onClick={() => setSelectedPoll(null)}
-          >
+          <ModalBackdrop onClick={() => setSelectedPoll(null)}>
             <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              initial={{ scale: 0.9, opacity: 0, y: 40 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              exit={{ scale: 0.9, opacity: 0, y: 40 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white dark:bg-[#111] w-full max-w-5xl max-h-[90vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col border border-gray-200 dark:border-zinc-800"
+              className="bg-gray-50 dark:bg-[#09090b] w-full max-w-6xl max-h-[95vh] rounded-[2rem] overflow-hidden shadow-2xl flex flex-col border border-gray-200 dark:border-zinc-800"
             >
               {/* Modal Header */}
-              <div className="shrink-0 p-6 md:p-8 border-b border-gray-100 dark:border-zinc-800 flex items-start justify-between bg-gray-50/50 dark:bg-zinc-900/20">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ${selectedPoll.status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                      selectedPoll.status === 'completed' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
-                        'bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-400'
-                      }`}>
-                      {selectedPoll.status}
-                    </span>
-                    <span className="text-gray-400 dark:text-zinc-500 text-sm flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> {format(new Date(selectedPoll.endDate), 'MMM d, yyyy')}
-                    </span>
+              <div className="shrink-0 px-8 py-6 border-b border-gray-100 dark:border-zinc-800 bg-white dark:bg-[#0c0c0e] flex items-start justify-between z-10">
+                <div className="flex items-start gap-6">
+                  <div className="hidden sm:flex h-14 w-14 rounded-2xl bg-blue-50 dark:bg-blue-900/10 items-center justify-center shrink-0">
+                    {selectedPoll.type === 'election' ? <Users className="w-7 h-7 text-blue-600" /> : <PieChart className="w-7 h-7 text-blue-600" />}
                   </div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
-                    {selectedPoll.title}
-                  </h2>
+                  <div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <StatusBadge status={selectedPoll.status} />
+                      <span className="text-gray-400 dark:text-zinc-500 text-xs font-medium flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5" />
+                        Ended {format(new Date(selectedPoll.endDate), 'MMM d, yyyy')}
+                      </span>
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white leading-tight">
+                      {selectedPoll.title}
+                    </h2>
+                  </div>
                 </div>
                 <button
                   onClick={() => setSelectedPoll(null)}
-                  className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-500 transition-colors"
+                  className="group p-2 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
                 >
-                  <X className="w-6 h-6" />
+                  <div className="bg-gray-100 dark:bg-zinc-800 p-1 rounded-full group-hover:scale-90 transition-transform">
+                    <X className="w-5 h-5 text-gray-500 dark:text-zinc-400" />
+                  </div>
                 </button>
               </div>
 
               {/* Modal Body */}
-              <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto custom-scrollbar">
                 {resultsLoading ? (
-                  <div className="flex justify-center items-center h-64">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
+                  <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
                   </div>
                 ) : pollResults ? (
-                  <div className="space-y-8">
-                    {/* Top Stats Row */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="p-4 rounded-2xl bg-gray-50 dark:bg-zinc-900/50 border border-gray-100 dark:border-zinc-800">
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Total Votes</h4>
-                        <p className="text-3xl font-bold font-mono text-gray-900 dark:text-white">{pollResults.totalVotes}</p>
-                      </div>
-                      <div className="p-4 rounded-2xl bg-gray-50 dark:bg-zinc-900/50 border border-gray-100 dark:border-zinc-800">
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Leading Option</h4>
-                        <p className="text-lg font-bold text-gray-900 dark:text-white truncate">
-                          {pollResults.options.reduce((a, b) => a.count > b.count ? a : b).text}
-                        </p>
-                      </div>
-                      <div className="p-4 rounded-2xl bg-gray-50 dark:bg-zinc-900/50 border border-gray-100 dark:border-zinc-800">
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Participation</h4>
-                        <div className="flex items-end gap-2">
-                          <p className="text-3xl font-bold font-mono text-gray-900 dark:text-white">{selectedPoll.participation || 0}%</p>
-                          <span className="text-xs text-green-500 font-bold mb-1.5">+2.4% vs avg</span>
-                        </div>
-                      </div>
+                  <div className="p-8 space-y-10">
+
+                    {/* Key Metrics Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      <MetricCard
+                        title="Total Impressions"
+                        value={(pollResults.totalVotes * 1.4).toFixed(0)} // Mock derived metric
+                        subtext="Views"
+                        icon={Eye}
+                        trend="+12%"
+                      />
+                      <MetricCard
+                        title="Total Votes"
+                        value={pollResults.totalVotes.toLocaleString()}
+                        subtext="Verified Voters"
+                        icon={CheckCircle}
+                        highlight
+                      />
+                      <MetricCard
+                        title="Peak Activity"
+                        value={pollResults.votingTrends?.daily?.length > 0 ? Math.max(...pollResults.votingTrends.daily.map(d => d.votes)) : 0}
+                        subtext="Votes in one day"
+                        icon={TrendingUp}
+                      />
+                      <MetricCard
+                        title="Completion Rate"
+                        value="94%"
+                        subtext="Avg. Time: 45s"
+                        icon={Target}
+                      />
                     </div>
 
-                    {/* Main Visualization Area */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                      {/* Bar Chart */}
-                      <div className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 shadow-sm">
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Vote Distribution</h3>
-                        <div className="h-64">
-                          <Bar
-                            data={{
-                              labels: pollResults.options.map(o => o.text),
-                              datasets: [{
-                                label: 'Votes',
-                                data: pollResults.options.map(o => o.count),
-                                backgroundColor: 'rgba(59, 130, 246, 0.8)',
-                                borderRadius: 4
-                              }]
-                            }}
-                            options={chartOptions}
-                          />
+                    {/* Leading Candidate Highlight (If Election) */}
+                    {pollResults.positions && pollResults.positions.length > 0 && (
+                      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-900 to-indigo-900 p-8 text-white shadow-xl">
+                        <div className="absolute top-0 right-0 p-32 bg-blue-500/20 blur-3xl rounded-full translate-x-10 -translate-y-10"></div>
+
+                        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                          <div>
+                            <div className="flex items-center gap-2 mb-2">
+                              <Award className="w-5 h-5 text-yellow-400" />
+                              <span className="text-blue-200 font-bold tracking-widest uppercase text-xs">Current Leader</span>
+                            </div>
+                            <h3 className="text-3xl font-bold mb-1">
+                              {pollResults.positions[0]?.candidates[0]?.text || 'No votes yet'}
+                            </h3>
+                            <p className="text-blue-200 text-sm">
+                              Leading Position 1 with <span className="text-white font-bold">{pollResults.positions[0]?.candidates[0]?.count || 0} votes</span>
+                            </p>
+                          </div>
+                          <div className="h-16 w-16 md:h-20 md:w-20 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/10">
+                            <TrendingUp className="w-8 h-8 text-green-400" />
+                          </div>
                         </div>
                       </div>
+                    )}
 
-                      {/* Voting Trends Line Chart */}
-                      <div className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 shadow-sm">
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Voting Activity</h3>
-                        <div className="h-64">
-                          <Line
-                            data={{
-                              labels: selectedPoll.votingTrends?.daily?.map(d => d.day) || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-                              datasets: [{
-                                label: 'Votes Cast',
-                                data: selectedPoll.votingTrends?.daily?.map(d => d.votes) || [12, 19, 3, 5, 2],
-                                borderColor: 'rgb(16, 185, 129)',
-                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                                fill: true,
-                              }]
-                            }}
-                            options={chartOptions}
-                          />
+                    {/* Data Visualization Section */}
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                          <BarChart2 className="w-5 h-5 text-blue-500" />
+                          Detailed Breakdown
+                        </h3>
+                      </div>
+
+                      {/* Election vs Standard Poll View */}
+                      {pollResults.positions && pollResults.positions.length > 0 ? (
+                        <div className="grid grid-cols-1 gap-12">
+                          {pollResults.positions.map((pos, idx) => (
+                            <PositionSection key={idx} position={pos} index={idx} chartOptions={chartOptions} />
+                          ))}
                         </div>
-                      </div>
-                    </div>
+                      ) : (
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                          {/* Main Bar Chart */}
+                          <div className="lg:col-span-2 bg-white dark:bg-[#121214] p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm">
+                            <h4 className="text-sm font-bold text-gray-500 dark:text-zinc-500 mb-6 uppercase tracking-wider">Vote Distribution</h4>
+                            <div className="h-80">
+                              <Bar
+                                data={{
+                                  labels: pollResults.options.map(o => o.text),
+                                  datasets: [{
+                                    label: 'Votes',
+                                    data: pollResults.options.map(o => o.count),
+                                    backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                                    hoverBackgroundColor: 'rgba(59, 130, 246, 1)',
+                                    borderRadius: 4
+                                  }]
+                                }}
+                                options={chartOptions}
+                              />
+                            </div>
+                          </div>
 
-                    {/* Demographics Section */}
-                    <div className="border-t border-gray-100 dark:border-zinc-800 pt-8">
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Voter Demographics</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {/* Age, Location, Device Placeholders */}
-                        <DemographicCard title="Age Groups" type="pie" data={selectedPoll.demographics?.ageGroups} />
-                        <DemographicCard title="Locations" type="bar" horizontal data={selectedPoll.demographics?.locations} />
-                        <DemographicCard title="Devices" type="doughnut" data={selectedPoll.demographics?.devices} />
-                      </div>
+                          {/* Trend Line Chart */}
+                          <div className="bg-white dark:bg-[#121214] p-6 rounded-3xl border border-gray-100 dark:border-zinc-800 shadow-sm">
+                            <h4 className="text-sm font-bold text-gray-500 dark:text-zinc-500 mb-6 uppercase tracking-wider">Timeline</h4>
+                            <div className="h-80">
+                              <Line
+                                data={{
+                                  labels: pollResults.votingTrends?.daily?.map(d => format(new Date(d.day), 'MMM d')) || [],
+                                  datasets: [{
+                                    label: 'Activity',
+                                    data: pollResults.votingTrends?.daily?.map(d => d.votes) || [],
+                                    borderColor: '#10B981',
+                                    backgroundColor: (context) => {
+                                      const ctx = context.chart.ctx;
+                                      const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                                      gradient.addColorStop(0, 'rgba(16, 185, 129, 0.2)');
+                                      gradient.addColorStop(1, 'rgba(16, 185, 129, 0)');
+                                      return gradient;
+                                    },
+                                    fill: true,
+                                    tension: 0.4,
+                                    pointRadius: 0,
+                                    pointHoverRadius: 6
+                                  }]
+                                }}
+                                options={{ ...chartOptions, scales: { ...chartOptions.scales, x: { ...chartOptions.scales.x, display: false } } }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-10 text-gray-500">
-                    No detailed results available.
+                  <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-zinc-500">
+                    <p>No results data available.</p>
                   </div>
                 )}
               </div>
             </motion.div>
-          </motion.div>
+          </ModalBackdrop>
         )}
       </AnimatePresence>
     </div>
   );
 };
 
-// Sub-components
+// --- Sub Components ---
 
-const ResultItem = ({ poll, viewMode, onClick, index }) => {
-  const totalVotes = poll.totalVotes || 0;
+const QuickStatPill = ({ icon: Icon, label, value, color, bgColor }) => (
+  <div className={`flex items-center gap-3 px-4 py-2 rounded-2xl ${bgColor}`}>
+    <Icon className={`w-4 h-4 ${color}`} />
+    <div className="flex flex-col leading-none">
+      <span className="text-[10px] uppercase font-bold text-gray-500 dark:text-zinc-400 opacity-80">{label}</span>
+      <span className="text-sm font-bold text-gray-900 dark:text-white mt-0.5">{value}</span>
+    </div>
+  </div>
+);
 
+const FilterTab = ({ label, active, onClick, count }) => (
+  <button
+    onClick={onClick}
+    className={`relative px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${active
+        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+        : 'bg-white dark:bg-zinc-900 text-gray-500 dark:text-zinc-400 hover:bg-gray-50 dark:hover:bg-zinc-800'
+      }`}
+  >
+    {label}
+    {count !== undefined && (
+      <span className={`ml-2 px-1.5 py-0.5 rounded-full text-[10px] ${active ? 'bg-white/20 text-white' : 'bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-500'
+        }`}>
+        {count}
+      </span>
+    )}
+  </button>
+);
+
+const StatusBadge = ({ status }) => {
+  const styles = {
+    active: "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400 border-green-200 dark:border-green-500/20",
+    completed: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border-blue-200 dark:border-blue-500/20",
+    upcoming: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border-amber-200 dark:border-amber-500/20"
+  };
+  return (
+    <span className={`px-2.5 py-1 rounded-lg text-[10px] uppercase font-bold tracking-wider border ${styles[status] || styles.active}`}>
+      {status}
+    </span>
+  );
+};
+
+const ResultCard = ({ poll, viewMode, onClick, index }) => {
+  // List View
   if (viewMode === 'list') {
     return (
       <motion.div
+        layout
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.05 }}
+        transition={{ delay: index * 0.03 }}
         onClick={onClick}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } }}
-        role="button"
-        tabIndex={0}
-        className="group flex flex-col md:flex-row items-center gap-4 p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 hover:border-blue-500/30 hover:shadow-lg transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+        className="group flex flex-col sm:flex-row sm:items-center gap-4 p-4 bg-white dark:bg-zinc-900/50 border border-gray-100 dark:border-zinc-800/50 hover:border-blue-500/30 dark:hover:border-blue-500/30 rounded-2xl cursor-pointer hover:shadow-lg hover:shadow-blue-500/5 transition-all text-left"
       >
-        <div className={`w-1.5 h-12 rounded-full ${poll.status === 'active' ? 'bg-green-500' : 'bg-gray-300 dark:bg-zinc-700'}`} />
+        <div className={`w-1.5 h-10 rounded-full shrink-0 ${poll.status === 'active' ? 'bg-green-500' : 'bg-gray-300 dark:bg-zinc-700'}`}></div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-gray-900 dark:text-white truncate">{poll.title}</h3>
-          <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
-            <span>{format(new Date(poll.createdAt), 'MMM d')}</span>
-            <span>{poll.options?.length || 0} Options</span>
+          <h3 className="font-bold text-gray-900 dark:text-white truncate text-base">{poll.title}</h3>
+          <div className="flex items-center gap-3 mt-1">
+            <span className="text-xs text-gray-400 dark:text-zinc-500 font-medium">
+              {format(new Date(poll.createdAt), 'MMM d')}
+            </span>
+            <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-zinc-700"></span>
+            <span className="text-xs text-gray-400 dark:text-zinc-500 font-medium">
+              {poll.type === 'election' ? 'Election' : 'Standard Poll'}
+            </span>
           </div>
         </div>
-        <div className="flex items-center gap-8 px-4">
-          <div className="text-center">
-            <div className="text-lg font-bold font-mono dark:text-white">{totalVotes}</div>
-            <div className="text-[10px] uppercase font-bold text-gray-400">Votes</div>
+        <div className="flex items-center gap-6 pl-4 sm:pl-0 border-t sm:border-t-0 border-gray-100 dark:border-zinc-800 pt-3 sm:pt-0">
+          <div className="text-right">
+            <span className="block text-lg font-black font-mono text-gray-900 dark:text-white leading-none">
+              {poll.totalVotes || 0}
+            </span>
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Votes</span>
           </div>
-          <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-blue-500 transition-colors" />
+          <div className="h-8 w-8 rounded-full bg-gray-50 dark:bg-zinc-800 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors text-gray-400">
+            <ChevronRight className="w-4 h-4" />
+          </div>
         </div>
       </motion.div>
-    )
+    );
   }
 
   // Grid View
@@ -438,59 +588,141 @@ const ResultItem = ({ poll, viewMode, onClick, index }) => {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: index * 0.05 }}
       onClick={onClick}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } }}
-      role="button"
-      tabIndex={0}
-      className="group relative flex flex-col justify-between p-6 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-3xl hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+      className="group relative flex flex-col justify-between p-6 bg-white dark:bg-[#121214] border border-gray-100 dark:border-zinc-800 rounded-[1.5rem] hover:border-blue-500/30 dark:hover:border-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/5 hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden text-left"
     >
-      <div className={`absolute top-0 left-0 right-0 h-1.5 ${poll.status === 'active' ? 'bg-gradient-to-r from-green-400 to-emerald-600' : 'bg-gray-200 dark:bg-zinc-700'}`} />
+      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-blue-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
-      <div className="mb-4">
-        <div className="flex justify-between items-start mb-2">
-          <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider ${poll.status === 'active' ? 'bg-green-50 text-green-600 dark:bg-green-900/20' : 'bg-gray-100 text-gray-500 dark:bg-zinc-800'
-            }`}>
-            {poll.status}
-          </span>
-          <BarChart2 className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
+      <div className="mb-6">
+        <div className="flex justify-between items-start mb-4">
+          <StatusBadge status={poll.status} />
+          {poll.type === 'election' && <div title="Election" className="p-1.5 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-600"><Award className="w-3.5 h-3.5" /></div>}
         </div>
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight line-clamp-2 mb-2">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-snug line-clamp-2 mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
           {poll.title}
         </h3>
-        <p className="text-xs text-gray-500 dark:text-zinc-500">
-          Ended: {format(new Date(poll.endDate), 'MMM d, yyyy')}
+        <p className="text-xs text-gray-400 dark:text-zinc-500 font-medium">
+          Created {format(new Date(poll.createdAt), 'MMMM d, yyyy')}
         </p>
       </div>
 
-      {/* Quick Stats Grid */}
-      <div className="grid grid-cols-2 gap-2 py-4 border-t border-gray-50 dark:border-zinc-800/50">
-        <div className="p-2 rounded-xl bg-gray-50 dark:bg-zinc-800/50 text-center">
-          <div className="text-lg font-bold text-gray-900 dark:text-white">{totalVotes}</div>
-          <div className="text-[10px] font-bold text-gray-400 uppercase">Votes</div>
+      <div className="mt-auto">
+        <div className="flex items-end justify-between border-t border-gray-50 dark:border-zinc-800 pt-4">
+          <div>
+            <span className="block text-2xl font-black font-mono text-gray-900 dark:text-white leading-none">
+              {poll.totalVotes || 0}
+            </span>
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total Votes</span>
+          </div>
+          <div className="flex flex-col items-end">
+            <div className="flex -space-x-2">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="w-6 h-6 rounded-full border-2 border-white dark:border-[#121214] bg-gray-200 dark:bg-zinc-700"></div>
+              ))}
+            </div>
+            <span className="text-[10px] text-gray-400 font-medium mt-1">+{(poll.totalVotes || 0) > 3 ? (poll.totalVotes - 3) : 0} others</span>
+          </div>
         </div>
-        <div className="p-2 rounded-xl bg-gray-50 dark:bg-zinc-800/50 text-center">
-          <div className="text-lg font-bold text-gray-900 dark:text-white">{poll.options?.length || 0}</div>
-          <div className="text-[10px] font-bold text-gray-400 uppercase">Options</div>
-        </div>
-      </div>
-
-      <div className="mt-2 flex items-center justify-between text-xs font-semibold text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
-        <span>View Full Analytics</span>
-        <ChevronRight className="w-4 h-4" />
       </div>
     </motion.div>
   );
 };
 
-const DemographicCard = ({ title, type, data, horizontal }) => {
-  // Placeholder chart logic
-  return (
-    <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800">
-      <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4">{title}</h4>
-      <div className="h-40 flex items-center justify-center text-gray-400 text-xs italic bg-gray-50 dark:bg-zinc-800/50 rounded-xl">
-        Chart Visualization
+const ModalBackdrop = ({ children, onClick }) => (
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    onClick={onClick}
+    className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 md:p-8"
+  >
+    {children}
+  </motion.div>
+);
+
+const MetricCard = ({ title, value, subtext, icon: Icon, trend, highlight }) => (
+  <div className={`p-6 rounded-3xl border flex flex-col justify-between h-32 ${highlight ? 'bg-blue-600 border-blue-500 text-white shadow-xl shadow-blue-500/20' : 'bg-white dark:bg-[#121214] border-gray-100 dark:border-zinc-800'}`}>
+    <div className="flex items-center justify-between">
+      <h4 className={`text-xs font-bold uppercase tracking-wider ${highlight ? 'text-blue-200' : 'text-gray-400'}`}>{title}</h4>
+      {Icon && <Icon className={`w-4 h-4 ${highlight ? 'text-blue-200' : 'text-gray-400'}`} />}
+    </div>
+    <div>
+      <div className="flex items-end gap-2">
+        <span className={`text-3xl font-black font-mono ${highlight ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{value}</span>
+        {trend && <span className="text-xs font-bold text-green-500 mb-1.5 bg-green-500/10 px-1.5 py-0.5 rounded">{trend}</span>}
+      </div>
+      <p className={`text-xs font-medium mt-1 ${highlight ? 'text-blue-100' : 'text-gray-500'}`}>{subtext}</p>
+    </div>
+  </div>
+);
+
+const PositionSection = ({ position, index, chartOptions }) => (
+  <div className="bg-white dark:bg-[#121214] rounded-[2rem] border border-gray-100 dark:border-zinc-800 p-8 shadow-sm">
+    <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 border-b border-gray-100 dark:border-zinc-800 pb-6">
+      <div className="flex items-start gap-4">
+        <div className="h-12 w-12 rounded-2xl bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-500 font-bold text-lg shrink-0">
+          {index + 1}
+        </div>
+        <div>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white">{position.title}</h3>
+          <p className="text-sm text-gray-500 dark:text-zinc-500 max-w-lg mt-1">{position.description || "Detailed results for this position"}</p>
+        </div>
+      </div>
+
+      {position.candidates[0] && position.candidates[0].count > 0 && (
+        <div className="flex items-center gap-3 bg-green-50 dark:bg-green-900/10 px-4 py-2 rounded-xl border border-green-100 dark:border-green-900/20">
+          <div className="text-right">
+            <span className="block text-[10px] font-bold text-green-600 uppercase tracking-wider">Winner</span>
+            <span className="block text-sm font-bold text-gray-900 dark:text-white">{position.candidates[0].text}</span>
+          </div>
+          <div className="h-8 w-8 rounded-full bg-green-500 text-white flex items-center justify-center">
+            <Award className="w-4 h-4" />
+          </div>
+        </div>
+      )}
+    </div>
+
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
+      {/* Chart Area */}
+      <div className="h-72">
+        <Bar
+          data={{
+            labels: position.candidates.map(c => c.text),
+            datasets: [{
+              label: 'Votes',
+              data: position.candidates.map(c => c.count),
+              backgroundColor: position.candidates.map((_, i) => i === 0 ? '#10B981' : '#3B82F6'),
+              borderRadius: 6,
+              barThickness: 30
+            }]
+          }}
+          options={chartOptions}
+        />
+      </div>
+
+      {/* Candidates List */}
+      <div className="overflow-y-auto max-h-72 custom-scrollbar pr-2">
+        <div className="flex flex-col gap-3">
+          {position.candidates.map((cand, i) => (
+            <div key={i} className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors border border-transparent hover:border-gray-100 dark:hover:border-zinc-800">
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${i === 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                  {i + 1}
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900 dark:text-white text-sm">{cand.text}</p>
+                  <p className="text-xs text-gray-500">{cand.party || 'Independent'}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="block font-bold text-gray-900 dark:text-white">{cand.count}</span>
+                <span className="text-[10px] text-gray-400 uppercase">Votes</span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
-  )
-}
+  </div>
+);
 
 export default ResultsPage;

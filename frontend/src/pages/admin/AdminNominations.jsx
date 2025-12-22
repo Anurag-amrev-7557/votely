@@ -92,7 +92,7 @@ const AdminNominations = () => {
     };
 
     return (
-        <div className="w-full min-h-screen p-6 md:p-8 md:pr-0 space-y-8 animate-fade-in">
+        <div className="w-full min-h-screen py-4 px-3 pr-1  space-y-8 animate-fade-in">
             {/* Header */}
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
                 <div>
@@ -119,7 +119,7 @@ const AdminNominations = () => {
             {/* Main Content Area */}
             <motion.div
                 onMouseMove={handleMouseMove}
-                className="relative group overflow-hidden rounded-3xl border border-gray-200 dark:border-zinc-800/50 bg-white dark:bg-zinc-900/50 shadow-xl backdrop-blur-xl"
+                className="relative group overflow-hidden rounded-2xl h-[calc(100vh-13rem)] border border-gray-200 dark:border-zinc-800/50 bg-white dark:bg-zinc-900/50 shadow-xl backdrop-blur-xl"
             >
                 <NoiseTexture />
                 <SpotlightEffect mouseX={mouseX} mouseY={mouseY} />

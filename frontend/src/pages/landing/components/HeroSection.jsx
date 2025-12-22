@@ -41,7 +41,7 @@ const HeroSection = ({ isVisible }) => {
         >
           {/* Mobile Layout: Stacked (Heading -> Buttons -> Animation implicitly via canvas) */}
           <div className="w-full">
-            <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-7xl xl:text-[8rem] 2xl:text-[10rem] tracking-tighter font-black text-gray-900 dark:text-white leading-[0.9] lg:leading-[0.85] select-none transition-colors duration-500 text-left">
+            <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-7xl xl:text-[8rem] 2xl:text-[10rem] tracking-tighter font-black text-gray-900 dark:text-white leading-[0.9] lg:leading-[0.85] select-none transition-colors duration-500 text-left will-change-transform">
               DECIDE.<br />
               VERIFY.<br />
               COMMIT.

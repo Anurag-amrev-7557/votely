@@ -23,8 +23,8 @@ const PollCard = ({
     };
 
     // Helper to format time remaining
-    const getTimeRemaining = (endDate) => {
-        const total = Date.parse(endDate) - Date.parse(new Date());
+    const getTimeRemaining = (targetDate) => {
+        const total = Date.parse(targetDate) - Date.parse(new Date());
         const seconds = Math.floor((total / 1000) % 60);
         const minutes = Math.floor((total / 1000 / 60) % 60);
         const hours = Math.floor((total / (1000 * 60 * 60)) % 24);
@@ -49,6 +49,10 @@ const PollCard = ({
         // You can add distinct icons per category if available, defaulting to Sparkles
         return <SparklesIcon className="w-3 h-3" />;
     };
+
+    const isUpcoming = poll.status === 'Upcoming';
+    const timerLabel = isUpcoming ? 'Starts In' : 'Time Left';
+    const targetDate = isUpcoming ? poll.startDate : poll.endDate;
 
     return (
         <motion.div
@@ -127,10 +131,10 @@ const PollCard = ({
                 <div className="mt-auto grid grid-cols-2 gap-3 mb-6">
                     <div className="flex flex-col gap-1 p-3 rounded-2xl bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800/50">
                         <span className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-gray-600 dark:text-gray-400">
-                            <Clock className="w-3 h-3" /> Time Left
+                            <Clock className="w-3 h-3" /> {timerLabel}
                         </span>
                         <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                            {getTimeRemaining(poll.endDate)}
+                            {getTimeRemaining(targetDate)}
                         </span>
                     </div>
                     <div className="flex flex-col gap-1 p-3 rounded-2xl bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800/50">

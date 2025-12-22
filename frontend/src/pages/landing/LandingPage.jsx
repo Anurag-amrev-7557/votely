@@ -1,5 +1,6 @@
-import { Suspense, lazy, useState, useEffect, memo } from 'react';
+import { Suspense, lazy, memo, useState } from 'react';
 import { useTheme } from '../../context/ThemeContext';
+import { motion } from 'framer-motion';
 
 // Enhanced lazy loading wrapper with better error handling
 const createLazyComponent = (importFn, displayName) => {
@@ -71,95 +72,128 @@ const SectionSkeleton = () => (
   </div>
 );
 
-const LandingPage = () => {
-  const [isVisible, setIsVisible] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const { isDarkMode } = useTheme();
-
-  useEffect(() => {
-    // Fade in the landing page with a slight delay for a smoother UX
-    const showTimer = setTimeout(() => {
-      setIsVisible(true);
-    }, 50);
-
-    // Mark as loaded after a slightly longer delay to allow for initial animations
-    const loadTimer = setTimeout(() => {
-      setIsLoaded(true);
-    }, 300);
-
-    // Clean up timers on unmount
-    return () => {
-      clearTimeout(showTimer);
-      clearTimeout(loadTimer);
-    };
-  }, []);
+const LazySection = ({ children, id, className, "aria-labelledby": ariaLabelledBy }) => {
+  const [hasStartedLoading, setHasStartedLoading] = useState(false);
 
   return (
-    <div className="layout-container flex grow flex-col min-h-screen transition-all duration-500 will-change-[background-color,color,box-shadow,filter]">
+    <motion.div
+      id={id}
+      className={className}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "200px" }} // Increased margin to pre-load a bit earlier
+      onViewportEnter={() => setHasStartedLoading(true)}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      role="region"
+      aria-labelledby={ariaLabelledBy}
+    >
+      {hasStartedLoading ? (
+        <Suspense fallback={<SectionSkeleton />}>
+          {children}
+        </Suspense>
+      ) : (
+        <SectionSkeleton />
+      )}
+    </motion.div>
+  );
+};
+
+const LandingPage = () => {
+  const { isDarkMode } = useTheme();
+
+  return (
+    <div className="layout-container flex grow flex-col min-h-screen">
       {/* Skip to main content link for keyboard users (Section 508) */}
-      <a href="#main-content" className="sr-only focus:not-sr-only absolute top-2 left-2 bg-blue-600 text-white px-4 py-2 rounded z-50" tabIndex="0" aria-label="Skip to main content">Skip to main content</a>
+      <a href="#main-content" className="sr-only focus:not-sr-only absolute top-2 left-2 bg-blue-600 text-white px-4 py-2 rounded z-50 transition-transform" tabIndex="0" aria-label="Skip to main content">Skip to main content</a>
       <div
-        className={`flex justify-center py-5 bg-white dark:bg-black w-full transition-all duration-500 will-change-[background-color,color,box-shadow,filter]`}
+        className="flex justify-center py-5 bg-white dark:bg-black w-full"
       >
         <div className="layout-content-container flex flex-col w-full flex-1">
           <main id="main-content" tabIndex={-1} className="focus:outline-none" role="main" aria-label="Landing page main content">
             <div className="@container space-y-16 sm:space-y-24">
-              {/* Hero Section */}
-              <div className="min-h-[80vh] flex items-center justify-center" aria-labelledby="hero-heading" role="region" tabIndex="0">
+
+              {/* Hero Section - Load immediately (using minimal delay to prevent blocking) */}
+              <div className="min-h-[80vh] flex items-center justify-center" aria-labelledby="hero-heading" role="region">
                 <h2 id="hero-heading" className="sr-only">Hero Section</h2>
-                <Suspense fallback={<div className="h-40 flex items-center justify-center" role="status" aria-live="polite">Loading hero...</div>}>
-                  <HeroSection isVisible={isVisible} />
-                </Suspense>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.8 }}
+                  className="w-full"
+                >
+                  <Suspense fallback={<div className="h-40 flex items-center justify-center" role="status" aria-live="polite">Loading hero...</div>}>
+                    <HeroSection isVisible={true} />
+                  </Suspense>
+                </motion.div>
               </div>
+
               {/* Features Section */}
-              <div className="min-h-[50vh] flex items-center justify-center" aria-labelledby="features-heading" role="region" tabIndex="0">
+              <LazySection
+                className="min-h-[50vh] flex items-center justify-center"
+                aria-labelledby="features-heading"
+              >
                 <h2 id="features-heading" className="sr-only">Features</h2>
-                <Suspense fallback={<SectionSkeleton role="status" aria-live="polite" />}>
-                  <FeaturesSection isVisible={isVisible} />
-                </Suspense>
-              </div>
+                <FeaturesSection isVisible={true} />
+              </LazySection>
+
               {/* How It Works Section */}
-              <div id="how-it-works" className="min-h-[60vh] flex items-center justify-center" aria-labelledby="howitworks-heading" role="region" tabIndex="0">
+              <LazySection
+                id="how-it-works"
+                className="min-h-[60vh] flex items-center justify-center"
+                aria-labelledby="howitworks-heading"
+              >
                 <h2 id="howitworks-heading" className="sr-only">How It Works</h2>
-                <Suspense fallback={<SectionSkeleton role="status" aria-live="polite" />}>
-                  <HowItWorksSection isVisible={isVisible} />
-                </Suspense>
-              </div>
+                <HowItWorksSection isVisible={true} />
+              </LazySection>
+
               {/* Security Section */}
-              <div id="security" className="min-h-[50vh] flex items-center justify-center" aria-labelledby="security-heading" role="region" tabIndex="0">
+              <LazySection
+                id="security"
+                className="min-h-[50vh] flex items-center justify-center"
+                aria-labelledby="security-heading"
+              >
                 <h2 id="security-heading" className="sr-only">Security</h2>
-                <Suspense fallback={<SectionSkeleton role="status" aria-live="polite" />}>
-                  <SecuritySection isVisible={isVisible} />
-                </Suspense>
-              </div>
+                <SecuritySection isVisible={true} />
+              </LazySection>
+
               {/* Accessibility Section */}
-              <div id="accessibility" className="min-h-[50vh] flex items-center justify-center" aria-labelledby="accessibility-heading" role="region" tabIndex="0">
+              <LazySection
+                id="accessibility"
+                className="min-h-[50vh] flex items-center justify-center"
+                aria-labelledby="accessibility-heading"
+              >
                 <h2 id="accessibility-heading" className="sr-only">Accessibility</h2>
-                <Suspense fallback={<SectionSkeleton role="status" aria-live="polite" />}>
-                  <AccessibilitySection isVisible={isVisible} />
-                </Suspense>
-              </div>
+                <AccessibilitySection isVisible={true} />
+              </LazySection>
+
               {/* Testimonial Section */}
-              <div className="min-h-[50vh] flex items-center justify-center" aria-labelledby="testimonial-heading" role="region" tabIndex="0">
+              <LazySection
+                className="min-h-[50vh] flex items-center justify-center"
+                aria-labelledby="testimonial-heading"
+              >
                 <h2 id="testimonial-heading" className="sr-only">Testimonials</h2>
-                <Suspense fallback={<SectionSkeleton role="status" aria-live="polite" />}>
-                  <TestimonialSection isVisible={isVisible} />
-                </Suspense>
-              </div>
+                <TestimonialSection isVisible={true} />
+              </LazySection>
+
               {/* Pricing Section */}
-              <div id="pricing" className="min-h-[60vh] flex items-center justify-center" aria-labelledby="pricing-heading" role="region" tabIndex="0">
+              <LazySection
+                id="pricing"
+                className="min-h-[60vh] flex items-center justify-center"
+                aria-labelledby="pricing-heading"
+              >
                 <h2 id="pricing-heading" className="sr-only">Pricing</h2>
-                <Suspense fallback={<SectionSkeleton role="status" aria-live="polite" />}>
-                  <PriceSection isVisible={isVisible} />
-                </Suspense>
-              </div>
+                <PriceSection isVisible={true} />
+              </LazySection>
+
               {/* Help & CTA Section */}
-              <div className="min-h-[60vh] flex items-center justify-center" aria-labelledby="help-cta-heading" role="region" tabIndex="0">
+              <LazySection
+                className="min-h-[60vh] flex items-center justify-center"
+                aria-labelledby="help-cta-heading"
+              >
                 <h2 id="help-cta-heading" className="sr-only">Help & Get Started</h2>
-                <Suspense fallback={<SectionSkeleton role="status" aria-live="polite" />}>
-                  <HelpCTASection isVisible={isVisible} />
-                </Suspense>
-              </div>
+                <HelpCTASection isVisible={true} />
+              </LazySection>
+
             </div>
           </main>
         </div>

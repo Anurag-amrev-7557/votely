@@ -1,9 +1,8 @@
-import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-import * as THREE from 'three';
 import { ShieldCheck, Lock, Eye, Server, Key, Fingerprint, Activity, FileCheck } from 'lucide-react';
-import { useTheme } from '../../../context/ThemeContext';
+import React, { useState, useEffect } from 'react';
+import * as THREE from 'three';
+
 import { useInViewPause } from '../../../hooks/useInViewPause';
 
 // --- 2D SCHEMATIC VISUALIZATIONS ---
@@ -230,7 +229,6 @@ const SecurityVisualizer = ({ activeData, isPaused }) => {
     );
 };
 
-
 // --- UI COMPONENTS ---
 
 const FEATURES = [
@@ -330,9 +328,8 @@ const FeatureItem = React.memo(({ feature, isActive, onHover, index }) => (
     </motion.div>
 ));
 
-const SecuritySection = ({ isVisible }) => {
+const SecuritySection = () => {
     const [activeFeature, setActiveFeature] = useState(FEATURES[0]);
-    const { isDarkMode } = useTheme();
     const [containerRef, isPaused] = useInViewPause({ threshold: 0.2 });
 
     // Auto-cycle features if user isn't interacting and NOT PAUSED
@@ -363,7 +360,7 @@ const SecuritySection = ({ isVisible }) => {
                     >
                         <div>
                             <div className="flex items-center gap-3 mb-4 md:mb-6">
-                                <span className="h-px w-8 md:w-12 bg-gray-400 dark:bg-zinc-700"></span>
+                                <span className="h-px w-8 md:w-12 bg-gray-400 dark:bg-zinc-700" />
                                 <span className="text-xs font-bold uppercase tracking-[0.2em] text-gray-700 dark:text-zinc-500">
                                     Zero Trust Architecture
                                 </span>
@@ -400,8 +397,7 @@ const SecuritySection = ({ isVisible }) => {
                     <div className="relative w-full aspect-square md:aspect-auto md:h-[600px] bg-gray-50 dark:bg-zinc-900/50 rounded-3xl overflow-hidden border border-gray-300 dark:border-zinc-800 flex items-center justify-center order-1 lg:order-2 lg:sticky">
                         {/* Ambient Background Noise/Grain */}
                         <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none"
-                            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}>
-                        </div>
+                            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
 
                         <AnimatePresence mode="wait">
                             <motion.div

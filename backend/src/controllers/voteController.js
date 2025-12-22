@@ -62,6 +62,7 @@ async function hasUserVoted(pollId, userId) {
 
 // Enhanced: Cast a vote
 // Enhanced: Cast a vote
+// Enhanced: Cast a vote
 exports.castVote = async (req, res) => {
   // Session for transactions (if replica set is active)
   const session = await mongoose.startSession();
@@ -103,25 +104,21 @@ exports.castVote = async (req, res) => {
     }
 
     // 2. Double Vote Prevention (Critical Step)
-    // We attempt to create the VoterLog FIRST. If this fails due to a duplicate key error,
-    // it means the user has already voted. This utilizes the MongoDB unique index for strict consistency.
     if (userId) {
       try {
         await VoterLog.create([{
           poll: pollId,
           user: userId,
           votedAt: new Date()
-        }], { session }); // Use session if transactions are supported, otherwise it falls back
+        }], { session });
       } catch (err) {
         if (session) session.endSession();
-        // Duplicate key error code is 11000
         if (err.code === 11000) {
           return res.status(400).json({ error: 'You have already voted in this poll.' });
         }
-        throw err; // Re-throw other errors
+        throw err;
       }
     } else {
-      // Anonymous/Unauth handling (less strict, IP based fallback)
       if (!userId) {
         if (session) session.endSession();
         return res.status(401).json({ error: 'You must be logged in to vote.' });
@@ -129,14 +126,13 @@ exports.castVote = async (req, res) => {
     }
 
     // 3. Prepare Vote Data & Integrity Chain
-    // integrity: get last hash
     const lastVote = await Vote.findOne({ poll: pollId }).sort({ createdAt: -1 }).session(session);
     const previousBlockHash = lastVote ? lastVote.hash : 'GENESIS_HASH';
     const votedAt = new Date();
 
     const voteData = {
       poll: pollId,
-      options,
+      options, // For elections, this is an array of candidate IDs
       votedAt,
       isAnonymous,
       previousBlockHash
@@ -153,57 +149,120 @@ exports.castVote = async (req, res) => {
     await vote.save({ session });
 
     // 4. Atomic Count Update
-    // Using findOneAndUpdate with $inc to ensure no race conditions on counters
-    // We filter specifically for the options that were selected
+    let updateOperation = {};
+    let validSelectedOptions = [];
 
-    // Validate options exist in the poll first to avoid bad data
-    const validTexts = poll.options.map(o => o.text);
-    const validSelectedOptions = options.filter(opt => validTexts.includes(opt));
+    if (poll.type === 'election') {
+      const incUpdate = { totalVotes: 1 };
 
-    if (validSelectedOptions.length === 0) {
-      // Should abort transaction here if invalid options
-      if (session) await session.abortTransaction(); // Try abort if in transaction
-      if (session) session.endSession();
-      return res.status(400).json({ error: 'Invalid options selected.' });
-    }
+      // Map request options (candidate IDs) to positions
+      // structure: { positionId: [candidateId, ...] }
+      // Flatten positions to find candidates
 
-    // Prepare update operation: Increment global total AND specific options
-    // To update specific array elements by text, we use arrayFilters
-    const updatedPoll = await Poll.findOneAndUpdate(
-      { _id: pollId },
-      {
+      const candidateMap = new Map(); // candidateId -> { posIndex, candIndex, maxVotes }
+      poll.positions.forEach((pos, pIdx) => {
+        pos.candidates.forEach((cand, cIdx) => {
+          candidateMap.set(String(cand._id), { pIdx, cIdx, maxVotes: pos.maxVotes });
+        });
+      });
+
+      const votesPerPosition = {}; // pIdx -> count
+
+      for (const optId of options) {
+        const info = candidateMap.get(String(optId));
+        if (!info) continue; // Ignore invalid IDs (or error?)
+
+        validSelectedOptions.push(optId);
+
+        if (!votesPerPosition[info.pIdx]) votesPerPosition[info.pIdx] = 0;
+        votesPerPosition[info.pIdx]++;
+
+        const fieldPath = `positions.${info.pIdx}.candidates.${info.cIdx}.votes`;
+        incUpdate[fieldPath] = (incUpdate[fieldPath] || 0) + 1;
+      }
+
+      // Validate Validation: Max Votes
+      for (const [pIdx, count] of Object.entries(votesPerPosition)) {
+        const max = poll.positions[pIdx].maxVotes;
+        if (count > max) {
+          if (session) await session.abortTransaction();
+          if (session) session.endSession();
+          return res.status(400).json({ error: `Too many votes for position: ${poll.positions[pIdx].title}. Max ${max}.` });
+        }
+      }
+
+      updateOperation = { $inc: incUpdate };
+
+    } else {
+      // Default Poll Logic
+      const validTexts = poll.options.map(o => o.text);
+      validSelectedOptions = options.filter(opt => validTexts.includes(opt)); // Here 'opt' matches using text, not ID (legacy)
+
+      // Wait! The frontend sends TEXT for simple polls? 
+      // Checking previous code: "const validTexts = poll.options.map(o => o.text);"
+      // Yes, it seems legacy code uses text.
+
+      if (validSelectedOptions.length === 0) {
+        if (session) await session.abortTransaction();
+        if (session) session.endSession();
+        return res.status(400).json({ error: 'Invalid options selected.' });
+      }
+
+      updateOperation = {
         $inc: {
           totalVotes: 1,
           "options.$[elem].votes": 1
         }
-      },
-      {
-        arrayFilters: [{ "elem.text": { $in: validSelectedOptions } }],
-        new: true, // Return updated document
-        session
-      }
-    );
+      };
+      // Add arrayFilters for update
+      // We can't put arrayFilters in the update object itself, it's a separate arg to findOneAndUpdate
+    }
 
-    // Commit Transaction (if we were successful)
-    // Note: If you don't have Replica Sets, 'session' calls might be ignored or error depending on driver version,
-    // but the logic above without explicit startTransaction() transaction block calls is still safer than before.
-    // For true ACID, we would wrap this in session.startTransaction() ... commitTransaction() block.
-    // Given the environment uncertainty, we rely on individual atomic ops + unique index which is 99% good enough for this scale.
+    let updatedPoll;
+
+    if (poll.type === 'election') {
+      if (Object.keys(validSelectedOptions).length === 0) {
+        if (session) await session.abortTransaction();
+        if (session) session.endSession();
+        return res.status(400).json({ error: 'No valid candidates selected.' });
+      }
+      updatedPoll = await Poll.findOneAndUpdate(
+        { _id: pollId },
+        updateOperation,
+        { new: true, session }
+      );
+    } else {
+      // Legacy Update with arrayFilters
+      updatedPoll = await Poll.findOneAndUpdate(
+        { _id: pollId },
+        updateOperation,
+        {
+          arrayFilters: [{ "elem.text": { $in: validSelectedOptions } }],
+          new: true,
+          session
+        }
+      );
+    }
 
     if (session) session.endSession();
 
     // 5. Post-Processing (Async/Non-blocking)
-
-    // Real-time Emit
     if (updatedPoll) {
-      io.to(`poll_${pollId}`).emit('pollResults', {
+      // Emit appropriately based on type
+      const payload = {
         pollId,
-        options: updatedPoll.options,
         totalVotes: updatedPoll.totalVotes,
-      });
+      };
+
+      if (updatedPoll.type === 'election') {
+        payload.positions = updatedPoll.positions;
+      } else {
+        payload.options = updatedPoll.options;
+      }
+
+      io.to(`poll_${pollId}`).emit('pollResults', payload);
     }
 
-    // Audit Log
     setImmediate(() => {
       Activity.create({
         user: userId,
@@ -218,16 +277,16 @@ exports.castVote = async (req, res) => {
     res.status(201).json({
       message: 'Vote cast successfully',
       pollId,
-      votedOptions: validSelectedOptions,
+      votedOptions: validSelectedOptions, // Returns IDs for elections, Texts for polls
       isAnonymous,
       totalVotes: updatedPoll ? updatedPoll.totalVotes : 0,
-      voteHash: voteData.hash // Return hash for receipt
+      voteHash: voteData.hash
     });
 
   } catch (err) {
     if (session) session.endSession();
     console.error('Error casting vote:', err);
-    res.status(400).json({ error: err.message || 'Failed to cast vote.' });
+    return res.status(400).json({ error: err.message || 'Failed to cast vote.' });
   }
 };
 
@@ -239,6 +298,22 @@ exports.getUserVote = async (req, res) => {
 
     // Check VoterLog first to see IF they voted
     const log = await VoterLog.findOne({ poll: pollId, user: userId });
+
+    // Fetch all votes for the poll to calculate trends
+    const allVotes = await Vote.find({ poll: pollId }).select('createdAt');
+
+    // Calculate Voting Trends (Daily)
+    const votesByDate = {};
+    allVotes.forEach(vote => {
+      const date = vote.createdAt.toISOString().split('T')[0]; // YYYY-MM-DD
+      votesByDate[date] = (votesByDate[date] || 0) + 1;
+    });
+
+    const votingTrends = {
+      daily: Object.entries(votesByDate)
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([day, votes]) => ({ day, votes }))
+    };
 
     // If they voted, check if we can retrieve the vote content
     // If anonymous, the Vote document won't have their ID.
@@ -266,7 +341,8 @@ exports.getUserVote = async (req, res) => {
       success: true,
       hasVoted: true,
       vote,
-      isAnonymous: false
+      isAnonymous: false,
+      votingTrends // Include real voting trends
     });
 
   } catch (err) {

@@ -36,7 +36,7 @@ const HeroSocialProof = () => {
                         <img
                             src={`https://i.pravatar.cc/150?img=${imgId}`}
                             alt="Voter avatar"
-                            className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-800 bg-gray-200 dark:bg-gray-700 shadow-md transition-all duration-300 will-change-[background-color,transform] cursor-pointer focus:ring-2 focus:ring-blue-400 focus:z-20 hover:scale-110"
+                            className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-800 bg-gray-200 dark:bg-gray-700 shadow-md transition-all duration-300 cursor-pointer focus:ring-2 focus:ring-blue-400 focus:z-20 hover:scale-110"
                             loading="lazy"
                         />
                         {/* Animated online indicator */}
@@ -45,7 +45,7 @@ const HeroSocialProof = () => {
                 ))}
                 {/* Animated "+N" overflow avatar */}
                 <div
-                    className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-800 bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-semibold shadow-md transition-all duration-300 will-change-[background-color,transform] cursor-pointer hover:scale-110 focus:ring-2 focus:ring-blue-400 focus:z-20"
+                    className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-800 bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-semibold shadow-md transition-all duration-300 cursor-pointer hover:scale-110 focus:ring-2 focus:ring-blue-400 focus:z-20"
                     tabIndex={0}
                     aria-label="More than 1,000 voters"
                 >
@@ -62,7 +62,7 @@ const HeroSocialProof = () => {
                         aria-live="polite"
                         aria-atomic="true"
                     >
-                        <CountUp end={1000} duration={2.2} separator="," />
+                        <CountUp end={1000} duration={2.2} separator="," enableScrollSpy scrollSpyOnce />
                         <span className="ml-0.5 animate-bounce text-blue-400 dark:text-blue-300" aria-hidden="true">+</span>
                         {/* Confetti burst on mount for extra delight */}
                         <motion.span

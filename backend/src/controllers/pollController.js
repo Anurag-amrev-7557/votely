@@ -9,7 +9,9 @@ exports.createPoll = async (req, res) => {
     console.log('User creating poll:', req.user?._id); // Log the user creating the poll
 
     // --- Robust Validation ---
-    const { title, description, startDate, endDate, options, resultDate, settings, category } = req.body;
+    const { title, description, startDate, endDate, options, resultDate, settings, category, type, positions } = req.body;
+
+    // Common Validation
     if (!title || typeof title !== 'string' || title.trim().length < 3 || title.length > 100) {
       return res.status(400).json({ error: 'Title is required (min 3, max 100 chars)' });
     }
@@ -22,32 +24,17 @@ exports.createPoll = async (req, res) => {
     if (!startDate || !endDate) {
       return res.status(400).json({ error: 'Start and end date are required' });
     }
+
     const now = new Date();
     const start = new Date(startDate);
     const end = new Date(endDate);
     if (isNaN(start) || isNaN(end)) {
       return res.status(400).json({ error: 'Invalid date format' });
     }
-    // if (start < now) {
-    //   return res.status(400).json({ error: 'Start date/time cannot be in the past' });
-    // }
     if (end <= start) {
       return res.status(400).json({ error: 'End date/time must be after start date/time' });
     }
-    if (!Array.isArray(options) || options.length < 2) {
-      return res.status(400).json({ error: 'At least 2 options are required' });
-    }
-    const texts = options.map(o => (o.text || '').trim());
-    if (texts.some(t => !t)) {
-      return res.status(400).json({ error: 'Option text cannot be empty' });
-    }
-    if (texts.some(t => t.length > 100)) {
-      return res.status(400).json({ error: 'Option text must be at most 100 characters' });
-    }
-    const textSet = new Set(texts.map(t => t.toLowerCase()));
-    if (textSet.size !== texts.length) {
-      return res.status(400).json({ error: 'Option text must be unique' });
-    }
+
     if (resultDate) {
       const resultDt = new Date(resultDate);
       if (isNaN(resultDt)) {
@@ -55,6 +42,42 @@ exports.createPoll = async (req, res) => {
       }
       if (resultDt < new Date(endDate)) {
         return res.status(400).json({ error: 'Result date must be after end date' });
+      }
+    }
+
+    // Type-Specific Validation
+    if (type === 'election') {
+      if (!Array.isArray(positions) || positions.length < 1) {
+        return res.status(400).json({ error: 'At least 1 position is required for an election' });
+      }
+
+      for (const pos of positions) {
+        if (!pos.title || !pos.title.trim()) return res.status(400).json({ error: 'All positions must have a title' });
+        if (!Array.isArray(pos.candidates) || pos.candidates.length < 2) {
+          return res.status(400).json({ error: `Position "${pos.title}" must have at least 2 candidates` });
+        }
+        // Candidate validation (reuse logic if possible or simplify)
+        const texts = pos.candidates.map(c => (c.text || '').trim());
+        if (texts.some(t => !t)) return res.status(400).json({ error: `Candidate names for "${pos.title}" cannot be empty` });
+
+        const textSet = new Set(texts.map(t => t.toLowerCase()));
+        if (textSet.size !== texts.length) return res.status(400).json({ error: `Candidate names for "${pos.title}" must be unique` });
+      }
+    } else {
+      // Default Poll Validation
+      if (!Array.isArray(options) || options.length < 2) {
+        return res.status(400).json({ error: 'At least 2 options are required' });
+      }
+      const texts = options.map(o => (o.text || '').trim());
+      if (texts.some(t => !t)) {
+        return res.status(400).json({ error: 'Option text cannot be empty' });
+      }
+      if (texts.some(t => t.length > 100)) {
+        return res.status(400).json({ error: 'Option text must be at most 100 characters' });
+      }
+      const textSet = new Set(texts.map(t => t.toLowerCase()));
+      if (textSet.size !== texts.length) {
+        return res.status(400).json({ error: 'Option text must be unique' });
       }
     }
     // --- End Validation ---
@@ -419,19 +442,41 @@ exports.updatePoll = async (req, res) => {
     if (end <= start) {
       return res.status(400).json({ error: 'End date/time must be after start date/time' });
     }
-    if (!Array.isArray(options) || options.length < 2) {
-      return res.status(400).json({ error: 'At least 2 options are required' });
-    }
-    const texts = options.map(o => (o.text || '').trim());
-    if (texts.some(t => !t)) {
-      return res.status(400).json({ error: 'Option text cannot be empty' });
-    }
-    if (texts.some(t => t.length > 100)) {
-      return res.status(400).json({ error: 'Option text must be at most 100 characters' });
-    }
-    const textSet = new Set(texts.map(t => t.toLowerCase()));
-    if (textSet.size !== texts.length) {
-      return res.status(400).json({ error: 'Option text must be unique' });
+    // Determine Poll Type (existing or new)
+    const isElection = (poll.type === 'election') || (req.body.type === 'election');
+    const { positions } = req.body;
+
+    if (isElection) {
+      if (positions && (!Array.isArray(positions) || positions.length < 1)) {
+        return res.status(400).json({ error: 'At least 1 position is required for an election' });
+      }
+      // Validate positions if provided
+      if (positions) {
+        for (const pos of positions) {
+          if (!pos.title || !pos.title.trim()) return res.status(400).json({ error: 'All positions must have a title' });
+          // Relaxed check: allow editing without candidates array if strictly updating metadata, 
+          // but if candidates provided, ensure valid.
+          if (pos.candidates && (!Array.isArray(pos.candidates) || pos.candidates.length < 2)) {
+            return res.status(400).json({ error: `Position "${pos.title}" must have at least 2 candidates` });
+          }
+        }
+      }
+    } else {
+      // Standard Poll Validation
+      if (!Array.isArray(options) || options.length < 2) {
+        return res.status(400).json({ error: 'At least 2 options are required' });
+      }
+      const texts = options.map(o => (o.text || '').trim());
+      if (texts.some(t => !t)) {
+        return res.status(400).json({ error: 'Option text cannot be empty' });
+      }
+      if (texts.some(t => t.length > 100)) {
+        return res.status(400).json({ error: 'Option text must be at most 100 characters' });
+      }
+      const textSet = new Set(texts.map(t => t.toLowerCase()));
+      if (textSet.size !== texts.length) {
+        return res.status(400).json({ error: 'Option text must be unique' });
+      }
     }
     if (resultDate) {
       const resultDt = new Date(resultDate);
@@ -460,16 +505,33 @@ exports.updatePoll = async (req, res) => {
     }
 
     // --- Update poll fields ---
+    // --- Update poll fields ---
     poll.title = title;
     poll.description = description;
     poll.startDate = startDate;
     poll.endDate = endDate;
-    poll.options = options;
     poll.resultDate = resultDate;
     poll.settings = settings;
     if (category !== undefined) poll.category = category;
 
+    // Handle Type-Specific Updates
+    console.log('[DEBUG] Update Poll - Type:', poll.type, 'Body Type:', req.body.type);
+    console.log('[DEBUG] Positions in body:', JSON.stringify(positions, null, 2));
+
+    if (poll.type === 'election' || req.body.type === 'election') {
+      poll.type = 'election';
+      if (positions) {
+        poll.positions = positions;
+        poll.markModified('positions'); // Ensure Mongoose tracks the change
+        console.log('[DEBUG] Assigned positions to poll');
+      }
+    } else {
+      if (options) poll.options = options;
+    }
+
+    console.log('[DEBUG] Saving poll...');
     await poll.save();
+    console.log('[DEBUG] Poll saved.');
 
     // --- Audit log (optional) ---
     console.log(`[AUDIT] Poll updated: ${poll._id} by user ${req.user ? req.user._id : 'unknown'}`);
@@ -573,37 +635,73 @@ exports.getPollResults = async (req, res) => {
     // Aggregate votes for this poll
     const votes = await Vote.find({ poll: poll._id }).lean();
 
-    // Count votes per option
-    const optionVoteCounts = {};
-    poll.options.forEach(opt => {
-      optionVoteCounts[opt.text] = 0; // Use option text as key
-    });
-    votes.forEach(vote => {
-      // Each vote has an array of options (option texts)
-      if (vote.options && Array.isArray(vote.options)) {
-        vote.options.forEach(optionText => {
-          if (optionVoteCounts.hasOwnProperty(optionText)) {
-            optionVoteCounts[optionText] += 1;
-          }
-        });
-      }
-    });
-
-    // Calculate total votes
+    // Prepare response data based on poll type
+    let options = [];
+    let positions = [];
     const totalVotes = votes.length;
 
-    // Calculate percentages and build detailed options array
-    const options = poll.options.map(opt => {
-      const count = optionVoteCounts[opt.text] || 0;
-      const percent = totalVotes > 0 ? (count / totalVotes) * 100 : 0;
-      return {
-        _id: opt._id,
-        text: opt.text,
-        image: opt.image,
-        count,
-        percent: Math.round(percent * 10) / 10, // 1 decimal place
-      };
-    });
+    if (poll.type === 'election') {
+      // Election Logic: Results per Position
+      positions = poll.positions.map(pos => {
+        const candidates = pos.candidates.map(cand => {
+          // Count votes for this candidate
+          // Vote.options for elections contains candidate IDs
+          const count = votes.filter(v => v.options && v.options.includes(String(cand._id))).length;
+          const percent = totalVotes > 0 ? (count / totalVotes) * 100 : 0; // Note: This percent is % of TOTAL voters, not just for this position.
+          // Optional: Calculate % of votes FOR THIS POSITION if needed, but totalVotes is standard.
+
+          return {
+            _id: cand._id,
+            text: cand.name || cand.text, // Normalized
+            image: cand.image,
+            party: cand.party,
+            count,
+            percent: Math.round(percent * 10) / 10
+          };
+        });
+
+        // Sort candidates by count (winner first)
+        candidates.sort((a, b) => b.count - a.count);
+
+        return {
+          _id: pos._id,
+          title: pos.title,
+          candidates
+        };
+      });
+
+    } else {
+      // Standard Poll Logic: Results per Option
+      const optionVoteCounts = {};
+      poll.options.forEach(opt => {
+        optionVoteCounts[opt.text] = 0;
+      });
+
+      votes.forEach(vote => {
+        if (vote.options && Array.isArray(vote.options)) {
+          vote.options.forEach(optionText => {
+            if (optionVoteCounts.hasOwnProperty(optionText)) {
+              optionVoteCounts[optionText] += 1;
+            }
+          });
+        }
+      });
+
+      options = poll.options.map(opt => {
+        const count = optionVoteCounts[opt.text] || 0;
+        const percent = totalVotes > 0 ? (count / totalVotes) * 100 : 0;
+        return {
+          _id: opt._id,
+          text: opt.text,
+          image: opt.image,
+          count,
+          percent: Math.round(percent * 10) / 10,
+        };
+      });
+
+      // Sort options by count
+      options.sort((a, b) => b.count - a.count);
+    }
 
     // Find the user's vote if authenticated
     let userVote = null;
@@ -641,12 +739,26 @@ exports.getPollResults = async (req, res) => {
       // totalVotes = null; 
     }
 
+    // Calculate voting trends (Daily)
+    const votesByDate = {};
+    votes.forEach(vote => {
+      const date = vote.createdAt.toISOString().split('T')[0];
+      votesByDate[date] = (votesByDate[date] || 0) + 1;
+    });
+    const sortedDates = Object.keys(votesByDate).sort();
+    const votingTrends = {
+      labels: sortedDates,
+      data: sortedDates.map(date => votesByDate[date])
+    };
+
     res.json({
       pollId: poll._id,
       title: poll.title,
       description: poll.description,
       options,
+      positions, // Include positions for election polls
       totalVotes,
+      votingTrends, // Real trend data
       status,
       resultDate: poll.resultDate,
       userVote,

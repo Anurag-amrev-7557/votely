@@ -7,14 +7,14 @@ const HeroImage = ({ onImageLoad }) => {
             <img
                 src={landingHero}
                 alt="Online voting platform hero"
-                className="max-w-full h-auto rounded-xl transition-all duration-500"
-                loading="lazy"
+                className="max-w-full h-auto rounded-xl transition-all duration-500 shadow-2xl"
+                loading="eager"
                 width={500}
                 height={400}
                 style={{ objectFit: 'cover' }}
                 onLoad={onImageLoad}
-                decoding="async"
-                fetchpriority="low"
+                decoding="sync"
+                fetchpriority="high"
             />
         </div>
     );

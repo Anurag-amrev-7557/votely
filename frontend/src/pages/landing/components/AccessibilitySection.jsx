@@ -1,12 +1,14 @@
-import React, { useState, useRef, useEffect } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { useTheme } from '../../../context/ThemeContext';
 import { Eye, Code, Cpu, Scan, CheckCircle2 } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+
 import { useInViewPause } from '../../../hooks/useInViewPause';
 
 // --- SHARED UI COMPONENT (The "Subject") ---
 // This component renders twice: once for the look, once for the code.
-const AccessibilityDemoUI = ({ mode = 'visual' }) => {
+// --- SHARED UI COMPONENT (The "Subject") ---
+// This component renders twice: once for the look, once for the code.
+const AccessibilityDemoUI = React.memo(({ mode = 'visual' }) => {
     const isSemantic = mode === 'semantic';
 
     return (
@@ -93,8 +95,14 @@ const AccessibilityDemoUI = ({ mode = 'visual' }) => {
             </div>
         </div>
     );
-};
+});
 
+const METRICS = [
+    { label: "ARIA Coverage", value: "100%", icon: CheckCircle2 },
+    { label: "Keyboard Nav", value: "NATIVE", icon: Cpu },
+    { label: "Color Contrast", value: "AAA", icon: Eye },
+    { label: "Semantics", value: "VALID", icon: Code },
+];
 
 const AccessibilitySection = () => {
     const sectionRef = useRef(null);
@@ -150,7 +158,6 @@ const AccessibilitySection = () => {
         return () => cancelAnimationFrame(id);
     }, [isHovering, mouseX, mouseY, isPaused]);
 
-
     return (
         <section
             ref={(node) => {
@@ -159,11 +166,11 @@ const AccessibilitySection = () => {
             }}
             id="accessibility"
             className="relative w-full py-16 bg-zinc-950 overflow-hidden cursor-crosshair selection:bg-green-500/30"
+            style={{ contentVisibility: 'auto' }}
         >
             {/* Background Grid */}
             <div className="absolute inset-0 pointer-events-none opacity-[0.03]"
-                style={{ backgroundImage: `linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)`, backgroundSize: '40px 40px' }}>
-            </div>
+                style={{ backgroundImage: `linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)`, backgroundSize: '40px 40px' }} />
 
             <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
 
@@ -175,7 +182,7 @@ const AccessibilitySection = () => {
                         viewport={{ once: true }}
                         className="inline-flex items-center gap-2 px-3 py-1 rounded bg-zinc-900 border border-zinc-800 text-xs font-mono text-zinc-400 mb-6 uppercase tracking-widest"
                     >
-                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                         System Integrity: Verified
                     </motion.div>
 
@@ -248,12 +255,7 @@ const AccessibilitySection = () => {
 
                 {/* Metric Strip */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-24 border-t border-zinc-900 pt-12" role="list">
-                    {[
-                        { label: "ARIA Coverage", value: "100%", icon: CheckCircle2 },
-                        { label: "Keyboard Nav", value: "NATIVE", icon: Cpu },
-                        { label: "Color Contrast", value: "AAA", icon: Eye },
-                        { label: "Semantics", value: "VALID", icon: Code },
-                    ].map((metric, i) => (
+                    {METRICS.map((metric, i) => (
                         <div key={i} className="flex flex-col items-center md:items-start p-4 hover:bg-zinc-900/50 rounded-xl transition-colors group" role="listitem">
                             <metric.icon className="w-6 h-6 text-zinc-400 group-hover:text-white transition-colors mb-3" />
                             <div className="text-3xl font-black text-white mb-1 group-hover:scale-105 transition-transform origin-left">{metric.value}</div>

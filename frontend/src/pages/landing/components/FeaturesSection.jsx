@@ -1,7 +1,6 @@
-import React, { useRef } from 'react';
-import { motion, useTransform, useMotionTemplate, useMotionValue } from 'framer-motion';
-import { useTheme } from '../../../context/ThemeContext';
-import { ShieldCheck, Accessibility, Sparkles, ArrowRight, Lock, Eye, Zap, Fingerprint } from 'lucide-react';
+import { motion, useMotionTemplate, useMotionValue } from 'framer-motion';
+import { ShieldCheck, Accessibility, Sparkles, ArrowRight, Eye } from 'lucide-react';
+import React from 'react';
 
 // --- DATA ---
 const FEATURES = [
@@ -47,7 +46,7 @@ const FEATURES = [
 
 // --- COMPONENTS ---
 
-const BentoCard = ({ title, description, icon: Icon, span, index }) => {
+const BentoCard = React.memo(({ title, description, icon: Icon, span, index }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
@@ -68,8 +67,7 @@ const BentoCard = ({ title, description, icon: Icon, span, index }) => {
     >
       {/* Subtle Noise Texture */}
       <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none"
-        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}>
-      </div>
+        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
 
       {/* Hover Spotlight Effect */}
       <motion.div
@@ -99,11 +97,13 @@ const BentoCard = ({ title, description, icon: Icon, span, index }) => {
       </div>
     </motion.div>
   );
-};
+});
+
+BentoCard.displayName = 'BentoCard';
 
 const FeaturesSection = () => {
   return (
-    <section className="relative w-full py-16 md:py-32 px-4 md:px-16 bg-white dark:bg-black overflow-hidden selection:bg-gray-200 dark:selection:bg-zinc-800">
+    <section className="relative w-full py-16 md:py-32 px-4 md:px-16 bg-white dark:bg-black overflow-hidden selection:bg-gray-200 dark:selection:bg-zinc-800" style={{ contentVisibility: 'auto' }}>
 
       {/* Massive Header */}
       <div className="max-w-8xl mx-auto mb-16 md:mb-32">
@@ -114,7 +114,7 @@ const FeaturesSection = () => {
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
         >
           <div className="flex items-center gap-3 mb-6 md:mb-8">
-            <span className="h-px w-8 md:w-12 bg-gray-400 dark:bg-zinc-700"></span>
+            <span className="h-px w-8 md:w-12 bg-gray-400 dark:bg-zinc-700" />
             <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gray-700 dark:text-zinc-500">
               System Architecture
             </h2>
@@ -149,7 +149,7 @@ const FeaturesSection = () => {
           <div className="flex items-center gap-4">
             <div className="flex space-x-1">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-zinc-800"></div>
+                <div key={i} className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-zinc-800" />
               ))}
             </div>
             <p className="text-sm text-gray-600 font-mono tracking-wider uppercase">
@@ -160,7 +160,7 @@ const FeaturesSection = () => {
           <a href="#demo" className="group flex items-center gap-4 text-lg font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
             <span className="relative">
               View Technical Specs
-              <span className="absolute left-0 -bottom-1 w-full h-px bg-current scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-right group-hover:origin-left"></span>
+              <span className="absolute left-0 -bottom-1 w-full h-px bg-current scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-right group-hover:origin-left" />
             </span>
             <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1 duration-300" />
           </a>
@@ -172,4 +172,4 @@ const FeaturesSection = () => {
 };
 
 FeaturesSection.displayName = 'FeaturesSection';
-export default FeaturesSection;
+export default React.memo(FeaturesSection);

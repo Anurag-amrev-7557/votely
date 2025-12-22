@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
 import { motion, useMotionTemplate, useMotionValue } from 'framer-motion';
-import { useTheme } from '../../../context/ThemeContext';
 import { Check, ArrowRight, Minus } from 'lucide-react';
+import React, { useState } from 'react';
 
 // --- VISUALS ---
 // Abstract tech-minimalist visuals matching the "LiveDemo" style
@@ -35,12 +34,52 @@ const VisualUnit = ({ type }) => {
                 </svg>
             )}
         </div>
-    )
-}
+    );
+};
+
+// --- DATA ---
+const TIERS = [
+    {
+        id: 'protocol',
+        name: "Protocol",
+        description: "Local Consensus",
+        price: "0",
+        features: [
+            { name: "Single Election Instance", included: true },
+            { name: "AES-256 Encryption", included: true },
+            { name: "Basic Audit Logs", included: true },
+            { name: "Custom Domain Mapping", included: false },
+        ],
+    },
+    {
+        id: 'federation',
+        name: "Federation",
+        description: "Org Governance",
+        price: "29",
+        features: [
+            { name: "Unlimited Instances", included: true },
+            { name: "Zero-Knowledge Proofs", included: true },
+            { name: "Real-time Chaos Auditing", included: true },
+            { name: "Custom Domain Mapping", included: true },
+        ],
+    },
+    {
+        id: 'empire',
+        name: "Empire",
+        description: "Sovereign Scale",
+        price: "Custom",
+        features: [
+            { name: "Dedicated Nodes", included: true },
+            { name: "Quantum-Resistant Sig", included: true },
+            { name: "Sovereign Identity Integ", included: true },
+            { name: "White-label Solution", included: true },
+        ],
+    }
+];
 
 // --- CARD COMPONENT ---
 // Exact replica of BentoCard styling from FeaturesSection
-const PriceCard = ({ tier, billing, index }) => {
+const PriceCard = React.memo(({ tier, index }) => {
     const mouseX = useMotionValue(0);
     const mouseY = useMotionValue(0);
 
@@ -60,12 +99,11 @@ const PriceCard = ({ tier, billing, index }) => {
             viewport={{ once: true }}
             transition={{ duration: 1, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
             onMouseMove={handleMouseMove}
-            className={`group relative flex flex-col justify-between p-8 md:p-12 overflow-hidden bg-gray-50 dark:bg-zinc-900/50 border border-transparent dark:border-zinc-800/50 transition-all duration-700 rounded-3xl h-full`}
+            className="group relative flex flex-col justify-between p-8 md:p-12 overflow-hidden bg-gray-50 dark:bg-zinc-900/50 border border-transparent dark:border-zinc-800/50 transition-all duration-700 rounded-3xl h-full"
         >
             {/* Subtle Noise Texture */}
             <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none"
-                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}>
-            </div>
+                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
 
             {/* Hover Spotlight Effect */}
             <motion.div
@@ -106,7 +144,7 @@ const PriceCard = ({ tier, billing, index }) => {
 
                 {/* Features List */}
                 <ul className="space-y-4 mb-auto">
-                    <div className="h-px w- full bg-gray-200 dark:bg-zinc-800 mb-6" />
+                    <div className="h-px w-full bg-gray-200 dark:bg-zinc-800 mb-6" />
                     {tier.features.map((feat, i) => (
                         <li key={i} className="flex items-start gap-3 text-sm">
                             {feat.included ? (
@@ -138,54 +176,15 @@ const PriceCard = ({ tier, billing, index }) => {
             </div>
         </motion.div>
     );
-};
+});
 
+PriceCard.displayName = 'PriceCard';
 
 const PriceSection = () => {
-    const { isDarkMode } = useTheme();
     const [billing, setBilling] = useState('monthly');
 
-    const TIERS = [
-        {
-            id: 'protocol',
-            name: "Protocol",
-            description: "Local Consensus",
-            price: "0",
-            features: [
-                { name: "Single Election Instance", included: true },
-                { name: "AES-256 Encryption", included: true },
-                { name: "Basic Audit Logs", included: true },
-                { name: "Custom Domain Mapping", included: false },
-            ],
-        },
-        {
-            id: 'federation',
-            name: "Federation",
-            description: "Org Governance",
-            price: "29",
-            features: [
-                { name: "Unlimited Instances", included: true },
-                { name: "Zero-Knowledge Proofs", included: true },
-                { name: "Real-time Chaos Auditing", included: true },
-                { name: "Custom Domain Mapping", included: true },
-            ],
-        },
-        {
-            id: 'empire',
-            name: "Empire",
-            description: "Sovereign Scale",
-            price: "Custom",
-            features: [
-                { name: "Dedicated Nodes", included: true },
-                { name: "Quantum-Resistant Sig", included: true },
-                { name: "Sovereign Identity Integ", included: true },
-                { name: "White-label Solution", included: true },
-            ],
-        }
-    ];
-
     return (
-        <section className="relative w-full py-32 px-4 md:px-16 bg-white dark:bg-black overflow-hidden selection:bg-gray-200 dark:selection:bg-zinc-800">
+        <section className="relative w-full py-32 px-4 md:px-16 bg-white dark:bg-black overflow-hidden selection:bg-gray-200 dark:selection:bg-zinc-800" style={{ contentVisibility: 'auto' }}>
 
             {/* Massive Header - EXACT Match of FeaturesSection */}
             <div className="max-w-8xl mx-auto mb-32">
@@ -196,7 +195,7 @@ const PriceSection = () => {
                     transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
                 >
                     <div className="flex items-center gap-3 mb-8">
-                        <span className="h-px w-12 bg-gray-400 dark:bg-zinc-700"></span>
+                        <span className="h-px w-12 bg-gray-400 dark:bg-zinc-700" />
                         <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gray-700 dark:text-zinc-500">
                             Resource Allocation
                         </h2>
@@ -236,7 +235,7 @@ const PriceSection = () => {
             <div className="max-w-8xl mx-auto flex md:grid overflow-x-auto md:overflow-visible snap-x snap-mandatory md:grid-cols-3 gap-4 md:gap-6 items-stretch pb-8 md:pb-0 px-4 md:px-0 -mx-4 md:mx-0 no-scrollbar" role="list">
                 {TIERS.map((tier, idx) => (
                     <div key={tier.id} className="flex-shrink-0 min-w-full md:min-w-0 md:w-auto snap-center" role="listitem">
-                        <PriceCard tier={tier} billing={billing} index={idx} />
+                        <PriceCard tier={tier} index={idx} />
                     </div>
                 ))}
             </div>

@@ -1,9 +1,10 @@
-import React, { useState, useEffect, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTheme } from '../../../context/ThemeContext';
 import { ArrowRight } from 'lucide-react';
+import React, { useState, memo } from 'react';
+
 import { useInViewPause } from '../../../hooks/useInViewPause';
 
+// --- DATA ---
 // --- DATA ---
 const STEPS = [
     {
@@ -32,9 +33,11 @@ const STEPS = [
     },
 ];
 
+const VOTE_INITIAL_POSITIONS = [50, -80, 120, -50, 100, -100];
+
 // --- ABSTRACT VISUALS ---
 
-const CreationVisual = ({ isPaused }) => (
+const CreationVisual = React.memo(({ isPaused }) => (
     <svg viewBox="0 0 400 400" className="w-full h-full text-gray-900 dark:text-white">
         {/* Central Core */}
         <motion.circle
@@ -80,9 +83,9 @@ const CreationVisual = ({ isPaused }) => (
             fill="none" stroke="currentColor"
         />
     </svg>
-);
+));
 
-const InviteVisual = ({ isPaused }) => (
+const InviteVisual = React.memo(({ isPaused }) => (
     <svg viewBox="0 0 400 400" className="w-full h-full text-gray-900 dark:text-white">
         {/* Source */}
         <circle cx="200" cy="200" r="10" fill="currentColor" />
@@ -108,12 +111,9 @@ const InviteVisual = ({ isPaused }) => (
             </motion.g>
         ))}
     </svg>
-);
+));
 
-const VoteVisual = ({ isPaused }) => {
-    // Pre-computed initial X positions to avoid Math.random() issues during render
-    const initialPositions = [50, -80, 120, -50, 100, -100];
-
+const VoteVisual = React.memo(({ isPaused }) => {
     return (
         <svg viewBox="0 0 400 400" className="w-full h-full text-gray-900 dark:text-white">
             {/* Ballot Box / Shield */}
@@ -127,7 +127,7 @@ const VoteVisual = ({ isPaused }) => {
             />
 
             {/* Incoming Votes */}
-            {initialPositions.map((offset, i) => (
+            {VOTE_INITIAL_POSITIONS.map((offset, i) => (
                 <motion.circle
                     key={i}
                     initial={{
@@ -151,9 +151,9 @@ const VoteVisual = ({ isPaused }) => {
             ))}
         </svg>
     );
-};
+});
 
-const ResultsVisual = ({ isPaused }) => (
+const ResultsVisual = React.memo(({ isPaused }) => (
     <svg viewBox="0 0 400 400" className="w-full h-full text-gray-900 dark:text-white">
         {/* Grid Lines */}
         <motion.line x1="50" y1="350" x2="350" y2="350" stroke="currentColor" strokeWidth="1" opacity="0.2" />
@@ -183,15 +183,14 @@ const ResultsVisual = ({ isPaused }) => (
             />
         ))}
     </svg>
-);
+));
 
-const VisualContainer = ({ activeStep, isPaused }) => {
+const VisualContainer = React.memo(({ activeStep, isPaused }) => {
     return (
         <div className="relative w-full aspect-square md:aspect-auto md:h-[600px] bg-gray-50 dark:bg-zinc-900/50 rounded-3xl overflow-hidden border border-gray-300 dark:border-zinc-800 flex items-center justify-center">
             {/* Ambient Background Noise/Grain */}
             <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none"
-                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}>
-            </div>
+                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
 
             <AnimatePresence mode="wait">
                 <motion.div
@@ -210,15 +209,14 @@ const VisualContainer = ({ activeStep, isPaused }) => {
             </AnimatePresence>
         </div>
     );
-};
-
+});
 
 const LiveDemoSection = () => {
     const [activeStep, setActiveStep] = useState(1);
     const [containerRef, isPaused] = useInViewPause({ threshold: 0.2 });
 
     return (
-        <section ref={containerRef} className="relative w-full px-4 md:px-16 py-16 md:py-32 bg-white dark:bg-black overflow-hidden selection:bg-gray-200 dark:selection:bg-zinc-800">
+        <section ref={containerRef} className="relative w-full px-4 md:px-16 py-16 md:py-32 bg-white dark:bg-black overflow-hidden selection:bg-gray-200 dark:selection:bg-zinc-800" style={{ contentVisibility: 'auto' }}>
 
             <div className="max-w-8xl mx-auto">
                 {/* Header */}
@@ -230,7 +228,7 @@ const LiveDemoSection = () => {
                 >
                     <div>
                         <div className="flex items-center gap-3 mb-4 md:mb-6">
-                            <span className="h-px w-8 md:w-12 bg-gray-400 dark:bg-zinc-700"></span>
+                            <span className="h-px w-8 md:w-12 bg-gray-400 dark:bg-zinc-700" />
                             <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-gray-700 dark:text-zinc-500">
                                 Process Flow
                             </h2>
@@ -275,7 +273,7 @@ const LiveDemoSection = () => {
                             </div>
                         ))}
                         {/* Final Border */}
-                        <div className="w-full h-px bg-gray-300 dark:bg-zinc-800 hidden lg:block"></div>
+                        <div className="w-full h-px bg-gray-300 dark:bg-zinc-800 hidden lg:block" />
                     </div>
 
                     {/* Right: Visual */}

@@ -110,7 +110,10 @@ const ModernToast = ({ t, type, title, subtitle, icon, duration, action, details
         filter: t.visible ? 'blur(0px)' : 'blur(10px)'
       }}
       exit={{ opacity: 0, scale: 0.9, filter: 'blur(10px)' }}
-      transition={{ type: "spring", stiffness: 400, damping: 30, mass: 1 }}
+      transition={{
+        default: { type: "spring", stiffness: 400, damping: 30, mass: 1 },
+        filter: { type: "tween", duration: 0.2, ease: "easeOut" } // Avoid negative blur values from spring overshoot
+      }}
       onMouseMove={handleMouseMove}
       style={{ pointerEvents: 'auto' }}
       className={`
@@ -350,7 +353,17 @@ export const showNotification = (
 };
 
 // Wrapped toast object to enforce the new UI
-const toastProxy = {
+const toastProxy = (message, options) => {
+  // Allow direct calls like toast('message') to use our custom UI
+  if (typeof message === 'function' || React.isValidElement(message)) {
+    return toast.custom(message, options);
+  }
+  // Default to custom variant for generic messages (preserves glass UI)
+  return showCustomToast(message, options?.subtitle, options);
+};
+
+// Assign methods to the function
+Object.assign(toastProxy, {
   ...toast,
   success: (message, options) => showSuccessToast(message, options?.subtitle, options),
   error: (message, options) => showErrorToast(message, options?.subtitle, options),
@@ -366,7 +379,7 @@ const toastProxy = {
   dismiss: toast.dismiss,
   remove: toast.remove,
   promise: toast.promise,
-};
+});
 
 export const dismissToast = (toastId) => toast.dismiss(toastId);
 export const dismissAllToasts = () => toast.dismiss();

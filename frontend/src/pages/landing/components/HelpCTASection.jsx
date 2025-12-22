@@ -71,7 +71,7 @@ const FaqItem = ({ item, isOpen, onClick }) => {
 
 // --- IMMERSIVE CTA COMPONENT ---
 
-const ImmersiveCTA = () => {
+const ImmersiveCTA = React.memo(() => {
     // 3D Tilt Physics
     const x = useMotionValue(0);
     const y = useMotionValue(0);
@@ -105,13 +105,13 @@ const ImmersiveCTA = () => {
     };
 
     // Particle Simulation Data
-    const particles = Array.from({ length: 20 }).map((_, i) => ({
+    const particles = React.useMemo(() => Array.from({ length: 20 }).map((_, i) => ({
         id: i,
         x: Math.random() * 100,
         y: Math.random() * 100,
         delay: Math.random() * 2,
         duration: 3 + Math.random() * 2
-    }));
+    })), []);
 
     return (
         <motion.div
@@ -229,7 +229,7 @@ const ImmersiveCTA = () => {
             </motion.div>
         </motion.div>
     );
-};
+});
 
 const HelpCTASection = () => {
     const [openIndex, setOpenIndex] = useState(null);
@@ -239,7 +239,7 @@ const HelpCTASection = () => {
     };
 
     return (
-        <section className="relative w-full py-24 md:py-32 px-4 md:px-8 bg-white dark:bg-black selection:bg-gray-200 dark:selection:bg-zinc-800 transition-colors duration-300">
+        <section className="relative w-full py-24 md:py-32 px-4 md:px-8 bg-white dark:bg-black selection:bg-gray-200 dark:selection:bg-zinc-800 transition-colors duration-300" style={{ contentVisibility: 'auto' }}>
             <div className="max-w-7xl mx-auto">
 
                 {/* Section Header */}

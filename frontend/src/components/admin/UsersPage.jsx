@@ -369,7 +369,7 @@ const UsersPage = () => {
   // Removed early return for isLoading to prevent page flash on search/filter updates
 
   return (
-    <div className="w-full min-h-screen p-6 md:p-8 md:pr-0 space-y-8 animate-fade-in pb-24" role="main" aria-label="Admin users management" tabIndex={0}>
+    <div className="w-full min-h-screen py-4 px-3 pr-1 space-y-8 animate-fade-in pb-24" role="main" aria-label="Admin users management" tabIndex={0}>
       {/* Users List Section */}
       {/* Users List Section */}
       {/* Header Section - Redesigned with Pill Stats */}
@@ -845,7 +845,7 @@ const UsersPage = () => {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 shadow-sm rounded-b-xl overflow-hidden relative min-h-[400px] border-t-0 !mt-0">
+      <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 shadow-sm rounded-b-2xl overflow-y-auto relative max-h-[calc(100vh-21.7rem)] border-t-0 !mt-0 custom-scrollbar">
         <AnimatePresence>
           {isLoading && (
             <motion.div
@@ -860,7 +860,7 @@ const UsersPage = () => {
         </AnimatePresence>
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-gray-50 dark:bg-zinc-800/50 border-b border-gray-200 dark:border-zinc-800">
+            <tr className="bg-gray-50 dark:bg-zinc-800/50 border-b border-gray-200 dark:border-zinc-800 sticky top-0 z-20 backdrop-blur-sm">
               <th className="px-5 py-4 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400 w-12">
                 <input
                   type="checkbox"

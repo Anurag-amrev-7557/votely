@@ -39,7 +39,7 @@ const AdminDashboard = ({ isDarkMode }) => {
   }, []);
 
   return (
-    <div className="w-full min-h-screen p-6 md:p-8 pr-0 md:pr-0 space-y-8">
+    <div className="w-full min-h-screen py-4 px-3 pr-1 space-y-8">
 
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4">
         <div>

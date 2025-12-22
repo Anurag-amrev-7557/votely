@@ -2,7 +2,7 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useMotionValue, useMotionTemplate } from 'framer-motion';
 import { MagnifyingGlass, Bell, CaretDown, X, ArrowRight, User, Calendar, Clock, BarChart3, Users } from '../ui/icons';
-import { Check, LayoutGrid, List, Filter, SlidersHorizontal, Plus } from 'lucide-react';
+import { Check, LayoutGrid, List, Filter, SlidersHorizontal, Plus, Heart, HeartOff } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useDebounce } from '../../hooks/useDebounce';
 // Remove direct axios import since we're using axiosInstance
@@ -755,7 +755,7 @@ const AvailablePolls = () => {
   const handlePollClick = useCallback((poll) => {
     if (!user && !authLoading) {
       setShowLoginModal(true);
-      toast('Please log in to participate in polls.', { icon: 'ℹ️' });
+      toast.error('Please log in to participate in polls.');
       return;
     }
 
@@ -765,7 +765,7 @@ const AvailablePolls = () => {
 
     if (hasVoted) {
       // User has already voted, show results instead
-      toast('You have already voted in this poll. Showing results...', { icon: 'ℹ️' });
+      toast.info('You have already voted in this poll. Showing results...', { id: `already-voted-${pollId}` });
       navigate(`/vote/${pollId}?showResults=1`);
       return;
     }
@@ -806,10 +806,10 @@ const AvailablePolls = () => {
     try {
       if (isFav) {
         await axiosInstance.post('/profile/favorites/remove', { pollId });
-        toast('Removed from favorites', { icon: '💔' });
+        toast('Removed from favorites', { icon: HeartOff });
       } else {
         await axiosInstance.post('/profile/favorites/add', { pollId });
-        toast('Added to favorites', { icon: '❤️' });
+        toast('Added to favorites', { icon: Heart });
       }
 
       // Show success animation
@@ -1412,7 +1412,7 @@ const AvailablePolls = () => {
           >
             <div className="flex items-center gap-3 mb-8">
               <button
-                onClick={() => navigate(-1)}
+                onClick={() => navigate('/')} // Navigate to home
                 className="group flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-gray-700 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-colors"
               >
                 <ArrowRight className="w-4 h-4 rotate-180 group-hover:-translate-x-1 transition-transform" />

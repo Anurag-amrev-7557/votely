@@ -475,7 +475,7 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="relative min-h-screen w-full p-4 md:p-8 overflow-hidden bg-gray-50 dark:bg-black transition-colors duration-500">
+    <div className="relative min-h-screen w-full py-4 px-3 pr-1 overflow-hidden bg-gray-50 dark:bg-black transition-colors duration-500">
 
       {/* Background Decor - Blobs */}
       <div className="absolute top-0 left-0 w-full h-96 bg-blue-500/10 dark:bg-blue-500/20 blur-[120px] rounded-full pointer-events-none mix-blend-multiply dark:mix-blend-screen transform -translate-y-1/2" />

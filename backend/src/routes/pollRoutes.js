@@ -26,18 +26,11 @@ router.post(
   checkPolicy('poll', 'create'),
   [
     body('title').isString().trim().notEmpty().withMessage('Title is required'),
-    body('options').isArray({ min: 2 }).withMessage('At least two options are required'),
-    body('options.*.text').isString().trim().notEmpty().withMessage('Option text is required'),
-    body('options.*.description').optional().isString(),
-    body('options.*.party').optional().isString(),
-    body('options.*.image').optional().isString(),
-    body('options.*.sop').optional().isString(),
-    body('options.*.motto').optional().isString(),
-    body('options.*.website').optional().isString(),
-    body('options.*.socialMedia').optional().isObject(),
-    body('options.*.additionalPhotos').optional().isArray(),
-    body('options.*.links').optional().isArray(),
-    // Add more validations as needed
+    body('title').isString().trim().notEmpty().withMessage('Title is required'),
+    // We remove strict 'options' validation here because it conflicts with 'election' type
+    // which uses 'positions'. The controller handles conditional validation robustly.
+    body('options').optional().isArray(),
+    body('positions').optional().isArray(),
   ],
   handleValidationErrors,
   pollController.createPoll

@@ -4,6 +4,7 @@ const axios = require('axios');
 
 const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
+const Activity = require('../models/Activity');
 const { hash } = require('../utils/cryptoUtils');
 const generateToken = require('../utils/generateToken');
 
@@ -90,6 +91,14 @@ const loginUser = async (req, res) => {
         const user = await User.findOne({ emailHash: hash(email.toLowerCase()) }).select('+password');
 
         if (user && (await bcrypt.compare(password, user.password))) {
+            // Valid login: Log activity
+            await Activity.createActivity(user._id, 'Login', 'Logged in via Password', {
+                metadata: {
+                    ip: req.ip,
+                    userAgent: req.headers['user-agent'],
+                    location: 'Unknown' // GeoIP lookup would go here
+                }
+            });
             res.json({
                 _id: user.id,
                 name: user.name,
@@ -208,6 +217,14 @@ const verifyMagicLink = async (req, res) => {
         // If name was placeholder, maybe we keep it until they update profile?
         await user.save();
 
+        // Log session
+        await Activity.createActivity(user._id, 'Login', 'Logged in via Magic Link', {
+            metadata: {
+                ip: req.ip,
+                userAgent: req.headers['user-agent']
+            }
+        });
+
         // 4. Issue JWT
         res.json({
             _id: user.id,
@@ -314,6 +331,14 @@ const googleAuth = async (req, res) => {
                 });
             }
         }
+
+        // Log session
+        await Activity.createActivity(user._id, 'Login', 'Logged in via Google', {
+            metadata: {
+                ip: req.ip,
+                userAgent: req.headers['user-agent']
+            }
+        });
 
         res.status(200).json({
             _id: user.id,

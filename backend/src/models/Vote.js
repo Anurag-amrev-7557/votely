@@ -3,7 +3,11 @@ const mongoose = require('mongoose');
 const voteSchema = new mongoose.Schema({
   poll: { type: mongoose.Schema.Types.ObjectId, ref: 'Poll', required: true },
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Optional for anonymous votes
-  options: [{ type: String, required: true }], // Array of option texts or ids
+  options: [{ type: String }], // Array of option texts (Simple Polls)
+  selections: [{ // For Election Type
+    positionId: { type: mongoose.Schema.Types.ObjectId, required: true },
+    candidateId: { type: mongoose.Schema.Types.ObjectId, required: true }
+  }],
   votedAt: {
     type: Date,
     default: Date.now

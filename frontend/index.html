@@ -122,13 +122,13 @@
         try {
           // Pre-calculate theme before any render
           const userPref = localStorage.getItem('theme');
-          const systemPref = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-          const theme = userPref || systemPref;
+          // Default to 'light' if no user preference is found, ignoring system preference for initial load
+          const theme = userPref || 'light';
           
           const html = document.documentElement;
           html.classList.remove('light', 'dark');
           html.setAttribute('data-theme', theme);
-          html.setAttribute('data-effective-theme', theme === 'system' ? systemPref : theme);
+          html.setAttribute('data-effective-theme', theme);
           
           if (theme === 'dark') {
             html.classList.add('dark');

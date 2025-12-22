@@ -2,12 +2,6 @@ import {
   Events
 } from "./chunk-MYHIP5LU.js";
 import {
-  _extends
-} from "./chunk-HQ6ZTAWL.js";
-import {
-  require_prop_types
-} from "./chunk-J2IKH2O7.js";
-import {
   _classCallCheck,
   _isNativeReflectConstruct,
   _objectSpread2,
@@ -18,6 +12,9 @@ import {
   lerp,
   misc
 } from "./chunk-2JCQ4X46.js";
+import {
+  require_prop_types
+} from "./chunk-J2IKH2O7.js";
 import {
   addAfterEffect,
   addEffect,
@@ -230,8 +227,8 @@ import {
 import {
   require_client
 } from "./chunk-UCNSDCM3.js";
-import "./chunk-L7IFVMJ4.js";
 import "./chunk-TGFGTOM7.js";
+import "./chunk-L7IFVMJ4.js";
 import {
   require_react
 } from "./chunk-4X3XUJ2M.js";
@@ -469,6 +466,17 @@ var require_with_selector = __commonJS({
     }
   }
 });
+
+// node_modules/@babel/runtime/helpers/esm/extends.js
+function _extends() {
+  return _extends = Object.assign ? Object.assign.bind() : function(n2) {
+    for (var e2 = 1; e2 < arguments.length; e2++) {
+      var t3 = arguments[e2];
+      for (var r2 in t3) ({}).hasOwnProperty.call(t3, r2) && (n2[r2] = t3[r2]);
+    }
+    return n2;
+  }, _extends.apply(null, arguments);
+}
 
 // node_modules/@react-three/drei/web/Html.js
 var React = __toESM(require_react());

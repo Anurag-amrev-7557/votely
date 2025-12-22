@@ -6,7 +6,7 @@ const HeroText = ({ isVisible }) => {
         <>
             {/* Advanced Animated Badge */}
             <motion.div
-                className="relative hidden @[480px]:inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-100 via-blue-200 to-blue-100 dark:from-blue-900/40 dark:via-blue-800/30 dark:to-blue-900/40 text-blue-700 dark:text-blue-300 text-sm font-semibold shadow-lg ring-1 ring-blue-200 dark:ring-blue-900/40 w-fit transition-all duration-500 will-change-[background-color,color,box-shadow]"
+                className="relative hidden @[480px]:inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-100 via-blue-200 to-blue-100 dark:from-blue-900/40 dark:via-blue-800/30 dark:to-blue-900/40 text-blue-700 dark:text-blue-300 text-sm font-semibold shadow-lg ring-1 ring-blue-200 dark:ring-blue-900/40 w-fit transition-all duration-500"
                 initial={isVisible ? { opacity: 0, y: 32, scale: 0.95, filter: "blur(4px)" } : false}
                 animate={isVisible ? { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" } : false}
                 transition={{ type: "spring", stiffness: 320, damping: 24, duration: 0.7 }}
@@ -83,7 +83,7 @@ const HeroText = ({ isVisible }) => {
                     />
                     {/* Animated headline with gradient and shimmer */}
                     <motion.h1
-                        className="relative z-10 text-3xl @[480px]:text-4xl @[864px]:text-5xl font-extrabold text-gray-900 dark:text-white leading-tight tracking-tight transition-colors duration-300 will-change-[color]"
+                        className="relative z-10 text-3xl @[480px]:text-4xl @[864px]:text-5xl font-extrabold text-gray-900 dark:text-white leading-tight tracking-tight transition-colors duration-300"
                         initial={{ opacity: 0, y: 32, letterSpacing: "-0.04em" }}
                         animate={{ opacity: 1, y: 0, letterSpacing: "0em" }}
                         transition={{ duration: 0.7, delay: 0.05, type: "spring", stiffness: 180, damping: 18 }}
@@ -116,7 +116,7 @@ const HeroText = ({ isVisible }) => {
                         <span className="relative inline-block">
                             {/* Animated gradient text with shimmer */}
                             <motion.span
-                                className="bg-gradient-to-r from-blue-700 via-blue-500 to-blue-400 dark:from-blue-300 dark:via-blue-400 dark:to-blue-500 bg-clip-text text-transparent transition-colors duration-300 will-change-[color] font-black"
+                                className="bg-gradient-to-r from-blue-700 via-blue-500 to-blue-400 dark:from-blue-300 dark:via-blue-400 dark:to-blue-500 bg-clip-text text-transparent transition-colors duration-300 font-black"
                                 initial={{ backgroundPosition: "0% 50%" }}
                                 animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
                                 transition={{ repeat: Infinity, duration: 3.5, ease: "linear" }}
@@ -188,7 +188,7 @@ const HeroText = ({ isVisible }) => {
                     </motion.div>
                 </div>
                 <motion.p
-                    className="text-balance text-[clamp(1rem,1.5vw,1.15rem)] text-gray-700 dark:text-gray-200 max-w-xl font-normal leading-relaxed tracking-tight transition-colors duration-300 will-change-[color] opacity-90"
+                    className="text-balance text-[clamp(1rem,1.5vw,1.15rem)] text-gray-700 dark:text-gray-200 max-w-xl font-normal leading-relaxed tracking-tight transition-colors duration-300 opacity-90"
                     initial={{ opacity: 0, y: 24, filter: "blur(2px)" }}
                     animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                     transition={{ duration: 0.7, delay: 0.18, ease: [0.4, 0, 0.2, 1] }}

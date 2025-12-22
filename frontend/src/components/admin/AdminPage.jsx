@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, Routes, Route, useLocation } from 'react-router-dom';
 import { motion, useMotionTemplate, useMotionValue, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
@@ -13,13 +13,18 @@ import {
   LogOut,
   Plus,
   HelpCircle,
+  FileText,
   Menu,
   X,
   Zap,
   Activity,
   ChevronRight,
   Cpu,
-  Wifi
+  Wifi,
+  ChevronLeft,
+  ChevronsLeft,
+  ChevronsRight,
+  GripVertical
 } from 'lucide-react';
 import { useAdminAuth } from '../../context/AdminAuthContext';
 import PollsPage from './PollsPage';
@@ -28,6 +33,7 @@ import ResultsPage from './ResultsPage';
 import SecurityPage from './SecurityPage';
 import SettingsPage from './SettingsPage';
 import AdminDashboard from './AdminDashboard';
+
 import AdminNominations from '../../pages/admin/AdminNominations';
 import adminAxios from '../../utils/api/adminAxios';
 
@@ -52,7 +58,7 @@ const SpotlightEffect = ({ mouseX, mouseY }) => (
 );
 
 // --- SIDEBAR MENU ITEM ---
-const SidebarMenuItem = ({ icon, label, isActive, onClick, hasNotification, index }) => {
+const SidebarMenuItem = ({ icon, label, isActive, onClick, hasNotification, index, isCollapsed }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
@@ -69,28 +75,14 @@ const SidebarMenuItem = ({ icon, label, isActive, onClick, hasNotification, inde
       transition={{ delay: index * 0.05, duration: 0.3 }}
       onMouseMove={handleMouseMove}
       onClick={onClick}
-      className={`group relative w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 overflow-hidden ${isActive
-        ? 'bg-white dark:bg-zinc-800 shadow-lg shadow-black/5 dark:shadow-black/30'
-        : 'hover:bg-gray-50 dark:hover:bg-zinc-800/50'
+      className={`group relative w-full flex items-center ${isCollapsed ? 'justify-center px-1' : 'gap-3 px-4'} py-1 rounded-xl transition-all duration-300 overflow-hidden ${isActive
+        ? ''
+        : ''
         } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900`}
     >
-      <SpotlightEffect mouseX={mouseX} mouseY={mouseY} />
-
-      {/* Active indicator */}
-      <AnimatePresence>
-        {isActive && (
-          <motion.div
-            layoutId="activeIndicator"
-            initial={{ opacity: 0, scaleY: 0 }}
-            animate={{ opacity: 1, scaleY: 1 }}
-            exit={{ opacity: 0, scaleY: 0 }}
-            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-full bg-gray-900 dark:bg-white"
-          />
-        )}
-      </AnimatePresence>
 
       {/* Icon container */}
-      <div className={`relative z-10 flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-300 ${isActive
+      <div className={`relative z-10 flex items-center justify-center transition-all duration-300 ${isCollapsed ? 'w-10 h-10' : 'w-9 h-9'} rounded-lg ${isActive
         ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-md'
         : 'bg-gray-100 dark:bg-zinc-700/50 text-gray-600 dark:text-zinc-400 group-hover:bg-gray-200 dark:group-hover:bg-zinc-700 group-hover:text-gray-900 dark:group-hover:text-white'
         }`}>
@@ -103,26 +95,27 @@ const SidebarMenuItem = ({ icon, label, isActive, onClick, hasNotification, inde
       </div>
 
       {/* Label */}
-      <span className={`relative z-10 text-sm font-medium tracking-tight transition-colors duration-300 ${isActive
-        ? 'text-gray-900 dark:text-white'
-        : 'text-gray-600 dark:text-zinc-400 group-hover:text-gray-900 dark:group-hover:text-white'
-        }`}>
-        {label}
-      </span>
-
-      {/* Arrow indicator */}
-      <ChevronRight className={`ml-auto w-4 h-4 transition-all duration-300 ${isActive
-        ? 'opacity-100 text-gray-900 dark:text-white translate-x-0'
-        : 'opacity-0 -translate-x-2 text-gray-400'
-        }`} />
-
-      {/* Notification badge */}
-      {hasNotification && (
-        <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-lg shadow-red-500/50" />
+      {!isCollapsed && (
+        <motion.span
+          initial={{ opacity: 0, width: 0 }}
+          animate={{ opacity: 1, width: 'auto' }}
+          exit={{ opacity: 0, width: 0 }}
+          className={`relative z-10 text-sm font-medium tracking-tight whitespace-nowrap overflow-hidden transition-colors duration-300 ${isActive
+            ? 'text-gray-900 dark:text-white'
+            : 'text-gray-600 dark:text-zinc-400 group-hover:text-gray-900 dark:group-hover:text-white'
+            }`}
+        >
+          {label}
+        </motion.span>
       )}
 
-      {/* Hover shimmer effect */}
-      <div className="absolute inset-0 bg-gradient-to-r from-gray-500/0 via-gray-500/5 to-gray-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-out pointer-events-none" />
+      {/* Arrow indicator */}
+      {!isCollapsed && (
+        <ChevronRight className={`ml-auto w-4 h-4 transition-all duration-300 ${isActive
+          ? 'opacity-100 text-gray-900 dark:text-white translate-x-0'
+          : 'opacity-0 -translate-x-2 text-gray-400'
+          }`} />
+      )}
     </motion.button>
   );
 };
@@ -212,6 +205,56 @@ const AdminPage = () => {
     return path === 'admin' ? 'dashboard' : path;
   });
 
+  // Sidebar State
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(320);
+  const [isResizing, setIsResizing] = useState(false);
+  const sidebarRef = useRef(null);
+
+  // Load saved preference
+  useEffect(() => {
+    const savedWidth = localStorage.getItem('adminSidebarWidth');
+    const savedCollapsed = localStorage.getItem('adminSidebarCollapsed');
+    if (savedWidth) setSidebarWidth(parseInt(savedWidth));
+    if (savedCollapsed) setIsSidebarCollapsed(savedCollapsed === 'true');
+  }, []);
+
+  // Save preference
+  useEffect(() => {
+    localStorage.setItem('adminSidebarWidth', sidebarWidth);
+    localStorage.setItem('adminSidebarCollapsed', isSidebarCollapsed);
+  }, [sidebarWidth, isSidebarCollapsed]);
+
+  // Resizing Logic
+  const startResizing = useCallback((e) => {
+    e.preventDefault();
+    setIsResizing(true);
+  }, []);
+
+  const stopResizing = useCallback(() => {
+    setIsResizing(false);
+  }, []);
+
+  const resize = useCallback((e) => {
+    if (isResizing) {
+      let newWidth = e.clientX - sidebarRef.current.getBoundingClientRect().left;
+      if (newWidth < 240) newWidth = 240;
+      if (newWidth > 480) newWidth = 480;
+      setSidebarWidth(newWidth);
+    }
+  }, [isResizing]);
+
+  useEffect(() => {
+    if (isResizing) {
+      window.addEventListener('mousemove', resize);
+      window.addEventListener('mouseup', stopResizing);
+    }
+    return () => {
+      window.removeEventListener('mousemove', resize);
+      window.removeEventListener('mouseup', stopResizing);
+    };
+  }, [isResizing, resize, stopResizing]);
+
   // Simulate loading state
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -233,6 +276,7 @@ const AdminPage = () => {
       path: 'nominations',
       active: activeTab === 'nominations',
     },
+
     {
       icon: <Vote size={20} />,
       label: 'Polls',
@@ -358,58 +402,81 @@ const AdminPage = () => {
       {/* Main Layout */}
       <div className={`relative flex size-full min-h-screen flex-col ${isDarkMode ? 'bg-zinc-950' : 'bg-gray-50'} transition-colors duration-200`}>
         <div className="layout-container flex h-full grow flex-col">
-          <div className="gap-1 px-6 flex flex-1 justify-center py-5">
+          <div className="gap-1 p-3 flex flex-1 justify-center pt-1">
             {/* Sidebar */}
-            <aside className="layout-content-container flex flex-col w-80 shrink-0" role="complementary" aria-label="Admin sidebar navigation" tabIndex={0}>
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5 }}
-                className={`flex h-full min-h-[700px] flex-col ${isDarkMode ? 'bg-zinc-900/80 backdrop-blur-xl' : 'bg-white/90 backdrop-blur-xl'} p-5 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/30 transition-all duration-300 relative overflow-hidden border border-gray-200/50 dark:border-zinc-700/50`}
+            <motion.aside
+              ref={sidebarRef}
+              initial={false}
+              animate={{
+                width: isSidebarCollapsed ? 80 : sidebarWidth,
+                transition: { duration: isResizing ? 0 : 0.3, type: "spring", stiffness: 300, damping: 30 }
+              }}
+              className="layout-content-container flex flex-col shrink-0 relative group/sidebar print:hidden"
+              role="complementary"
+              aria-label="Admin sidebar navigation"
+            >
+              <div
+                className={`flex h-[calc(100vh-5.5rem)] flex-col ${isDarkMode ? 'bg-zinc-900/80 backdrop-blur-xl' : 'bg-white/90 backdrop-blur-xl'} rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/30 transition-all duration-300 relative overflow-hidden border border-gray-200/50 dark:border-zinc-700/50`}
               >
-                <NoiseTexture />
-
-                {/* Gradient Border Effect */}
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-gray-500/5 via-transparent to-gray-500/5 pointer-events-none" />
-
-                {/* Logo/Branding Section */}
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  className="relative z-10 pb-6 border-b border-gray-200/50 dark:border-zinc-700/50"
-                >
-                  <div className="flex items-center gap-3">
-                    {/* Animated Logo */}
-                    <div className="relative">
-                      <div className="w-10 h-10 rounded-xl bg-gray-900 dark:bg-white flex items-center justify-center shadow-lg">
-                        <Vote className="w-5 h-5 text-white dark:text-gray-900" />
+                {/* Top Section */}
+                <div className={`mt-auto space-y-4 relative z-10 px-2 py-2`}>
+                  {/* User Profile Card */}
+                  <motion.div
+                    layout
+                    className={`relative rounded-2xl overflow-hidden transition-all ${isSidebarCollapsed ? 'p-2 flex flex-col gap-4 justify-center' : 'p-2'}`}
+                  >
+                    <div className={`flex items-center gap-3 ${isSidebarCollapsed ? 'justify-center mb-0' : 'mb-3'}`}>
+                      <div className="relative group">
+                        <div className="w-10 h-10 rounded-full bg-gray-900 dark:bg-white flex items-center justify-center text-white dark:text-gray-900 text-sm font-bold shadow-lg transition-transform duration-300 group-hover:scale-110">
+                          {(adminEmail?.[0] || 'A').toUpperCase()}
+                        </div>
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-white dark:border-zinc-800">
+                          <div className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-75" />
+                        </div>
                       </div>
-                      <div className="absolute -inset-0.5 rounded-xl bg-gray-900 dark:bg-white blur opacity-20 animate-pulse" />
+                      {!isSidebarCollapsed && (
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                            Admin User
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-zinc-500 truncate">
+                            {adminEmail || 'admin@votely.io'}
+                          </p>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex flex-col">
-                      <span className="text-lg font-black tracking-tight text-gray-900 dark:text-white">
-                        VOTELY
-                      </span>
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600 dark:text-zinc-500">
-                        Admin Console
-                      </span>
-                    </div>
-                    <div className="ml-auto px-2 py-1 rounded-md bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700/50">
-                      <span className="text-[10px] font-bold text-gray-600 dark:text-zinc-400">v2.1</span>
-                    </div>
-                  </div>
+
+                    {/* Logout Button */}
+                    <motion.button
+                      layout
+                      onClick={handleLogout}
+                      className={`group relative w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-2 py-3' : 'gap-2 px-3 py-3'} rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200/50 dark:border-red-800/30 text-red-600 dark:text-red-400 font-medium transition-all duration-300 hover:bg-red-100 dark:hover:bg-red-900/30 hover:shadow-lg hover:shadow-red-500/10 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900`}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-red-500/0 via-red-500/10 to-red-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-out" />
+                      <LogOut className={`w-4 h-4 transition-transform group-hover:-translate-x-0.5 ${isSidebarCollapsed ? '' : ''}`} />
+                      {!isSidebarCollapsed && <span className="text-sm">Sign Out</span>}
+                    </motion.button>
                 </motion.div>
+                </div>
+
+
 
                 {/* Navigation Menu */}
-                <nav className="flex-1 flex flex-col gap-6 mt-6 relative z-10 overflow-y-auto">
+                <nav className={`flex-1 flex flex-col gap-6 relative z-10 overflow-y-auto overflow-x-hidden ${isSidebarCollapsed ? '' : 'px-0'}`}>
                   {/* Core Section */}
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2 px-2 mb-3">
-                      <span className="h-px flex-1 bg-gray-200 dark:bg-zinc-700/50" />
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600 dark:text-zinc-500">Core</span>
-                      <span className="h-px flex-1 bg-gray-200 dark:bg-zinc-700/50" />
-                    </div>
+                    {!isSidebarCollapsed && (
+                      <div className="flex items-center gap-2 px-2 mb-3">
+                        <span className="h-px flex-1 bg-gray-200 dark:bg-zinc-700/50" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600 dark:text-zinc-500">Core</span>
+                        <span className="h-px flex-1 bg-gray-200 dark:bg-zinc-700/50" />
+                      </div>
+                    )}
+                    {isSidebarCollapsed && (
+                      <div className="flex items-center gap-2 px-2 mb-3">
+                        <span className="h-px flex-1 bg-gray-200 dark:bg-zinc-700/50" />
+                      </div>
+                    )}
                     {menuItems.slice(0, 3).map((item, index) => (
                       <SidebarMenuItem
                         key={item.path}
@@ -418,6 +485,7 @@ const AdminPage = () => {
                         isActive={item.active}
                         hasNotification={item.label === 'Polls'}
                         index={index}
+                        isCollapsed={isSidebarCollapsed}
                         onClick={() => {
                           setActiveTab(item.path);
                           navigate(`/admin/${item.path}`);
@@ -428,11 +496,18 @@ const AdminPage = () => {
 
                   {/* Management Section */}
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2 px-2 mb-3">
-                      <span className="h-px flex-1 bg-gray-200 dark:bg-zinc-700/50" />
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600 dark:text-zinc-500">Manage</span>
-                      <span className="h-px flex-1 bg-gray-200 dark:bg-zinc-700/50" />
-                    </div>
+                    {!isSidebarCollapsed && (
+                      <div className="flex items-center gap-2 px-2 mb-3">
+                        <span className="h-px flex-1 bg-gray-200 dark:bg-zinc-700/50" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600 dark:text-zinc-500">Manage</span>
+                        <span className="h-px flex-1 bg-gray-200 dark:bg-zinc-700/50" />
+                      </div>
+                    )}
+                    {isSidebarCollapsed && (
+                      <div className="flex items-center gap-2 px-2 mb-3">
+                        <span className="h-px flex-1 bg-gray-200 dark:bg-zinc-700/50" />
+                      </div>
+                    )}
                     {menuItems.slice(3, 5).map((item, index) => (
                       <SidebarMenuItem
                         key={item.path}
@@ -440,6 +515,7 @@ const AdminPage = () => {
                         label={item.label}
                         isActive={item.active}
                         index={index + 3}
+                        isCollapsed={isSidebarCollapsed}
                         onClick={() => {
                           setActiveTab(item.path);
                           navigate(`/admin/${item.path}`);
@@ -450,11 +526,18 @@ const AdminPage = () => {
 
                   {/* System Section */}
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2 px-2 mb-3">
-                      <span className="h-px flex-1 bg-gray-200 dark:bg-zinc-700/50" />
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600 dark:text-zinc-500">System</span>
-                      <span className="h-px flex-1 bg-gray-200 dark:bg-zinc-700/50" />
-                    </div>
+                    {!isSidebarCollapsed && (
+                      <div className="flex items-center gap-2 px-2 mb-3">
+                        <span className="h-px flex-1 bg-gray-200 dark:bg-zinc-700/50" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600 dark:text-zinc-500">System</span>
+                        <span className="h-px flex-1 bg-gray-200 dark:bg-zinc-700/50" />
+                      </div>
+                    )}
+                    {isSidebarCollapsed && (
+                      <div className="flex items-center gap-2 px-2 mb-3">
+                        <span className="h-px flex-1 bg-gray-200 dark:bg-zinc-700/50" />
+                      </div>
+                    )}
                     {menuItems.slice(5, 7).map((item, index) => (
                       <SidebarMenuItem
                         key={item.path}
@@ -462,6 +545,7 @@ const AdminPage = () => {
                         label={item.label}
                         isActive={item.active}
                         index={index + 5}
+                        isCollapsed={isSidebarCollapsed}
                         onClick={() => {
                           setActiveTab(item.path);
                           navigate(`/admin/${item.path}`);
@@ -470,70 +554,31 @@ const AdminPage = () => {
                     ))}
                   </div>
                 </nav>
+              </div>
 
-                {/* Bottom Section */}
-                <div className="mt-auto space-y-4 relative z-10 pt-6">
-                  {/* User Profile Card */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className="relative p-4 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 dark:from-zinc-800 dark:to-zinc-800/50 border border-gray-200/50 dark:border-zinc-700/50 overflow-hidden"
-                  >
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="relative group">
-                        <div className="w-10 h-10 rounded-full bg-gray-900 dark:bg-white flex items-center justify-center text-white dark:text-gray-900 text-sm font-bold shadow-lg transition-transform duration-300 group-hover:scale-110">
-                          {(adminEmail?.[0] || 'A').toUpperCase()}
-                        </div>
-                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-white dark:border-zinc-800">
-                          <div className="absolute inset-0 rounded-full bg-green-500 animate-ping opacity-75" />
-                        </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                          Admin User
-                        </p>
-                        <p className="text-xs text-gray-600 dark:text-zinc-500 truncate">
-                          {adminEmail || 'admin@votely.io'}
-                        </p>
-                      </div>
-                    </div>
+              {/* Collapse Toggle (Moved Outside) */}
+              <button
+                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                className={`absolute z-20 top-[calc(100vh-38rem)] -right-3 p-1.5 rounded-full bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 shadow-md text-gray-500 dark:text-zinc-400 hover:text-blue-500 hover:scale-110 transition-all duration-200 opacity-0 group-hover/sidebar:opacity-100 focus:opacity-100 ${isSidebarCollapsed ? 'rotate-180 translate-x-1' : ''}`}
+              >
+                <ChevronsLeft className="w-4 h-4" />
+              </button>
 
-                    {/* Quick Action Buttons */}
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => { setActiveTab('settings'); navigate('/admin/settings'); }}
-                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-white dark:bg-zinc-700/50 border border-gray-200 dark:border-zinc-600/50 text-gray-600 dark:text-zinc-300 text-xs font-medium hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-zinc-800"
-                      >
-                        <Settings className="w-3.5 h-3.5" />
-                        Settings
-                      </button>
-                      <button className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-white dark:bg-zinc-700/50 border border-gray-200 dark:border-zinc-600/50 text-gray-600 dark:text-zinc-300 text-xs font-medium hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-zinc-800">
-                        <HelpCircle className="w-3.5 h-3.5" />
-                        Help
-                      </button>
-                    </div>
-                  </motion.div>
-
-                  {/* Logout Button */}
-                  <motion.button
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 }}
-                    onClick={handleLogout}
-                    className="group relative w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200/50 dark:border-red-800/30 text-red-600 dark:text-red-400 font-medium transition-all duration-300 hover:bg-red-100 dark:hover:bg-red-900/30 hover:shadow-lg hover:shadow-red-500/10 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-red-500/0 via-red-500/10 to-red-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-out" />
-                    <LogOut className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-                    <span className="text-sm">Sign Out</span>
-                  </motion.button>
+              {/* Resize Handle */}
+              {!isSidebarCollapsed && (
+                <div
+                  className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize z-10 flex items-center justify-center transition-opacity opacity-0 hover:opacity-100"
+                  onMouseDown={startResizing}
+                >
+                  <div className="w-[1px] h-full bg-black/50 dark:bg-zinc-700/50" />
                 </div>
-              </motion.div>
-            </aside>
+              )}
+            </motion.aside>
             {/* Main Content */}
             <main className="flex-1 min-w-0" role="region" aria-labelledby="admin-main-heading" tabIndex={0}>
               <h1 id="admin-main-heading" className="sr-only">Admin Dashboard Main Content</h1>
               <Routes>
+
                 <Route path="polls" element={<PollsPage />} />
                 <Route path="nominations" element={<AdminNominations />} />
                 <Route path="users" element={<UsersPage />} />

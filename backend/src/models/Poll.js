@@ -29,6 +29,13 @@ const pollSchema = new mongoose.Schema({
   resultDate: { type: Date },
   status: { type: String, enum: ['active', 'upcoming', 'completed'], default: 'upcoming' },
   options: [optionSchema],
+  type: { type: String, enum: ['poll', 'election'], default: 'poll' }, // 'poll' (simple) or 'election' (multi-position)
+  positions: [{
+    title: { type: String, required: true },
+    description: { type: String },
+    maxVotes: { type: Number, default: 1 },
+    candidates: [optionSchema] // Reusing optionSchema for candidates
+  }], // For elections
   settings: {
     allowMultipleVotes: { type: Boolean, default: false },
     showResultsBeforeEnd: { type: Boolean, default: false },

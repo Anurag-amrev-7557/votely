@@ -21,6 +21,7 @@ const ParticleMaterial = shaderMaterial(
     },
     // Vertex Shader
     `
+    precision highp float;
     uniform float uTime;
     uniform vec3 uMouse;
     uniform float uMixShape1;
@@ -221,14 +222,8 @@ const writePointOnBezier = (buffer, idx, p0x, p0y, p1x, p1y, p2x, p2y, tubeRadiu
 
 // --- Text Point Generation ---
 // Optimized to read once and fill buffer
-const fillTextPoints = (buffer, startIndex, text, count, isMobile) => {
-    const canvas = document.createElement('canvas');
-    const width = 800; // Keep high res for text quality
-    const height = 200;
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d', { willReadFrequently: true }); // Hint for optimization
-
+const fillTextPoints = (buffer, startIndex, text, count, isMobile, ctx, width, height) => {
+    // Reuse the passed context - NO new allocations per call
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, width, height);
     ctx.font = 'bold 100px Inter, system-ui, sans-serif';
@@ -281,7 +276,7 @@ const fillTextPoints = (buffer, startIndex, text, count, isMobile) => {
 };
 
 // --- Shape Generation ---
-const generateShapePoints = (count, shapeIndex, isMobile) => {
+const generateShapePoints = (count, shapeIndex, isMobile, ctx, width, height) => {
     const points = new Float32Array(count * 3);
     const SHAPE_COUNT = 3000;
     const TEXT_COUNT = count - SHAPE_COUNT;
@@ -492,7 +487,7 @@ const generateShapePoints = (count, shapeIndex, isMobile) => {
     }
 
     if (TEXT_COUNT > 0) {
-        fillTextPoints(points, SHAPE_COUNT, textLabel, TEXT_COUNT, isMobile);
+        fillTextPoints(points, SHAPE_COUNT, textLabel, TEXT_COUNT, isMobile, ctx, width, height);
     }
 
     return points;
@@ -508,28 +503,79 @@ const ParticleSystem = ({ themeColor, isPaused, xOffset = 0, stepIndex }) => {
 
     // --- Pre-calculate Attributes ---
     const [positions, aShape1, aShape2, aShape3, aShape4, aShape5, aShape6, aRandom] = useMemo(() => {
-        // Initial random positions
+        // Initial Grid Positions (Equal distance) - TUNNEL SHAPE
         const pos = new Float32Array(COUNT * 3);
         const rnd = new Float32Array(COUNT);
 
-        for (let i = 0; i < COUNT; i++) {
-            pos[i * 3] = (Math.random() - 0.5) * 30 + 3.5;
-            pos[i * 3 + 1] = (Math.random() - 0.5) * 30;
-            pos[i * 3 + 2] = (Math.random() - 0.5) * 20;
-            rnd[i] = Math.random();
+        // Define grid limits to fit viewport (Aspect Ratio ~16:9)
+        // Camera Z=10. Viewport at Z=0 is approx W=16, H=9.
+        // We want particles to be largely visible on screen.
+
+        const nX = 25; // Wider
+        const nY = 12; // Shorter
+        const nZ = 14;
+        // 25 * 12 * 14 = 4200 (covers COUNT=4000)
+
+        const spacingX = 14 / nX; // Total width ~14
+        const spacingY = 7 / nY;  // Total height ~7
+        const spacingZ = 9 / nZ;  // depth 0 to 9
+
+        const offsetX = (nX * spacingX) / 2;
+        const offsetY = (nY * spacingY) / 2;
+
+        let pIdx = 0;
+        // Loop Z from front (9) to back (0) for layering
+        loop:
+        for (let z = 0; z < nZ; z++) {
+            for (let y = 0; y < nY; y++) {
+                for (let x = 0; x < nX; x++) {
+                    if (pIdx >= COUNT) break loop;
+
+                    pos[pIdx * 3] = (x * spacingX) - offsetX + 3.5; // Centered X, +3.5 offset to match shape center
+                    pos[pIdx * 3 + 1] = (y * spacingY) - offsetY + 0.5;   // Centered Y, small lift
+                    // Z goes from 9 down to 0
+                    pos[pIdx * 3 + 2] = 9.0 - (z * spacingZ);
+
+                    rnd[pIdx] = Math.random();
+                    pIdx++;
+                }
+            }
         }
 
-        const s1 = generateShapePoints(COUNT, 0, isMobile);
-        const s2 = generateShapePoints(COUNT, 1, isMobile);
-        const s3 = generateShapePoints(COUNT, 2, isMobile);
-        const s4 = generateShapePoints(COUNT, 3, isMobile);
-        const s5 = generateShapePoints(COUNT, 4, isMobile); // Gear (Settings)
-        const s6 = generateShapePoints(COUNT, 5, isMobile); // Clipboard (Review)
+        // Fill remaining if any
+        while (pIdx < COUNT) {
+            pos[pIdx * 3] = (Math.random() - 0.5) * 14 + 3.5;
+            pos[pIdx * 3 + 1] = (Math.random() - 0.5) * 7;
+            pos[pIdx * 3 + 2] = Math.random() * 9;
+            rnd[pIdx] = Math.random();
+            pIdx++;
+        }
+
+        // Optimization: Recycle a single canvas context for all text generation
+        // This prevents creating 6 separate canvas elements and contexts during initialization
+        const canvas = document.createElement('canvas');
+        const width = 800; // Keep high res for text quality
+        const height = 200;
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+        const s1 = generateShapePoints(COUNT, 0, isMobile, ctx, width, height);
+        const s2 = generateShapePoints(COUNT, 1, isMobile, ctx, width, height);
+        const s3 = generateShapePoints(COUNT, 2, isMobile, ctx, width, height);
+        const s4 = generateShapePoints(COUNT, 3, isMobile, ctx, width, height);
+        const s5 = generateShapePoints(COUNT, 4, isMobile, ctx, width, height);
+        const s6 = generateShapePoints(COUNT, 5, isMobile, ctx, width, height);
+
+        // Canvas is naturally GC'd after useMemo scope ends
 
         return [pos, s1, s2, s3, s4, s5, s6, rnd];
     }, [isMobile]);
 
     const [targetShape, setTargetShape] = useState(0);
+
+    // Track start time for initial delay
+    const startTimeRef = useRef(0);
 
     useEffect(() => {
         if (isPaused) return;
@@ -566,8 +612,16 @@ const ParticleSystem = ({ themeColor, isPaused, xOffset = 0, stepIndex }) => {
         if (isPaused || !materialRef.current) return; // KILL SWITCH for CPU
 
         const time = state.clock.getElapsedTime();
+
+        // Initialize start time on first frame
+        if (startTimeRef.current === 0) {
+            startTimeRef.current = time;
+        }
+
         materialRef.current.uTime = time;
-        materialRef.current.uPixelRatio = Math.min(window.devicePixelRatio, 2);
+        // Optimization: Use gl.getPixelRatio() which is stable, 
+        // instead of accessing global window.devicePixelRatio every frame
+        materialRef.current.uPixelRatio = Math.min(gl.getPixelRatio(), 2);
 
         const mx = (mouse.x * viewport.width) / 2;
         const my = (mouse.y * viewport.height) / 2;
@@ -579,12 +633,13 @@ const ParticleSystem = ({ themeColor, isPaused, xOffset = 0, stepIndex }) => {
 
         const morphSmoothness = 1.0 - Math.exp(-2.0 * delta);
 
-        let t1 = targetShape === 0 ? 1 : 0;
-        let t2 = targetShape === 1 ? 1 : 0;
-        let t3 = targetShape === 2 ? 1 : 0;
-        let t4 = targetShape === 3 ? 1 : 0;
-        let t5 = targetShape === 4 ? 1 : 0;
-        let t6 = targetShape === 5 ? 1 : 0;
+        // Calculate targets outside to avoid allocating object/array
+        const t1 = targetShape === 0 ? 1 : 0;
+        const t2 = targetShape === 1 ? 1 : 0;
+        const t3 = targetShape === 2 ? 1 : 0;
+        const t4 = targetShape === 3 ? 1 : 0;
+        const t5 = targetShape === 4 ? 1 : 0;
+        const t6 = targetShape === 5 ? 1 : 0;
 
         materialRef.current.uMixShape1 += (t1 - materialRef.current.uMixShape1) * morphSmoothness;
         materialRef.current.uMixShape2 += (t2 - materialRef.current.uMixShape2) * morphSmoothness;
@@ -593,34 +648,39 @@ const ParticleSystem = ({ themeColor, isPaused, xOffset = 0, stepIndex }) => {
         materialRef.current.uMixShape5 += (t5 - materialRef.current.uMixShape5) * morphSmoothness;
         materialRef.current.uMixShape6 += (t6 - materialRef.current.uMixShape6) * morphSmoothness;
 
-        // Animate Start Mix (Chaos -> Order)
-        if (materialRef.current.uMixStart > 0.01) {
-            materialRef.current.uMixStart *= 0.95; // Decay factor
+        // Animate Start Mix (Grid -> Order)
+        // Wait 0.1 second before starting to morph (Reduced from 0.5s)
+        const startDelay = 0.1;
+        if (time > startTimeRef.current + startDelay) {
+            if (materialRef.current.uMixStart > 0.01) {
+                // Faster decay (2.5) for quicker shape formation
+                materialRef.current.uMixStart += (0 - materialRef.current.uMixStart) * (1.0 - Math.exp(-2.5 * delta));
+            } else {
+                materialRef.current.uMixStart = 0;
+            }
         } else {
-            materialRef.current.uMixStart = 0;
+            // Ensure it stays at 1 (Grid) during delay
+            materialRef.current.uMixStart = 1.0;
         }
     });
 
-    // Responsive Scale:
-    // Text width is approx 6.5 units. 
-    // Mobile viewport width is often < 5 units.
-    // We scale down if viewport is small.
-    // Responsive Scale:
-    const rawScale = viewport.width / 8.5;
-    const responsiveScale = isNaN(rawScale) ? 1 : Math.min(1, rawScale);
+    // Responsive Scale and Position
+    const { responsiveScale, checkPos } = useMemo(() => {
+        const rawScale = viewport.width / 8.5;
+        const scale = isNaN(rawScale) ? 1 : Math.min(1, rawScale);
 
-    // Position Shift:
-    // Mobile: Center X (-3.5 * scale) and Shift Down (-Y)
-    // Check for NaNs to prevent Three.js matrix errors
-    const shiftX = -3.5 * responsiveScale;
-    const shiftY = -viewport.height * 0.28;
+        const shiftX = -3.5 * scale;
+        const shiftY = -viewport.height * 0.28;
 
-    const posCheck = (isMobile && !isNaN(shiftX) && !isNaN(shiftY))
-        ? [shiftX, shiftY, 0]
-        : [0 + xOffset, 0.4, 0];
+        const pos = (isMobile && !isNaN(shiftX) && !isNaN(shiftY))
+            ? [shiftX, shiftY, 0]
+            : [0 + xOffset, 0.4, 0];
+
+        return { responsiveScale: scale, checkPos: pos };
+    }, [viewport.width, viewport.height, isMobile, xOffset]);
 
     return (
-        <points ref={meshRef} position={posCheck} scale={[responsiveScale, responsiveScale, responsiveScale]} frustumCulled={false}>
+        <points ref={meshRef} position={checkPos} scale={[responsiveScale, responsiveScale, responsiveScale]} frustumCulled={false}>
             <bufferGeometry>
                 <bufferAttribute attach="attributes-position" count={COUNT} array={positions} itemSize={3} />
                 <bufferAttribute attach="attributes-aStart" count={COUNT} array={positions} itemSize={3} />
@@ -646,4 +706,4 @@ const ParticleSystem = ({ themeColor, isPaused, xOffset = 0, stepIndex }) => {
     );
 };
 
-export default ParticleSystem;
+export default React.memo(ParticleSystem);
